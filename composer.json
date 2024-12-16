@@ -1,0 +1,18 @@
+{
+    "name": "edutiek/assessment-service",
+    "type": "library",
+    "license": "GPLv3",
+    "version": "0.0.1",
+    "autoload": {
+        "psr-4": {
+            "Edutiek\\AssessmentService\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Lukas Scharmer",
+            "email": "lscharmer@databay.de"
+        }
+    ],
+    "require": {}
+}
