@@ -4,9 +4,8 @@
     "license": "GPLv3",
     "version": "0.0.1",
     "autoload": {
-        "psr-4": {
-            "Edutiek\\AssessmentService\\": "src/"
-        }
+        "psr-4": {"Edutiek\\AssessmentService\\": "src/"},
+        "classmap": ["./src"]
     },
     "authors": [
         {
