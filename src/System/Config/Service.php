@@ -3,6 +3,7 @@
 namespace Edutiek\AssessmentService\System\Config;
 
 use Edutiek\AssessmentService\System\Api\Dependencies;
+use Edutiek\AssessmentService\System\Data\Config;
 
 readonly class Service implements ReadService, FullService
 {

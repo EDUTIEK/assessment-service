@@ -1,6 +1,6 @@
 <?php
 
-namespace Edutiek\AssessmentService\System\Config;
+namespace Edutiek\AssessmentService\System\Data;
 
 interface Repository
 {

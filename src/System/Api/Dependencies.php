@@ -2,7 +2,7 @@
 
 namespace Edutiek\AssessmentService\System\Api;
 
-use  Edutiek\AssessmentService\System\Config\Repository;
+use Edutiek\AssessmentService\System\Data\Repository;
 
 Interface Dependencies
 {

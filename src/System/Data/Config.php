@@ -1,6 +1,6 @@
 <?php
 
-namespace Edutiek\AssessmentService\System\Config;
+namespace Edutiek\AssessmentService\System\Data;
 
 /**
  * Global confiuration of the assessment services
