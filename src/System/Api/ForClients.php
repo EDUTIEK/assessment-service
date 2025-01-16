@@ -12,6 +12,8 @@ class ForClients
     public function __construct(private readonly Dependencies $dependencies) {}
 
     public function config(): FullService {
-        return self::$instances[FullService::class] ??= new Service($this->dependencies);
+        return self::$instances[FullService::class] ??= new Service(
+            $this->dependencies->configRepo()
+        );
     }
 }
