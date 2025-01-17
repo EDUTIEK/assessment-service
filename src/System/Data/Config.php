@@ -5,7 +5,7 @@ namespace Edutiek\AssessmentService\System\Data;
 /**
  * Global confiuration of the assessment services
  */
-abstract class Config
+abstract class Config implements SystemEntity
 {
     /**
      * URL of the writer web app
