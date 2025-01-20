@@ -6,6 +6,6 @@ namespace Edutiek\AssessmentService\System\Data;
 
 interface Repository
 {
-    public function readConfig(): Config;
-    public function writeConfig(Config $config) : void;
+    public function getConfig(): Config;
+    public function saveConfig(Config $config) : void;
 }

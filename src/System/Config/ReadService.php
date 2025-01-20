@@ -8,5 +8,5 @@ use Edutiek\AssessmentService\System\Data\Config;
 
 interface ReadService
 {
-    public function readConfig(): Config;
+    public function getConfig(): Config;
 }

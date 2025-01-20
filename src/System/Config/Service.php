@@ -14,13 +14,13 @@ readonly class Service implements ReadService, FullService
         private Repository $config_repo
     ) {}
 
-    public function readConfig(): Config
+    public function getConfig(): Config
     {
-        return $this->config_repo->readConfig();
+        return $this->config_repo->getConfig();
     }
 
-    public function writeConfig(Config $config) : void
+    public function saveConfig(Config $config) : void
     {
-        $this->config_repo->writeConfig($config);
+        $this->config_repo->saveConfig($config);
     }
 }

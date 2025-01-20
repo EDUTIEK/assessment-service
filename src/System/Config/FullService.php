@@ -8,5 +8,5 @@ use Edutiek\AssessmentService\System\Data\Config;
 
 interface FullService extends ReadService
 {
-    public function writeConfig(Config $config): void;
+    public function saveConfig(Config $config): void;
 }
