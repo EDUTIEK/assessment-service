@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\System\Data;
 
 /**
- * Global confiuration of the assessment services
+ * Global configuration of the assessment-service
+ * This can be changed via client api
  */
 abstract class Config implements SystemEntity
 {
