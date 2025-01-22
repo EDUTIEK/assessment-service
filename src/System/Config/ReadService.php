@@ -21,7 +21,13 @@ interface ReadService
 
     /**
      * Get the effective URL to open a frontend web app
-     * This may be taken from the config or built from the setup and the module name
+     * This is taken from the config or built from the setup and the module name
      */
     public function getFrontendUrl(FrontendModule $module): string;
+
+    /**
+     * Get the effective path of the ghostscript executable
+     * This is taken from the config or as default from the setup
+     */
+    public function getPathToGhostscript(): ?string;
 }

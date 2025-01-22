@@ -6,6 +6,9 @@ namespace Edutiek\AssessmentService\System\Api;
 
 use Edutiek\AssessmentService\System\Config\FullService;
 use Edutiek\AssessmentService\System\Config\Service;
+use Edutiek\AssessmentService\System\File\Storage;
+use Edutiek\AssessmentService\System\File\Delivery;
+
 
 class ForClients
 {
@@ -18,4 +21,15 @@ class ForClients
             $this->dependencies->configRepo()
         );
     }
+
+    public function fileStorage(): Storage
+    {
+        return $this->dependencies->fileStorage();
+    }
+
+    public function fileDelivery(): Delivery
+    {
+        return $this->dependencies->fileDelivery();
+    }
+
 }

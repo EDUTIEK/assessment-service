@@ -45,4 +45,10 @@ abstract class Setup
      * TCPDF requires this path for image sources
      */
     abstract public function getRelativeTempPath(): string;
+
+    /**
+     * Get the default path of the ghostscript executable
+     * This is taken, if Config::getPathToGhostscript is not set
+     */
+    abstract function getDefaultPathToGhostscript(): ?string;
 }

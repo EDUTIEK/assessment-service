@@ -35,11 +35,16 @@ readonly class Service implements ReadService, FullService
     {
         switch ($module) {
             case FrontendModule::WRITER:
-                return $this->getConfig()->getWriterUrl() ?? $this->buildFrontendUrl('assessment-writer');
+                return $this->getConfig()->getWriterUrl() ?? $this->buildFrontendUrl($module);
             case FrontendModule::CORRECTOR:
-                return $this->getConfig()->getCorrectorUrl() ?? $this->buildFrontendUrl('assessment-corrector');
+                return $this->getConfig()->getCorrectorUrl() ?? $this->buildFrontendUrl($module);
         }
         return '';
+    }
+
+    public function getPathToGhostscript(): ?string
+    {
+        return $this->getConfig()->getPathToGhostscript() ?? $this->getSetup()->getDefaultPathToGhostscript();
     }
 
     /**
@@ -47,13 +52,13 @@ readonly class Service implements ReadService, FullService
      * Add a query string with the revision to avoid an outdated cached app
      * @param string $module name and path of the web app in node_modules
      */
-    private function buildFrontendUrl(string $module): string
+    private function buildFrontendUrl(FrontendModule $module): string
     {
         $json = json_decode(file_get_contents(__DIR__ . '/../../../package-lock.json'), true);
-        $resolved = $json['packages']['node_modules/' . $module]['resolved'] ?? '';
+        $resolved = $json['packages']['node_modules/' . $module->value]['resolved'] ?? '';
         $revision = (string) parse_url($resolved, PHP_URL_FRAGMENT);
 
         return $this->getSetup()->getFrontendsBaseUrl()
-            . '/' . $module . '/' . '/dist/index.html?' . substr($revision, 0, 7);
+            . '/' . $module->value . '/' . '/dist/index.html?' . substr($revision, 0, 7);
     }
 }
