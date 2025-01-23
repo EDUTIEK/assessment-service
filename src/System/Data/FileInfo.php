@@ -16,14 +16,14 @@ abstract class FileInfo implements SystemEntity
     /**
      * Name of the file which is used for downloads
      */
-    abstract public function getName(): ?string;
-    abstract public function setName(?string $name): FileInfo;
+    abstract public function getFileName(): ?string;
+    abstract public function setFileName(?string $name): FileInfo;
 
     /**
      * Mime type of the file
      */
-    abstract public function getMime(): ?string;
-    abstract public function setMime(?string $mime): FileInfo;
+    abstract public function getMimeType(): ?string;
+    abstract public function setMimeType(?string $mime): FileInfo;
 
     /**
      * Size of the file in bytes
