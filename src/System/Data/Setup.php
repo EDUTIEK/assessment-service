@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Data;
 
+use DateTimeZone;
+
 /**
  * Setup of the hosting system and the inclusion of the assessment-service
  * This can't be changed via client api
@@ -50,5 +52,15 @@ abstract class Setup
      * Get the default path of the ghostscript executable
      * This is taken, if Config::getPathToGhostscript is not set
      */
-    abstract function getDefaultPathToGhostscript(): ?string;
+    abstract public function getDefaultPathToGhostscript(): ?string;
+
+    /**
+     * Get the default language for documentations as ISO 639-1 two-letter code, e.g. 'en'
+     */
+    abstract public function getDefaultLanguage(): string;
+
+    /**
+     * Get the default time zone for documentations
+     */
+    abstract public function getDefaultTimezone(): DateTimeZone;
 }
