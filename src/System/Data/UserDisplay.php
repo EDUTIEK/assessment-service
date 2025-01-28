@@ -16,13 +16,9 @@ abstract readonly class UserDisplay implements SystemEntity
      */
     abstract public function getImageUrl(): ?string;
 
-    /**
-     * URL of an embedded user profile page that can be used as src attribute of an iframe element
-     */
-    abstract public function getEmbeddedProfileUrl(): ?string;
 
     /**
      * Url for showing a user profile in the same window with a back link
      */
-    abstract public function getLinkedProfileUrl(string $return_url): ?string;
+    abstract public function getProfileUrl(string $return_url): ?string;
 }
