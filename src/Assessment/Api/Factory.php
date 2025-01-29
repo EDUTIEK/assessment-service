@@ -10,24 +10,26 @@ use Edutiek\AssessmentService\Assessment\Api\ForRest;
 
 class Factory
 {
-    protected static array $instances = [];
+    private array $instances = [];
 
     public function __construct(private readonly Dependencies $dependencies) {}
 
     /**
      * Get the API for client systems
+     * @param int $ass_id  id of the assessment object
+     * @param int $context_id  id of the permission context in which the object is used
      */
     public function forClients(int $ass_id, int $context_id) : ForClients
     {
-        return self::$instances[ForClients::class][$ass_id][$context_id] ??= new ForClients(
+        return $this->instances[ForClients::class][$ass_id][$context_id] ??= new ForClients(
             $ass_id, $context_id, $this->dependencies);
     }
 
     /**
      * Get the API for REST calls
      */
-    public function forRest(int $ass_id, int $context_id) : ForRest
+    public function forRest() : ForRest
     {
-        return self::$instances[ForRest::class] ??= new ForRest($this->dependencies);
+        return $this->instances[ForRest::class] ??= new ForRest($this->dependencies);
     }
 }

@@ -13,7 +13,7 @@ use Edutiek\AssessmentService\System\User\Service as UserService;
 
 class ForClients
 {
-    protected static array $instances = [];
+    private array $instances = [];
 
     public function __construct(private readonly Dependencies $dependencies)
     {
@@ -21,7 +21,7 @@ class ForClients
 
     public function config(): ConfigFullService
     {
-        return self::$instances[ConfigService::class] ??= new ConfigService(
+        return $this->instances[ConfigService::class] ??= new ConfigService(
             $this->dependencies->configRepo()
         );
     }
@@ -38,7 +38,7 @@ class ForClients
 
     public function user(): UserReadService
     {
-        return self::$instances[UserService::class] ??= new UserService(
+        return $this->instances[UserService::class] ??= new UserService(
             $this->dependencies->userRepo()
         );
     }

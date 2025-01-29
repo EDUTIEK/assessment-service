@@ -10,7 +10,7 @@ use DateTimeZone;
  * Setup of the hosting system and the inclusion of the assessment-service
  * This can't be changed via client api
  */
-abstract class Setup
+abstract readonly class Setup
 {
     /**
      * Get a name identifying the hosting system

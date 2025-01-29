@@ -7,7 +7,7 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 
 class ForRest
 {
-    protected static array $instances = [];
+    private array $instances = [];
 
     public function __construct(
         private readonly Dependencies $dependencies

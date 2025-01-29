@@ -6,7 +6,7 @@ namespace Edutiek\AssessmentService\System\Api;
 
 class Factory
 {
-    protected static array $instances = [];
+    private array $instances = [];
 
     public function __construct(private readonly Dependencies $dependencies) {}
 
@@ -15,7 +15,7 @@ class Factory
      */
     public function forClients() : ForClients
     {
-        return self::$instances[ForClients::class] ??= new ForClients($this->dependencies);
+        return $this->instances[ForClients::class] ??= new ForClients($this->dependencies);
     }
 
     /**
@@ -23,7 +23,7 @@ class Factory
      */
     public function forServices() : ForServices
     {
-        return self::$instances[ForServices::class] ??= new ForServices($this->dependencies);
+        return $this->instances[ForServices::class] ??= new ForServices($this->dependencies);
     }
 
 }
