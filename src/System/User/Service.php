@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\System\User;
 
 use Edutiek\AssessmentService\System\Data\UserRepo;
 use Edutiek\AssessmentService\System\Data\UserData;
+use ILIAS\Plugin\LongEssayAssessment\System\Data\UserDisplay;
 
 readonly class Service implements ReadService
 {
@@ -14,7 +15,7 @@ readonly class Service implements ReadService
     ) {
     }
 
-    public function getUser(int $id)
+    public function getUser(int $id) : ?UserData
     {
         return $this->user_repo->getUser($id);
     }
@@ -32,5 +33,15 @@ readonly class Service implements ReadService
     public function getCurrentUser(): ?UserData
     {
         return $this->user_repo->getCurrentUser();
+    }
+
+    public function getUserDisplay(int $id, ?string $back_link): UserDisplay
+    {
+        return $this->user_repo->getUserDisplay($id, $back_link);
+    }
+
+    public function getUserDisplaysByIds(array $ids, ?string $back_link): array
+    {
+        return $this->user_repo->getUserDisplaysByIds($ids, $back_link);
     }
 }
