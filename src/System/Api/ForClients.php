@@ -22,7 +22,8 @@ class ForClients
     public function config(): ConfigFullService
     {
         return $this->instances[ConfigService::class] ??= new ConfigService(
-            $this->dependencies->configRepo()
+            $this->dependencies->configRepo(),
+            $this->dependencies->setupRepo()
         );
     }
 
@@ -39,7 +40,8 @@ class ForClients
     public function user(): UserReadService
     {
         return $this->instances[UserService::class] ??= new UserService(
-            $this->dependencies->userRepo()
+            $this->dependencies->userDataRepo(),
+            $this->dependencies->userDisplayRepo()
         );
     }
 

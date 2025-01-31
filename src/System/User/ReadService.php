@@ -4,9 +4,19 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\User;
 
-use Edutiek\AssessmentService\System\Data\UserRepo;
+use Edutiek\AssessmentService\System\Data\UserData;
+use Edutiek\AssessmentService\System\Data\UserDisplay;
 
-interface ReadService extends UserRepo
+interface ReadService
 {
-    // nothing special yet
+    public function getUser(int $id) : ?UserData;
+
+    public function getUsersByIds(array $ids): array;
+
+    public function getCurrentUser(): ?UserData;
+
+    public function getUserDisplay(int $id, ?string $back_link): UserDisplay;
+
+    public function getUserDisplaysByIds(array $ids, ?string $back_link): array;
+
 }

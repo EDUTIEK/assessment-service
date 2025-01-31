@@ -8,27 +8,29 @@ use Edutiek\AssessmentService\System\Api\Dependencies;
 use Edutiek\AssessmentService\System\Data\Config;
 use Edutiek\AssessmentService\System\Data\ConfigRepo;
 use Edutiek\AssessmentService\System\Data\Setup;
+use Edutiek\AssessmentService\System\Data\SetupRepo;
 
 readonly class Service implements ReadService, FullService
 {
     public function __construct(
-        private ConfigRepo $config_repo
+        private ConfigRepo $config_repo,
+        private SetupRepo $setup_repo
     ) {
     }
 
     public function getConfig(): Config
     {
-        return $this->config_repo->getConfig();
+        return $this->config_repo->get();
     }
 
     public function saveConfig(Config $config): void
     {
-        $this->config_repo->saveConfig($config);
+        $this->config_repo->save($config);
     }
 
     public function getSetup(): Setup
     {
-        return $this->config_repo->getSetup();
+        return $this->setup_repo->get();
     }
 
     public function getFrontendUrl(FrontendModule $module): string
