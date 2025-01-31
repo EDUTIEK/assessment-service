@@ -6,9 +6,5 @@ namespace Edutiek\AssessmentService\System\Data;
 
 interface SetupRepo
 {
-    /**
-     * Get setup data from the hosting system
-     */
-    public function get(): Setup;
-
+    public function one(): Setup;
 }

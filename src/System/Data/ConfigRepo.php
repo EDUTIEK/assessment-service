@@ -6,13 +6,6 @@ namespace Edutiek\AssessmentService\System\Data;
 
 interface ConfigRepo
 {
-    /**
-     * Get the global configuration of the assessment-service
-     */
-    public function get(): Config;
-
-    /**
-     * Set the global configuration of the assessment-service
-     */
-    public function save(Config $config) : void;
+    public function one(): Config;
+    public function save(Config $config): void;
 }

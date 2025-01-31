@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Data;
 
-abstract readonly class ObjectPermissions implements AssessmentEntity
+abstract readonly class Permissions implements AssessmentEntity
 {
-    abstract public function getAssessmentId(): int;
+    abstract public function getAssId(): int;
     abstract public function getContextId(): int;
     abstract public function getUserId(): int;
 

@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Permissions;
 
-use Edutiek\AssessmentService\Assessment\Data\ObjectRepo;
-use Edutiek\AssessmentService\Assessment\Data\ObjectPermissions;
+use Edutiek\AssessmentService\Assessment\Data\Permissions;
+use Edutiek\AssessmentService\Assessment\Data\Repositories;
 
 class Service implements ReadService
 {
-    private ObjectPermissions $object_permissions;
+    private Permissions $permissions;
 
     public function __construct(
         private readonly int $ass_id,
         private readonly int $context_id,
         private readonly int $user_id,
-        private readonly ObjectRepo $object_repo,
+        private readonly Repositories $repos,
     ) {
-        $this->object_permissions = $this->object_repo->getObjectPermissions($this->ass_id, $this->context_id, $this->user_id);
+        $this->permissions = $this->repos->permissions()->one($this->ass_id, $this->context_id, $this->user_id);
     }
 
     public function canViewInfoScreen(): bool

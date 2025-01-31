@@ -1,0 +1,13 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Edutiek\AssessmentService\Assessment\Data;
+
+interface Repositories
+{
+    public function alert(): AlertRepo;
+    public function logEntry(): LogEntryRepo;
+    public function permissions(): PermissionsRepo;
+    public function properties(): PropertiesRepo;
+}

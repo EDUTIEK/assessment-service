@@ -11,13 +11,13 @@ interface UserDisplayRepo
     /**
      * Get the display properties of a single user
      */
-    public function getOne(int $id, ?string $back_link): UserDisplay;
+    public function one(int $id, ?string $back_link): UserDisplay;
 
     /**
      * Get display properties of multiple users
      * @param int[] $ids
      * @return UserDisplay[]
      */
-    public function getSome(array $ids, ?string $back_link): array;
+    public function some(array $ids, ?string $back_link): array;
 
 }

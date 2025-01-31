@@ -20,7 +20,7 @@ readonly class Service implements ReadService, FullService
 
     public function getConfig(): Config
     {
-        return $this->config_repo->get();
+        return $this->config_repo->one();
     }
 
     public function saveConfig(Config $config): void
@@ -30,7 +30,7 @@ readonly class Service implements ReadService, FullService
 
     public function getSetup(): Setup
     {
-        return $this->setup_repo->get();
+        return $this->setup_repo->one();
     }
 
     public function getFrontendUrl(FrontendModule $module): string

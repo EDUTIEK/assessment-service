@@ -17,28 +17,28 @@ readonly class Service implements ReadService
     ) {
     }
 
-    public function getUser(int $id) : ?UserData
+    public function getUser(int $id): ?UserData
     {
-        return $this->user_repo->getOne($id);
+        return $this->user_repo->one($id);
     }
 
     public function getUsersByIds(array $ids): array
     {
-        return $this->user_repo->getSome($ids);
+        return $this->user_repo->some($ids);
     }
 
     public function getCurrentUser(): ?UserData
     {
-        return $this->user_repo->getCurrent();
+        return $this->user_repo->current();
     }
 
     public function getUserDisplay(int $id, ?string $back_link): UserDisplay
     {
-        return $this->user_display->getOne($id, $back_link);
+        return $this->user_display->one($id, $back_link);
     }
 
     public function getUserDisplaysByIds(array $ids, ?string $back_link): array
     {
-        return $this->user_display->getSome($ids, $back_link);
+        return $this->user_display->some($ids, $back_link);
     }
 }
