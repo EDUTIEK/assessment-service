@@ -6,16 +6,16 @@ namespace Edutiek\AssessmentService\Assessment\Data;
 
 abstract class GradeLevel implements AssessmentEntity
 {
-    public abstract function getId(): int;
-    public abstract function setId(int $id): self;
-    public abstract function getMinPoints(): float;
-    public abstract function setMinPoints(float $min_points): self;
-    public abstract function getGrade(): string;
-    public abstract function setGrade(string $grade): self;
-    public abstract function getCode(): ?string;
-    public abstract function setCode(?string $code): self;
-    public abstract function getPassed(): bool;
-    public abstract function setPassed(bool $passed): self;
-    public abstract function getAssId(): int;
-    public abstract function setAssId(int $ass_id): self;
+    abstract public function getId(): int;
+    abstract public function setId(int $id): self;
+    abstract public function getMinPoints(): float;
+    abstract public function setMinPoints(float $min_points): self;
+    abstract public function getGrade(): string;
+    abstract public function setGrade(string $grade): self;
+    abstract public function getCode(): ?string;
+    abstract public function setCode(?string $code): self;
+    abstract public function getPassed(): bool;
+    abstract public function setPassed(bool $passed): self;
+    abstract public function getAssId(): int;
+    abstract public function setAssId(int $ass_id): self;
 }

@@ -8,18 +8,24 @@ use DateTimeImmutable;
 
 abstract class Alert implements AssessmentEntity
 {
-    public abstract function getId(): int;
-    public abstract function setId(int $id): self;
-    public abstract function getTitle(): ?string;
-    public abstract function setTitle(?string $title): self;
-    public abstract function getMessage(): string;
-    public abstract function setMessage(string $message): self;
-    public abstract function getWriterId(): ?int;
-    public abstract function setWriterId(?int $writer_id): self;
-    public abstract function getAssId(): int;
-    public abstract function setAssId(int $ass_id): self;
-    public abstract function getShownFrom(): ?DateTimeImmutable;
-    public abstract function setShownFrom(?DateTimeImmutable $shown_from): self;
-    public abstract function getShownUntil(): ?DateTimeImmutable;
-    public abstract function setShownUntil(?DateTimeImmutable $shown_until): self;
+    abstract public function getId(): int;
+    abstract public function setId(int $id): self;
+
+    abstract public function getAssId(): int;
+    abstract public function setAssId(int $ass_id): self;
+
+    abstract public function getTitle(): ?string;
+    abstract public function setTitle(?string $title): self;
+
+    abstract public function getMessage(): string;
+    abstract public function setMessage(string $message): self;
+
+    abstract public function getWriterId(): ?int;
+    abstract public function setWriterId(?int $writer_id): self;
+
+    abstract public function getShownFrom(): ?DateTimeImmutable;
+    abstract public function setShownFrom(?DateTimeImmutable $shown_from): self;
+
+    abstract public function getShownUntil(): ?DateTimeImmutable;
+    abstract public function setShownUntil(?DateTimeImmutable $shown_until): self;
 }

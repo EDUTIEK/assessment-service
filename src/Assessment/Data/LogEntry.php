@@ -8,14 +8,18 @@ use DateTimeImmutable;
 
 abstract class LogEntry implements AssessmentEntity
 {
-    public abstract function getId(): int;
-    public abstract function setId(int $id): self;
-    public abstract function getTimestamp(): ?DateTimeImmutable;
-    public abstract function setTimestamp(?DateTimeImmutable $timestamp): self;
-    public abstract function getCategory(): string;
-    public abstract function setCategory(string $category): self;
-    public abstract function getEntry(): ?string;
-    public abstract function setEntry(?string $entry): self;
-    public abstract function getAssId(): int;
-    public abstract function setAssId(int $ass_id): self;
+    abstract public function getAssId(): int;
+    abstract public function setAssId(int $ass_id): self;
+
+    abstract public function getId(): int;
+    abstract public function setId(int $id): self;
+
+    abstract public function getTimestamp(): ?DateTimeImmutable;
+    abstract public function setTimestamp(?DateTimeImmutable $timestamp): self;
+
+    abstract public function getCategory(): string;
+    abstract public function setCategory(string $category): self;
+
+    abstract public function getEntry(): ?string;
+    abstract public function setEntry(?string $entry): self;
 }

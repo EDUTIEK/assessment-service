@@ -8,46 +8,74 @@ use DateTimeImmutable;
 
 abstract class Settings implements AssessmentEntity
 {
-    public abstract function getOnline(): int;
-    public abstract function setOnline(int $online): self;
-    public abstract function getParticipationType(): string;
-    public abstract function setParticipationType(string $participation_type): self;
-    public abstract function getAssId(): int;
-    public abstract function setAssId(int $ass_id): self;
-    public abstract function getDescription(): ?string;
-    public abstract function setDescription(?string $description): self;
-    public abstract function getClosingMessage(): ?string;
-    public abstract function setClosingMessage(?string $closing_message): self;
-    public abstract function getWritingStart(): ?DateTimeImmutable;
-    public abstract function setWritingStart(?DateTimeImmutable $writing_start): self;
-    public abstract function getWritingEnd(): ?DateTimeImmutable;
-    public abstract function setWritingEnd(?DateTimeImmutable $writing_end): self;
-    public abstract function getWritingLimitMinutes(): ?int;
-    public abstract function setWritingLimitMinutes(?int $writing_limit_minutes): self;
-    public abstract function getCorrectionStart(): ?DateTimeImmutable;
-    public abstract function setCorrectionStart(?DateTimeImmutable $correction_start): self;
-    public abstract function getCorrectionEnd(): ?DateTimeImmutable;
-    public abstract function setCorrectionEnd(?DateTimeImmutable $correction_end): self;
-    public abstract function getReviewStart(): ?DateTimeImmutable;
-    public abstract function setReviewStart(?DateTimeImmutable $review_start): self;
-    public abstract function getReviewEnd(): ?DateTimeImmutable;
-    public abstract function setReviewEnd(?DateTimeImmutable $review_end): self;
-    public abstract function getKeepAvailable(): int;
-    public abstract function setKeepAvailable(int $keep_available): self;
-    public abstract function getSolutionAvailableDate(): ?DateTimeImmutable;
-    public abstract function setSolutionAvailableDate(?DateTimeImmutable $solution_available_date): self;
-    public abstract function getResultAvailableType(): string;
-    public abstract function setResultAvailableType(string $result_available_type): self;
-    public abstract function getResultAvailableDate(): ?DateTimeImmutable;
-    public abstract function setResultAvailableDate(?DateTimeImmutable $result_available_date): self;
-    public abstract function getSolutionAvailable(): int;
-    public abstract function setSolutionAvailable(int $solution_available): self;
-    public abstract function getReviewEnabled(): int;
-    public abstract function setReviewEnabled(int $review_enabled): self;
-    public abstract function getReviewNotification(): int;
-    public abstract function setReviewNotification(int $review_notification): self;
-    public abstract function getReviewNotifText(): ?string;
-    public abstract function setReviewNotifText(?string $review_notif_text): self;
-    public abstract function getStatisticsAvailable(): int;
-    public abstract function setStatisticsAvailable(int $statistics_available): self;
+    abstract public function getAssId(): int;
+    abstract public function setAssId(int $ass_id): self;
+
+    /**
+     * Online switch of the assessment
+     * This controls the read access for persons who don't have maintenance permissions
+     */
+    abstract public function getOnline(): bool;
+    abstract public function setOnline(bool $online): self;
+
+    abstract public function getParticipationType(): string;
+    abstract public function setParticipationType(string $participation_type): self;
+
+    /**
+     * Organisational description that is shown on the starting page of participants
+     * Rich Text with HTML
+     */
+    abstract public function getDescription(): ?string;
+    abstract public function setDescription(?string $description): self;
+
+    abstract public function getClosingMessage(): ?string;
+    abstract public function setClosingMessage(?string $closing_message): self;
+
+    abstract public function getWritingStart(): ?DateTimeImmutable;
+    abstract public function setWritingStart(?DateTimeImmutable $writing_start): self;
+
+    abstract public function getWritingEnd(): ?DateTimeImmutable;
+    abstract public function setWritingEnd(?DateTimeImmutable $writing_end): self;
+
+    abstract public function getWritingLimitMinutes(): ?int;
+    abstract public function setWritingLimitMinutes(?int $writing_limit_minutes): self;
+
+    abstract public function getCorrectionStart(): ?DateTimeImmutable;
+    abstract public function setCorrectionStart(?DateTimeImmutable $correction_start): self;
+
+    abstract public function getCorrectionEnd(): ?DateTimeImmutable;
+    abstract public function setCorrectionEnd(?DateTimeImmutable $correction_end): self;
+
+    abstract public function getReviewStart(): ?DateTimeImmutable;
+    abstract public function setReviewStart(?DateTimeImmutable $review_start): self;
+
+    abstract public function getReviewEnd(): ?DateTimeImmutable;
+    abstract public function setReviewEnd(?DateTimeImmutable $review_end): self;
+
+    abstract public function getKeepAvailable(): int;
+    abstract public function setKeepAvailable(int $keep_available): self;
+
+    abstract public function getSolutionAvailableDate(): ?DateTimeImmutable;
+    abstract public function setSolutionAvailableDate(?DateTimeImmutable $solution_available_date): self;
+
+    abstract public function getResultAvailableType(): string;
+    abstract public function setResultAvailableType(string $result_available_type): self;
+
+    abstract public function getResultAvailableDate(): ?DateTimeImmutable;
+    abstract public function setResultAvailableDate(?DateTimeImmutable $result_available_date): self;
+
+    abstract public function getSolutionAvailable(): int;
+    abstract public function setSolutionAvailable(int $solution_available): self;
+
+    abstract public function getReviewEnabled(): int;
+    abstract public function setReviewEnabled(int $review_enabled): self;
+
+    abstract public function getReviewNotification(): int;
+    abstract public function setReviewNotification(int $review_notification): self;
+
+    abstract public function getReviewNotifText(): ?string;
+    abstract public function setReviewNotifText(?string $review_notif_text): self;
+
+    abstract public function getStatisticsAvailable(): int;
+    abstract public function setStatisticsAvailable(int $statistics_available): self;
 }

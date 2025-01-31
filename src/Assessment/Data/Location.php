@@ -6,10 +6,10 @@ namespace Edutiek\AssessmentService\Assessment\Data;
 
 abstract class Location implements AssessmentEntity
 {
-    public abstract function getId(): int;
-    public abstract function setId(int $id): self;
-    public abstract function getTitle(): string;
-    public abstract function setTitle(string $title): self;
-    public abstract function getAssId(): int;
-    public abstract function setAssId(int $ass_id): self;
+    abstract public function getId(): int;
+    abstract public function setId(int $id): self;
+    abstract public function getTitle(): string;
+    abstract public function setTitle(string $title): self;
+    abstract public function getAssId(): int;
+    abstract public function setAssId(int $ass_id): self;
 }
