@@ -28,77 +28,77 @@ interface ReadService
     public function canEditOrgaSettings() : bool;
 
     /**
-     * Check if the user can edit additional material
+     * Check if the current user can edit additional material
      */
     public function canEditTechnicalSettings() : bool;
 
     /**
-     * Check if the user can edit the content settings
+     * Check if the current user can edit the content settings
      */
     public function canEditContentSettings() : bool;
 
     /**
-     * Check if the user can edit the grades
+     * Check if the current user can edit the grades
      */
     public function canEditGrades() : bool;
 
     /**
-     * Check if the user can maintain the writers
+     * Check if the current user can maintain the writers
      */
     public function canMaintainWriters() : bool;
 
     /**
-     * Check if the user can maintain the writers
+     * Check if the current user can maintain the writers
      */
     public function canMaintainCorrectors() : bool;
 
     /**
-     * Check if the object can be exported
+     * Check if the current user can export the assessment object
      */
     public function canExportObject(): bool;
 
     /**
-     * Check if the user can write the essay
+     * Check if the current user can write the essay
      */
     public function canWrite() : bool;
 
     /**
-     *  Check if the user can view the solution
+     *  Check if the current user can view the solution
      */
     public function canViewSolution() : bool;
 
     /**
-     *  Check if a writer can view the statistics
+     *  Check if the current user can view the statistics
      */
     public function canViewWriterStatistics(): bool;
 
     /**
-     * Check if the user can view his assessment result
+     * Check if the current user can view his assessment result
      */
     public function canViewResult() : bool;
 
     /**
-     * Check if the user can review his/her own assessment (authorized or not)
+     * Check if the current user can review his/her own assessment (authorized or not)
      */
     public function canReviewWrittenAssessment() : bool;
 
     /**
-     * Check if the user can review the correction of his/her own assessment
+     * Check if the current user can review the correction of his/her own assessment
      */
     public function canReviewCorrectedAssessment() : bool;
 
     /**
-     * Check if the user can correct assessments
+     * Check if the current user can correct assessments
      */
     public function canCorrect() : bool;
 
     /**
-     * Check if the user can write a correction report
+     * Check if the current user can write a correction report
      */
     public function canWriteCorrectionReport() : bool;
 
     /**
-     * Check if the user can download a correction report
+     * Check if the current user can download a correction report
      */
     public function canDownloadCorrectionReports() : bool;
 }
