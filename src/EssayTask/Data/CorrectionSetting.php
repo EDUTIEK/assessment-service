@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\Data;
 
-abstract class CorrectorSetting implements EssayTaskEntity
+abstract class CorrectionSetting implements EssayTaskEntity
 {
     public abstract function getAssId(): int;
     public abstract function setAssId(int $ass_id): self;
