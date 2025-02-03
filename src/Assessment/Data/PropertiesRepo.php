@@ -7,5 +7,5 @@ namespace Edutiek\AssessmentService\Assessment\Data;
 interface PropertiesRepo
 {
     public function one(int $ass_id): ?Properties;
-    public function save(Properties $properties): void;
+    public function save(Properties $entity): void;
 }
