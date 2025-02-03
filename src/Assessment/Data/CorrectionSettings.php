@@ -6,7 +6,7 @@ namespace Edutiek\AssessmentService\Assessment\Data;
 
 use DateTimeImmutable;
 
-abstract class CorrectorSetting implements AssessmentEntity
+abstract class CorrectionSettings implements AssessmentEntity
 {
     abstract public function getAssId(): int;
     abstract public function setAssId(int $ass_id): self;

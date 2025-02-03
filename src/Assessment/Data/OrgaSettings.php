@@ -6,7 +6,7 @@ namespace Edutiek\AssessmentService\Assessment\Data;
 
 use DateTimeImmutable;
 
-abstract class Settings implements AssessmentEntity
+abstract class OrgaSettings implements AssessmentEntity
 {
     abstract public function getAssId(): int;
     abstract public function setAssId(int $ass_id): self;
