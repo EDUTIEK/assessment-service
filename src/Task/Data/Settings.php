@@ -6,12 +6,12 @@ namespace Edutiek\AssessmentService\Task\Data;
 
 abstract class Settings implements TaskEntity
 {
-    public abstract function getTaskId(): int;
-    public abstract function setTaskId(int $task_id): self;
-    public abstract function getAssId(): int;
-    public abstract function setAssId(int $ass_id): self;
-    public abstract function getInstructions(): ?string;
-    public abstract function setInstructions(?string $instructions): self;
-    public abstract function getSolution(): ?string;
-    public abstract function setSolution(?string $solution): self;
+    abstract public function getAssId(): int;
+    abstract public function setAssId(int $ass_id): self;
+    abstract public function getTaskId(): int;
+    abstract public function setTaskId(int $task_id): self;
+    abstract public function getInstructions(): ?string;
+    abstract public function setInstructions(?string $instructions): self;
+    abstract public function getSolution(): ?string;
+    abstract public function setSolution(?string $solution): self;
 }
