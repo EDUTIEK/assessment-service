@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\Data;
 
-abstract class WriteSetting implements EssayTaskEntity
+abstract class WriteSettings implements EssayTaskEntity
 {
     public abstract function getHeadlineScheme(): string;
     public abstract function setHeadlineScheme(string $headline_scheme): self;
