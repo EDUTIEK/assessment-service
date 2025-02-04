@@ -8,24 +8,24 @@ use DateTimeImmutable;
 
 abstract class Essay implements EssayTaskEntity
 {
-    public abstract function getId(): int;
-    public abstract function setId(int $id): self;
-    public abstract function getUuid(): string;
-    public abstract function setUuid(string $uuid): self;
-    public abstract function getWriterId(): int;
-    public abstract function setWriterId(int $writer_id): self;
-    public abstract function getWrittenText(): ?string;
-    public abstract function setWrittenText(?string $written_text): self;
-    public abstract function getRawTextHash(): string;
-    public abstract function setRawTextHash(string $raw_text_hash): self;
-    public abstract function getPdfVersion(): ?string;
-    public abstract function setPdfVersion(?string $pdf_version): self;
-    public abstract function getTaskId(): int;
-    public abstract function setTaskId(int $task_id): self;
-    public abstract function getLastChange(): ?DateTimeImmutable;
-    public abstract function setLastChange(?DateTimeImmutable $last_change): self;
-    public abstract function getServiceVersion(): int;
-    public abstract function setServiceVersion(int $service_version): self;
-    public abstract function getFirstChange(): ?DateTimeImmutable;
-    public abstract function setFirstChange(?DateTimeImmutable $first_change): self;
+    abstract public function getId(): int;
+    abstract public function setId(int $id): self;
+    abstract public function getTaskId(): int;
+    abstract public function setTaskId(int $task_id): self;
+    abstract public function getUuid(): string;
+    abstract public function setUuid(string $uuid): self;
+    abstract public function getWriterId(): int;
+    abstract public function setWriterId(int $writer_id): self;
+    abstract public function getWrittenText(): ?string;
+    abstract public function setWrittenText(?string $written_text): self;
+    abstract public function getRawTextHash(): string;
+    abstract public function setRawTextHash(string $raw_text_hash): self;
+    abstract public function getPdfVersion(): ?string;
+    abstract public function setPdfVersion(?string $pdf_version): self;
+    abstract public function getLastChange(): ?DateTimeImmutable;
+    abstract public function setLastChange(?DateTimeImmutable $last_change): self;
+    abstract public function getServiceVersion(): int;
+    abstract public function setServiceVersion(int $service_version): self;
+    abstract public function getFirstChange(): ?DateTimeImmutable;
+    abstract public function setFirstChange(?DateTimeImmutable $first_change): self;
 }

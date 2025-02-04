@@ -6,22 +6,22 @@ namespace Edutiek\AssessmentService\EssayTask\Data;
 
 abstract class CorrectionSettings implements EssayTaskEntity
 {
-    public abstract function getAssId(): int;
-    public abstract function setAssId(int $ass_id): self;
-    public abstract function getCriteriaMode(): string;
-    public abstract function setCriteriaMode(string $criteria_mode): self;
-    public abstract function getPositiveRating(): string;
-    public abstract function setPositiveRating(string $positive_rating): self;
-    public abstract function getNegativeRating(): string;
-    public abstract function setNegativeRating(string $negative_rating): self;
-    public abstract function getFixedInclusions(): int;
-    public abstract function setFixedInclusions(int $fixed_inclusions): self;
-    public abstract function getIncludeComments(): int;
-    public abstract function setIncludeComments(int $include_comments): self;
-    public abstract function getIncludeCommentRatings(): int;
-    public abstract function setIncludeCommentRatings(int $include_comment_ratings): self;
-    public abstract function getIncludeCommentPoints(): int;
-    public abstract function setIncludeCommentPoints(int $include_comment_points): self;
-    public abstract function getIncludeCriteriaPoints(): int;
-    public abstract function setIncludeCriteriaPoints(int $include_criteria_points): self;
+    abstract public function getAssId(): int;
+    abstract public function setAssId(int $ass_id): self;
+    abstract public function getCriteriaMode(): string;
+    abstract public function setCriteriaMode(string $criteria_mode): self;
+    abstract public function getPositiveRating(): string;
+    abstract public function setPositiveRating(string $positive_rating): self;
+    abstract public function getNegativeRating(): string;
+    abstract public function setNegativeRating(string $negative_rating): self;
+    abstract public function getFixedInclusions(): int;
+    abstract public function setFixedInclusions(int $fixed_inclusions): self;
+    abstract public function getIncludeComments(): int;
+    abstract public function setIncludeComments(int $include_comments): self;
+    abstract public function getIncludeCommentRatings(): int;
+    abstract public function setIncludeCommentRatings(int $include_comment_ratings): self;
+    abstract public function getIncludeCommentPoints(): int;
+    abstract public function setIncludeCommentPoints(int $include_comment_points): self;
+    abstract public function getIncludeCriteriaPoints(): int;
+    abstract public function setIncludeCriteriaPoints(int $include_criteria_points): self;
 }
