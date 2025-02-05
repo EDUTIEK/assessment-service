@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\Assessment\Api;
+namespace Edutiek\AssessmentService\EssayTask\Api;
 
+use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\System\Api\ForServices as SystemApi;
-use Edutiek\AssessmentService\Assessment\Data\Repositories;
 
 interface Dependencies
 {

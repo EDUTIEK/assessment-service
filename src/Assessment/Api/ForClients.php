@@ -35,7 +35,7 @@ class ForClients
             $this->ass_id,
             $this->context_id,
             $user_id,
-            $this->dependencies->objectRepo()
+            $this->dependencies->repositories()
         );
     }
 }
