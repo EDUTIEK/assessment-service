@@ -26,8 +26,6 @@
         "ext-xml": "*",
         "ext-xsl": "*",
         "ext-curl": "*",
-        "edutiek/long-essay-pdf-converter": "dev-main",
-        "edutiek/long-essay-image-sketch": "dev-main",
         "mustache/mustache": "^2.14",
         "slim/psr7": "^1.6",
         "slim/slim": "^4.14",
