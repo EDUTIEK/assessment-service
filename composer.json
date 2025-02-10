@@ -1,17 +1,37 @@
 {
     "name": "edutiek/assessment-service",
+    "description": "Backend service for long essay assessments",
     "type": "library",
     "license": "GPLv3",
     "version": "0.0.1",
     "autoload": {
-        "psr-4": {"Edutiek\\AssessmentService\\": "src/"},
-        "classmap": ["./src"]
+        "psr-4": {
+            "Edutiek\\LongEssayAssessmentService\\": "src"
+        }
     },
     "authors": [
+        {
+            "name": "Fred Neumann",
+            "email": "neumann@ilias.de"
+        },
         {
             "name": "Lukas Scharmer",
             "email": "lscharmer@databay.de"
         }
     ],
-    "require": {}
+    "require": {
+        "php": ">=8.2 <8.4",
+        "ext-json": "*",
+        "ext-dom": "*",
+        "ext-xml": "*",
+        "ext-xsl": "*",
+        "ext-curl": "*",
+        "edutiek/long-essay-pdf-converter": "dev-main",
+        "edutiek/long-essay-image-sketch": "dev-main",
+        "mustache/mustache": "^2.14",
+        "slim/psr7": "^1.6",
+        "slim/slim": "^4.14",
+        "tecnickcom/tcpdf": "^6.3",
+        "yetanotherape/diff-match-patch": "^1.1"
+    }
 }
