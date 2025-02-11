@@ -8,6 +8,9 @@ use Edutiek\AssessmentService\System\Config\ReadService as ConfigReadService;
 use Edutiek\AssessmentService\System\Config\Service as ConfigService;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\File\Delivery;
+use Edutiek\AssessmentService\System\Format\FullService as FormatFullService;
+use Edutiek\AssessmentService\System\Format\Service as FormatService;
+use Edutiek\AssessmentService\System\ImageSketch\ImageMagick\Sketch;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\System\User\Service as UserService;
 use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverterFullService;
@@ -44,6 +47,14 @@ class ForServices
         return $this->dependencies->fileDelivery();
     }
 
+    public function format(?string $language = null, ?string $timezone = null): FormatFullService
+    {
+        $language ??= $this->config()->getSetup()->getDefaultLanguage();
+        $timezone ??= $this->config()->getSetup()->getDefaultTimezone();
+
+        return $this->instances[$language][$timezone->getName()] ??= new FormatService($language, $timezone);
+    }
+
     public function user(): UserReadService
     {
         return $this->instances[UserReadService::class] ??= new UserService(
@@ -52,6 +63,13 @@ class ForServices
         );
     }
 
+    public function imageSketch(): ImageSketchFullService
+    {
+        return $this->instances[ImageSketchFullService::class] ??= new Sketch([
+                // Default font of Sketch is not available on Windows - keep default font of Imagick
+                'font' => ['name' => null, 'size' => 50]]
+        );
+    }
     public function pdfConverter(): PdfConverterFullService
     {
         return $this->instances[PdfConverterFullService::class] ??= ($this->config()->getPathToGhostscript() === null ?
@@ -71,8 +89,5 @@ class ForServices
         );
     }
 
-    public function imageSketch(): ImageSketchFullService
-    {
-        // TODO: create service implementation
-    }
+
 }

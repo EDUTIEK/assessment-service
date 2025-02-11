@@ -23,4 +23,16 @@ class Factory
             $this->dependencies
         );
     }
+
+    /**
+     * Get the API for peer services
+     * @param int $task_id  id of the task
+     */
+    public function forService(int $task_id): ForServices
+    {
+        return $this->instances[ForServices::class][$task_id] ??= new ForServices(
+            $task_id,
+            $this->dependencies
+        );
+    }
 }
