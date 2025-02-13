@@ -6,21 +6,15 @@ namespace Edutiek\AssessmentService\System\Data;
 
 class ImageDescriptor
 {
-    /** @var resource */
-    private $stream;
-    private int $width;
-    private int $height;
-    private string $type;
-
     /**
      * @param resource $stream
      */
-    public function __construct($stream, int $width, int $height, string $type)
+    public function __construct(
+        private $stream,
+        private readonly int $width,
+        private readonly int $height,
+        private readonly string $type)
     {
-        $this->stream = $stream;
-        $this->width = $width;
-        $this->height = $height;
-        $this->type = $type;
     }
 
     /**
