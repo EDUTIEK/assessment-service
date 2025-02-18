@@ -19,12 +19,15 @@ class ForRest
     {
     }
 
-    public function authentication(int $ass_id, int $context_id, int $user_id): AuthenticationFullService
+
+    /**
+     * Internal authentication service for REST handlers
+     */
+    private function authentication(int $ass_id, int $context_id): AuthenticationFullService
     {
-        return $this->instances[AuthenticationService::class][$ass_id][$context_id][$user_id] ??= new AuthenticationService(
+        return $this->instances[AuthenticationService::class][$ass_id][$context_id] ??= new AuthenticationService(
             $ass_id,
             $context_id,
-            $user_id,
             $this->dependencies->repositories()
         );
     }

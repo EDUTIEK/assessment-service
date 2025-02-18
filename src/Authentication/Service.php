@@ -5,38 +5,33 @@ namespace Edutiek\AssessmentService\Assessment\Authentication;
 use DateTimeImmutable;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\Token;
+use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 
 readonly class Service implements FullService
 {
     public function __construct(
         private int $ass_id,
         private int $context_id,
-        private int $user_id,
-        private Repositories $repos,
+        private Repositories $repos
     ) {
     }
 
-    /**
-     * Get a new expire time for a token
-     */
-    public function getTokenExpireTime(Purpose $purpose): ?DateTimeImmutable
+    public function newValitity(TokenPurpose $purpose): ?DateTimeImmutable
     {
         switch ($purpose) {
-            case Purpose::PURPOSE_FILE:
-            case Purpose::PURPOSE_DATA:
-                return null;                   // todo: temporary solution until re-authentication is possible
+            case TokenPurpose::FILE:
+            case TokenPurpose::DATA:
+                return null;                   // todo: temporary solution for both until re-authentication is possible
         }
 
         return null;
     }
 
-    /**
-     * Generate a new token
-     */
-    public function generateApiToken(Purpose $purpose): Token
+    public function newToken(int $user_id, TokenPurpose $purpose): Token
     {
         // generate a random uuid like string for the token
-        $value = sprintf('%04x%04x%04x%04x%04x%04x%04x%04x',
+        $value = sprintf(
+            '%04x%04x%04x%04x%04x%04x%04x%04x',
             mt_rand(0, 65535),
             mt_rand(0, 65535),
             mt_rand(0, 65535),
@@ -44,36 +39,39 @@ readonly class Service implements FullService
             mt_rand(32768, 49151),
             mt_rand(0, 65535),
             mt_rand(0, 65535),
-            mt_rand(0, 65535));
+            mt_rand(0, 65535)
+        );
 
         return $this->repos->token()->new()
             ->setAssId($this->ass_id)
-            ->setUserId($this->user_id)
+            ->setUserId($user_id)
             ->setToken($value)
             ->setIp($_SERVER['REMOTE_ADDR'])
-            ->setValidUntil($this->getTokenExpireTime($purpose));
+            ->setPurpose($purpose)
+            ->setValidUntil($this->newValitity($purpose));
     }
 
-    /**
-     * Check a request signature
-     */
-    public function checkSignature(Token $token, string $signature) : bool
+    public function getToken(int $user_id, TokenPurpose $purpose): ?Token
     {
-        return (md5($this->user_id . $this->context_id . $token->getToken()) == $signature);
+        return $this->repos->token()->oneByIdsAndPurpose($user_id, $this->ass_id, $purpose);
     }
 
-    /**
-     * Check if the client ip address is allowed for a token
-     */
-    public function checkRemoteAddress(Token $token) : bool
+    public function saveToken(Token $token): void
     {
-        return ($token->getIp() == $_SERVER['REMOTE_ADDR']);
+        $this->repos->token()->deleteByIdsAndPurpose($token->getUserId(), $token->getAssId(), $token->getPurpose());
     }
 
-    /**
-     * Check if a token is still valid
-     */
-    public function checkTokenValid(Token $token) : bool
+    public function checkSignature(Token $token, $signature): bool
+    {
+        return md5(($token->getUserId() . $this->context_id . $token->getToken()) == $signature);
+    }
+
+    public function checkRemoteAddress(Token $token): bool
+    {
+        return $token->getIp() == $_SERVER['REMOTE_ADDR'];
+    }
+
+    public function checkValidity(Token $token): bool
     {
         return $token->getValidUntil() === null || $token->getValidUntil()->getTimestamp() > time();
     }

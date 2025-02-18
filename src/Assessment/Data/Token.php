@@ -18,8 +18,8 @@ abstract class Token implements AssessmentEntity
     abstract public function setToken(string $token): self;
     abstract public function getIp(): string;
     abstract public function setIp(string $ip): self;
-    abstract public function getPurpose(): string;
-    abstract public function setPurpose(string $purpose): self;
+    abstract public function getPurpose(): TokenPurpose;
+    abstract public function setPurpose(TokenPurpose $purpose): self;
     abstract public function getValidUntil(): ?DateTimeImmutable;
     abstract public function setValidUntil(?DateTimeImmutable $valid_until): self;
 }
