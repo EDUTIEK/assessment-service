@@ -4,31 +4,29 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Api;
 
-
 use Edutiek\AssessmentService\Assessment\Authentication\FullService as AuthenticationFullService;
 use Edutiek\AssessmentService\Assessment\Authentication\Service as AuthenticationService;
-
+use Edutiek\AssessmentService\Assessment\RestHandler\FullService as RestFullService;
+use Edutiek\AssessmentService\Assessment\RestHandler\Service as RestService;
 
 class ForRest
 {
     private array $instances = [];
 
     public function __construct(
-        private readonly Dependencies $dependencies
-    )
-    {
+        private readonly Dependencies $dependencies,
+        private readonly Internal $internal
+    ) {
     }
 
-
     /**
-     * Internal authentication service for REST handlers
+     * Common handler for all REST calls
      */
-    private function authentication(int $ass_id, int $context_id): AuthenticationFullService
+    public function service(): RestFullService
     {
-        return $this->instances[AuthenticationService::class][$ass_id][$context_id] ??= new AuthenticationService(
-            $ass_id,
-            $context_id,
-            $this->dependencies->repositories()
+        return $this->instances[RestService::class] ??= new RestService(
+            $this->dependencies->restContext(),
+            $this->internal
         );
     }
 }

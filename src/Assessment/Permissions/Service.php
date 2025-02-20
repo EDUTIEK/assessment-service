@@ -15,7 +15,7 @@ class Service implements ReadService
         private readonly int $ass_id,
         private readonly int $context_id,
         private readonly int $user_id,
-        private readonly Repositories $repos,
+        private readonly Repositories $repos
     ) {
         $this->permissions = $this->repos->permissions()->one($this->ass_id, $this->context_id, $this->user_id);
     }
@@ -113,5 +113,15 @@ class Service implements ReadService
     public function canDownloadCorrectionReports(): bool
     {
         // TODO: Implement canDownloadCorrectionReports() method.
+    }
+
+    public function canDoRestCall(): bool
+    {
+        return $this->permissions->getRead() && $this->isOnline() || $this->canEditContentSettings();
+    }
+
+    private function isOnline(): bool
+    {
+        return (bool) $this->repos->orgaSettings()->one($this->ass_id)?->getOnline();
     }
 }

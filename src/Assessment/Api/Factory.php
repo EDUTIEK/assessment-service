@@ -12,24 +12,42 @@ class Factory
 {
     private array $instances = [];
 
-    public function __construct(private readonly Dependencies $dependencies) {}
+    public function __construct(private readonly Dependencies $dependencies)
+    {
+    }
 
     /**
      * Get the API for client systems
      * @param int $ass_id  id of the assessment object
      * @param int $context_id  id of the permission context in which the object is used
      */
-    public function forClients(int $ass_id, int $context_id) : ForClients
+    public function forClients(int $ass_id, int $context_id): ForClients
     {
         return $this->instances[ForClients::class][$ass_id][$context_id] ??= new ForClients(
-            $ass_id, $context_id, $this->dependencies);
+            $ass_id,
+            $context_id,
+            $this->dependencies
+        );
     }
 
     /**
      * Get the API for REST calls
      */
-    public function forRest() : ForRest
+    public function forRest(): ForRest
     {
-        return $this->instances[ForRest::class] ??= new ForRest($this->dependencies);
+        return $this->instances[ForRest::class] ??= new ForRest(
+            $this->dependencies,
+            $this->internal()
+        );
+    }
+
+    /**
+     * Get the factory for internal services
+     */
+    private function internal(): Internal
+    {
+        return $this->instances[Internal::class] ??= new Internal(
+            $this->dependencies
+        );
     }
 }
