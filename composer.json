@@ -6,7 +6,7 @@
     "version": "0.0.1",
     "autoload": {
         "psr-4": {
-            "Edutiek\\LongEssayAssessmentService\\": "src"
+            "Edutiek\\AssessmentService\\": "src"
         }
     },
     "authors": [
