@@ -1,6 +1,8 @@
 <?php
 
-namespace Edutiek\AssessmentService\Assessment\RestHandler;
+declare(strict_types=1);
+
+namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Exception;
 

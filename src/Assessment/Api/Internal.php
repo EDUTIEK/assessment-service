@@ -1,14 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Edutiek\AssessmentService\Assessment\Api;
 
-use Edutiek\AssessmentService\Assessment\Authentication\FullService as AuthenticationFullService;
+use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
+use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
 use Edutiek\AssessmentService\Assessment\Authentication\Service as AuthenticationService;
-use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
+use Edutiek\AssessmentService\Assessment\CorrectorApp\Service as CorrectorAppService;
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
-use Edutiek\AssessmentService\Assessment\RestHandler\RestHelper;
-use Edutiek\AssessmentService\Assessment\RestHandler\Writer;
-use Edutiek\AssessmentService\Assessment\RestHandler\Corrector;
+use Edutiek\AssessmentService\Assessment\WriterApp\Service as WriterAppService;
 use Slim\App;
 use Slim\Factory\AppFactory;
 
@@ -25,7 +26,7 @@ class Internal
      * Internal authentication service for REST handlers
      * (no caching needed, created once per request)
      */
-    public function authentication(int $ass_id, int $context_id): AuthenticationFullService
+    public function authentication(int $ass_id, int $context_id): AuthenticationService
     {
         return new AuthenticationService(
             $ass_id,
@@ -38,7 +39,7 @@ class Internal
      * Service for querying permissions
      * (no caching needed, created once per request)
      */
-    public function permissions(int $ass_id, int $context_id, int $user_id): PermissionsReadService
+    public function permissions(int $ass_id, int $context_id, int $user_id): PermissionsService
     {
         return new PermissionsService(
             $ass_id,
@@ -52,14 +53,15 @@ class Internal
      * REST handler for writer web app
      * (no caching needed, created once per request)
      */
-    public function writer(int $ass_id, int $context_id, int $user_id): Writer
+    public function writer(int $ass_id, int $context_id, int $user_id): WriterAppService
     {
-        return new Writer(
+        return new WriterAppService(
             $ass_id,
             $context_id,
             $user_id,
-            $this->slimApp(),
+            $this->openHelper($ass_id, $context_id, $user_id),
             $this->restHelper($ass_id, $context_id, $user_id),
+            $this->slimApp(),
             $this->dependencies->repositories()
         );
     }
@@ -68,15 +70,32 @@ class Internal
      * REST handler for corrector web app
      * (no caching needed, created once per request)
      */
-    public function corrector(int $ass_id, int $context_id, int $user_id): Corrector
+    public function corrector(int $ass_id, int $context_id, int $user_id): CorrectorAppService
     {
-        return new Corrector(
+        return new CorrectorAppService(
             $ass_id,
             $context_id,
             $user_id,
-            $this->slimApp(),
+            $this->openHelper($ass_id, $context_id, $user_id),
             $this->restHelper($ass_id, $context_id, $user_id),
+            $this->slimApp(),
             $this->dependencies->repositories()
+        );
+    }
+
+    /**
+     * Helper functions to open the WebApps
+     * (no caching needed, created once per request)
+     */
+    public function openHelper(int $ass_id, int $context_id, int $user_id): OpenHelper
+    {
+        return new openHelper(
+            $ass_id,
+            $context_id,
+            $user_id,
+            $this->authentication($ass_id, $context_id),
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->config()
         );
     }
 
@@ -92,7 +111,10 @@ class Internal
             $user_id,
             $this->authentication($ass_id, $context_id),
             $this->permissions($ass_id, $context_id, $user_id),
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->config(),
+            $this->dependencies->systemApi()->user(),
+            $this->dependencies->systemApi()->fileDelivery()
         );
     }
 

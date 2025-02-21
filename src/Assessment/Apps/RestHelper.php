@@ -1,12 +1,17 @@
 <?php
 
-namespace Edutiek\AssessmentService\Assessment\RestHandler;
+declare(strict_types=1);
+
+namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Authentication\FullService as Authentication;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as Permissions;
 use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use Edutiek\AssessmentService\System\Config\ReadService as ConfigReadService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
+use Edutiek\AssessmentService\System\File\Delivery as FileDelivery;
+use Edutiek\AssessmentService\System\File\Disposition;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 
@@ -19,7 +24,9 @@ readonly class RestHelper
         private Authentication $auth,
         private Permissions $permissions,
         private Repositories $repos,
+        private ConfigReadService $config_service,
         private UserReadService $user_service,
+        private FileDelivery $file_delivery
     ) {
     }
 
@@ -45,6 +52,10 @@ readonly class RestHelper
      */
     public function checkAccess()
     {
+        if ($this->config_service->getConfig()->getSimulateOffline()) {
+            throw new RestException(RestException::SERVICE_UNAVAILABLE, 'offline mode');
+        }
+
         if ($this->user_service->getUser($this->user_id) === null) {
             throw new RestException(RestException::NOT_FOUND, 'user not found');
         }
@@ -77,7 +88,7 @@ readonly class RestHelper
     /**
      * Set a new expiration time for the data token and set it in the response
      */
-    protected function refreshDataToken(Response $response)
+    public function refreshDataToken(Response $response)
     {
         $token = $this->auth->getToken($this->user_id, TokenPurpose::DATA);
         $token->setValidUntil($this->auth->newValitity(TokenPurpose::DATA));
@@ -88,7 +99,7 @@ readonly class RestHelper
     /**
      * Generate a new data token and set it in the response
      */
-    protected function setNewDataToken(Response $response)
+    public function setNewDataToken(Response $response)
     {
         $token = $this->auth->getToken($this->user_id, TokenPurpose::DATA);
         $token->setValidUntil($this->auth->newValitity(TokenPurpose::DATA));
@@ -99,7 +110,7 @@ readonly class RestHelper
     /**
      * Generate a new file token and set it in the response
      */
-    protected function setNewFileToken(Response $response)
+    public function setNewFileToken(Response $response)
     {
         $token = $this->auth->getToken($this->user_id, TokenPurpose::FILE);
         $token->setValidUntil($this->auth->newValitity(TokenPurpose::FILE));
@@ -111,7 +122,7 @@ readonly class RestHelper
      * Modify the response with a status code and json return
      * @param string|array $json
      */
-    protected function setResponse(Response $response, int $status, $json = []): Response
+    public function setResponse(Response $response, int $status, $json = []): Response
     {
         $response = $response
             ->withHeader('Content-Type', 'application/json')
@@ -119,5 +130,13 @@ readonly class RestHelper
             ->withStatus($status);
         $response->getBody()->write(json_encode($json));
         return $response;
+    }
+
+    /**
+     * Send a resource file as inline
+     */
+    public function sendFile(int $file_id): Response
+    {
+        $this->file_delivery->sendFile($file_id, Disposition::INLINE);
     }
 }

@@ -1,6 +1,8 @@
 <?php
 
-namespace Edutiek\AssessmentService\Assessment\RestHandler;
+declare(strict_types=1);
+
+namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -28,10 +30,10 @@ interface RestContext
     /**
      * Extend a user session in the client system
      */
-    public function setAlive(int $user_id);
+    public function setAlive(int $user_id): void;
 
     /**
      * Send a response to the front end application
      */
-    public function sendResponse(int $status_code, string $body);
+    public function sendResponse(int $status_code, string $body): never;
 }
