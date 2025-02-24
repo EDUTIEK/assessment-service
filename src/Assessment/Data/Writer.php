@@ -32,6 +32,8 @@ abstract class Writer implements AssessmentEntity
     abstract public function setWritingAuthorized(?DateTimeImmutable $writing_authorized): self;
     abstract public function getWritingAuthorizedBy(): ?int;
     abstract public function setWritingAuthorizedBy(?int $writing_authorized_by): self;
+    abstract public function getCorrectionFinalized(): ?DateTimeImmutable;
+    abstract public function setCorrectionFinalized(?DateTimeImmutable $correction_finalized): self;
     abstract public function getCorrectionFinalizedBy(): ?int;
     abstract public function setCorrectionFinalizedBy(?int $correction_finalized_by): self;
     abstract public function getWritingExcluded(): ?DateTimeImmutable;

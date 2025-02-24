@@ -14,18 +14,18 @@ abstract class CorrectionSettings implements AssessmentEntity
     abstract public function setRequiredCorrectors(int $required_correctors): self;
     abstract public function getMaxAutoDistance(): float;
     abstract public function setMaxAutoDistance(float $max_auto_distance): self;
-    abstract public function getMutualVisibility(): int;
-    abstract public function setMutualVisibility(int $mutual_visibility): self;
+    abstract public function getMutualVisibility(): bool;
+    abstract public function setMutualVisibility(bool $mutual_visibility): self;
     abstract public function getAssignMode(): string;
     abstract public function setAssignMode(string $assign_mode): self;
-    abstract public function getStitchWhenDistance(): int;
-    abstract public function setStitchWhenDistance(int $stitch_when_distance): self;
-    abstract public function getStitchWhenDecimals(): int;
-    abstract public function setStitchWhenDecimals(int $stitch_when_decimals): self;
-    abstract public function getAnonymizeCorrectors(): int;
-    abstract public function setAnonymizeCorrectors(int $anonymize_correctors): self;
-    abstract public function getReportsEnabled(): int;
-    abstract public function setReportsEnabled(int $reports_enabled): self;
+    abstract public function getStitchWhenDistance(): bool;
+    abstract public function setStitchWhenDistance(bool $stitch_when_distance): self;
+    abstract public function getStitchWhenDecimals(): bool;
+    abstract public function setStitchWhenDecimals(bool $stitch_when_decimals): self;
+    abstract public function getAnonymizeCorrectors(): bool;
+    abstract public function setAnonymizeCorrectors(bool $anonymize_correctors): self;
+    abstract public function getReportsEnabled(): bool;
+    abstract public function setReportsEnabled(bool $reports_enabled): self;
     abstract public function getReportsAvailableStart(): ?DateTimeImmutable;
     abstract public function setReportsAvailableStart(?DateTimeImmutable $reports_available_start): self;
 }

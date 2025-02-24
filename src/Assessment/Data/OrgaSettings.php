@@ -18,8 +18,8 @@ abstract class OrgaSettings implements AssessmentEntity
     abstract public function getOnline(): bool;
     abstract public function setOnline(bool $online): self;
 
-    abstract public function getParticipationType(): string;
-    abstract public function setParticipationType(string $participation_type): self;
+    abstract public function getParticipationType(): ParticipationType;
+    abstract public function setParticipationType(ParticipationType $participation_type): self;
 
     /**
      * Organisational description that is shown on the starting page of participants
@@ -52,8 +52,8 @@ abstract class OrgaSettings implements AssessmentEntity
     abstract public function getReviewEnd(): ?DateTimeImmutable;
     abstract public function setReviewEnd(?DateTimeImmutable $review_end): self;
 
-    abstract public function getKeepAvailable(): int;
-    abstract public function setKeepAvailable(int $keep_available): self;
+    abstract public function getKeepAvailable(): bool;
+    abstract public function setKeepAvailable(bool $keep_available): self;
 
     abstract public function getSolutionAvailableDate(): ?DateTimeImmutable;
     abstract public function setSolutionAvailableDate(?DateTimeImmutable $solution_available_date): self;
@@ -64,18 +64,18 @@ abstract class OrgaSettings implements AssessmentEntity
     abstract public function getResultAvailableDate(): ?DateTimeImmutable;
     abstract public function setResultAvailableDate(?DateTimeImmutable $result_available_date): self;
 
-    abstract public function getSolutionAvailable(): int;
-    abstract public function setSolutionAvailable(int $solution_available): self;
+    abstract public function getSolutionAvailable(): bool;
+    abstract public function setSolutionAvailable(bool $solution_available): self;
 
-    abstract public function getReviewEnabled(): int;
-    abstract public function setReviewEnabled(int $review_enabled): self;
+    abstract public function getReviewEnabled(): bool;
+    abstract public function setReviewEnabled(bool $review_enabled): self;
 
-    abstract public function getReviewNotification(): int;
-    abstract public function setReviewNotification(int $review_notification): self;
+    abstract public function getReviewNotification(): bool;
+    abstract public function setReviewNotification(bool $review_notification): self;
 
     abstract public function getReviewNotifText(): ?string;
     abstract public function setReviewNotifText(?string $review_notif_text): self;
 
-    abstract public function getStatisticsAvailable(): int;
-    abstract public function setStatisticsAvailable(int $statistics_available): self;
+    abstract public function getStatisticsAvailable(): bool;
+    abstract public function setStatisticsAvailable(bool $statistics_available): self;
 }

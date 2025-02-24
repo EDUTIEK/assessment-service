@@ -4,12 +4,20 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Permissions;
 
+use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
+use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
+use Edutiek\AssessmentService\Assessment\Data\ParticipationType;
 use Edutiek\AssessmentService\Assessment\Data\Permissions;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Data\ResultAvailableType;
+use Edutiek\AssessmentService\Assessment\Data\WorkingTime;
+use Edutiek\AssessmentService\Assessment\Data\Writer;
 
 class Service implements ReadService
 {
     private Permissions $permissions;
+    private ?OrgaSettings $orga_settings;
+    private ?CorrectionSettings $correction_settings;
 
     public function __construct(
         private readonly int $ass_id,
@@ -18,101 +26,195 @@ class Service implements ReadService
         private readonly Repositories $repos
     ) {
         $this->permissions = $this->repos->permissions()->one($this->ass_id, $this->context_id, $this->user_id);
+        $this->orga_settings = $this->repos->orgaSettings()->one(($this->ass_id)) ?? $this->repos->orgaSettings()->new();
+        $this->correction_settings = $this->repos->correctionSettings()->one($this->ass_id) ?? $this->repos->correctionSettings()->new();
     }
 
     public function canViewInfoScreen(): bool
     {
-        // TODO: Implement canViewInfoScreen() method.
+        return $this->permissions->getMaintainSettings();
     }
 
     public function canViewWriterScreen(): bool
     {
-        // TODO: Implement canViewWriterScreen() method.
+        return $this->permissions->getRead() &&
+            $this->isOnline() &&
+            ($this->orga_settings->getParticipationType() === ParticipationType::INSTANT || $this->isWriter());
     }
 
     public function canViewCorrectorScreen(): bool
     {
-        // TODO: Implement canViewCorrectorScreen() method.
+        return $this->permissions->getRead() &&
+            $this->isOnline() &&
+            $this->isCorrector();
     }
 
     public function canEditOrgaSettings(): bool
     {
-        // TODO: Implement canEditOrgaSettings() method.
+        return $this->permissions->getMaintainSettings();
     }
 
     public function canEditTechnicalSettings(): bool
     {
-        // TODO: Implement canEditTechnicalSettings() method.
+        return $this->permissions->getMaintainSettings();
     }
 
     public function canEditContentSettings(): bool
     {
-        // TODO: Implement canEditContentSettings() method.
+        return $this->permissions->getMaintainContent();
     }
 
     public function canEditGrades(): bool
     {
-        // TODO: Implement canEditGrades() method.
+        return $this->permissions->getMaintainContent();
     }
 
     public function canMaintainWriters(): bool
     {
-        // TODO: Implement canMaintainWriters() method.
+        return $this->permissions->getMaintainWriting();
     }
 
     public function canMaintainCorrectors(): bool
     {
-        // TODO: Implement canMaintainCorrectors() method.
+        return $this->permissions->getMaintainCorrection();
     }
 
     public function canExportObject(): bool
     {
-        // TODO: Implement canExportObject() method.
+        return $this->canEditOrgaSettings() && $this->canEditContentSettings() && $this->canEditTechnicalSettings();
+
     }
 
     public function canWrite(): bool
     {
-        // TODO: Implement canWrite() method.
+        if (!$this->canViewWriterScreen()) {
+            return false;
+        }
+
+        $writer = $this->getWriter();
+        if ($writer === null || $writer->getWritingAuthorized() !== null || $writer->getWritingExcluded() !== null) {
+            return false;
+        }
+
+        $working_time = new WorkingTime($this->orga_settings, $writer);
+        return $working_time->isNowInAllowedTime();
     }
 
     public function canViewSolution(): bool
     {
-        // TODO: Implement canViewSolution() method.
+        if (!$this->canViewWriterScreen() || !$this->orga_settings->getSolutionAvailable()) {
+            return false;
+        }
+
+        return $this->orga_settings->getSolutionAvailableDate() === null ||
+            $this->orga_settings->getSolutionAvailableDate()->getTimestamp() >= time();
     }
 
     public function canViewWriterStatistics(): bool
     {
-        // TODO: Implement canViewWriterStatistics() method.
+        return $this->canViewResult() && $this->orga_settings->getStatisticsAvailable();
     }
 
     public function canViewResult(): bool
     {
-        // TODO: Implement canViewResult() method.
+        if (!$this->canViewWriterScreen() || $this->getWriter()?->getCorrectionFinalizedBy() === null) {
+            return false;
+        }
+
+        switch ($this->orga_settings->getResultAvailableType()) {
+            case ResultAvailableType::FINALISED:
+                return true;
+            case ResultAvailableType::REVIEW:
+                return $this->canReviewCorrectedAssessment();
+            case ResultAvailableType::DATE:
+                return $this->orga_settings->getResultAvailableDate() === null ||
+                    $this->orga_settings->getResultAvailableDate()->getTimestamp() >= time();
+        }
+        return false;
+
     }
 
     public function canReviewWrittenAssessment(): bool
     {
-        // TODO: Implement canReviewWrittenAssessment() method.
+        if (!$this->canViewWriterScreen()) {
+            return false;
+        }
+
+        if ($this->canWrite()) {
+            // no review if writing is (still) possible
+            return false;
+        }
+
+        if (!$this->orga_settings->getKeepAvailable()) {
+            return false;
+        }
+
+        return $this->getWriter()?->getWorkingStart() !== null;
     }
 
     public function canReviewCorrectedAssessment(): bool
     {
-        // TODO: Implement canReviewCorrectedAssessment() method.
+        if (!$this->canViewWriterScreen() || !$this->orga_settings->getReviewEnabled()) {
+            return false;
+        }
+
+        if ($this->orga_settings->getReviewStart() !== null &&
+            $this->orga_settings->getReviewStart()->getTimestamp() < time()) {
+            return false;
+        }
+        if ($this->orga_settings->getReviewEnd() !== null &&
+            $this->orga_settings->getReviewStart()->getTimestamp() > time()) {
+            return false;
+        }
+
+        return $this->getWriter()?->getCorrectionFinalizedBy() !== null;
     }
 
     public function canCorrect(): bool
     {
-        // TODO: Implement canCorrect() method.
+        if (!$this->canViewCorrectorScreen()) {
+            return false;
+        }
+
+        if ($this->orga_settings->getCorrectionStart() !== null &&
+            $this->orga_settings->getCorrectionStart()->getTimestamp() < time()) {
+            return false;
+        }
+        if ($this->orga_settings->getCorrectionEnd() !== null &&
+            $this->orga_settings->getCorrectionEnd()->getTimestamp() > time()) {
+            return false;
+        }
+
+        return true;
+
     }
 
     public function canWriteCorrectionReport(): bool
     {
-        // TODO: Implement canWriteCorrectionReport() method.
+        if (!$this->canViewCorrectorScreen() || !$this->correction_settings->getReportsEnabled()) {
+            return false;
+        }
+
+        if ($this->orga_settings->getCorrectionStart() !== null &&
+            $this->orga_settings->getCorrectionStart()->getTimestamp() < time()) {
+            return false;
+        }
+        if ($this->orga_settings->getCorrectionEnd() !== null &&
+            $this->orga_settings->getCorrectionEnd()->getTimestamp() > time()) {
+            return false;
+        }
+
+        return true;
+
     }
 
     public function canDownloadCorrectionReports(): bool
     {
-        // TODO: Implement canDownloadCorrectionReports() method.
+        if (!$this->canViewWriterScreen() || !$this->correction_settings->getReportsEnabled()) {
+            return false;
+        }
+
+        return $this->correction_settings->getReportsAvailableStart()?->getTimestamp() >= time();
     }
 
     public function canDoRestCall(): bool
@@ -123,5 +225,20 @@ class Service implements ReadService
     private function isOnline(): bool
     {
         return (bool) $this->repos->orgaSettings()->one($this->ass_id)?->getOnline();
+    }
+
+    private function isWriter(): bool
+    {
+        return $this->getWriter() !== null;
+    }
+
+    private function isCorrector(): bool
+    {
+        return $this->repos->corrector()->oneByUserIdAndAssId($this->user_id, $this->ass_id) !== null;
+    }
+
+    private function getWriter(): ?Writer
+    {
+        return $this->repos->writer()->oneByUserIdAndAssId($this->user_id, $this->ass_id);
     }
 }
