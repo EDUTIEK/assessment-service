@@ -14,7 +14,7 @@ use Edutiek\AssessmentService\System\ImageSketch\FullService as ImageSketchServi
 use Edutiek\AssessmentService\System\ImageSketch\Point;
 use Edutiek\AssessmentService\System\ImageSketch\Shape;
 
-class Service implements FullService
+class Service
 {
     private const BACKGROUND_NORMAL = '#D8E5F4';
     private const BACKGROUND_EXCELLENT = '#E3EFDD';

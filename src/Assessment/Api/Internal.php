@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\Assessment\Authentication\Service as Authenticatio
 use Edutiek\AssessmentService\Assessment\CorrectorApp\Service as CorrectorAppService;
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
 use Edutiek\AssessmentService\Assessment\WriterApp\Service as WriterAppService;
+use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Slim\App;
 use Slim\Factory\AppFactory;
 
@@ -81,6 +82,16 @@ class Internal
             $this->slimApp(),
             $this->dependencies->repositories()
         );
+    }
+
+    /**
+     * Translation of language variables
+     */
+    public function language(string $code) : LanguageService
+    {
+        return $this->instances[LanguageService::class][$code] = $this->dependencies->systemApi()->language()
+            ->addLanguage('de', require(__DIR__ . '/../Languages/de.php'))
+            ->setLanguage($code);
     }
 
     /**

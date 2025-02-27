@@ -11,6 +11,8 @@ use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\Format\FullService as FormatFullService;
 use Edutiek\AssessmentService\System\Format\Service as FormatService;
 use Edutiek\AssessmentService\System\ImageSketch\ImageMagick\Sketch;
+use Edutiek\AssessmentService\System\Language\FullService as LanguageFullService;
+use Edutiek\AssessmentService\System\Language\Service as LanguageService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\System\User\Service as UserService;
 use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverterFullService;
@@ -70,6 +72,12 @@ class ForServices
                 'font' => ['name' => null, 'size' => 50]]
         );
     }
+
+    public function language(): LanguageFullService
+    {
+        return (new LanguageService())->setDefaultLanguage($this->config()->getSetup()->getDefaultLanguage());
+    }
+
     public function pdfConverter(): PdfConverterFullService
     {
         return $this->instances[PdfConverterFullService::class] ??= ($this->config()->getPathToGhostscript() === null ?

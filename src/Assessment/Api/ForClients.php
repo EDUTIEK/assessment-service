@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Api;
 
-use Edutiek\AssessmentService\Assessment\Data\Corrector;
+use Edutiek\AssessmentService\Assessment\CorrectorApp\OpenService as CorrectorAppOpenService;
+use Edutiek\AssessmentService\Assessment\Lifecycle\FullService as LifecycleFullService;
+use Edutiek\AssessmentService\Assessment\Lifecycle\Service as LifecycleService;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
 use Edutiek\AssessmentService\Assessment\Supervision\FullService as SupervisionFullService;
 use Edutiek\AssessmentService\Assessment\Supervision\Service as SupervisionService;
 use Edutiek\AssessmentService\Assessment\WriterApp\OpenService as WriterAppOpenService;
-use Edutiek\AssessmentService\Assessment\CorrectorApp\OpenService as CorrectorAppOpenService;
 
 class ForClients
 {
@@ -24,22 +25,17 @@ class ForClients
     ) {
     }
 
-    public function writerApp($user_id): WriterAppOpenService
-    {
-        return $this->internal->writer($this->ass_id, $this->context_id, $user_id);
-    }
-
-    public function correctorApp($user_id): CorrectorAppOpenService
+    public function correctorApp(int $user_id): CorrectorAppOpenService
     {
         return $this->internal->corrector($this->ass_id, $this->context_id, $user_id);
     }
 
-    public function supervision(): SupervisionFullService
+    public function lifecycle(): LifecycleFullService
     {
-        return $this->instances[SupervisionService::class] ??= new SupervisionService(
+        return $this->instances[LifecycleService::class] = new LifecycleService(
             $this->ass_id,
-            $this->context_id,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->dependencies->taskApi()->tasks($this->ass_id)
         );
     }
 
@@ -51,5 +47,19 @@ class ForClients
             $user_id,
             $this->dependencies->repositories()
         );
+    }
+
+    public function supervision(): SupervisionFullService
+    {
+        return $this->instances[SupervisionService::class] ??= new SupervisionService(
+            $this->ass_id,
+            $this->context_id,
+            $this->dependencies->repositories()
+        );
+    }
+
+    public function writerApp(int $user_id): WriterAppOpenService
+    {
+        return $this->internal->writer($this->ass_id, $this->context_id, $user_id);
     }
 }

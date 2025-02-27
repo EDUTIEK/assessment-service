@@ -1,0 +1,37 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
+
+Interface Tasks
+{
+    /**
+     * Get the number of tasks in this assessment
+     */
+    public function count(): int;
+
+    /**
+     * Get the basic info of all tasks of the assessment
+     * The array is ordered by the tasks positions
+     *
+     * @return TaskInfo[]
+     */
+    public function all(): array;
+
+    /**
+     * Create a new task for the assessment and return its id
+     * The id of the input information should be null and is ignored
+     */
+    public function create(TaskInfo $info): int;
+
+    /**
+     * Delete a task of the assessment given by its id
+     */
+    public function delete(int $task_id): void;
+
+    /**
+     * Clone a task given by its id to a new assessment
+     */
+    public function clone(int $task_id, int $new_ass_id): void;
+}

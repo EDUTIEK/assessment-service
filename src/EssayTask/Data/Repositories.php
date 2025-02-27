@@ -6,18 +6,18 @@ namespace Edutiek\AssessmentService\EssayTask\Data;
 
 interface Repositories
 {
-    public function correctionSettingsRepo(): CorrectionSettingsRepo;
-    public function correctorCommentRepo(): CorrectorCommentRepo;
+    public function correctionSettings(): CorrectionSettingsRepo;
+    public function correctorComment(): CorrectorCommentRepo;
     public function correctorPointsRepo(): CorrectorPointsRepo;
-    public function correctorPrefsRepo(): CorrectorPrefsRepo;
-    public function correctorSummaryRepo(): CorrectorSummaryRepo;
-    public function correctorTaskPrefsRepo(): CorrectorTaskPrefsRepo;
-    public function essayRepo(): EssayRepo;
-    public function essayImageRepo(): EssayImageRepo;
-    public function ratingCriterionRepo(): RatingCriterionRepo;
-    public function taskSettingsRepo(): TaskSettingsRepo;
-    public function writerHistoryRepo(): WriterHistoryRepo;
-    public function writerNoticeRepo(): WriterNoticeRepo;
-    public function writerPrefsRepo(): WriterPrefsRepo;
-    public function writingSetingsRepo(): WritingSettingsRepo;
+    public function correctorPrefs(): CorrectorPrefsRepo;
+    public function correctorSummary(): CorrectorSummaryRepo;
+    public function correctorTaskPrefs(): CorrectorTaskPrefsRepo;
+    public function essay(): EssayRepo;
+    public function essayImage(): EssayImageRepo;
+    public function ratingCriterion(): RatingCriterionRepo;
+    public function taskSettings(): TaskSettingsRepo;
+    public function writerHistory(): WriterHistoryRepo;
+    public function writerNotice(): WriterNoticeRepo;
+    public function writerPrefs(): WriterPrefsRepo;
+    public function writingSetings(): WritingSettingsRepo;
 }

@@ -7,6 +7,7 @@ namespace Edutiek\AssessmentService\Assessment\Data;
 interface Repositories
 {
     public function alert(): AlertRepo;
+    public function location(): LocationRepo;
     public function logEntry(): LogEntryRepo;
     public function permissions(): PermissionsRepo;
     public function properties(): PropertiesRepo;

@@ -14,24 +14,22 @@ class Factory
 
     /**
      * Get the API for client systems
-     * @param int $task_id  id of the task
+     * @param int $ass_id  id of the assessment
      */
-    public function forClients(int $task_id): ForClients
+    public function forClients(int $ass_id): ForClients
     {
-        return $this->instances[ForClients::class][$task_id] ??= new ForClients(
-            $task_id,
+        return $this->instances[ForClients::class][$ass_id] ??= new ForClients(
+            $ass_id,
             $this->dependencies
         );
     }
 
     /**
-     * Get the API for peer services
-     * @param int $task_id  id of the task
+     * Get the factory for internal services
      */
-    public function forService(int $task_id): ForServices
+    private function internal(): Internal
     {
-        return $this->instances[ForServices::class][$task_id] ??= new ForServices(
-            $task_id,
+        return $this->instances[Internal::class] ??= new Internal(
             $this->dependencies
         );
     }

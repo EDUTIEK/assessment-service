@@ -3,7 +3,7 @@
 namespace Edutiek\AssessmentService\EssayTask\HtmlProcessing;
 
 use DOMDocument;
-use Edutiek\AssessmentService\EssayTask\Comments\FullService as CommentsService;
+use Edutiek\AssessmentService\EssayTask\Comments\Service as CommentsService;
 use Edutiek\AssessmentService\EssayTask\Data\HeadlineScheme;
 use Mustache_Engine;
 use Edutiek\AssessmentService\EssayTask\Data\CorrectionSettings;

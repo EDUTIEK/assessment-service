@@ -53,17 +53,17 @@ readonly class RestHelper
     public function checkAccess()
     {
         if ($this->config_service->getConfig()->getSimulateOffline()) {
-            throw new RestException(RestException::SERVICE_UNAVAILABLE, 'offline mode');
+            throw new RestException('offline mode', RestException::SERVICE_UNAVAILABLE);
         }
 
         if ($this->user_service->getUser($this->user_id) === null) {
-            throw new RestException(RestException::NOT_FOUND, 'user not found');
+            throw new RestException('user not found', RestException::NOT_FOUND);
         }
         if (!$this->repos->properties()->exists($this->ass_id, $this->context_id)) {
-            throw new RestException(RestException::NOT_FOUND, 'assessment not found');
+            throw new RestException('assessment not found', RestException::NOT_FOUND);
         }
         if (!$this->permissions->canDoRestCall()) {
-            throw new RestException(RestException::FORBIDDEN, 'REST call not allowed');
+            throw new RestException('REST call not allowed', RestException::FORBIDDEN);
         }
     }
 
@@ -135,7 +135,7 @@ readonly class RestHelper
     /**
      * Send a resource file as inline
      */
-    public function sendFile(int $file_id): Response
+    public function sendFile(string $file_id): Response
     {
         $this->file_delivery->sendFile($file_id, Disposition::INLINE);
     }

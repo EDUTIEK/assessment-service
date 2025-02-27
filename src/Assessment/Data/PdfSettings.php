@@ -23,6 +23,8 @@ abstract class PdfSettings implements AssessmentEntity, PdfCreatorSettings
      */
     private const FOOTER_HEIGHT = 5;
 
+    abstract public function getAssId(): int;
+    abstract public function setAssId(int $ass_id): self;
     abstract public function getAddHeader(): bool;
     abstract public function setAddHeader(bool $add_header): self;
     abstract public function getAddFooter(): bool;
@@ -35,8 +37,6 @@ abstract class PdfSettings implements AssessmentEntity, PdfCreatorSettings
     abstract public function setLeftMargin(int $left_margin): self;
     abstract public function getRightMargin(): int;
     abstract public function setRightMargin(int $right_margin): self;
-    abstract public function getAssId(): int;
-    abstract public function setAssId(int $ass_id): self;
 
 
     public function getHeaderMargin(): int
