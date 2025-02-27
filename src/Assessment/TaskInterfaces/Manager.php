@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
 
-Interface Tasks
+Interface Manager
 {
     /**
      * Get the number of tasks in this assessment

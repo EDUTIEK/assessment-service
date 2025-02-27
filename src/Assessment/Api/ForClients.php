@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Api;
 
 use Edutiek\AssessmentService\Assessment\CorrectorApp\OpenService as CorrectorAppOpenService;
-use Edutiek\AssessmentService\Assessment\Lifecycle\FullService as LifecycleFullService;
-use Edutiek\AssessmentService\Assessment\Lifecycle\Service as LifecycleService;
+use Edutiek\AssessmentService\Assessment\Manager\FullService as ManagerFullService;
+use Edutiek\AssessmentService\Assessment\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
 use Edutiek\AssessmentService\Assessment\Supervision\FullService as SupervisionFullService;
@@ -30,12 +30,12 @@ class ForClients
         return $this->internal->corrector($this->ass_id, $this->context_id, $user_id);
     }
 
-    public function lifecycle(): LifecycleFullService
+    public function manager(): ManagerFullService
     {
-        return $this->instances[LifecycleService::class] = new LifecycleService(
+        return $this->instances[ManagerService::class] = new ManagerService(
             $this->ass_id,
             $this->dependencies->repositories(),
-            $this->dependencies->taskApi()->tasks($this->ass_id)
+            $this->dependencies->taskApi()->manager($this->ass_id)
         );
     }
 

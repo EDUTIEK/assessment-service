@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\Assessment\Lifecycle;
+namespace Edutiek\AssessmentService\Assessment\Manager;
 
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Manager\FullService;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\Manager;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\Tasks;
-use Edutiek\AssessmentService\Assessment\Lifecycle\FullService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
 
 class Service implements FullService
@@ -15,7 +15,7 @@ class Service implements FullService
     public function __construct(
         private readonly int $ass_id,
         private readonly Repositories $repos,
-        private readonly Tasks $tasks
+        private readonly Manager $tasks
     )
     {
     }

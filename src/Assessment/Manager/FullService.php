@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\Assessment\Lifecycle;
+namespace Edutiek\AssessmentService\Assessment\Manager;
 
 interface FullService
 {

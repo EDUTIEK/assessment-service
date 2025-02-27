@@ -2,14 +2,15 @@
 
 declare(strict_types = 1);
 
-namespace Edutiek\AssessmentService\Task\Tasks;
+namespace Edutiek\AssessmentService\Task\Manager;
 
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\Manager;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
 
-readonly class Service implements \Edutiek\AssessmentService\Assessment\TaskInterfaces\Tasks
+readonly class Service implements Manager
 {
     public function __construct(
         private int $ass_id,
