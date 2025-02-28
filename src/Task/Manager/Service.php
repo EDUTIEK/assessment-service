@@ -1,30 +1,32 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Task\Manager;
 
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\Manager;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
+use Edutiek\AssessmentService\Task\TypeInterfaces\ApiFactory as TypeApiFactory;
 
 readonly class Service implements Manager
 {
     public function __construct(
         private int $ass_id,
+        private int $user_id,
         private Repositories $repos,
         private Storage $storage,
+        private TypeApiFactory $types,
     ) {
     }
 
-    public function count() : int
+    public function count(): int
     {
         return $this->repos->settings()->countByAssId($this->ass_id);
     }
 
-    public function all() : array
+    public function all(): array
     {
         $infos = [];
         foreach ($this->repos->settings()->allByAssId($this->ass_id) as $setting) {
@@ -33,8 +35,9 @@ readonly class Service implements Manager
         return $infos;
     }
 
-    public function create(TaskInfo $info) : int
+    public function create(TaskInfo $info): int
     {
+        // don't create a task twice
         if ($this->repos->settings()->one($info->getId() ?? 0) !== null) {
             return $info->getId();
         }
@@ -47,13 +50,17 @@ readonly class Service implements Manager
 
         $this->repos->settings()->save($settings);
 
-        // todo: call the creation of the task type
+        $this->types->api($info->getTaskType())
+            ->manager($settings->getTaskId(), $this->user_id)
+            ->create();
 
         return $settings->getTaskId();
     }
 
-    public function delete(int $task_id) : void
+    public function delete(int $task_id): void
     {
+        $task_type = $this->repos->settings()->one($task_id)?->getTaskType();
+
         $this->repos->settings()->delete($task_id);
         $this->repos->correctorAssignment()->deleteByTaskId($task_id);
         $this->repos->writerComment()->deleteByTaskId($task_id);
@@ -65,12 +72,20 @@ readonly class Service implements Manager
             $this->repos->resource()->delete($resource->getId());
         }
 
-        // todo: delete the data of the task type
+        if ($task_type !== null) {
+            $this->types->api($task_type)
+                ->manager($task_id, $this->user_id)
+                ->delete();
+        }
     }
 
-    public function clone(int $task_id, int $new_ass_id) : void
+    public function clone(int $task_id, int $new_ass_id): void
     {
-        $settings = $this->repos->settings()->one($task_id) ?? $this->repos->settings()->new();
+        $settings = $this->repos->settings()->one($task_id);
+        if ($settings === null) {
+            return;
+        }
+
         $this->repos->settings()->save($settings->setTaskId(0)->setAssId($new_ass_id));
         $new_task_id = $settings->getTaskId();
 
@@ -89,6 +104,8 @@ readonly class Service implements Manager
                 ->setFileId($new_file_id));
         }
 
-        // todo: clone the data of the task type
+        $this->types->api($settings->getTaskType())
+            ->manager($task_id, $this->user_id)
+            ->clone($new_task_id);
     }
 }

@@ -9,7 +9,7 @@ class ForClients
     private array $instances = [];
 
     public function __construct(
-        private readonly int $ass_id,
+        private readonly int $task_id,
         private readonly Dependencies $dependencies
     ) {
     }

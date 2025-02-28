@@ -67,20 +67,28 @@ class ForServices
 
     public function imageSketch(): ImageSketchFullService
     {
-        return $this->instances[ImageSketchFullService::class] ??= new Sketch([
+        return $this->instances[ImageSketchFullService::class] ??= new Sketch(
+            [
                 // Default font of Sketch is not available on Windows - keep default font of Imagick
                 'font' => ['name' => null, 'size' => 50]]
         );
     }
 
+    /**
+     * Service vor translating language variables
+     * This service is not cached here
+     * Components using it must provide a default and a user language code
+     * They must add the language files for both
+     */
     public function language(): LanguageFullService
     {
-        return (new LanguageService())->setDefaultLanguage($this->config()->getSetup()->getDefaultLanguage());
+        return new LanguageService();
     }
 
     public function pdfConverter(): PdfConverterFullService
     {
-        return $this->instances[PdfConverterFullService::class] ??= ($this->config()->getPathToGhostscript() === null ?
+        return $this->instances[PdfConverterFullService::class] ??= (
+            $this->config()->getPathToGhostscript() === null ?
             new ServiceByImageMagick() :
             new ServiceByGhostscript(
                 $this->config()->getPathToGhostscript(),

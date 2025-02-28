@@ -25,6 +25,16 @@ class Factory
     }
 
     /**
+     * Get the API for the assessment component
+     */
+    public function forAssessment(): ForAssessment
+    {
+        return $this->instances[ForAssessment::class] ??= new ForAssessment(
+            $this->dependencies
+        );
+    }
+
+    /**
      * Get the factory for internal services
      */
     private function internal(): Internal

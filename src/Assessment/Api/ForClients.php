@@ -20,14 +20,15 @@ class ForClients
     public function __construct(
         private readonly int $ass_id,
         private readonly int $context_id,
+        private readonly int $user_id,
         private readonly Dependencies $dependencies,
         private readonly Internal $internal
     ) {
     }
 
-    public function correctorApp(int $user_id): CorrectorAppOpenService
+    public function correctorApp(): CorrectorAppOpenService
     {
-        return $this->internal->corrector($this->ass_id, $this->context_id, $user_id);
+        return $this->internal->corrector($this->ass_id, $this->context_id, $this->user_id);
     }
 
     public function manager(): ManagerFullService
@@ -35,16 +36,17 @@ class ForClients
         return $this->instances[ManagerService::class] = new ManagerService(
             $this->ass_id,
             $this->dependencies->repositories(),
-            $this->dependencies->taskApi()->manager($this->ass_id)
+            $this->internal->language($this->user_id),
+            $this->dependencies->taskApi()->manager($this->ass_id, $this->user_id)
         );
     }
 
-    public function permissions(int $user_id): PermissionsReadService
+    public function permissions(): PermissionsReadService
     {
-        return $this->instances[PermissionsService::class][$user_id] ??= new PermissionsService(
+        return $this->instances[PermissionsService::class] ??= new PermissionsService(
             $this->ass_id,
             $this->context_id,
-            $user_id,
+            $this->user_id,
             $this->dependencies->repositories()
         );
     }
@@ -54,12 +56,14 @@ class ForClients
         return $this->instances[SupervisionService::class] ??= new SupervisionService(
             $this->ass_id,
             $this->context_id,
-            $this->dependencies->repositories()
+            $this->user_id,
+            $this->dependencies->repositories(),
+            $this->internal->language($this->user_id),
         );
     }
 
-    public function writerApp(int $user_id): WriterAppOpenService
+    public function writerApp(): WriterAppOpenService
     {
-        return $this->internal->writer($this->ass_id, $this->context_id, $user_id);
+        return $this->internal->writer($this->ass_id, $this->context_id, $this->user_id);
     }
 }

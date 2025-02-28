@@ -14,13 +14,25 @@ class Factory
 
     /**
      * Get the API for client systems
+     * @param int $task_id  id of the task
+     */
+    public function forClients(int $task_id): ForClients
+    {
+        return $this->instances[ForClients::class][$task_id] ??= new ForClients(
+            $task_id,
+            $this->dependencies
+        );
+    }
+
+    /**
+     * Get the API for client systems
      * @param int $ass_id  id of the assessment
      */
-    public function forClients(int $ass_id): ForClients
+    public function forTask(): ForTask
     {
-        return $this->instances[ForClients::class][$ass_id] ??= new ForClients(
-            $ass_id,
-            $this->dependencies
+        return $this->instances[ForTask::class] ??= new ForTask(
+            $this->dependencies,
+            $this->internal()
         );
     }
 

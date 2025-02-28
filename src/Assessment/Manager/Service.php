@@ -9,15 +9,16 @@ use Edutiek\AssessmentService\Assessment\Manager\FullService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\Manager;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
+use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 
-class Service implements FullService
+readonly class Service implements FullService
 {
     public function __construct(
-        private readonly int $ass_id,
-        private readonly Repositories $repos,
-        private readonly Manager $tasks
-    )
-    {
+        private int $ass_id,
+        private Repositories $repos,
+        private LanguageService $language,
+        private Manager $tasks
+    ) {
     }
 
     /**
@@ -30,19 +31,22 @@ class Service implements FullService
             return;
         }
 
-        $this->repos->orgaSettings()->save($this->repos->orgaSettings()->new()
+        $this->repos->orgaSettings()->save(
+            $this->repos->orgaSettings()->new()
             ->setAssId($this->ass_id)
         );
-        $this->repos->correctionSettings()->save($this->repos->correctionSettings()->new()
+        $this->repos->correctionSettings()->save(
+            $this->repos->correctionSettings()->new()
             ->setAssId($this->ass_id)
         );
-        $this->repos->pdfSettings()->save($this->repos->pdfSettings()->new()
+        $this->repos->pdfSettings()->save(
+            $this->repos->pdfSettings()->new()
             ->setAssId($this->ass_id)
         );
 
         // create the first task of the assessment
         $this->tasks->create(new TaskInfo(
-            $this->repos->properties()->one($this->ass_id)?->getTitle(),
+            $this->language->txt('sub_task', ['number' => '1']),
             TaskType::ESSAY
         ));
     }

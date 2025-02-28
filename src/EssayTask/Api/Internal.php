@@ -24,14 +24,22 @@ class Internal
         );
     }
 
-    /**
-     * Translation of language variables
-     */
-    public function language(string $code) : LanguageService
+    public function language(int $user_id): LanguageService
     {
-        return $this->instances[LanguageService::class][$code] = $this->dependencies->systemApi()->language()
-            ->addLanguage('de', require(__DIR__ . '/../Languages/de.php'))
-            ->setLanguage($code);
+        $default_code = $this->dependencies->systemApi()->config()->getSetup()->getDefaultLanguage();
+        $user_code = $this->dependencies->systemApi()->user()->getUser($user_id)?->getLanguage() ?? $default_code;
+
+        $service = $this->instances[LanguageService::class][$user_id] = $this->dependencies->systemApi()->language()
+            ->setDefaultLanguage($user_code)
+            ->setLanguage($user_code);
+
+        foreach (array_unique([$default_code, $user_code]) as $code) {
+            if (file_exists(__DIR__ . '/../Languages/' . $code . '.php')) {
+                $service->addLanguage($code, require(__DIR__ . '/../Languages/' . $code . '.php'));
+            }
+        }
+
+        return $service;
     }
 
     public function comments(): CommentsService
