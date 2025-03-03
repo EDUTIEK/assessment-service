@@ -19,5 +19,5 @@ interface Manager
     /**
      * Clone the type specific entities to a new task
      */
-    public function clone(int $new_task_id): void;
+    public function clone(int $new_ass_id, int $new_task_id): void;
 }

@@ -6,5 +6,5 @@ namespace Edutiek\AssessmentService\Task\TypeInterfaces;
 
 interface Api
 {
-    public function manager(int $task_id, int $user_id): Manager;
+    public function manager(int $ass_id, int $task_id, int $user_id): Manager;
 }

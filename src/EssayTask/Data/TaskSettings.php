@@ -6,6 +6,8 @@ namespace Edutiek\AssessmentService\EssayTask\Data;
 
 abstract class TaskSettings implements EssayTaskEntity
 {
+    abstract public function getAssId(): int;
+    abstract public function setAssId(int $ass_id): self;
     abstract public function getTaskId(): int;
     abstract public function setTaskId(int $task_id): self;
     abstract public function getMaxPoints(): int;

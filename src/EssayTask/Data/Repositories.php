@@ -8,7 +8,7 @@ interface Repositories
 {
     public function correctionSettings(): CorrectionSettingsRepo;
     public function correctorComment(): CorrectorCommentRepo;
-    public function correctorPointsRepo(): CorrectorPointsRepo;
+    public function correctorPoints(): CorrectorPointsRepo;
     public function correctorPrefs(): CorrectorPrefsRepo;
     public function correctorSummary(): CorrectorSummaryRepo;
     public function correctorTaskPrefs(): CorrectorTaskPrefsRepo;
@@ -19,5 +19,5 @@ interface Repositories
     public function writerHistory(): WriterHistoryRepo;
     public function writerNotice(): WriterNoticeRepo;
     public function writerPrefs(): WriterPrefsRepo;
-    public function writingSetings(): WritingSettingsRepo;
+    public function writingSettings(): WritingSettingsRepo;
 }

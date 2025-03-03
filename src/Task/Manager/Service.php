@@ -51,7 +51,7 @@ readonly class Service implements Manager
         $this->repos->settings()->save($settings);
 
         $this->types->api($info->getTaskType())
-            ->manager($settings->getTaskId(), $this->user_id)
+            ->manager($this->ass_id, $settings->getTaskId(), $this->user_id)
             ->create();
 
         return $settings->getTaskId();
@@ -74,7 +74,7 @@ readonly class Service implements Manager
 
         if ($task_type !== null) {
             $this->types->api($task_type)
-                ->manager($task_id, $this->user_id)
+                ->manager($this->ass_id, $task_id, $this->user_id)
                 ->delete();
         }
     }
@@ -105,7 +105,7 @@ readonly class Service implements Manager
         }
 
         $this->types->api($settings->getTaskType())
-            ->manager($task_id, $this->user_id)
-            ->clone($new_task_id);
+            ->manager($this->ass_id, $task_id, $this->user_id)
+            ->clone($new_ass_id, $new_task_id);
     }
 }

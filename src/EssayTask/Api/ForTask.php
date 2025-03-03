@@ -18,9 +18,10 @@ class ForTask implements TypeApi
     ) {
     }
 
-    public function manager(int $task_id, int $user_id): ManagerInterface
+    public function manager(int $ass_id, int $task_id, int $user_id): ManagerInterface
     {
         return $this->instances[ManagerService::class] = new ManagerService(
+            $ass_id,
             $task_id,
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->fileStorage(),
