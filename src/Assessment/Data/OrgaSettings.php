@@ -8,6 +8,9 @@ use DateTimeImmutable;
 
 abstract class OrgaSettings implements AssessmentEntity
 {
+    /** @var OrgaSettingsError[] */
+    private $validation_errors = [];
+
     abstract public function getAssId(): int;
     abstract public function setAssId(int $ass_id): self;
 
@@ -78,4 +81,14 @@ abstract class OrgaSettings implements AssessmentEntity
 
     abstract public function getStatisticsAvailable(): bool;
     abstract public function setStatisticsAvailable(bool $statistics_available): self;
+
+    public function addValidationError(OrgaSettingsError $error)
+    {
+        $this->validation_errors[] = $error;
+    }
+
+    public function getValidationErrors(): array
+    {
+        return $this->validation_errors;
+    }
 }

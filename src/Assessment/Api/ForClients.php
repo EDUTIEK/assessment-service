@@ -7,6 +7,8 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 use Edutiek\AssessmentService\Assessment\CorrectorApp\OpenService as CorrectorAppOpenService;
 use Edutiek\AssessmentService\Assessment\Manager\FullService as ManagerFullService;
 use Edutiek\AssessmentService\Assessment\Manager\Service as ManagerService;
+use Edutiek\AssessmentService\Assessment\OrgaSettings\FullService as OrgaSettingsFullService;
+use Edutiek\AssessmentService\Assessment\OrgaSettings\Service as OrgaSettingsService;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
 use Edutiek\AssessmentService\Assessment\Supervision\FullService as SupervisionFullService;
@@ -38,6 +40,14 @@ class ForClients
             $this->dependencies->repositories(),
             $this->internal->language($this->user_id),
             $this->dependencies->taskApi()->manager($this->ass_id, $this->user_id)
+        );
+    }
+
+    public function OrgaSettings(): OrgaSettingsFullService
+    {
+        return $this->instances[OrgaSettingsService::class] = new OrgaSettingsService(
+            $this->ass_id,
+            $this->dependencies->repositories()
         );
     }
 
