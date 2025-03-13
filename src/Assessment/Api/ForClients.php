@@ -43,7 +43,7 @@ class ForClients
         );
     }
 
-    public function OrgaSettings(): OrgaSettingsFullService
+    public function orgaSettings(): OrgaSettingsFullService
     {
         return $this->instances[OrgaSettingsService::class] = new OrgaSettingsService(
             $this->ass_id,

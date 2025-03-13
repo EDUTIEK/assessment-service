@@ -16,10 +16,11 @@ class Factory
      * Get the API for client systems
      * @param int $ass_id  id of the assessment
      */
-    public function forClients(int $ass_id): ForClients
+    public function forClients(int $ass_id, int $user_id): ForClients
     {
-        return $this->instances[ForClients::class][$ass_id] ??= new ForClients(
+        return $this->instances[ForClients::class][$ass_id][$user_id] ??= new ForClients(
             $ass_id,
+            $user_id,
             $this->dependencies
         );
     }

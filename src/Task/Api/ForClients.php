@@ -10,6 +10,7 @@ class ForClients
 
     public function __construct(
         private readonly int $ass_id,
+        private readonly int $user_id,
         private readonly Dependencies $dependencies
     ) {
     }
