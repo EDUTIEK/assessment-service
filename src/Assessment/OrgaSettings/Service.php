@@ -10,7 +10,7 @@ use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\WorkingTime;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\FullService;
 
-class Service implements FullService
+readonly class Service implements FullService
 {
 
     public function __construct(

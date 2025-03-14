@@ -8,8 +8,8 @@ abstract class WritingSettings implements EssayTaskEntity
 {
     abstract public function getAssId(): int;
     abstract public function setAssId(int $ass_id): self;
-    abstract public function getHeadlineScheme(): string;
-    abstract public function setHeadlineScheme(string $headline_scheme): self;
+    abstract public function getHeadlineScheme(): HeadlineScheme;
+    abstract public function setHeadlineScheme(HeadlineScheme $headline_scheme): self;
     abstract public function getFormattingOptions(): string;
     abstract public function setFormattingOptions(string $formatting_options): self;
     abstract public function getNoticeBoards(): int;
@@ -26,6 +26,6 @@ abstract class WritingSettings implements EssayTaskEntity
     abstract public function setRightCorrectionMargin(int $right_correction_margin): self;
     abstract public function getAllowSpellcheck(): int;
     abstract public function setAllowSpellcheck(int $allow_spellcheck): self;
-    abstract public function getWritingType(): string;
-    abstract public function setWritingType(string $writing_type): self;
+    abstract public function getWritingType(): WritingType;
+    abstract public function setWritingType(WritingType $writing_type): self;
 }

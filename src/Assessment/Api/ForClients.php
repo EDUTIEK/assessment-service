@@ -7,6 +7,8 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 use Edutiek\AssessmentService\Assessment\CorrectorApp\OpenService as CorrectorAppOpenService;
 use Edutiek\AssessmentService\Assessment\Manager\FullService as ManagerFullService;
 use Edutiek\AssessmentService\Assessment\Manager\Service as ManagerService;
+use Edutiek\AssessmentService\Assessment\Location\FullService as LocationFullService;
+use Edutiek\AssessmentService\Assessment\Location\Service as LocationService;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\FullService as OrgaSettingsFullService;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\Service as OrgaSettingsService;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
@@ -40,6 +42,14 @@ class ForClients
             $this->dependencies->repositories(),
             $this->internal->language($this->user_id),
             $this->dependencies->taskApi()->manager($this->ass_id, $this->user_id)
+        );
+    }
+
+    public function location(): LocationFullService
+    {
+        return $this->instances[LocationService::class] = new LocationService(
+            $this->ass_id,
+            $this->dependencies->repositories()
         );
     }
 
