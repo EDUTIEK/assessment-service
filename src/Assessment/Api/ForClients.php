@@ -13,6 +13,8 @@ use Edutiek\AssessmentService\Assessment\OrgaSettings\FullService as OrgaSetting
 use Edutiek\AssessmentService\Assessment\OrgaSettings\Service as OrgaSettingsService;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
+use Edutiek\AssessmentService\Assessment\Properties\FullService as PropertiesFullSrvice;
+use Edutiek\AssessmentService\Assessment\Properties\Service as PropertiesService;
 use Edutiek\AssessmentService\Assessment\Supervision\FullService as SupervisionFullService;
 use Edutiek\AssessmentService\Assessment\Supervision\Service as SupervisionService;
 use Edutiek\AssessmentService\Assessment\WriterApp\OpenService as WriterAppOpenService;
@@ -67,6 +69,14 @@ class ForClients
             $this->ass_id,
             $this->context_id,
             $this->user_id,
+            $this->dependencies->repositories()
+        );
+    }
+
+    public function properties(): PropertiesFullSrvice
+    {
+        return $this->instances[PropertiesService::class] ??= new PropertiesService(
+            $this->ass_id,
             $this->dependencies->repositories()
         );
     }

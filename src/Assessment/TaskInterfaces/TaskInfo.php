@@ -29,7 +29,7 @@ readonly class TaskInfo
         return $this->task_type;
     }
 
-    public function getPosition() : int
+    public function getPosition() : ?int
     {
         return $this->position;
     }

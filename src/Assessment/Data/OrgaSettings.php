@@ -61,8 +61,8 @@ abstract class OrgaSettings implements AssessmentEntity
     abstract public function getSolutionAvailableDate(): ?DateTimeImmutable;
     abstract public function setSolutionAvailableDate(?DateTimeImmutable $solution_available_date): self;
 
-    abstract public function getResultAvailableType(): string;
-    abstract public function setResultAvailableType(string $result_available_type): self;
+    abstract public function getResultAvailableType(): ResultAvailableType;
+    abstract public function setResultAvailableType(ResultAvailableType $result_available_type): self;
 
     abstract public function getResultAvailableDate(): ?DateTimeImmutable;
     abstract public function setResultAvailableDate(?DateTimeImmutable $result_available_date): self;
