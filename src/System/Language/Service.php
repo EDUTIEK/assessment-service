@@ -43,8 +43,8 @@ class Service implements FullService
     {
         $text = $this->texts[$this->language][$key] ?? $this->texts[$this->default_language][$key] ?? $key;
         foreach ($variables as $variable => $value) {
-            $test = str_replace('{' . $variable . '}', $value, $text);
+            $text = str_replace('{' . $variable . '}', $value, $text);
         }
-        return $test;
+        return $text;
     }
 }

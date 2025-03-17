@@ -35,18 +35,37 @@ readonly class Service implements Manager
         return $infos;
     }
 
+    public function one(int $task_id): ?TaskInfo
+    {
+        $settings = $this->repos->settings()->one($task_id);
+
+        // security and consistency check
+        if ($settings->getAssId() !== $this->ass_id) {
+            return null;
+        }
+        return $settings->getInfo();
+    }
+
+    public function first(): ?TaskInfo
+    {
+        foreach ($this->repos->settings()->allByAssId($this->ass_id) as $setting) {
+            return $setting->getInfo();
+        }
+        return null;
+    }
+
     public function create(TaskInfo $info): int
     {
-        // don't create a task twice
-        if ($this->repos->settings()->one($info->getId() ?? 0) !== null) {
-            return $info->getId();
+        $max_pos = null;
+        foreach ($this->repos->settings()->allByAssId($this->ass_id) as $setting) {
+            $max_pos = max($max_pos, $setting->getPosition());
         }
 
         $settings = $this->repos->settings()->new()
             ->setAssId($this->ass_id)
             ->setTitle($info->getTitle())
             ->setTaskType($info->getTaskType())
-            ->setPosition($info->getPosition());
+            ->setPosition($max_pos ? $max_pos + 1 : 0);
 
         $this->repos->settings()->save($settings);
 
@@ -59,7 +78,13 @@ readonly class Service implements Manager
 
     public function delete(int $task_id): void
     {
-        $task_type = $this->repos->settings()->one($task_id)?->getTaskType();
+        // security and consistency check
+        $settings = $this->repos->settings()->one($task_id);
+        if ($settings === null || $settings?->getAssId() !== $this->ass_id) {
+            return;
+        }
+
+        $task_type = $settings->getTaskType();
 
         $this->repos->settings()->delete($task_id);
         $this->repos->correctorAssignment()->deleteByTaskId($task_id);
@@ -81,8 +106,9 @@ readonly class Service implements Manager
 
     public function clone(int $task_id, int $new_ass_id): void
     {
+        // security and consistency check
         $settings = $this->repos->settings()->one($task_id);
-        if ($settings === null) {
+        if ($settings === null || $settings?->getAssId() !== $this->ass_id) {
             return;
         }
 

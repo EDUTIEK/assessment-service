@@ -1,10 +1,10 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
 
-Interface Manager
+interface Manager
 {
     /**
      * Get the number of tasks in this assessment
@@ -20,8 +20,18 @@ Interface Manager
     public function all(): array;
 
     /**
+     * Get a task info by id
+     */
+    public function one(int $task_id): ?TaskInfo;
+
+    /**
+     * Get the first found task info
+     */
+    public function first(): ?TaskInfo;
+
+    /**
      * Create a new task for the assessment and return its id
-     * The id of the input information should be null and is ignored
+     * The id and position of the input information should be null and is ignored
      */
     public function create(TaskInfo $info): int;
 
