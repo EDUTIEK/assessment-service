@@ -39,7 +39,7 @@ readonly class Service implements FullService
             && $settings->getSolutionAvailableDate() <= $working_time->getWorkingDeadline()) {
             $settings->addValidationError(OrgaSettingsError::TIME_EXCEEDS_SOLUTION_AVAILABILITY);
         }
-        return !empty($settings->getValidationErrors());
+        return empty($settings->getValidationErrors());
     }
 
     public function save(OrgaSettings $settings) : void
