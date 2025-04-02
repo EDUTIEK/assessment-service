@@ -24,6 +24,9 @@ abstract class OrgaSettings implements AssessmentEntity
     abstract public function getParticipationType(): ParticipationType;
     abstract public function setParticipationType(ParticipationType $participation_type): self;
 
+    abstract public function getMultiTasks(): bool;
+    abstract public function setMultiTasks(bool $multi): self;
+
     /**
      * Organisational description that is shown on the starting page of participants
      * Rich Text with HTML
