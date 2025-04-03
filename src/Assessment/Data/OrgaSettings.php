@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Data;
 
 use DateTimeImmutable;
+use ReflectionClass;
 
 abstract class OrgaSettings implements AssessmentEntity
 {
+    use \Edutiek\AssessmentService\System\Api\Entity;
+
     /** @var OrgaSettingsError[] */
     private $validation_errors = [];
 
