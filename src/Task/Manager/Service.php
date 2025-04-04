@@ -7,7 +7,9 @@ namespace Edutiek\AssessmentService\Task\Manager;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\Manager;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo;
 use Edutiek\AssessmentService\System\File\Storage;
+use Edutiek\AssessmentService\Task\Api\ApiException;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
+use Edutiek\AssessmentService\Task\Data\Settings;
 use Edutiek\AssessmentService\Task\TypeInterfaces\ApiFactory as TypeApiFactory;
 
 readonly class Service implements Manager
@@ -38,11 +40,7 @@ readonly class Service implements Manager
     public function one(int $task_id): ?TaskInfo
     {
         $settings = $this->repos->settings()->one($task_id);
-
-        // security and consistency check
-        if ($settings->getAssId() !== $this->ass_id) {
-            return null;
-        }
+        $this->checkScope($settings);
         return $settings->getInfo();
     }
 
@@ -78,11 +76,11 @@ readonly class Service implements Manager
 
     public function delete(int $task_id): void
     {
-        // security and consistency check
         $settings = $this->repos->settings()->one($task_id);
-        if ($settings === null || $settings?->getAssId() !== $this->ass_id) {
+        if ($settings === null) {
             return;
         }
+        $this->checkScope($settings);
 
         $task_type = $settings->getTaskType();
 
@@ -106,11 +104,11 @@ readonly class Service implements Manager
 
     public function clone(int $task_id, int $new_ass_id): void
     {
-        // security and consistency check
         $settings = $this->repos->settings()->one($task_id);
-        if ($settings === null || $settings?->getAssId() !== $this->ass_id) {
+        if ($settings === null) {
             return;
         }
+        $this->checkScope($settings);
 
         $this->repos->settings()->save($settings->setTaskId(0)->setAssId($new_ass_id));
         $new_task_id = $settings->getTaskId();
@@ -133,5 +131,12 @@ readonly class Service implements Manager
         $this->types->api($settings->getTaskType())
             ->manager($this->ass_id, $task_id, $this->user_id)
             ->clone($new_ass_id, $new_task_id);
+    }
+
+    private function checkScope(Settings $settings)
+    {
+        if ($settings->getAssId() !== $this->ass_id) {
+            throw new ApiException("wrong ass_id", ApiException::ID_SCOPE);
+        }
     }
 }

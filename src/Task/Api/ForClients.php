@@ -6,6 +6,8 @@ namespace Edutiek\AssessmentService\Task\Api;
 
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\Manager as ManagerInterface;
 use Edutiek\AssessmentService\Task\Manager\Service as ManagerService;
+use Edutiek\AssessmentService\Task\Settings\FullService as SettingsFullService;
+use Edutiek\AssessmentService\Task\Settings\Service as SettingsService;
 
 class ForClients
 {
@@ -28,4 +30,14 @@ class ForClients
             $this->dependencies->typeApis()
         );
     }
+
+    public function settings(int $task_id): SettingsFullService
+    {
+        return $this->instances[SettingsService::class] = new SettingsService(
+            $this->ass_id,
+            $task_id,
+            $this->dependencies->repositories()
+        );
+    }
+
 }

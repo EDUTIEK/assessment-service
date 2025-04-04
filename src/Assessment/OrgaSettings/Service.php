@@ -4,11 +4,11 @@ declare(strict_types = 1);
 
 namespace Edutiek\AssessmentService\Assessment\OrgaSettings;
 
+use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettingsError;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\WorkingTime;
-use Edutiek\AssessmentService\Assessment\OrgaSettings\FullService;
 
 readonly class Service implements FullService
 {
@@ -27,6 +27,7 @@ readonly class Service implements FullService
 
     public function validate(OrgaSettings $settings) : bool
     {
+        $this->checkScope($settings);
         $working_time = new WorkingTime($settings);
         if ($working_time->isEndBeforeStart()) {
             $settings->addValidationError(OrgaSettingsError::LATEST_END_BEFORE_EARLIEST_START);
@@ -44,6 +45,14 @@ readonly class Service implements FullService
 
     public function save(OrgaSettings $settings) : void
     {
+        $this->checkScope($settings);
         $this->repos->orgaSettings()->save($settings);
+    }
+    
+    private function checkScope(OrgaSettings $settings) 
+    {
+        if ($settings->getAssId() !== $this->ass_id) {
+            throw new ApiException("wrong ass_id", ApiException::ID_SCOPE);
+        }
     }
 }
