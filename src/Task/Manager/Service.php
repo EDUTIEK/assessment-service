@@ -40,6 +40,9 @@ readonly class Service implements Manager
     public function one(int $task_id): ?TaskInfo
     {
         $settings = $this->repos->settings()->one($task_id);
+        if ($settings === null) {
+            return null;
+        }
         $this->checkScope($settings);
         return $settings->getInfo();
     }
