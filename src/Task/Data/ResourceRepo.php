@@ -8,7 +8,7 @@ interface ResourceRepo
 {
     public function new(): Resource;
     public function one(int $id): ?Resource;
-    public function oneByTaskIdAndType(int $task_id, string $type): ?Resource;
+    public function oneByTaskIdAndType(int $task_id, ResourceType $type): ?Resource;
     public function oneByFileId(string $file_id): ?Resource;
     /** @return Resource[] */
     public function allByTaskId(int $task_id): array;

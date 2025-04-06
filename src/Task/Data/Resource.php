@@ -16,10 +16,10 @@ abstract class Resource implements TaskEntity
     abstract public function setDescription(?string $description): self;
     abstract public function getUrl(): string;
     abstract public function setUrl(string $url): self;
-    abstract public function getType(): string;
-    abstract public function setType(string $type): self;
-    abstract public function getAvailability(): string;
-    abstract public function setAvailability(string $availability): self;
+    abstract public function getType(): ResourceType;
+    abstract public function setType(ResourceType $type): self;
+    abstract public function getAvailability(): ResourceAvailability;
+    abstract public function setAvailability(ResourceAvailability $availability): self;
     abstract public function getFileId(): ?string;
     abstract public function setFileId(?string $file_id): self;
 }

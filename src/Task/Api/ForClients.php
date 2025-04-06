@@ -6,6 +6,8 @@ namespace Edutiek\AssessmentService\Task\Api;
 
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\Manager as ManagerInterface;
 use Edutiek\AssessmentService\Task\Manager\Service as ManagerService;
+use Edutiek\AssessmentService\Task\Resource\FullService as ResourceFullService;
+use Edutiek\AssessmentService\Task\Resource\Service as ResourceService;
 use Edutiek\AssessmentService\Task\Settings\FullService as SettingsFullService;
 use Edutiek\AssessmentService\Task\Settings\Service as SettingsService;
 
@@ -28,6 +30,15 @@ class ForClients
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->typeApis()
+        );
+    }
+
+    public function Resource(int $task_id): ResourceFullService
+    {
+        return $this->instances[ResourceService::class] = new ResourceService(
+            $task_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->fileStorage(),
         );
     }
 
