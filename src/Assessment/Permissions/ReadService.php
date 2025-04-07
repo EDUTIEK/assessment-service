@@ -106,4 +106,9 @@ interface ReadService
      * Check if the user can do a REST call
      */
     public function canDoRestCall(): bool;
+
+    /**
+     * Check if the user is allowed to upload files
+     */
+    public function canUploadFiles(): bool;
 }

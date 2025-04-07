@@ -24,6 +24,13 @@ readonly class Service implements FullService
         return $this->repos->resource()->allByTaskId($this->task_id);
     }
 
+
+    public function new(): Resource
+    {
+        return $this->repos->resource()->new()
+            ->setTaskId($this->task_id);
+    }
+
     public function one(int $id): ?Resource
     {
         $resource = $this->repos->resource()->one($id);
@@ -31,17 +38,17 @@ readonly class Service implements FullService
             $this->checkScope($resource);
             return $resource;
         }
-        return $resource;
+        return null;
     }
 
-    public function oneByType(ResourceType $type): Resource
+    public function oneByType(ResourceType $type): ?Resource
     {
         $resource = $this->repos->resource()->oneByTaskIdAndType($this->task_id, $type);
         if ($resource !== null) {
             $this->checkScope($resource);
             return $resource;
         }
-        return $resource;
+        return null;
     }
 
     public function validate(Resource $resource): bool
@@ -61,7 +68,7 @@ readonly class Service implements FullService
         $this->checkScope($resource);
         $this->repos->resource()->delete($resource->getId());
         if ($resource->getFileId() !== null) {
-            $this->storage->deleteFile($resource->getFileId());
+            $this->storage->deleteFile($resource->getFileId() ?? '');
         }
     }
 

@@ -222,6 +222,13 @@ class Service implements ReadService
         return $this->permissions->getRead() && $this->isOnline() || $this->canEditContentSettings();
     }
 
+    public function canUploadFiles(): bool
+    {
+        return $this->canEditContentSettings() || $this->canMaintainWriters()
+            || $this->isWriter() && $this->isOnline()
+            || $this->isCorrector() && $this->isOnline();
+    }
+
     private function isOnline(): bool
     {
         return (bool) $this->repos->orgaSettings()->one($this->ass_id)?->getOnline();

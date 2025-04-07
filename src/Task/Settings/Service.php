@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Task\Settings;
 
@@ -17,21 +17,21 @@ readonly class Service implements FullService
     ) {
     }
 
-    public function get() : Settings
+    public function get(): Settings
     {
-        return $this->repos->settings()->one($this->ass_id) ??
+        return $this->repos->settings()->one($this->task_id) ??
             $this->repos->settings()->new()
                 ->setAssId($this->ass_id)
                 ->setTaskId($this->task_id);
     }
 
-    public function validate(Settings $settings) : bool
+    public function validate(Settings $settings): bool
     {
         $this->checkScope($settings);
         return true;
     }
 
-    public function save(Settings $settings) : void
+    public function save(Settings $settings): void
     {
         $this->checkScope($settings);
         $this->repos->settings()->save($settings);

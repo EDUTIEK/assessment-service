@@ -11,6 +11,7 @@ interface FullService
 {
     /** @return Resource[] */
     public function all(): array;
+    public function new(): Resource;
     public function one(int $id): ?Resource;
     public function oneByType(ResourceType $type): ?Resource;
     public function validate(Resource $resource): bool;
