@@ -6,6 +6,8 @@ namespace Edutiek\AssessmentService\System\Api;
 
 use Edutiek\AssessmentService\System\Config\FullService as ConfigFullService;
 use Edutiek\AssessmentService\System\Config\Service as ConfigService;
+use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
+use Edutiek\AssessmentService\System\Entity\Service as EntityService;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\Format\FullService as FormatFullService;
@@ -29,6 +31,11 @@ class ForClients
             $this->dependencies->configRepo(),
             $this->dependencies->setupRepo()
         );
+    }
+
+    public function entity(): EntityFullService
+    {
+        return $this->instances[EntityService::class] ??= new EntityService();
     }
 
     public function fileStorage(): Storage
