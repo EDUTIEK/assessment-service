@@ -6,11 +6,11 @@ namespace Edutiek\AssessmentService\Assessment\Data;
 
 use DateTimeImmutable;
 use ReflectionClass;
+use ILIAS\Plugin\LongEssayAssessment\Common\RecordRepo\Attribute\Column;
+use Edutiek\AssessmentService\System\Api\HasHtml;
 
 abstract class OrgaSettings implements AssessmentEntity
 {
-    use \Edutiek\AssessmentService\System\Api\Entity;
-
     /** @var OrgaSettingsError[] */
     private $validation_errors = [];
 
@@ -34,9 +34,11 @@ abstract class OrgaSettings implements AssessmentEntity
      * Organisational description that is shown on the starting page of participants
      * Rich Text with HTML
      */
+    #[HasHtml]
     abstract public function getDescription(): ?string;
     abstract public function setDescription(?string $description): self;
 
+    #[HasHtml]
     abstract public function getClosingMessage(): ?string;
     abstract public function setClosingMessage(?string $closing_message): self;
 

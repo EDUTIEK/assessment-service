@@ -22,11 +22,10 @@ class Factory
      * @param int $context_id  id of the permission context in which the object is used
      * @param int $user_id id of the currently active user
      */
-    public function forClients(int $ass_id, int $context_id, int $user_id): ForClients
+    public function forClients(int $ass_id, int $user_id): ForClients
     {
-        return $this->instances[ForClients::class][$ass_id][$context_id] ??= new ForClients(
+        return $this->instances[ForClients::class][$ass_id][$user_id] ??= new ForClients(
             $ass_id,
-            $context_id,
             $user_id,
             $this->dependencies,
             $this->internal()
