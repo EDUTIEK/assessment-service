@@ -10,8 +10,8 @@ use ReflectionMethod;
 class Service implements FullService
 {
     /**
-     * Properties of the given classes: class name => property (PascalCase) => getter return type
-     * @todo: this array can be created and loaded from artefacts to avoid reflection calls for each request
+     * Cached properties of the given classes: class name => property (PascalCase) => getter return type
+     * @todo: this array could be created and loaded from artefacts to avoid reflection calls for each request
      *
      * @var array<string, array<string, string>>
      */
@@ -23,7 +23,7 @@ class Service implements FullService
         $primitives = [];
         foreach ($this->getProperties($class) as $name => $type) {
             $method = 'get' . $name;
-            $key = $this->convertCase($name, KeyCase::PASCAL_CASE, KeyCase::SNAKE_CASE);
+            $key = $this->convertCase($name, KeyCase::PASCAL_CASE, $case);
             $primitives[$key] = $this->toPrimitive($entity->$method());
         }
         return $primitives;
@@ -46,7 +46,7 @@ class Service implements FullService
             $getters = $reflection_class->getMethods(ReflectionMethod::IS_ABSTRACT);
             foreach ($getters as $getter) {
                 if (str_starts_with($getter->name, 'get')) {
-                    $this->properties[$class][$getter->name] = $getter->getReturnType()->getName();
+                    $this->properties[$class][ substr($getter->name, 3)] = $getter->getReturnType();
                 }
             }
         }
