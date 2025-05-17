@@ -7,7 +7,7 @@ namespace Edutiek\AssessmentService\System\Format;
 use DateTimeInterface;
 use DateTimeZone;
 
-class Service implements FullService
+readonly class Service implements FullService
 {
     public function __construct(
         private string $language,
@@ -31,5 +31,19 @@ class Service implements FullService
         }
 
         return implode(' - ', array_unique($parts));
+    }
+
+    public function fileSize(int $size = 0, string $unit = ""): string
+    {
+        if ((!$unit && $size >= 1 << 30) || $unit == "GB") {
+            return number_format($size / (1 << 30), 2) . "GB";
+        }
+        if ((!$unit && $size >= 1 << 20) || $unit == "MB") {
+            return number_format($size / (1 << 20), 2) . "MB";
+        }
+        if ((!$unit && $size >= 1 << 10) || $unit == "KB") {
+            return number_format($size / (1 << 10), 2) . "KB";
+        }
+        return number_format($size) . " bytes";
     }
 }

@@ -8,5 +8,13 @@ use DateTimeInterface;
 
 interface FullService
 {
+    /**
+     * Human readable dates
+     */
     function dates(?DateTimeInterface $start = null, ?DateTimeInterface $end = null) : string;
+
+    /**
+     * Human readable file size
+     */
+    function fileSize(int $size = 0, string $unit = ""): string;
 }

@@ -22,4 +22,6 @@ abstract class Resource implements TaskEntity
     abstract public function setAvailability(ResourceAvailability $availability): self;
     abstract public function getFileId(): ?string;
     abstract public function setFileId(?string $file_id): self;
+    abstract public function getEmbedded(): bool;
+    abstract public function setEmbedded(bool $embedded): self;
 }

@@ -138,9 +138,10 @@ class Service implements FullService
                 default:
                     if(enum_exists($type)) {
                         // we support only backed enums with string return types
-                        $type = preg_replace('/[^a-zA-Z0-9\\\\]/', '', $type);
-                        $value = preg_replace('/[^a-zA-Z0-9]/', '', (string) $value);
-                        eval('$value=' . $type . '::tryFrom($value);');
+//                        $type = preg_replace('/[^a-zA-Z0-9\\\\]/', '', $type);
+//                        $value = preg_replace('/[^a-zA-Z0-9]/', '', (string) $value);
+                        $value = $type::tryFrom($value);
+                        // eval('$value=' . $type . '::tryFrom($value);');
                         return $value;
                     }
                     return $value;

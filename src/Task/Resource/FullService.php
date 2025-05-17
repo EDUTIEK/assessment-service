@@ -11,6 +11,11 @@ interface FullService
 {
     /** @return Resource[] */
     public function all(): array;
+    /**
+     * @param ResourceType[]
+     * @return Resource[]
+     * */
+    public function allByTypes(array $types): array;
     public function new(): Resource;
     public function one(int $id): ?Resource;
     public function oneByType(ResourceType $type): ?Resource;

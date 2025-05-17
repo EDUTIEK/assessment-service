@@ -24,6 +24,17 @@ readonly class Service implements FullService
         return $this->repos->resource()->allByTaskId($this->task_id);
     }
 
+    public function allByTypes(array $types) : array
+    {
+        $resources = [];
+        foreach ($this->all() as $resource) {
+            if (in_array($resource->getType(), $types, true)) {
+                $resources[] = $resource;
+            }
+        }
+        return $resources;
+    }
+
 
     public function new(): Resource
     {
