@@ -28,6 +28,7 @@ readonly class Service implements Manager
         return $this->repos->settings()->countByAssId($this->ass_id);
     }
 
+    /** @return TaskInfo[] */
     public function all(): array
     {
         $infos = [];

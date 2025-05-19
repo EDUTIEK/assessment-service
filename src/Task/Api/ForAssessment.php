@@ -19,7 +19,7 @@ class ForAssessment implements TasksApi
 
     public function manager(int $ass_id, int $user_id): ManagerInterface
     {
-        return $this->instances[ManagerService::class] = new ManagerService(
+        return $this->instances[ManagerService::class][$ass_id][$user_id] ??= new ManagerService(
             $ass_id,
             $user_id,
             $this->dependencies->repositories(),

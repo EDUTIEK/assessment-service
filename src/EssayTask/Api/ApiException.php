@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Edutiek\AssessmentService\Task\Api;
+namespace Edutiek\AssessmentService\EssayTask\Api;
 
 use Exception;
 

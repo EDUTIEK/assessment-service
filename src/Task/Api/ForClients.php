@@ -24,7 +24,7 @@ class ForClients
 
     public function manager(): ManagerInterface
     {
-        return $this->instances[ManagerService::class] = new ManagerService(
+        return $this->instances[ManagerService::class] ??= new ManagerService(
             $this->ass_id,
             $this->user_id,
             $this->dependencies->repositories(),
@@ -33,9 +33,9 @@ class ForClients
         );
     }
 
-    public function Resource(int $task_id): ResourceFullService
+    public function resource(int $task_id): ResourceFullService
     {
-        return $this->instances[ResourceService::class] = new ResourceService(
+        return $this->instances[ResourceService::class][$task_id] ??= new ResourceService(
             $task_id,
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->fileStorage(),
@@ -44,7 +44,7 @@ class ForClients
 
     public function settings(int $task_id): SettingsFullService
     {
-        return $this->instances[SettingsService::class] = new SettingsService(
+        return $this->instances[SettingsService::class][$task_id] ??= new SettingsService(
             $this->ass_id,
             $task_id,
             $this->dependencies->repositories()

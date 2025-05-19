@@ -20,7 +20,7 @@ class Internal
      */
     public function language(string $code) : LanguageService
     {
-        return $this->instances[LanguageService::class][$code] = $this->dependencies->systemApi()->language()
+        return $this->instances[LanguageService::class][$code] ??= $this->dependencies->systemApi()->language()
             ->addLanguage('de', require(__DIR__ . '/../Languages/de.php'))
             ->setLanguage($code);
     }

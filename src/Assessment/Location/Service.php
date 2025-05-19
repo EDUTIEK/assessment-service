@@ -6,6 +6,8 @@ namespace Edutiek\AssessmentService\Assessment\Location;
 
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Location\FullService;
+use Edutiek\AssessmentService\Assessment\Data\Location;
+use Edutiek\AssessmentService\Assessment\Api\ApiException;
 
 readonly class Service implements FullService
 {
@@ -13,6 +15,29 @@ readonly class Service implements FullService
         private int $ass_id,
         private Repositories $repos
     ) {
+    }
+
+    public function all(): array
+    {
+        return $this->repos->location()->allByAssId($this->ass_id);
+    }
+
+    public function new(): Location
+    {
+        return $this->repos->location()->new()->setAssId($this->ass_id);
+    }
+
+    public function save(Location $location) : void
+    {
+        $this->checkScope($location);
+        $this->repos->location()->save($location);
+    }
+
+    private function checkScope(Location $location)
+    {
+        if ($location->getAssId() !== $this->ass_id) {
+            throw new ApiException("wrong ass_id", ApiException::ID_SCOPE);
+        }
     }
 
     public function exampleTitles(): array
@@ -49,4 +74,5 @@ readonly class Service implements FullService
             }
         }
     }
+
 }

@@ -6,7 +6,8 @@ namespace Edutiek\AssessmentService\EssayTask\WritingSettings;
 
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\FullService;
-use ILIAS\Plugin\LongEssayAssessment\EssayTask\Data\WritingSettings;
+use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
+use Edutiek\AssessmentService\EssayTask\Api\ApiException;
 
 class Service implements FullService
 {
@@ -22,13 +23,16 @@ class Service implements FullService
             $this->repos->writingSettings()->new()->setAssId($this->ass_id);
     }
 
-    public function validate(WritingSettings $settings) : bool
-    {
-        return true;
-    }
-
     public function save(WritingSettings $settings) : void
     {
+        $this->checkScope($settings);
         $this->repos->writingSettings()->save($settings);
+    }
+
+    private function checkScope(WritingSettings $settings)
+    {
+        if ($settings->getAssId() !== $this->ass_id) {
+            throw new ApiException("wrong ass_id", ApiException::ID_SCOPE);
+        }
     }
 }

@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Data;
 
 use DateTimeImmutable;
-use ReflectionClass;
-use ILIAS\Plugin\LongEssayAssessment\Common\RecordRepo\Attribute\Column;
 use Edutiek\AssessmentService\System\Api\HasHtml;
 
 abstract class OrgaSettings implements AssessmentEntity

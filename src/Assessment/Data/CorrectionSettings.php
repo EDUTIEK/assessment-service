@@ -8,6 +8,9 @@ use DateTimeImmutable;
 
 abstract class CorrectionSettings implements AssessmentEntity
 {
+    /** @var CorrectionSettingsError[] */
+    private $validation_errors = [];
+
     abstract public function getAssId(): int;
     abstract public function setAssId(int $ass_id): self;
     abstract public function getRequiredCorrectors(): int;
@@ -28,4 +31,14 @@ abstract class CorrectionSettings implements AssessmentEntity
     abstract public function setReportsEnabled(bool $reports_enabled): self;
     abstract public function getReportsAvailableStart(): ?DateTimeImmutable;
     abstract public function setReportsAvailableStart(?DateTimeImmutable $reports_available_start): self;
+
+    public function addValidationError(CorrectionSettingsError $error)
+    {
+        $this->validation_errors[] = $error;
+    }
+
+    public function getValidationErrors(): array
+    {
+        return $this->validation_errors;
+    }
 }

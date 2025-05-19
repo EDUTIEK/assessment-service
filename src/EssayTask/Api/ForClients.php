@@ -6,6 +6,12 @@ namespace Edutiek\AssessmentService\EssayTask\Api;
 
 use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\FullService as WritingSettingsFullService;
+use Edutiek\AssessmentService\EssayTask\CorrectionSettings\Service as CorrectionSettingsService;
+use Edutiek\AssessmentService\EssayTask\CorrectionSettings\FullService as CorrectionSettingsFullService;
+use Edutiek\AssessmentService\EssayTask\RatingCriterion\Service as RatingCriterionService;
+use Edutiek\AssessmentService\EssayTask\RatingCriterion\FullService as RatingCriterionFullService;
+use Edutiek\AssessmentService\EssayTask\TaskSettings\Service as TaskSettingsService;
+use Edutiek\AssessmentService\EssayTask\TaskSettings\FullService as TaskSettingsFullService;
 
 class ForClients
 {
@@ -18,10 +24,35 @@ class ForClients
     ) {
     }
 
+    public function correctionSettings(): CorrectionSettingsFullService
+    {
+        return $this->instances[CorrectionSettingsService::class] = new CorrectionSettingsService(
+            $this->ass_id,
+            $this->dependencies->repositories()
+        );
+    }
+
     public function writingSettings(): WritingSettingsFullService
     {
         return $this->instances[WritingSettingsService::class] = new WritingSettingsService(
             $this->ass_id,
+            $this->dependencies->repositories()
+        );
+    }
+
+    public function ratingCriterion(int $task_id): RatingCriterionFullService
+    {
+        return $this->instances[RatingCriterionService::class][$task_id] ??= new RatingCriterionService(
+            $task_id,
+            $this->dependencies->repositories()
+        );
+    }
+
+    public function taskSettings(int $task_id): TaskSettingsFullService
+    {
+        return $this->instances[TaskSettingsService::class][$task_id] ??= new TaskSettingsService(
+            $this->ass_id,
+            $task_id,
             $this->dependencies->repositories()
         );
     }
