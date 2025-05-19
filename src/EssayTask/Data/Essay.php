@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\EssayTask\Data;
 
 use DateTimeImmutable;
+use Edutiek\AssessmentService\System\Api\HasHtml;
 
 abstract class Essay implements EssayTaskEntity
 {
@@ -16,6 +17,7 @@ abstract class Essay implements EssayTaskEntity
     abstract public function setUuid(string $uuid): self;
     abstract public function getWriterId(): int;
     abstract public function setWriterId(int $writer_id): self;
+    #[HasHtml]
     abstract public function getWrittenText(): ?string;
     abstract public function setWrittenText(?string $written_text): self;
     abstract public function getRawTextHash(): string;

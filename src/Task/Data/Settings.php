@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\Task\Data;
 
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
+use Edutiek\AssessmentService\System\Api\HasHtml;
 
 abstract class Settings implements TaskEntity
 {
@@ -19,8 +20,10 @@ abstract class Settings implements TaskEntity
     abstract public function setTaskType(TaskType $type): self;
     abstract public function getTitle(): string;
     abstract public function setTitle(string $title): self;
+    #[HasHtml]
     abstract public function getInstructions(): ?string;
     abstract public function setInstructions(?string $instructions): self;
+    #[HasHtml]
     abstract public function getSolution(): ?string;
     abstract public function setSolution(?string $solution): self;
 
