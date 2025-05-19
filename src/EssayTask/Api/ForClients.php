@@ -10,6 +10,8 @@ use Edutiek\AssessmentService\EssayTask\CorrectionSettings\Service as Correction
 use Edutiek\AssessmentService\EssayTask\CorrectionSettings\FullService as CorrectionSettingsFullService;
 use Edutiek\AssessmentService\EssayTask\RatingCriterion\Service as RatingCriterionService;
 use Edutiek\AssessmentService\EssayTask\RatingCriterion\FullService as RatingCriterionFullService;
+use Edutiek\AssessmentService\EssayTask\AssessmentStatus\Service as StatusService;
+use Edutiek\AssessmentService\EssayTask\AssessmentStatus\FullService as StatusFullService;
 use Edutiek\AssessmentService\EssayTask\TaskSettings\Service as TaskSettingsService;
 use Edutiek\AssessmentService\EssayTask\TaskSettings\FullService as TaskSettingsFullService;
 
@@ -44,6 +46,14 @@ class ForClients
     {
         return $this->instances[RatingCriterionService::class][$task_id] ??= new RatingCriterionService(
             $task_id,
+            $this->dependencies->repositories()
+        );
+    }
+
+    public function assessmentStatus(): StatusFullService
+    {
+        return $this->instances[StatusService::class] = new StatusService(
+            $this->ass_id,
             $this->dependencies->repositories()
         );
     }
