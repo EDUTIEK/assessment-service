@@ -49,8 +49,10 @@ class Service implements FullService
                 $value = $entity->$getter();
                 if (!empty($value)) {
                     if ($meta['html']) {
-                        $entity->$setter(strip_tags($value,
-                            '<p><div><br><strong><b><em><i><u><ol><ul><li><h1><h2><h3><h4><h5><h6><pre>'));
+                        $entity->$setter(strip_tags(
+                            $value,
+                            '<p><div><br><strong><b><em><i><u><ol><ul><li><h1><h2><h3><h4><h5><h6><pre>'
+                        ));
                     } else {
                         $entity->$setter(strip_tags($value));
                     }
@@ -112,8 +114,7 @@ class Service implements FullService
     {
         if ($value === null && $nullable) {
             return null;
-        }
-        else {
+        } else {
             switch ($type) {
                 case 'int':
                 case '?int':
@@ -136,13 +137,8 @@ class Service implements FullService
                 case '?DateTimeImmutable':
                     return (new DateTimeImmutable(false))->setTimestamp((int) $value);
                 default:
-                    if(enum_exists($type)) {
-                        // we support only backed enums with string return types
-//                        $type = preg_replace('/[^a-zA-Z0-9\\\\]/', '', $type);
-//                        $value = preg_replace('/[^a-zA-Z0-9]/', '', (string) $value);
+                    if (enum_exists($type)) {
                         $value = $type::tryFrom($value);
-                        // eval('$value=' . $type . '::tryFrom($value);');
-                        return $value;
                     }
                     return $value;
             }

@@ -19,8 +19,8 @@ abstract class CorrectionSettings implements AssessmentEntity
     abstract public function setMaxAutoDistance(float $max_auto_distance): self;
     abstract public function getMutualVisibility(): bool;
     abstract public function setMutualVisibility(bool $mutual_visibility): self;
-    abstract public function getAssignMode(): string;
-    abstract public function setAssignMode(string $assign_mode): self;
+    abstract public function getAssignMode(): AssignMode;
+    abstract public function setAssignMode(AssignMode $assign_mode): self;
     abstract public function getStitchWhenDistance(): bool;
     abstract public function setStitchWhenDistance(bool $stitch_when_distance): self;
     abstract public function getStitchWhenDecimals(): bool;
