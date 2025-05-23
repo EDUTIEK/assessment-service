@@ -15,4 +15,9 @@ readonly class Service implements FullService
     {
         return $this->repos->correctorComment()->hasByAssId($this->ass_id);
     }
+
+    public function hasAuthorizedSummaries(?int $corrector_id = null)
+    {
+        return $this->repos->correctorSummary()->hasAuthorizedByAssId($this->ass_id, $corrector_id);
+    }
 }

@@ -33,6 +33,22 @@ readonly class Service implements FullService
         $this->repos->gradeLevel()->save($grade_level);
     }
 
+    public function one(int $id): ?GradeLevel
+    {
+        $grade_level = $this->repos->gradeLevel()->one($id);
+        if ($grade_level !== null) {
+            $this->checkScope($grade_level);
+            return $grade_level;
+        }
+        return null;
+    }
+
+    public function delete(GradeLevel $grade_level): void
+    {
+        $this->checkScope($grade_level);
+        $this->repos->gradeLevel()->delete($grade_level->getId());
+    }
+
     private function checkScope(GradeLevel $grade_level)
     {
         if ($grade_level->getAssId() !== $this->ass_id) {
