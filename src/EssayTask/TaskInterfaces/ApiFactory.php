@@ -1,0 +1,11 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Edutiek\AssessmentService\EssayTask\TaskInterfaces;
+
+
+interface ApiFactory
+{
+    public function api(): Api;
+}
