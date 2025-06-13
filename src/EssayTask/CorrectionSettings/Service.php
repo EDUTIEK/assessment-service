@@ -10,7 +10,7 @@ use Edutiek\AssessmentService\EssayTask\Data\CorrectionSettings;
 use Edutiek\AssessmentService\EssayTask\Api\ApiException;
 use Edutiek\AssessmentService\EssayTask\Data\CriteriaMode;
 use Edutiek\AssessmentService\EssayTask\Api\Dependencies;
-use Edutiek\AssessmentService\EssayTask\TaskInterfaces\CorrectorAssignment;
+use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentService;
 use Edutiek\AssessmentService\EssayTask\Data\TaskSettings;
 
 class Service implements FullService
@@ -18,7 +18,7 @@ class Service implements FullService
     public function __construct(
         private int $ass_id,
         private Repositories $repos,
-        private CorrectorAssignment $corrector_assignment_service,
+        private CorrectorAssignmentService $corrector_assignment_service,
     ) {
     }
 

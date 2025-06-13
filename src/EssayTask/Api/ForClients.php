@@ -31,7 +31,7 @@ class ForClients
         return $this->instances[CorrectionSettingsService::class] = new CorrectionSettingsService(
             $this->ass_id,
             $this->dependencies->repositories(),
-            $this->dependencies->taskApi()->correctorAssignments()
+            $this->dependencies->taskApi($this->ass_id)->correctorAssignments()
         );
     }
 
