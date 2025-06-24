@@ -39,4 +39,15 @@ readonly class Service implements FullService
             throw new ApiException("wrong task_id", ApiException::ID_SCOPE);
         }
     }
+
+    public function one(int $criterion_id): ?RatingCriterion
+    {
+        return $this->repos->ratingCriterion()->one($criterion_id);
+    }
+
+    public function delete(RatingCriterion $criterion)
+    {
+        $this->checkScope($criterion);
+        $this->repos->ratingCriterion()->delete($criterion->getId());
+    }
 }

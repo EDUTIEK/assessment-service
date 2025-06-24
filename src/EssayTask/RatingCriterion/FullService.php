@@ -10,6 +10,8 @@ interface FullService
 {
     /** @return RatingCriterion[] */
     public function allByCorrectorId(?int $corrector_id): array;
+    public function one(int $criterion_id): ?RatingCriterion;
     public function new(): RatingCriterion;
     public function save(RatingCriterion $criterion);
+    public function delete(RatingCriterion $criterion);
 }
