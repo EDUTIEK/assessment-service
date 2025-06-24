@@ -16,7 +16,7 @@ enum CriteriaModeTransition: string
     case CorrectorToNone = 'corrnone';
     case CorrectorToFixed = 'corrfixed';
 
-    public function fromTransition(CriteriaMode $a, CriteriaMode $b) : self
+    public static function fromTransition(CriteriaMode $a, CriteriaMode $b) : self
     {
        return self::from($a->value . $b->value);
     }
