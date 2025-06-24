@@ -36,6 +36,17 @@ class Factory
     }
 
     /**
+     * Get the API for the assessment component
+     */
+    public function forTypes(int $ass_id): ForTypes
+    {
+        return $this->instances[ForTypes::class] ??= new ForTypes(
+            $ass_id,
+            $this->dependencies
+        );
+    }
+
+    /**
      * Get the factory for internal services
      */
     private function internal(): Internal
