@@ -12,9 +12,12 @@ use Edutiek\AssessmentService\EssayTask\Data\CriteriaMode;
 use Edutiek\AssessmentService\EssayTask\Api\Dependencies;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentService;
 use Edutiek\AssessmentService\EssayTask\Data\TaskSettings;
+use Edutiek\AssessmentService\EssayTask\CorrectorSummary\FullService as CorrectorSummaryService;
 
 class Service implements FullService
 {
+    private ?array $task_ids = null;
+
     public function __construct(
         private int $ass_id,
         private Repositories $repos,
@@ -36,32 +39,33 @@ class Service implements FullService
 
     public function changeCriteriaMode(CriteriaMode $old_mode, CriteriaMode $new_mode)
     {
-        switch(CriteriaModeTransition::fromTransition($old_mode, $new_mode)){
+        switch (CriteriaModeTransition::fromTransition($old_mode, $new_mode)) {
             case CriteriaModeTransition::NoneToFixed:
             case CriteriaModeTransition::NoneToCorrector:
-                foreach($this->allTaskIds() as $task_id){
+                foreach ($this->allTaskIds() as $task_id) {
                     $this->purgeAllPoints($task_id);
                 }
                 break;
             case CriteriaModeTransition::FixedToNone:
             case CriteriaModeTransition::CorrectorToNone:
-                foreach($this->allCorrectorIdsByTask() as $task_id => $corrector_ids) {
+                foreach ($this->allCorrectorIdsByTask() as $task_id => $corrector_ids) {
                     $this->purgeCriteriaInPoints($task_id, $corrector_ids);
                     $this->deleteAllCriteria($task_id);
                 }
                 break;
             case CriteriaModeTransition::FixedToCorrector:
-                foreach($this->allCorrectorIdsByTask() as $task_id => $corrector_ids) {
+                foreach ($this->allCorrectorIdsByTask() as $task_id => $corrector_ids) {
                     $this->copyFixedCriteriaWithPoints($task_id, $corrector_ids);
                 }
                 break;
             case CriteriaModeTransition::CorrectorToFixed:
-                foreach($this->allCorrectorIdsByTask() as $task_id => $corrector_ids) {
+                foreach ($this->allCorrectorIdsByTask() as $task_id => $corrector_ids) {
                     $this->purgeAllPoints($task_id);
                     $this->deletePersonalCriteria($task_id, $corrector_ids);
                 }
                 break;
         }
+        // TODO: Remove Authorizations, which also triggers logging?
     }
 
     /**
@@ -69,7 +73,7 @@ class Service implements FullService
      */
     private function allTaskIds() : array
     {
-        return array_map(fn(TaskSettings $x) => $x->getTaskId(), $this->repos->taskSettings()->allByAssId($this->ass_id));
+        return $this->task_ids ??= array_map(fn (TaskSettings $x) => $x->getTaskId(), $this->repos->taskSettings()->allByAssId($this->ass_id));
     }
 
     /**
@@ -78,10 +82,10 @@ class Service implements FullService
     private function allCorrectorIdsByTask()
     {
         $correctors_by_task = [];
-        foreach($this->corrector_assignment_service->all() as $assignment) {
+        foreach ($this->corrector_assignment_service->all() as $assignment) {
             $correctors_by_task[$assignment->getTaskId()][] = $assignment->getCorrectorId();
         }
-        return array_map(fn(array $x) => array_unique($x), $correctors_by_task);
+        return array_map(fn (array $x) => array_unique($x), $correctors_by_task);
     }
 
     /**
@@ -89,7 +93,7 @@ class Service implements FullService
      */
     private function purgeAllPoints(int $task_id)
     {
-        foreach($this->repos->essay()->allByTaskId($task_id) as $essay) {
+        foreach ($this->repos->essay()->allByTaskId($task_id) as $essay) {
             $this->repos->correctorPoints()->deleteByEssayId($essay->getId());
         }
     }
@@ -107,7 +111,7 @@ class Service implements FullService
         }
 
 
-        foreach($corrector_ids as $corrector_id) {
+        foreach ($corrector_ids as $corrector_id) {
             $matching = [];
             foreach ($fixed_criteria as $criterion) {
                 $corr_criterion = clone($criterion);
@@ -119,7 +123,9 @@ class Service implements FullService
 
             foreach ($this->repos->essay()->allByTaskId($task_id) as $essay) {
                 foreach ($this->repos->correctorPoints()->allByEssayIdAndCorrectorId(
-                    $essay->getId(), $corrector_id) as $points) {
+                    $essay->getId(),
+                    $corrector_id
+                ) as $points) {
                     if (isset($matching[$points->getCriterionId()])) {
                         $points->setCriterionId($matching[$points->getCriterionId()]);
                         $this->repos->correctorPoints()->save($points);
@@ -135,8 +141,8 @@ class Service implements FullService
      */
     private function purgeCriteriaInPoints(int $task_id, array $corrector_ids)
     {
-        foreach($corrector_ids as $corrector_id){
-            foreach($this->repos->essay()->allByTaskId($task_id) as $essay) {
+        foreach ($corrector_ids as $corrector_id) {
+            foreach ($this->repos->essay()->allByTaskId($task_id) as $essay) {
                 $comment_points = [];
                 foreach ($this->repos->correctorPoints()->allByEssayIdAndCorrectorId($essay->getId(), $corrector_id) as $points) {
                     if ($points->getCommentId() !== null) {
