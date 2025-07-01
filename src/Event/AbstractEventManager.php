@@ -54,6 +54,6 @@ abstract class AbstractEventManager implements EventObserver, EventDispatcher
     public function update(Event $event) : void
     {
         $handler = array_map(fn (string $handler) => $this->handler[$handler], $this->event_map[$event::class] ?? []);
-        array_map(fn (EventHandler $handler) => $handler->handerEvent($event), $handler);
+        array_map(fn (EventHandler $handler) => $handler->handleEvent($event), $handler);
     }
 }
