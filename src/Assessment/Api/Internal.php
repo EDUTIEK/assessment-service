@@ -54,7 +54,7 @@ class Internal
      * REST handler for writer web app
      * (no caching needed, created once per request)
      */
-    public function writer(int $ass_id, int $context_id, int $user_id): WriterAppService
+    public function writerApp(int $ass_id, int $context_id, int $user_id): WriterAppService
     {
         return new WriterAppService(
             $ass_id,
@@ -71,7 +71,7 @@ class Internal
      * REST handler for corrector web app
      * (no caching needed, created once per request)
      */
-    public function corrector(int $ass_id, int $context_id, int $user_id): CorrectorAppService
+    public function correctorApp(int $ass_id, int $context_id, int $user_id): CorrectorAppService
     {
         return new CorrectorAppService(
             $ass_id,

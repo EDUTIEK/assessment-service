@@ -8,6 +8,7 @@ interface WriterRepo
 {
     public function new(): Writer;
     public function one(int $id): ?Writer;
+    public function hasByWriterIdAndAssId(int $writer_id, int $ass_id): bool;
     public function oneByUserIdAndAssId(int $user_id, int $ass_id): ?Writer;
     /** @return Writer[] */
     public function allByUserIdsAndAssId(array $user_ids, int $ass_id): array;

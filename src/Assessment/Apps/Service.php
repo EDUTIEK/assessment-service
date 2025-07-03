@@ -36,11 +36,11 @@ class Service implements RestService
 
             switch ($this->module) {
                 case self::MODULE_WRITER:
-                    $this->internal->writer($this->ass_id, $this->context_id, $this->user_id)->handle();
+                    $this->internal->writerApp($this->ass_id, $this->context_id, $this->user_id)->handle();
                     break;
 
                 case self::MODULE_CORRECTOR:
-                    $this->internal->corrector($this->ass_id, $this->context_id, $this->user_id)->handle();
+                    $this->internal->correctorApp($this->ass_id, $this->context_id, $this->user_id)->handle();
                     break;
             }
         } catch (RestException $e) {

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\Api;
 
+use Edutiek\AssessmentService\EssayTask\Essay\FullService as EssayFullService;
+use Edutiek\AssessmentService\EssayTask\Essay\Service as EssayService;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\FullService as WritingSettingsFullService;
 use Edutiek\AssessmentService\EssayTask\CorrectionSettings\Service as CorrectionSettingsService;
@@ -24,6 +26,14 @@ class ForClients
         private int $user_id,
         private readonly Dependencies $dependencies
     ) {
+    }
+
+    public function essay(): EssayFullService
+    {
+        return $this->instances[EssayFullService::class] = new EssayService(
+            $this->dependencies->repositories(),
+            $this->dependencies->assessmentApi($this->ass_id)->writer()
+        );
     }
 
     public function correctionSettings(): CorrectionSettingsFullService

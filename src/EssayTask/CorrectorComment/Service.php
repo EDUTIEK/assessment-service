@@ -33,9 +33,9 @@ readonly class Service implements FullService
         $this->repos->correctorComment()->save($comment);
     }
 
-    private function checkScope(CorrectorComment $criterion)
+    private function checkScope(CorrectorComment $comment)
     {
-        if ($criterion->getEssayId() !== $this->essay_id) {
+        if ($comment->getEssayId() !== $this->essay_id) {
             throw new ApiException("wrong essay_id", ApiException::ID_SCOPE);
         }
     }

@@ -21,6 +21,8 @@ use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsR
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
 use Edutiek\AssessmentService\Assessment\Properties\FullService as PropertiesFullSrvice;
 use Edutiek\AssessmentService\Assessment\Properties\Service as PropertiesService;
+use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterFullService;
+use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
 use Edutiek\AssessmentService\Assessment\WriterApp\OpenService as WriterAppOpenService;
 
 class ForClients
@@ -45,7 +47,7 @@ class ForClients
     
     public function correctorApp(int $context_id): CorrectorAppOpenService
     {
-        return $this->internal->corrector($this->ass_id, $context_id, $this->user_id);
+        return $this->internal->correctorApp($this->ass_id, $context_id, $this->user_id);
     }
     
     public function gradLevel(): GradeLevelFullService
@@ -108,8 +110,16 @@ class ForClients
         );
     }
 
+    public function writer(): WriterFullService
+    {
+        return $this->instances[WriterFullService::class] ??= new WriterService(
+            $this->ass_id,
+            $this->dependencies->repositories()
+        );
+    }
+
     public function writerApp(int $context_id): WriterAppOpenService
     {
-        return $this->internal->writer($this->ass_id, $context_id, $this->user_id);
+        return $this->internal->writerApp($this->ass_id, $context_id, $this->user_id);
     }
 }

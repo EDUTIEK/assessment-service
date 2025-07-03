@@ -38,14 +38,14 @@ class Service implements ReadService
     public function canViewWriterScreen(): bool
     {
         return $this->permissions->getRead() &&
-            $this->isOnline() &&
+            ($this->isOnline() || $this->canEditOrgaSettings()) &&
             ($this->orga_settings->getParticipationType() === ParticipationType::INSTANT || $this->isWriter());
     }
 
     public function canViewCorrectorScreen(): bool
     {
         return $this->permissions->getRead() &&
-            $this->isOnline() &&
+            ($this->isOnline() || $this->canEditOrgaSettings()) &&
             $this->isCorrector();
     }
 

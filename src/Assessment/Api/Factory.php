@@ -7,6 +7,7 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 use Edutiek\AssessmentService\Assessment\Api\Dependencies;
 use Edutiek\AssessmentService\Assessment\Api\ForClients;
 use Edutiek\AssessmentService\Assessment\Api\ForRest;
+use Edutiek\AssessmentService\Assessment\Api\ForTasks;
 
 class Factory
 {
@@ -40,6 +41,17 @@ class Factory
         return $this->instances[ForRest::class] ??= new ForRest(
             $this->dependencies,
             $this->internal()
+        );
+    }
+
+    /**
+     * Get the API for Tasks and Task Types
+     */
+    public function forTasks(int $ass_id): ForTasks
+    {
+        return $this->instances[ForRest::class] ??= new ForTasks(
+            $ass_id,
+            $this->dependencies
         );
     }
 

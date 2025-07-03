@@ -14,7 +14,7 @@ class Factory
 
     /**
      * Get the API for client systems
-     * @param int $task_id  id of the task
+     * @param int $ass_id  id of the assessment
      */
     public function forClients(int $ass_id, int $user_id): ForClients
     {
@@ -26,8 +26,7 @@ class Factory
     }
 
     /**
-     * Get the API for client systems
-     * @param int $ass_id  id of the assessment
+     * Get the API for the task
      */
     public function forTask(): ForTask
     {
