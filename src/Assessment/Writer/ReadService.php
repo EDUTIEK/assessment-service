@@ -3,6 +3,7 @@
 namespace Edutiek\AssessmentService\Assessment\Writer;
 
 use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 
 interface ReadService
 {

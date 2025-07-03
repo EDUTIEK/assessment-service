@@ -4,6 +4,7 @@ namespace Edutiek\AssessmentService\Assessment\Writer;
 
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Assessment\Api\ApiException;
 
 readonly class Service implements ReadService, FullService
 {
@@ -18,8 +19,28 @@ readonly class Service implements ReadService, FullService
         return $this->repos->writer()->hasByWriterIdAndAssId($writer_id, $this->ass_id);
     }
 
+    public function getByUserId(int $user_id) : Writer
+    {
+        $writer = $this->oneByUserId($user_id);
+        if ($writer === null) {
+            $writer = $this->repos->writer()->new()->setAssId($this->ass_id)->setUserId($user_id);
+            $this->repos->writer()->save($writer);
+        } else {
+            $this->checkScope($writer);
+        }
+        return $writer;
+    }
+
     public function oneByUserId(int $user_id) : ?Writer
     {
         return $this->repos->writer()->oneByUserIdAndAssId($user_id, $this->ass_id);
+    }
+
+
+    private function checkScope(Writer $writer)
+    {
+        if ($writer->getAssId() !== $this->ass_id) {
+            throw new ApiException("wrong ass_id", ApiException::ID_SCOPE);
+        }
     }
 }

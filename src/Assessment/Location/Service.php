@@ -17,6 +17,13 @@ readonly class Service implements FullService
     ) {
     }
 
+    public function one(int $id): ?Location
+    {
+       $location = $this->repos->location()->one($id);
+       $this->checkScope($location);
+       return $location;
+    }
+
     public function all(): array
     {
         return $this->repos->location()->allByAssId($this->ass_id);
@@ -74,5 +81,4 @@ readonly class Service implements FullService
             }
         }
     }
-
 }

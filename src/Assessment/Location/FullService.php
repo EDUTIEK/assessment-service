@@ -8,6 +8,8 @@ use Edutiek\AssessmentService\Assessment\Data\Location;
 
 interface FullService
 {
+    public function one(int $id): ?Location;
+
     /** @return Location[] */
     public function all(): array;
     public function new(): Location;

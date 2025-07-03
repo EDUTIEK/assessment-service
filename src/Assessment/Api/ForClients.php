@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Api;
 
+use Edutiek\AssessmentService\Assessment\Corrector\FullService as CorrectorFullService;
+use Edutiek\AssessmentService\Assessment\Corrector\Service as CorrectorService;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\FullService as CorrectionSettingsFullService;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\Service as CorrectionSettingsService;
 use Edutiek\AssessmentService\Assessment\CorrectorApp\OpenService as CorrectorAppOpenService;
@@ -44,7 +46,16 @@ class ForClients
             $this->dependencies->repositories()
         );
     }
-    
+
+    public function corrector(): CorrectorFullService
+    {
+        return $this->instances[CorrectorFullService::class] ??= new CorrectorService(
+            $this->ass_id,
+            $this->dependencies->repositories()
+        );
+    }
+
+
     public function correctorApp(int $context_id): CorrectorAppOpenService
     {
         return $this->internal->correctorApp($this->ass_id, $context_id, $this->user_id);
