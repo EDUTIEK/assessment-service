@@ -2,55 +2,50 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\Assessment\Data;
+namespace Edutiek\AssessmentService\Assessment\WorkingTime;
 
 use DateTimeZone;
 use DateTimeImmutable;
+use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
+use Edutiek\AssessmentService\System\Language\FullService as Language;
+use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\System\Format\FullService as SystemFormat;
 
 /**
  * Calculation of the common or individual working time
  */
-class WorkingTime
+readonly class Service implements FullService
 {
     private DateTimeZone $time_zone;
-
-    private ?DateTimeImmutable $common_earliest_start = null;
-    private ?DateTimeImmutable $common_latest_end = null;
-    private ?DateTimeImmutable $writer_earliest_start = null;
-    private ?DateTimeImmutable $writer_latest_end = null;
-
-    private ?int $common_time_limit_minutes = null;
-    private ?int $writer_time_limit_minutes = null;
-
-    private ?DateTimeImmutable $working_start = null;
-
+    private ?DateTimeImmutable $common_earliest_start;
+    private ?DateTimeImmutable $common_latest_end;
+    private ?DateTimeImmutable $writer_earliest_start;
+    private ?DateTimeImmutable $writer_latest_end;
+    private ?int $common_time_limit_minutes;
+    private ?int $writer_time_limit_minutes;
+    private ?DateTimeImmutable $working_start;
 
     public function __construct(
+        private Language $language,
         OrgaSettings $settings,
         ?Writer $writer = null
     ) {
         $this->time_zone = new DateTimeZone(date_default_timezone_get());
 
-        if ($settings->getWritingStart() !== null) {
-            $this->common_earliest_start = $settings->getWritingStart();
-        }
-
-        if ($settings->getWritingEnd() !== null) {
-            $this->common_latest_end = $settings->getWritingEnd();
-        }
-
-        if ($settings->getWritingLimitMinutes() !== null) {
-            $this->common_time_limit_minutes = $settings->getWritingLimitMinutes();
-        }
+        $this->common_earliest_start = $settings->getWritingStart();
+        $this->common_latest_end = $settings->getWritingEnd();
+        $this->common_time_limit_minutes = $settings->getWritingLimitMinutes();
 
         if ($writer !== null) {
             $this->writer_earliest_start = $writer->getEarliestStart();
             $this->writer_latest_end = $writer->getLatestEnd();
             $this->working_start = $writer->getWorkingStart();
-
-            if ($writer->getTimeLimitMinutes() !== null) {
-                $this->writer_time_limit_minutes = $writer->getTimeLimitMinutes();
-            }
+            $this->writer_time_limit_minutes = $writer->getTimeLimitMinutes();
+        } else {
+            $this->writer_earliest_start = null;
+            $this->writer_latest_end = null;
+            $this->working_start = null;
+            $this->writer_time_limit_minutes = null;
         }
     }
 
@@ -217,5 +212,18 @@ class WorkingTime
             $this->getLatestEnd() != null &&
             $this->getTimeLimitMinutes() != null &&
             $this->getTimeLimitMinutes() * 60 > $this->getLatestEnd()->getTimestamp() - $this->getEarliestStart()->getTimestamp();
+    }
+
+    public function format(SystemFormat $system_format): string
+    {
+        if ($this->isLimited()) {
+            $string = $system_format->dateRange($this->getEarliestStart(), $this->getLatestEnd());
+            if ($this->getTimeLimitMinutes()) {
+                $string .= ', ' . $system_format->duration($this->getTimeLimitMinutes() * 60);
+            }
+            return $string;
+        }
+
+        return $this->language->txt('not_specified');
     }
 }

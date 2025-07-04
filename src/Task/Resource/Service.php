@@ -9,6 +9,8 @@ use Edutiek\AssessmentService\Task\Api\ApiException;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Task\Data\Resource;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
+use Edutiek\AssessmentService\Task\Data\ResourceAvailability;
+use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 
 readonly class Service implements FullService
 {
@@ -81,6 +83,22 @@ readonly class Service implements FullService
         if ($resource->getFileId() !== null) {
             $this->storage->deleteFile($resource->getFileId() ?? '');
         }
+    }
+
+    public function isAvailable(OrgaSettings $orga, Resource $resource): bool
+    {
+        if ($resource->getAvailability() === ResourceAvailability::BEFORE) {
+            return true;
+        }
+
+        if ($resource->getAvailability() === ResourceAvailability::DURING
+            && time() < $orga->getWritingStart()->getTimestamp()) {
+            return true;
+        }
+
+        return $resource->getAvailability() === ResourceAvailability::AFTER
+            && $orga->getSolutionAvailable()
+            && time() < $orga->getSolutionAvailableDate()->getTimestamp();
     }
 
     private function checkScope(Resource $resource)

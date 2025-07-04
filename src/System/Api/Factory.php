@@ -13,17 +13,21 @@ class Factory
     /**
      * Get the API for client systems
      */
-    public function forClients() : ForClients
+    public function forClients(): ForClients
     {
-        return $this->instances[ForClients::class] ??= new ForClients($this->dependencies);
+        return $this->instances[ForClients::class] ??= new ForClients($this->dependencies, $this->internal());
     }
 
     /**
      * Get the API for peer services
      */
-    public function forServices() : ForServices
+    public function forServices(): ForServices
     {
-        return $this->instances[ForServices::class] ??= new ForServices($this->dependencies);
+        return $this->instances[ForServices::class] ??= new ForServices($this->dependencies, $this->internal());
     }
 
+    private function internal(): Internal
+    {
+        return $this->instances[Internal::class] ??= new Internal($this->dependencies);
+    }
 }

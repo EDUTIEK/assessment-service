@@ -16,13 +16,16 @@ use Edutiek\AssessmentService\System\Transform\FullService as TransformFullServi
 use Edutiek\AssessmentService\System\Transform\Service as TransformService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\System\User\Service as UserService;
+use Closure;
 
 class ForClients
 {
     private array $instances = [];
 
-    public function __construct(private readonly Dependencies $dependencies)
-    {
+    public function __construct(
+        private readonly Dependencies $dependencies,
+        private readonly Internal $internal
+    ) {
     }
 
     public function config(): ConfigFullService
@@ -48,12 +51,13 @@ class ForClients
         return $this->dependencies->fileDelivery();
     }
 
-    public function format(?string $language = null, ?string $timezone = null): FormatFullService
+    /**
+     * @param Closure(DateTimeInterface): string $format_date
+     */
+    public function format(int $user_id, Closure $format_date, ?string $timezone = null): FormatFullService
     {
-        $language ??= $this->config()->getSetup()->getDefaultLanguage();
         $timezone ??= $this->config()->getSetup()->getDefaultTimezone();
-
-        return $this->instances[$language][$timezone->getName()] ??= new FormatService($language, $timezone);
+        return new FormatService($format_date, $timezone, $this->internal->language($user_id));
     }
 
     public function transform(): TransformFullService

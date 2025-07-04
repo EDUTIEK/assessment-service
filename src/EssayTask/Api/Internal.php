@@ -26,20 +26,8 @@ class Internal
 
     public function language(int $user_id): LanguageService
     {
-        $default_code = $this->dependencies->systemApi()->config()->getSetup()->getDefaultLanguage();
-        $user_code = $this->dependencies->systemApi()->user()->getUser($user_id)?->getLanguage() ?? $default_code;
-
-        $service = $this->instances[LanguageService::class][$user_id] = $this->dependencies->systemApi()->language()
-            ->setDefaultLanguage($user_code)
-            ->setLanguage($user_code);
-
-        foreach (array_unique([$default_code, $user_code]) as $code) {
-            if (file_exists(__DIR__ . '/../Languages/' . $code . '.php')) {
-                $service->addLanguage($code, require(__DIR__ . '/../Languages/' . $code . '.php'));
-            }
-        }
-
-        return $service;
+        return $this->instances[LanguageService::class][$user_id] ??=
+            $this->dependencies->systemApi()->loadLanguagFromFile($user_id, __DIR__ . '/../Languages/');
     }
 
     public function comments(): CommentsService

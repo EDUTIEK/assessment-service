@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\System\Api;
 
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigReadService;
-use Edutiek\AssessmentService\System\Config\Service as ConfigService;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\Format\FullService as FormatFullService;
@@ -14,7 +13,6 @@ use Edutiek\AssessmentService\System\ImageSketch\ImageMagick\Sketch;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageFullService;
 use Edutiek\AssessmentService\System\Language\Service as LanguageService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
-use Edutiek\AssessmentService\System\User\Service as UserService;
 use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverterFullService;
 use Edutiek\AssessmentService\System\PdfConverter\ServiceByImageMagick;
 use Edutiek\AssessmentService\System\PdfConverter\ServiceByGhostscript;
@@ -27,16 +25,14 @@ class ForServices
     private array $instances = [];
 
     public function __construct(
-        private readonly Dependencies $dependencies
+        private readonly Dependencies $dependencies,
+        private readonly Internal $internal
     ) {
     }
 
     public function config(): ConfigReadService
     {
-        return $this->instances[ConfigReadService::class] ??= new ConfigService(
-            $this->dependencies->configRepo(),
-            $this->dependencies->setupRepo()
-        );
+        return $this->internal->config();
     }
 
     public function fileStorage(): Storage
@@ -59,10 +55,7 @@ class ForServices
 
     public function user(): UserReadService
     {
-        return $this->instances[UserReadService::class] ??= new UserService(
-            $this->dependencies->userDataRepo(),
-            $this->dependencies->userDisplayRepo()
-        );
+        return $this->internal->user();
     }
 
     public function imageSketch(): ImageSketchFullService
@@ -83,6 +76,11 @@ class ForServices
     public function language(): LanguageFullService
     {
         return new LanguageService();
+    }
+
+    public function loadLanguagFromFile(int $user_id, string $dir): LanguageFullService
+    {
+        return $this->internal->loadLanguagFromFile($user_id, $dir);
     }
 
     public function pdfConverter(): PdfConverterFullService
