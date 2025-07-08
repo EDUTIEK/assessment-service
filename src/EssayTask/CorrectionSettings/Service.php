@@ -4,15 +4,13 @@ declare(strict_types = 1);
 
 namespace Edutiek\AssessmentService\EssayTask\CorrectionSettings;
 
-use Edutiek\AssessmentService\EssayTask\Data\Repositories;
-use Edutiek\AssessmentService\EssayTask\CorrectionSettings\FullService;
-use Edutiek\AssessmentService\EssayTask\Data\CorrectionSettings;
 use Edutiek\AssessmentService\EssayTask\Api\ApiException;
+use Edutiek\AssessmentService\EssayTask\AssessmentStatus\FullService as AssessmentStatus;
+use Edutiek\AssessmentService\EssayTask\Data\CorrectionSettings;
 use Edutiek\AssessmentService\EssayTask\Data\CriteriaMode;
-use Edutiek\AssessmentService\EssayTask\Api\Dependencies;
-use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentService;
+use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\Data\TaskSettings;
-use Edutiek\AssessmentService\EssayTask\CorrectorSummary\FullService as CorrectorSummaryService;
+use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentService;
 
 class Service implements FullService
 {
@@ -22,6 +20,7 @@ class Service implements FullService
         private int $ass_id,
         private Repositories $repos,
         private CorrectorAssignmentService $corrector_assignment_service,
+        private AssessmentStatus $assessment_status,
     ) {
     }
 
@@ -34,10 +33,40 @@ class Service implements FullService
     public function save(CorrectionSettings $settings) : void
     {
         $this->checkScope($settings);
+
+        $existing = $this->get();
+        if ($existing->getCriteriaMode() !== $settings->getCriteriaMode() && $this->assessment_status->hasAuthorizedSummaries()) {
+            throw new ApiException("changing criteria mode not allowed if corrections are authorized", ApiException::CORRECTION_STATUS);
+        }
+
         $this->repos->correctionSettings()->save($settings);
+        $this->handleCriteriaModeChange($existing->getCriteriaMode(), $settings->getCriteriaMode());
     }
 
-    public function changeCriteriaMode(CriteriaMode $old_mode, CriteriaMode $new_mode)
+    /**
+     * @return int[]
+     */
+    private function allTaskIds() : array
+    {
+        return $this->task_ids ??= array_map(fn (TaskSettings $x) => $x->getTaskId(), $this->repos->taskSettings()->allByAssId($this->ass_id));
+    }
+
+    /**
+     * @return array<int, int[]>
+     */
+    private function allCorrectorIdsByTask()
+    {
+        $correctors_by_task = [];
+        foreach ($this->corrector_assignment_service->all() as $assignment) {
+            $correctors_by_task[$assignment->getTaskId()][] = $assignment->getCorrectorId();
+        }
+        return array_map(fn (array $x) => array_unique($x), $correctors_by_task);
+    }
+
+    /**
+     * Handle a change of the criteria mode
+     */
+    private function handleCriteriaModeChange(CriteriaMode $old_mode, CriteriaMode $new_mode)
     {
         switch (CriteriaModeTransition::fromTransition($old_mode, $new_mode)) {
             case CriteriaModeTransition::NoneToFixed:
@@ -65,27 +94,6 @@ class Service implements FullService
                 }
                 break;
         }
-        // TODO: Remove Authorizations, which also triggers logging?
-    }
-
-    /**
-     * @return int[]
-     */
-    private function allTaskIds() : array
-    {
-        return $this->task_ids ??= array_map(fn (TaskSettings $x) => $x->getTaskId(), $this->repos->taskSettings()->allByAssId($this->ass_id));
-    }
-
-    /**
-     * @return array<int, int[]>
-     */
-    private function allCorrectorIdsByTask()
-    {
-        $correctors_by_task = [];
-        foreach ($this->corrector_assignment_service->all() as $assignment) {
-            $correctors_by_task[$assignment->getTaskId()][] = $assignment->getCorrectorId();
-        }
-        return array_map(fn (array $x) => array_unique($x), $correctors_by_task);
     }
 
     /**

@@ -11,5 +11,4 @@ interface FullService
 {
     public function get(): CorrectionSettings;
     public function save(CorrectionSettings $settings): void;
-    public function changeCriteriaMode(CriteriaMode $old_mode, CriteriaMode $new_mode);
 }

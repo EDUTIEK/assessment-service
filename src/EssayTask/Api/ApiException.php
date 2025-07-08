@@ -13,4 +13,14 @@ class ApiException extends Exception
      * e.g. an ass_id that is not handled by the service
      */
     public const ID_SCOPE = 0;
+
+    /**
+     * The operation is not allowed due to the writing status of an essay
+     */
+    public const WRITING_STATUS = 1;
+
+    /**
+     * The operation is not allowed due to the correction status of an essay
+     */
+    public const CORRECTION_STATUS = 2;
 }
