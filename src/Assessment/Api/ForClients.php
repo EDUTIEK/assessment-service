@@ -29,7 +29,6 @@ use Edutiek\AssessmentService\Assessment\WriterApp\OpenService as WriterAppOpenS
 use Edutiek\AssessmentService\Assessment\Format\Service as Format;
 use Edutiek\AssessmentService\Assessment\Format\FullService as FormatInterface;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
-use Edutiek\AssessmentService\System\Format\FullService as SystemFormat;
 use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as FullWorkingTime;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Service as WorkingTime;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
@@ -141,9 +140,13 @@ class ForClients
         return $this->internal->writerApp($this->ass_id, $context_id, $this->user_id);
     }
 
-    public function format(SystemFormat $format, OrgaSettings $orga): FormatInterface
+    public function format(OrgaSettings $orga): FormatInterface
     {
-        return new Format($this->internal->language($this->user_id), $format, $orga);
+        return new Format(
+            $this->internal->language($this->user_id),
+            $this->dependencies->systemApi()->format($this->user_id),
+            $orga
+        );
     }
 
     public function workingTime(OrgaSettings $orga, ?Writer $writer = null): FullWorkingTime

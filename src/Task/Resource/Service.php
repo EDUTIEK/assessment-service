@@ -92,7 +92,7 @@ readonly class Service implements FullService
         }
 
         if ($resource->getAvailability() === ResourceAvailability::DURING
-            && time() < $orga->getWritingStart()->getTimestamp()) {
+            && time() < $orga->getWritingStart()?->getTimestamp()) {
             return true;
         }
 

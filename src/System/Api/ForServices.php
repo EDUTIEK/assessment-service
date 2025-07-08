@@ -45,12 +45,12 @@ class ForServices
         return $this->dependencies->fileDelivery();
     }
 
-    public function format(?string $language = null, ?string $timezone = null): FormatFullService
+    public function format(int $user_id, ?string $timezone = null): FormatFullService
     {
-        $language ??= $this->config()->getSetup()->getDefaultLanguage();
+        $language = $this->internal->language($user_id);
         $timezone ??= $this->config()->getSetup()->getDefaultTimezone();
 
-        return $this->instances[$language][$timezone->getName()] ??= new FormatService($language, $timezone);
+        return new FormatService($this->dependencies->formatDate(...), $timezone, $language);
     }
 
     public function user(): UserReadService

@@ -51,13 +51,10 @@ class ForClients
         return $this->dependencies->fileDelivery();
     }
 
-    /**
-     * @param Closure(DateTimeInterface): string $format_date
-     */
-    public function format(int $user_id, Closure $format_date, ?string $timezone = null): FormatFullService
+    public function format(int $user_id, ?string $timezone = null): FormatFullService
     {
         $timezone ??= $this->config()->getSetup()->getDefaultTimezone();
-        return new FormatService($format_date, $timezone, $this->internal->language($user_id));
+        return new FormatService($this->dependencies->formatDate(...), $timezone, $this->internal->language($user_id));
     }
 
     public function transform(): TransformFullService

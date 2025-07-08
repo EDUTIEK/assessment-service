@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\Data\SetupRepo;
 use Edutiek\AssessmentService\System\Data\UserDisplayRepo;
+use DateTimeInterface;
 
 interface Dependencies
 {
@@ -19,4 +20,5 @@ interface Dependencies
     public function fileDelivery(): Delivery;
     public function userDataRepo(): UserDataRepo;
     public function userDisplayRepo(): UserDisplayRepo;
+    public function formatDate(DateTimeInterface $date): string;
 }
