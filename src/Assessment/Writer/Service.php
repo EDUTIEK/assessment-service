@@ -36,6 +36,23 @@ readonly class Service implements ReadService, FullService
         return $this->repos->writer()->oneByUserIdAndAssId($user_id, $this->ass_id);
     }
 
+    public function oneByWriterId(int $writer_id): ?Writer
+    {
+        $writer = $this->repos->writer()->one($writer_id);
+        $this->checkScope($writer);
+        return $writer;
+    }
+
+    public function all(): array
+    {
+        return $this->repos->writer()->allByAssId($this->ass_id);
+    }
+
+    public function save(Writer $writer): void
+    {
+        $this->checkScope($writer);
+        $this->repos->writer()->save($writer);
+    }
 
     private function checkScope(Writer $writer)
     {

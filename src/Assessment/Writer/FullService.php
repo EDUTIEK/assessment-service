@@ -10,4 +10,6 @@ interface FullService extends ReadService
      * Get or create a writer of the assessment by its user id
      */
     public function getByUserId(int $user_id) : Writer;
+
+    public function save(Writer $writer) : void;
 }

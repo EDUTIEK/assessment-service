@@ -9,4 +9,7 @@ interface ReadService
 {
     public function has(int $writer_id): bool;
     public function oneByUserId(int $user_id): ?Writer;
+    /** @return Writer[] */
+    public function all(): array;
+    public function oneByWriterId(int $writer_id): ?Writer;
 }

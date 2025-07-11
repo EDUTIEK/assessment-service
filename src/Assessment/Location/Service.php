@@ -56,7 +56,7 @@ readonly class Service implements FullService
     {
         $titles = [];
         foreach($this->repos->location()->allByAssId($this->ass_id) as $location) {
-            $titles[] = $location->getTitle();
+            $titles[$location->getId()] = $location->getTitle();
         }
         sort($titles);
         return array_unique($titles);

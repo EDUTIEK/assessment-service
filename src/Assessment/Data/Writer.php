@@ -46,4 +46,67 @@ abstract class Writer implements AssessmentEntity
     abstract public function setLocation(?int $location): self;
     abstract public function getReviewNotification(): int;
     abstract public function setReviewNotification(int $review_notification): self;
+
+    public function getStatus(): WritingStatus
+    {
+        if($this->getWritingExcluded() !== null){
+            return WritingStatus::EXCLUDED;
+        }
+        if($this->getWritingAuthorized() !== null) {
+            return WritingStatus::AUTHORIZED;
+        }
+        if($this->getWorkingStart() !== null) {
+            return WritingStatus::STARTED;
+        }
+        return WritingStatus::NOT_STARTED;
+    }
+
+    public function isAuthorized() : bool
+    {
+        return $this->getWritingAuthorized() !== null;
+    }
+
+    public function canGetAuthorized() : bool
+    {
+        return $this->getWorkingStart() !== null
+            && $this->getWritingAuthorized() === null;
+    }
+
+    public function canGetUnauthorized() : bool
+    {
+        return $this->getWorkingStart() !== null
+            && $this->getWritingAuthorized() !== null;
+    }
+
+    public function hasChangedTimeLimit() : bool
+    {
+        return $this->getEarliestStart() !== null
+            || $this->getLatestEnd() !== null
+            || !empty($this->getTimeLimitMinutes());
+    }
+
+    public function canChangeWorkingTime() : bool
+    {
+        return $this->getWritingAuthorized() === null && $this->getCorrectionFinalized() === null;
+    }
+
+    public function isExcluded() : bool
+    {
+        return $this->getWritingExcluded() !== null;
+    }
+
+    public function canGetExcluded() : bool
+    {
+        return $this->getWritingExcluded() === null;
+    }
+
+    public function canGetRepealed() : bool
+    {
+        return $this->getWritingExcluded() !== null;
+    }
+
+    public function canGetSight() : bool
+    {
+        return $this->getWorkingStart() !== null;
+    }
 }
