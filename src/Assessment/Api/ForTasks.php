@@ -10,7 +10,7 @@ use Edutiek\AssessmentService\Assessment\Apps\RestService as RestService;
 use Edutiek\AssessmentService\Assessment\Apps\Service as AppService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
 use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
-
+use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 class ForTasks
 {
     private array $instances = [];
@@ -26,6 +26,16 @@ class ForTasks
         return $this->instances[WriterReadService::class] ??= new WriterService(
             $this->ass_id,
             $this->dependencies->repositories()
+        );
+    }
+
+    public function logEntry(): LogEntryService
+    {
+        return $this->instances[LogEntryService::class] ??= new LogEntryService(
+            $this->ass_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->language(),
+            $this->dependencies->systemApi()->user()
         );
     }
 }
