@@ -8,7 +8,11 @@ use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
 use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
 use Edutiek\AssessmentService\Assessment\Authentication\Service as AuthenticationService;
 use Edutiek\AssessmentService\Assessment\CorrectorApp\Service as CorrectorAppService;
+use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
+use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
+use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as FullWorkingTime;
+use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\Assessment\WriterApp\Service as WriterAppService;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Slim\App;
@@ -138,5 +142,15 @@ class Internal
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(true, true, true);
         return $app;
+    }
+
+    /**
+     * Factory for working time calculations
+     */
+    public function workingTimeFactory(int $user_id): WorkingTimeFactory
+    {
+        return $this->instances[WorkingTimeFactory::class][$user_id] ??= new WorkingTimeFactory(
+            $this->language($user_id),
+        );
     }
 }

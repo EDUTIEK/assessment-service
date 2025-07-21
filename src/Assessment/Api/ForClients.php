@@ -66,7 +66,7 @@ class ForClients
     {
         return $this->internal->correctorApp($this->ass_id, $context_id, $this->user_id);
     }
-    
+
     public function gradLevel(): GradeLevelFullService
     {
         return $this->instances[GradeLevelService::class] = new GradeLevelService(
@@ -97,7 +97,8 @@ class ForClients
     {
         return $this->instances[OrgaSettingsService::class] = new OrgaSettingsService(
             $this->ass_id,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->internal->workingTimeFactory($this->user_id)
         );
     }
 
@@ -151,7 +152,9 @@ class ForClients
 
     public function workingTime(OrgaSettings $orga, ?Writer $writer = null): FullWorkingTime
     {
-        return $this->instances[WorkingTime::class] ??=
-            new WorkingTime($this->internal->language($this->user_id), $orga, $writer);
+        return $this->internal->workingTimeFactory($this->user_id)->workingTime(
+            $orga,
+            $writer
+        );
     }
 }
