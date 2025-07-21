@@ -2,8 +2,10 @@
 
 namespace Edutiek\AssessmentService\Assessment\LogEntry;
 
-interface FullService extends TasksService
+interface TasksService
 {
+    public function addEntry(Type $type, ?MentionUser $subject_mention, ?MentionUser $object_mention = null, ?string $note = null) : void;
+
     /**
      * Create the log as a CSV string
      */

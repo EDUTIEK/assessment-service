@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\Assessment\Apps\RestService as RestService;
 use Edutiek\AssessmentService\Assessment\Apps\Service as AppService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
 use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
+use Edutiek\AssessmentService\Assessment\LogEntry\TasksService as LogEntryTasksService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 class ForTasks
 {
@@ -29,7 +30,7 @@ class ForTasks
         );
     }
 
-    public function logEntry(): LogEntryService
+    public function logEntry(): LogEntryTasksService
     {
         return $this->instances[LogEntryService::class] ??= new LogEntryService(
             $this->ass_id,
