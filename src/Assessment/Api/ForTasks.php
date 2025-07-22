@@ -18,7 +18,9 @@ class ForTasks
 
     public function __construct(
         private readonly int $ass_id,
-        private readonly Dependencies $dependencies
+        private readonly int $user_id,
+        private readonly Dependencies $dependencies,
+        private readonly Internal $internal
     ) {
     }
 
@@ -26,7 +28,9 @@ class ForTasks
     {
         return $this->instances[WriterReadService::class] ??= new WriterService(
             $this->ass_id,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->internal->workingTimeFactory($this->user_id),
+            $this->logEntry()
         );
     }
 

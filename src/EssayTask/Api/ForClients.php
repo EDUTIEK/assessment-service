@@ -32,7 +32,7 @@ class ForClients
     {
         return $this->instances[EssayFullService::class] = new EssayService(
             $this->dependencies->repositories(),
-            $this->dependencies->assessmentApi($this->ass_id)->writer()
+            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->writer()
         );
     }
 

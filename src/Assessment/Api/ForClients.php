@@ -32,6 +32,9 @@ use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as FullWorkingTime;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Service as WorkingTime;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Assessment\LogEntry\FullService as FullLogEntryService;
+use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
+use Edutiek\AssessmentService\Assessment\WorkingTime\IndividualWorkingTime;
 
 class ForClients
 {
@@ -132,7 +135,9 @@ class ForClients
     {
         return $this->instances[WriterFullService::class] ??= new WriterService(
             $this->ass_id,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->internal->workingTimeFactory($this->user_id),
+            $this->logEntry()
         );
     }
 
@@ -150,11 +155,21 @@ class ForClients
         );
     }
 
-    public function workingTime(OrgaSettings $orga, ?Writer $writer = null): FullWorkingTime
+    public function workingTime(OrgaSettings $orga, Writer|IndividualWorkingTime|null $writer = null): FullWorkingTime
     {
         return $this->internal->workingTimeFactory($this->user_id)->workingTime(
             $orga,
             $writer
+        );
+    }
+
+    public function logEntry(): FullLogEntryService
+    {
+        return $this->instances[LogEntryService::class] ??= new LogEntryService(
+            $this->ass_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->language(),
+            $this->dependencies->systemApi()->user()
         );
     }
 }

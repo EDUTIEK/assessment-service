@@ -47,11 +47,13 @@ class Factory
     /**
      * Get the API for Tasks and Task Types
      */
-    public function forTasks(int $ass_id): ForTasks
+    public function forTasks(int $ass_id, int $user_id): ForTasks
     {
         return $this->instances[ForRest::class] ??= new ForTasks(
             $ass_id,
-            $this->dependencies
+            $user_id,
+            $this->dependencies,
+            $this->internal()
         );
     }
 
