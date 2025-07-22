@@ -10,7 +10,7 @@ use Edutiek\AssessmentService\Assessment\Data\ParticipationType;
 use Edutiek\AssessmentService\Assessment\Data\Permissions;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\ResultAvailableType;
-use Edutiek\AssessmentService\Assessment\Data\WorkingTime;
+use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 
 class Service implements ReadService
@@ -23,7 +23,8 @@ class Service implements ReadService
         private readonly int $ass_id,
         private readonly int $context_id,
         private readonly int $user_id,
-        private readonly Repositories $repos
+        private readonly Repositories $repos,
+        private WorkingTimeFactory $working_time_factory
     ) {
         $this->permissions = $this->repos->permissions()->one($this->ass_id, $this->context_id, $this->user_id);
         $this->orga_settings = $this->repos->orgaSettings()->one(($this->ass_id)) ?? $this->repos->orgaSettings()->new();
@@ -96,7 +97,7 @@ class Service implements ReadService
             return false;
         }
 
-        $working_time = new WorkingTime($this->orga_settings, $writer);
+        $working_time = $this->working_time_factory->workingTime($this->orga_settings, $writer);
         return $working_time->isNowInAllowedTime();
     }
 

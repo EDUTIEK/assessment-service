@@ -7,7 +7,6 @@ namespace Edutiek\AssessmentService\Assessment\PdfSettings;
 use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Data\PdfSettings;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
-use Edutiek\AssessmentService\Assessment\Data\WorkingTime;
 
 readonly class Service implements FullService
 {

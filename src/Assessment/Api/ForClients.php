@@ -119,7 +119,8 @@ class ForClients
             $this->ass_id,
             $context_id,
             $this->user_id,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->internal->workingTimeFactory($this->user_id)
         );
     }
 

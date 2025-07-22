@@ -50,7 +50,8 @@ class Internal
             $ass_id,
             $context_id,
             $user_id,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->workingTimeFactory($user_id)
         );
     }
 
