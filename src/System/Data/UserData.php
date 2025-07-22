@@ -60,6 +60,9 @@ abstract readonly class UserData implements SystemEntity
         if ($this->getLastname() !== '') {
             $name = ($name !== '' ? $name . ' ' : '') . $this->getLastname();
         }
+        if ($with_login && $this->getLogin() !== '') {
+            $name = ($name !== '' ? $name . ' ' : '') . '[' . $this->getLogin() . ']';
+        }
 
         return $name;
     }
