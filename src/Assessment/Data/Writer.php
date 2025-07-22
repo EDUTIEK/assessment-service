@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Data;
 
 use DateTimeImmutable;
+use Edutiek\AssessmentService\Assessment\WorkingTime\ValidationErrorStore;
+use Edutiek\AssessmentService\Assessment\WorkingTime\ValidationError;
+use Edutiek\AssessmentService\Assessment\WorkingTime\IndividualWorkingTime;
 
-abstract class Writer implements AssessmentEntity
+abstract class Writer implements AssessmentEntity, ValidationErrorStore, IndividualWorkingTime
 {
+    /** @var ValidationError[] */
+    private $validation_errors = [];
     abstract public function getId(): int;
     abstract public function setId(int $id): self;
     abstract public function getUserId(): int;
@@ -108,5 +113,15 @@ abstract class Writer implements AssessmentEntity
     public function canGetSight() : bool
     {
         return $this->getWorkingStart() !== null;
+    }
+
+    public function addValidationError(ValidationError $error) : void
+    {
+        $this->validation_errors[] = $error;
+    }
+
+    public function getValidationErrors(): array
+    {
+        return $this->validation_errors;
     }
 }

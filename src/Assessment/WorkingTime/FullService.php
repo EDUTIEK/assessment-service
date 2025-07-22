@@ -25,4 +25,5 @@ interface FullService
     public function isEndBeforeStart(): bool;
     public function isTimeLimitTooLong(): bool;
     public function format(SystemFormat $system_format): string;
+    public function validate(?ValidationErrorStore $store = null) : bool;
 }

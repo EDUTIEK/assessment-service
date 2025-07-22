@@ -6,9 +6,7 @@ namespace Edutiek\AssessmentService\Assessment\OrgaSettings;
 
 use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
-use Edutiek\AssessmentService\Assessment\Data\OrgaSettingsError;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
-use Edutiek\AssessmentService\Assessment\Data\WorkingTime;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 
 readonly class Service implements FullService
@@ -26,22 +24,11 @@ readonly class Service implements FullService
             $this->repos->orgaSettings()->new()->setAssId($this->ass_id);
     }
 
-    public function validate(OrgaSettings $settings): bool
+    public function validate(OrgaSettings $settings) : bool
     {
         $this->checkScope($settings);
         $working_time = $this->working_time_factory->workingTime($settings);
-        if ($working_time->isEndBeforeStart()) {
-            $settings->addValidationError(OrgaSettingsError::LATEST_END_BEFORE_EARLIEST_START);
-        }
-        if ($working_time->isTimeLimitTooLong()) {
-            $settings->addValidationError(OrgaSettingsError::TIME_LIMIT_TOO_LONG);
-        }
-        if ($settings->getSolutionAvailable()
-            && $settings->getSolutionAvailableDate() !== null && $working_time->getWorkingDeadline() !== null
-            && $settings->getSolutionAvailableDate() <= $working_time->getWorkingDeadline()) {
-            $settings->addValidationError(OrgaSettingsError::TIME_EXCEEDS_SOLUTION_AVAILABILITY);
-        }
-        return empty($settings->getValidationErrors());
+        return $working_time->validate($settings);
     }
 
     public function save(OrgaSettings $settings): void

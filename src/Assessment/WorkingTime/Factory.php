@@ -15,7 +15,7 @@ readonly class Factory
     ) {
     }
 
-    public function workingTime(OrgaSettings $orga, ?Writer $writer = null): FullWorkingTime
+    public function workingTime(OrgaSettings $orga, Writer|IndividualWorkingTime|null $writer = null): FullWorkingTime
     {
         return new WorkingTime(
             $this->language,

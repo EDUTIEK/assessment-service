@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\System\Format\FullService as SystemFormat;
+use Edutiek\AssessmentService\Assessment\WorkingTime\Service as WorkingTimeService;
 
 /**
  * Calculation of the common or individual working time
@@ -24,17 +25,19 @@ readonly class Service implements FullService
     private ?int $common_time_limit_minutes;
     private ?int $writer_time_limit_minutes;
     private ?DateTimeImmutable $working_start;
+    private bool $solution_available;
 
     public function __construct(
         private Language $language,
         OrgaSettings $settings,
-        ?Writer $writer = null
+        Writer|IndividualWorkingTime|null $writer = null
     ) {
         $this->time_zone = new DateTimeZone(date_default_timezone_get());
 
         $this->common_earliest_start = $settings->getWritingStart();
         $this->common_latest_end = $settings->getWritingEnd();
         $this->common_time_limit_minutes = $settings->getWritingLimitMinutes();
+        $this->solution_available = $settings->getSolutionAvailable();
 
         if ($writer !== null) {
             $this->writer_earliest_start = $writer->getEarliestStart();
@@ -97,6 +100,11 @@ readonly class Service implements FullService
     public function getWorkingStart(): ?DateTimeImmutable
     {
         return $this->working_start;
+    }
+
+    public function isSolutionAvailable(): bool
+    {
+        return $this->solution_available;
     }
 
     /**
@@ -225,5 +233,25 @@ readonly class Service implements FullService
         }
 
         return $this->language->txt('not_specified');
+    }
+
+    public function validate(?ValidationErrorStore $store = null) : bool
+    {
+        $valid = true;
+        if ($this->isEndBeforeStart()) {
+            $store?->addValidationError(ValidationError::LATEST_END_BEFORE_EARLIEST_START);
+            $valid = false;
+        }
+        if ($this->isTimeLimitTooLong()) {
+            $store?->addValidationError(ValidationError::TIME_LIMIT_TOO_LONG);
+            $valid = false;
+        }
+        if ($this->isSolutionAvailable()
+            && $this->isSolutionAvailable() !== null && $this->getWorkingDeadline() !== null
+            && $this->isSolutionAvailable() <= $this->getWorkingDeadline()) {
+            $store?->addValidationError(ValidationError::TIME_EXCEEDS_SOLUTION_AVAILABILITY);
+            $valid = false;
+        }
+        return $valid;
     }
 }

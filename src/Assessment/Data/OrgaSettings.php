@@ -6,10 +6,12 @@ namespace Edutiek\AssessmentService\Assessment\Data;
 
 use DateTimeImmutable;
 use Edutiek\AssessmentService\System\Api\HasHtml;
+use Edutiek\AssessmentService\Assessment\WorkingTime\ValidationErrorStore;
+use Edutiek\AssessmentService\Assessment\WorkingTime\ValidationError;
 
-abstract class OrgaSettings implements AssessmentEntity
+abstract class OrgaSettings implements AssessmentEntity, ValidationErrorStore
 {
-    /** @var OrgaSettingsError[] */
+    /** @var ValidationError[] */
     private $validation_errors = [];
 
     abstract public function getAssId(): int;
@@ -88,7 +90,7 @@ abstract class OrgaSettings implements AssessmentEntity
     abstract public function getStatisticsAvailable(): bool;
     abstract public function setStatisticsAvailable(bool $statistics_available): self;
 
-    public function addValidationError(OrgaSettingsError $error)
+    public function addValidationError(ValidationError $error) : void
     {
         $this->validation_errors[] = $error;
     }
