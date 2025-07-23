@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Data;
 
+use Edutiek\AssessmentService\Assessment\LogEntry\Category as LogEntryCategory;
 use DateTimeImmutable;
 
 abstract class LogEntry implements AssessmentEntity
@@ -17,8 +18,8 @@ abstract class LogEntry implements AssessmentEntity
     abstract public function getTimestamp(): ?DateTimeImmutable;
     abstract public function setTimestamp(?DateTimeImmutable $timestamp): self;
 
-    abstract public function getCategory(): string;
-    abstract public function setCategory(string $category): self;
+    abstract public function getCategory(): LogEntryCategory;
+    abstract public function setCategory(LogEntryCategory $category): self;
 
     abstract public function getEntry(): ?string;
     abstract public function setEntry(?string $entry): self;

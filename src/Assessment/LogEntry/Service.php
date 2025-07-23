@@ -61,7 +61,7 @@ class Service implements FullService
         $log_entry = $this->repos->logEntry()->new()
                                              ->setTimestamp($timestamp)
                                              ->setAssId($this->ass_id)
-                                             ->setCategory($category->value)
+                                             ->setCategory($category)
                                              ->setEntry(trim($entry . ' ' .  $note));
 
         $this->repos->logEntry()->create($log_entry);
@@ -71,5 +71,10 @@ class Service implements FullService
     {
         return "";
         // TODO: Implement createCsv() method.
+    }
+
+    public function all(): array
+    {
+        return $this->repos->logEntry()->allByAssId($this->ass_id);
     }
 }
