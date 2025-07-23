@@ -35,6 +35,8 @@ use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\LogEntry\FullService as FullLogEntryService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\IndividualWorkingTime;
+use Edutiek\AssessmentService\Assessment\Alert\FullService as FullAlertService;
+use Edutiek\AssessmentService\Assessment\Alert\Service as AlertService;
 
 class ForClients
 {
@@ -171,6 +173,14 @@ class ForClients
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->language(),
             $this->dependencies->systemApi()->user()
+        );
+    }
+
+    public function alert(): FullAlertService
+    {
+        return $this->instances[AlertService::class] ??= new AlertService(
+            $this->ass_id,
+            $this->dependencies->repositories()
         );
     }
 }
