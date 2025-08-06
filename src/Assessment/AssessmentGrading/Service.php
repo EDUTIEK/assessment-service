@@ -14,12 +14,12 @@ class Service implements FullService
     /**
      * @var GradeLevel[]
      */
-    //private ?array $grade_levels = null;
+    private ?array $grade_levels = null;
     /**
      * Align with $grade_levels for a binary search for the fitting grade level
      * @var float[]
      */
-    // private array $min_points;
+     private array $min_points;
 
     public function __construct(
         private int $ass_id,
@@ -54,58 +54,46 @@ class Service implements FullService
         if (!isset($points)) {
             return null;
         }
-        $level = null;
-        $last_points = 0;
-        foreach ($this->getGradeLevels() as $levelCandidate) {
-            if ($levelCandidate->getMinPoints() <= $points
-                && $levelCandidate->getMinPoints() >= $last_points
-            ) {
-                $level = $levelCandidate;
-                $last_points = $level->getMinPoints();
-            }
-        }
-        return $level;
+        $low = 0;
+        $high = count($this->min_points) - 1;
+        $best = null;
 
-        //        $low = 0;
-        //        $high = count($this->min_points) - 1;
-        //        $best = null;
-        //
-        //        while ($low <= $high) {
-        //            $mid = intdiv($low + $high, 2);
-        //            if ($this->min_points[$mid] <= $points) {
-        //                $best = $mid;
-        //                $low = $mid + 1;
-        //            } else {
-        //                $high = $mid - 1;
-        //            }
-        //        } // Binary search for the next min_points
-        //
-        //        return $best !== null ? $this->grade_levels[$best] : null;
+        while ($low <= $high) {
+            $mid = intdiv($low + $high, 2);
+            if ($this->min_points[$mid] <= $points) {
+                $best = $mid;
+                $low = $mid + 1;
+            } else {
+                $high = $mid - 1;
+            }
+        } // Binary search for the next min_points
+
+        return $best !== null ? $this->grade_levels[$best] : null;
     }
 
-    //    private function getMinPoints(): array
-    //    {
-    //        if($this->min_points !== null) {
-    //            return $this->min_points;
-    //        }
-    //
-    //        $this->grade_levels ??= $this->repos->gradeLevel()->allByAssId($this->ass_id);
-    //        usort($this->grade_levels, fn(GradeLevel $a, GradeLevel $b) => $a->getMinPoints() <=> $b->getMinPoints()); // sort grade levels
-    //
-    //
-    //        return $this->min_points = array_map(fn(GradeLevel $level) => $level->getMinPoints(), $this->grade_levels);
-    //    }
+    private function getMinPoints(): array
+    {
+        if($this->min_points !== null) {
+            return $this->min_points;
+        }
+
+        $this->grade_levels ??= $this->repos->gradeLevel()->allByAssId($this->ass_id);
+        usort($this->grade_levels, fn(GradeLevel $a, GradeLevel $b) => $a->getMinPoints() <=> $b->getMinPoints()); // sort grade levels
+
+
+        return $this->min_points = array_map(fn(GradeLevel $level) => $level->getMinPoints(), $this->grade_levels);
+    }
 
     private function getGradeLevels(): array
     {
         if ($this->grade_levels_by_id === null) {
-            foreach ($this->repos->gradeLevel()->allByAssId($this->ass_id) as $level) {
+            $this->grade_levels ??= $this->repos->gradeLevel()->allByAssId($this->ass_id);
+
+            foreach ($this->grade_levels as $level) {
                 $this->grade_levels_by_id[$level->getId()] = $level;
             }
         }
 
         return $this->grade_levels_by_id;
     }
-
-
 }
