@@ -17,6 +17,8 @@ use Edutiek\AssessmentService\Assessment\WriterApp\Service as WriterAppService;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Slim\App;
 use Slim\Factory\AppFactory;
+use Edutiek\AssessmentService\Assessment\AssessmentGrading\Service as AssessmentGradingService;
+use Edutiek\AssessmentService\Assessment\AssessmentGrading\FullService as AssessmentGradingFullService;
 
 class Internal
 {
@@ -153,5 +155,10 @@ class Internal
         return $this->instances[WorkingTimeFactory::class][$user_id] ??= new WorkingTimeFactory(
             $this->language($user_id),
         );
+    }
+
+    public function assessment_grading(int $ass_id): AssessmentGradingFullService
+    {
+        return $this->instances[AssessmentGradingService::class][$ass_id] ??= new AssessmentGradingService($ass_id, $this->dependencies->repositories());
     }
 }
