@@ -51,6 +51,8 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
     abstract public function setLocation(?int $location): self;
     abstract public function getReviewNotification(): int;
     abstract public function setReviewNotification(int $review_notification): self;
+    abstract public function setStitchNeeded(bool $stitch_needed): self;
+    abstract public function getStitchNeeded(): bool;
 
     public function getStatus(): WritingStatus
     {
@@ -113,6 +115,11 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
     public function canGetSight() : bool
     {
         return $this->getWorkingStart() !== null;
+    }
+
+    public function isCorrectionFinalized() : bool
+    {
+        return $this->getCorrectionFinalized() !== null;
     }
 
     public function addValidationError(ValidationError $error) : void

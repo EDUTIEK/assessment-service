@@ -19,4 +19,5 @@ interface WriterRepo
     public function save(Writer $entity): void;
     public function delete(int $id): void;
     public function deleteByAssId(int $ass_id): void;
+    public function hasStitchDecisions(int $ass_id): bool;
 }

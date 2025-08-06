@@ -12,4 +12,5 @@ interface ReadService
     /** @return Writer[] */
     public function all(): array;
     public function oneByWriterId(int $writer_id): ?Writer;
+    public function hasStitchDecisions(): bool;
 }

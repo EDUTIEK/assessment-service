@@ -151,4 +151,9 @@ readonly class Service implements ReadService, FullService
         $working_time = $this->working_time_factory->workingTime($settings, $writer);
         return $working_time->validate($writer);
     }
+
+    public function hasStitchDecisions(): bool
+    {
+        return $this->repos->writer()->hasStitchDecisions($this->ass_id);
+    }
 }
