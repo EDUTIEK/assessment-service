@@ -12,6 +12,9 @@ use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService
 use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
 use Edutiek\AssessmentService\Assessment\LogEntry\TasksService as LogEntryTasksService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
+use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
+use Edutiek\AssessmentService\Assessment\CorrectionSettings\Service as CorrectionSettingsService;
+
 class ForTasks
 {
     private array $instances = [];
@@ -41,6 +44,14 @@ class ForTasks
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->language(),
             $this->dependencies->systemApi()->user()
+        );
+    }
+
+    public function correctionSettings() : CorrectionSettingsReadService
+    {
+        return $this->instances[CorrectionSettingsService::class] ??= new CorrectionSettingsService(
+            $this->ass_id,
+            $this->dependencies->repositories()
         );
     }
 }

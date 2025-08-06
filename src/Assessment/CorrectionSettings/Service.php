@@ -27,6 +27,11 @@ readonly class Service implements FullService
     public function validate(CorrectionSettings $settings) : bool
     {
         $this->checkScope($settings);
+
+        if($settings->getRequiredCorrectors() === 1 && ($settings->getStitchWhenDecimals() || $settings->getStitchWhenDistance())) {
+            $settings->addValidationError(CorrectionSettingsError::ATLEAST_TWO_CORRECTORS);
+        }
+
         return empty($settings->getValidationErrors());
     }
 

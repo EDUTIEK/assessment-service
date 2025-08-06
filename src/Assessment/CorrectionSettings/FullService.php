@@ -6,9 +6,8 @@ namespace Edutiek\AssessmentService\Assessment\CorrectionSettings;
 
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
 
-interface FullService
+interface FullService extends ReadService
 {
-    public function get(): CorrectionSettings;
     public function validate(CorrectionSettings $settings): bool;
     public function save(CorrectionSettings $settings): void;
 }
