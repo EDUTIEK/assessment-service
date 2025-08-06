@@ -16,8 +16,8 @@ use Edutiek\AssessmentService\EssayTask\AssessmentStatus\Service as StatusServic
 use Edutiek\AssessmentService\EssayTask\AssessmentStatus\FullService as StatusFullService;
 use Edutiek\AssessmentService\EssayTask\TaskSettings\Service as TaskSettingsService;
 use Edutiek\AssessmentService\EssayTask\TaskSettings\FullService as TaskSettingsFullService;
-use Edutiek\AssessmentService\EssayTask\CorrectorSummary\FullService;
-use Edutiek\AssessmentService\EssayTask\CorrectorSummary\Service;
+use Edutiek\AssessmentService\EssayTask\CorrectorSummary\FullService as CorrectorSummaryFullService;
+use Edutiek\AssessmentService\EssayTask\CorrectorSummary\Service as CorrectorSummaryService;
 
 class ForClients
 {
@@ -82,8 +82,8 @@ class ForClients
         );
     }
 
-    public function summary(int $task_id): FullService
+    public function summary(int $task_id): CorrectorSummaryFullService
     {
-        return $this->instances[Service::class] ??= new Service($task_id, $this->dependencies->repositories());
+        return $this->instances[CorrectorSummaryService::class] ??= new CorrectorSummaryService($task_id, $this->dependencies->repositories());
     }
 }
