@@ -21,7 +21,8 @@ class Factory
         return $this->instances[ForClients::class][$ass_id][$user_id] ??= new ForClients(
             $ass_id,
             $user_id,
-            $this->dependencies
+            $this->dependencies,
+            $this->internal()
         );
     }
 
@@ -38,11 +39,12 @@ class Factory
     /**
      * Get the API for the assessment component
      */
-    public function forTypes(int $ass_id): ForTypes
+    public function forTypes(int $ass_id, int $user_id): ForTypes
     {
         return $this->instances[ForTypes::class] ??= new ForTypes(
             $ass_id,
-            $this->dependencies
+            $user_id,
+            $this->internal()
         );
     }
 

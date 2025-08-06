@@ -13,6 +13,6 @@ interface Dependencies
 {
     public function systemApi(): SystemApi;
     public function assessmentApi(int $ass_id, int $user_id): AssessmentApi;
-    public function taskApi(int $ass_id): TaskApi;
+    public function taskApi(int $ass_id, int $user_id): TaskApi;
     public function repositories(): Repositories;
 }

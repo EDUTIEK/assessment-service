@@ -10,6 +10,8 @@ use Edutiek\AssessmentService\Task\Resource\FullService as ResourceFullService;
 use Edutiek\AssessmentService\Task\Resource\Service as ResourceService;
 use Edutiek\AssessmentService\Task\Settings\FullService as SettingsFullService;
 use Edutiek\AssessmentService\Task\Settings\Service as SettingsService;
+use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as CorrectorAssignmentsFullService;
+use Edutiek\AssessmentService\Task\CorrectorAssignments\Service as CorrectorAssignmentsService;
 
 class ForClients
 {
@@ -18,7 +20,8 @@ class ForClients
     public function __construct(
         private readonly int $ass_id,
         private readonly int $user_id,
-        private readonly Dependencies $dependencies
+        private readonly Dependencies $dependencies,
+        private readonly Internal $internal
     ) {
     }
 
@@ -49,6 +52,11 @@ class ForClients
             $task_id,
             $this->dependencies->repositories()
         );
+    }
+
+    public function correctorAssignments() : CorrectorAssignmentsFullService
+    {
+        return $this->internal->correctorAssignments($this->ass_id, $this->user_id);
     }
 
 }

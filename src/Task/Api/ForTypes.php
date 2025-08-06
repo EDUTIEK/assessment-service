@@ -15,12 +15,13 @@ class ForTypes
 
     public function __construct(
         private readonly int $ass_id,
-        private readonly Dependencies $dependencies
+        private readonly int $user_id,
+        private readonly Internal $internal
     ) {
     }
 
     public function correctorAssignments(): CorrectorAssignmentReadService
     {
-        return $this->instances[CorrectorAssignmentService::class] ??= new CorrectorAssignmentService($this->ass_id, $this->dependencies->repositories());
+        return $this->internal->correctorAssignments($this->ass_id, $this->user_id);
     }
 }
