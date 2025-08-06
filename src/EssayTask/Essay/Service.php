@@ -26,6 +26,15 @@ readonly class Service implements FullService
         return $this->repos->essay()->allByWriterId($writer_id);
     }
 
+    public function allByTaskId(int $task_id) : array {
+        return $this->repos->essay()->allByTaskId($task_id);
+    }
+
+    public function oneByWriterIdAndTaskId(int $writer_id, int $task_id)
+    {
+        return $this->repos->essay()->oneByWriterIdAndTaskId($writer_id, $task_id);
+    }
+
     public function new(int $writer_id, int $task_id) : Essay
     {
         $essay = $this->repos->essay()->new()->setWriterId($writer_id)->setTaskId($task_id);
