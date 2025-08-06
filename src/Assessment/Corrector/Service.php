@@ -35,5 +35,11 @@ class Service implements FullService
     {
         return $this->repos->corrector()->oneByUserIdAndAssId($user_id, $this->ass_id);
     }
+
+    public function oneById(int $corrector_id): ?Corrector
+    {
+        return $this->repos->corrector()->one($corrector_id);
+    }
+
 }
 

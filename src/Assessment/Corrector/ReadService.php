@@ -10,4 +10,7 @@ interface ReadService
 {
     public function has(int $corrector_id): bool;
     public function oneByUserId(int $user_id): ?Corrector;
+    /** @return Corrector[] */
+    public function all(): array;
+    public function oneById(int $corrector_id): ?Corrector;
 }
