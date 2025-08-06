@@ -10,6 +10,8 @@ interface EssayRepo
     public function one(int $id): ?Essay;
     public function oneByWriterIdAndTaskId(int $writer_id, int $task_id): ?Essay;
     /** @return Essay[] */
+    public function allByAssId(int $ass_id): array;
+    /** @return Essay[] */
     public function allByTaskId(int $task_id): array;
     /** @return Essay[] */
     public function allByWriterId(int $writer_id): array;

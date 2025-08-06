@@ -2,12 +2,13 @@
 
 namespace Edutiek\AssessmentService\EssayTask\AssessmentStatus;
 
-class WriterEssayStatus
+class WriterEssaySummary
 {
     public function __construct(
         private int $writer_id,
         private ?\DateTimeImmutable $last_save,
-        private bool $has_pdf_uploads
+        private bool $has_pdf_uploads,
+        private ?int $words
     ){}
 
     public function getWriterId(): int
@@ -23,5 +24,10 @@ class WriterEssayStatus
     public function hasPdfUploads(): bool
     {
         return $this->has_pdf_uploads;
+    }
+
+    public function getWords(): ?int
+    {
+        return $this->words;
     }
 }
