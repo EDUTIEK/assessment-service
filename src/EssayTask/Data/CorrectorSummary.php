@@ -32,4 +32,23 @@ abstract class CorrectorSummary implements EssayTaskEntity
     abstract public function setCorrectionAuthorized(?DateTimeImmutable $corection_authorized): self;
     abstract public function getCorrectionAuthorizedBy(): ?int;
     abstract public function setCorrectionAuthorizedBy(?int $correction_authorized_by): self;
+
+    public function getGradingStatus() : GradingStatus
+    {
+        if(empty($this->getLastChange())) {
+            return GradingStatus::NOT_STARTED;
+        }
+
+
+        if (empty($this->getCorrectionAuthorized())) {
+            return GradingStatus::OPEN;
+        }
+
+        return GradingStatus::AUTHORIZED;
+    }
+
+    public function isAuthorized() : bool
+    {
+        return $this->getCorrectionAuthorized() !== null;
+    }
 }

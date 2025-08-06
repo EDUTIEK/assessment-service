@@ -11,6 +11,10 @@ interface CorrectorSummaryRepo
     public function hasByEssayId(int $essay_id): bool;
     public function hasAuthorizedByAssId(int $ass_id, ?int $corrector_id = null): bool;
     /** @return CorrectorSummary[] */
+    public function allByAssId(int $ass_id): array;
+    /** @return CorrectorSummary[] */
+    public function allByWriterId(int $writer_id): array;
+    /** @return CorrectorSummary[] */
     public function allByTaskId(int $task_id): array;
     /** @return CorrectorSummary[] */
     public function allByTaskIdAndWriterIds(int $task_id, array $writer_ids): array;
