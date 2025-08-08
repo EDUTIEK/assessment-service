@@ -20,6 +20,7 @@ interface CorrectorSummaryRepo
     public function allByTaskIdAndWriterIds(int $task_id, array $writer_ids): array;
     /** @return CorrectorSummary[] */
     public function allByTaskIdAndCorrectorId(int $task_id, int $corrector_id): array;
+    public function allByCorrectorId(int $corrector_id): array;
     /** @return CorrectorSummary[] */
     public function allByEssayIdAndCorrectorId(int $essay_id, int $corrector_id): array;
     public function save(CorrectorSummary $entity): void;

@@ -11,5 +11,7 @@ interface FullService
     /** @return CorrectorSummary[] */
     public function all(): array;
     /** @return CorrectorSummary[] */
-    public function allByWriterIdAndTaskId(int $writer_id, int $task_id): array;
+    public function allByWriterId(int $writer_id): array;
+    /** @return CorrectorSummary[] */
+    public function allByCorrectorId(int $corrector_id): array;
 }

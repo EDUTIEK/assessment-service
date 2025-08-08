@@ -21,9 +21,14 @@ readonly class Service implements FullService
         return $this->repos->correctorSummary()->allByTaskId($this->task_id);
     }
 
-    public function allByWriterIdAndTaskId(int $writer_id, int $task_id): array
+    public function allByWriterId(int $writer_id): array
     {
-        return $this->repos->correctorSummary()->allByTaskIdAndWriterIds($task_id, [$writer_id]);
+        return $this->repos->correctorSummary()->allByTaskIdAndWriterIds($this->task_id, [$writer_id]);
+    }
+
+    public function allByCorrectorId(int $corrector_id): array
+    {
+        return $this->repos->correctorSummary()->allByTaskIdAndCorrectorId($this->task_id, $corrector_id);
     }
 
 }
