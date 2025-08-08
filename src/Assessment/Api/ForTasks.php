@@ -16,6 +16,7 @@ use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as Corre
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\Service as CorrectionSettingsService;
 use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
 use Edutiek\AssessmentService\Assessment\PdfSettings\Service as PdfSettingsService;
+use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as AssessmentGradingService;
 
 class ForTasks
 {
@@ -63,5 +64,10 @@ class ForTasks
             $this->ass_id,
             $this->dependencies->repositories()
         );
+    }
+
+    public function assessment_grading(): AssessmentGradingService
+    {
+        return $this->internal->assessment_grading($this->ass_id);
     }
 }
