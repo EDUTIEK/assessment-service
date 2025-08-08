@@ -48,4 +48,9 @@ class Service implements FullService
         }
         return $missing;
     }
+
+    public function allByCorrectorId(int $corrector_id): array
+    {
+        return $this->repos->correctorAssignment()->allByCorrectorId($corrector_id);
+    }
 }

@@ -14,5 +14,6 @@ interface ReadService
      * @return CorrectorAssignment[]
      */
     public function allByWriterId(int $writer_id): array;
+    public function allByCorrectorId(int $corrector_id) : array;
     public function countMissingCorrectors();
 }
