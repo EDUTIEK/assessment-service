@@ -7,6 +7,7 @@ namespace Edutiek\AssessmentService\Assessment\Corrector;
 use Edutiek\AssessmentService\Assessment\Corrector\FullService;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Api\ApiException;
 
 class Service implements FullService
 {
@@ -33,13 +34,39 @@ class Service implements FullService
 
     public function oneByUserId(int $user_id): ?Corrector
     {
-        return $this->repos->corrector()->oneByUserIdAndAssId($user_id, $this->ass_id);
+        $corrector = $this->repos->corrector()->oneByUserIdAndAssId($user_id, $this->ass_id);
+        return $corrector;
     }
 
     public function oneById(int $corrector_id): ?Corrector
     {
-        return $this->repos->corrector()->one($corrector_id);
+        $corrector = $this->repos->corrector()->one($corrector_id);
+        $this->checkScope($corrector);
+        return $corrector;
     }
 
+    public function remove(Corrector $corrector)
+    {
+        $this->checkScope($corrector);
+        $this->repos->corrector()->delete($corrector->getId());
+    }
+    private function checkScope(Corrector $corrector)
+    {
+        if ($corrector->getAssId() !== $this->ass_id) {
+            throw new ApiException("wrong ass_id", ApiException::ID_SCOPE);
+        }
+    }
+
+    public function getByUserId(int $user_id): Corrector
+    {
+        $corrector = $this->oneByUserId($user_id);
+        if ($corrector === null) {
+            $corrector = $this->repos->corrector()->new()->setAssId($this->ass_id)->setUserId($user_id);
+            $this->repos->corrector()->save($corrector);
+        } else {
+            $this->checkScope($corrector);
+        }
+        return $corrector;
+    }
 }
 
