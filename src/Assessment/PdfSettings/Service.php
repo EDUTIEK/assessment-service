@@ -29,7 +29,7 @@ readonly class Service implements FullService
         $this->checkScope($settings);
         $this->repos->pdfSettings()->save($settings);
     }
-    
+
     private function checkScope(PdfSettings $settings) 
     {
         if ($settings->getAssId() !== $this->ass_id) {

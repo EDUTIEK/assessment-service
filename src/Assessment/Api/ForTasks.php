@@ -12,6 +12,9 @@ use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService
 use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
 use Edutiek\AssessmentService\Assessment\LogEntry\TasksService as LogEntryTasksService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
+use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
+use Edutiek\AssessmentService\Assessment\PdfSettings\Service as PdfSettingsService;
+
 class ForTasks
 {
     private array $instances = [];
@@ -41,6 +44,14 @@ class ForTasks
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->language(),
             $this->dependencies->systemApi()->user()
+        );
+    }
+
+    public function pdfSettings(): PdfSettingsFullService
+    {
+        return $this->instances[PdfSettingsService::class] = new PdfSettingsService(
+            $this->ass_id,
+            $this->dependencies->repositories()
         );
     }
 }

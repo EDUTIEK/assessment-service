@@ -1,0 +1,34 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Edutiek\AssessmentService\EssayTask\BackgroundTask;
+
+use Edutiek\AssessmentService\System\BackgroundTask\Job;
+use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImage;
+use Edutiek\AssessmentService\EssayTask\Data\EssayRepo;
+
+class GenerateEssayImages implements Job
+{
+    public function __construct(
+        private readonly EssayRepo $essay,
+        private readonly EssayImage $essay_image,
+    )
+    {
+    }
+
+    public function run(int $essay_id): void
+    {
+        $essay = $this->essay->one($essay_id);
+
+        if ($essay === null) {
+            throw new Exception(sprintf('Essay for essay id %s not found!', $essay_id));
+        }
+        $count = $this->essay_image->createByEssayId($essay);
+        // $this->logger->info(sprintf(
+        //     'AssessmentService: For Essay %s, %s page images created.',
+        //     $essay_id,
+        //     $count
+        // ));
+    }
+}

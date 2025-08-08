@@ -16,7 +16,6 @@ use Edutiek\AssessmentService\System\Transform\FullService as TransformFullServi
 use Edutiek\AssessmentService\System\Transform\Service as TransformService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\System\User\Service as UserService;
-use Closure;
 
 class ForClients
 {
@@ -69,5 +68,4 @@ class ForClients
             $this->dependencies->userDisplayRepo()
         );
     }
-
 }

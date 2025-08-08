@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\EssayTask\CorrectorComment;
 
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
-use Edutiek\AssessmentService\EssayTask\CorrectorComment\FullService;
 use Edutiek\AssessmentService\EssayTask\Data\CorrectorComment;
 use Edutiek\AssessmentService\EssayTask\Api\ApiException;
 
@@ -31,6 +30,12 @@ readonly class Service implements FullService
     {
         $this->checkScope($comment);
         $this->repos->correctorComment()->save($comment);
+    }
+
+    public function deleteByEssayId(int $id): void
+    {
+        $this->repos->correctorComment()->deleteByEssayId($id);
+        $this->repos->correctorPoints()->deleteByEssayId($id);
     }
 
     private function checkScope(CorrectorComment $comment)
