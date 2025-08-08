@@ -83,7 +83,8 @@ class ForClients
         return $this->instances[StatusService::class] = new StatusService(
             $this->ass_id,
             $this->dependencies->repositories(),
-            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->writer()
+            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->writer(),
+            $this->dependencies->taskApi($this->ass_id, $this->user_id)->correctorAssignments(),
         );
     }
 

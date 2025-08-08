@@ -14,4 +14,13 @@ interface FullService
     /** @return CorrectionStatus[] */
     public function allWriterCorrectionStatus() : array;
     public function oneWriterCorrectionStatus(Writer $writer) : CorrectionStatus;
+
+    /**
+     * @param int[]|null $corrector_ids
+     * @return CorrectorCorrectionSummary[]
+     */
+    public function allCorrectorCorrectionSummaries(?array $corrector_ids = null) : array;
+    public function oneCorrectorCorrectionSummary(int $corrector_id): CorrectorCorrectionSummary;
+
+    public function getCorrectorsWithOpenAuthorizations();
 }
