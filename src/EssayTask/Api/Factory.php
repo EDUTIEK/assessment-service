@@ -21,7 +21,8 @@ class Factory
         return $this->instances[ForClients::class][$ass_id][$user_id] ??= new ForClients(
             $ass_id,
             $user_id,
-            $this->dependencies
+            $this->dependencies,
+            $this->internal(),
         );
     }
 

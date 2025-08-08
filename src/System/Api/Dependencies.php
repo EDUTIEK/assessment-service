@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\Data\SetupRepo;
 use Edutiek\AssessmentService\System\Data\UserDisplayRepo;
 use DateTimeInterface;
+use Edutiek\AssessmentService\System\BackgroundTask\ClientManager as BackgroundTaskManager;
 
 interface Dependencies
 {
@@ -21,4 +22,5 @@ interface Dependencies
     public function userDataRepo(): UserDataRepo;
     public function userDisplayRepo(): UserDisplayRepo;
     public function formatDate(DateTimeInterface $date): string;
+    public function backgroundTaskManager(): BackgroundTaskManager;
 }

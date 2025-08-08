@@ -14,6 +14,8 @@ use Edutiek\AssessmentService\Assessment\LogEntry\TasksService as LogEntryTasksS
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\Service as CorrectionSettingsService;
+use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
+use Edutiek\AssessmentService\Assessment\PdfSettings\Service as PdfSettingsService;
 
 class ForTasks
 {
@@ -50,6 +52,14 @@ class ForTasks
     public function correctionSettings() : CorrectionSettingsReadService
     {
         return $this->instances[CorrectionSettingsService::class] ??= new CorrectionSettingsService(
+            $this->ass_id,
+            $this->dependencies->repositories()
+        );
+    }
+
+    public function pdfSettings(): PdfSettingsFullService
+    {
+        return $this->instances[PdfSettingsService::class] = new PdfSettingsService(
             $this->ass_id,
             $this->dependencies->repositories()
         );

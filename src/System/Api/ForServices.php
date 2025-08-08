@@ -19,6 +19,8 @@ use Edutiek\AssessmentService\System\PdfConverter\ServiceByGhostscript;
 use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreatorFullService;
 use Edutiek\AssessmentService\System\PdfCreator\Service as PdfCreatorService;
 use Edutiek\AssessmentService\System\ImageSketch\FullService as ImageSketchFullService;
+use Edutiek\AssessmentService\System\BackgroundTask\ClientManager as BackgroundTaskManager;
+use Edutiek\AssessmentService\System\BackgroundTask\Service as BackgroundTaskService;
 
 class ForServices
 {
@@ -103,5 +105,8 @@ class ForServices
         );
     }
 
-
+    public function backgroundTask(): BackgroundTaskManager
+    {
+        return new BackgroundTaskService($this->dependencies->backgroundTaskManager());
+    }
 }
