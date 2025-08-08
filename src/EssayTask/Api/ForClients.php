@@ -99,6 +99,7 @@ class ForClients
     public function summary(int $task_id): CorrectorSummaryFullService
     {
         return $this->instances[CorrectorSummaryService::class] ??= new CorrectorSummaryService($task_id, $this->dependencies->repositories());
+    }
 
     public function pdfInput(): FullPdfInput
     {
