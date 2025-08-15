@@ -126,10 +126,10 @@ readonly class Service implements FullService
         $summaries_by_corrector = [];
 
         foreach($this->assignment_service->all() as $assignment) {
-            $assignments_by_corrector[$assignment->getCorrectorId()] = $assignment;
+            $assignments_by_corrector[$assignment->getCorrectorId()][] = $assignment;
         }
         foreach($this->repos->correctorSummary()->allByAssId($this->ass_id) as $summary) {
-            $summaries_by_corrector[$summary->getCorrectorId()] = $summary;
+            $summaries_by_corrector[$summary->getCorrectorId()][] = $summary;
         }
 
         if($corrector_ids === null) {
