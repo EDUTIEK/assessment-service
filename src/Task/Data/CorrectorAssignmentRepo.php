@@ -22,4 +22,5 @@ interface CorrectorAssignmentRepo
     public function deleteByWriterId(int $writer_id): void;
     public function deleteByCorrectorId(int $corrector_id): void;
     public function deleteByWriterIdAndCorrectorId(int $writer_id, int $corrector_id): void;
+    public function oneById(int $id): ?CorrectorAssignment;
 }
