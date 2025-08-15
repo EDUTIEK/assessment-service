@@ -32,6 +32,11 @@ abstract class CorrectionSettings implements AssessmentEntity
     abstract public function getReportsAvailableStart(): ?DateTimeImmutable;
     abstract public function setReportsAvailableStart(?DateTimeImmutable $reports_available_start): self;
 
+    public function isStitchPossible() : bool
+    {
+        return $this->getRequiredCorrectors() > 1 && ($this->getStitchWhenDecimals() || $this->getStitchWhenDistance());
+    }
+
     public function addValidationError(CorrectionSettingsError $error)
     {
         $this->validation_errors[] = $error;
