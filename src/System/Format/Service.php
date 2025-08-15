@@ -23,7 +23,8 @@ readonly class Service implements FullService
     public function dateRange(?DateTimeImmutable $start, ?DateTimeImmutable $end): string
     {
         $txt = $this->language->txt(...);
-
+        $start = $start?->setTimezone($this->timezone);
+        $end = $end?->setTimezone($this->timezone);
         $text = match([!!$start, !!$end]) {
             [true, false] => $txt('period_only_from') . ' ' . ($this->format_date)($start),
             [false, true] => $txt('period_only_until') . ' ' . ($this->format_date)($end),

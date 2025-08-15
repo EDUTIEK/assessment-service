@@ -16,6 +16,7 @@ use Edutiek\AssessmentService\System\Transform\FullService as TransformFullServi
 use Edutiek\AssessmentService\System\Transform\Service as TransformService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\System\User\Service as UserService;
+use DateTimeZone;
 
 class ForClients
 {
@@ -50,7 +51,7 @@ class ForClients
         return $this->dependencies->fileDelivery();
     }
 
-    public function format(int $user_id, ?string $timezone = null): FormatFullService
+    public function format(int $user_id, ?DateTimeZone $timezone = null): FormatFullService
     {
         $timezone ??= $this->config()->getSetup()->getDefaultTimezone();
         return new FormatService($this->dependencies->formatDate(...), $timezone, $this->internal->language($user_id));
