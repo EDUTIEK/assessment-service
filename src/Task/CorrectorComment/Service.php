@@ -36,7 +36,7 @@ readonly class Service implements FullService
     public function delete(): void
     {
         $this->repos->correctorComment()->deleteByTaskIdAndWriterId($this->task_id, $this->writer_id);
-        #$this->repos->correctorPoints()->deleteByTaskIdAndWriterId($id); TODO
+        $this->repos->correctorPoints()->deleteByTaskIdAndWriterId($this->task_id, $this->writer_id);
     }
 
     private function checkScope(CorrectorComment $comment)
