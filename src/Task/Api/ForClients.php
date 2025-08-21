@@ -13,6 +13,8 @@ use Edutiek\AssessmentService\Task\Settings\Service as SettingsService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as CorrectorAssignmentsFullService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\Service as CorrectorAssignmentsService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsFullService;
+use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as CorrectorSummaryFullService;
+use Edutiek\AssessmentService\Task\CorrectorSummary\Service as CorrectorSummaryService;
 
 class ForClients
 {
@@ -64,5 +66,10 @@ class ForClients
     public function correctionSettings(): CorrectionSettingsFullService
     {
         return $this->internal->correctionSettings($this->ass_id, $this->user_id);
+    }
+
+    public function summary(int $task_id): CorrectorSummaryFullService
+    {
+        return $this->instances[CorrectorSummaryService::class] ??= new CorrectorSummaryService($task_id, $this->dependencies->repositories());
     }
 }

@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\EssayTask\Data;
+namespace Edutiek\AssessmentService\Task\Data;
 
 interface CorrectorSummaryRepo
 {
     public function new(): CorrectorSummary;
     public function one(int $id): ?CorrectorSummary;
-    public function hasByEssayId(int $essay_id): bool;
+    public function hasByTaskIdAndWriterId(int $task_id, int $writer_id): bool;
     public function hasAuthorizedByAssId(int $ass_id, ?int $corrector_id = null): bool;
     /** @return CorrectorSummary[] */
     public function allByAssId(int $ass_id): array;
@@ -22,10 +22,11 @@ interface CorrectorSummaryRepo
     public function allByTaskIdAndCorrectorId(int $task_id, int $corrector_id): array;
     public function allByCorrectorId(int $corrector_id): array;
     /** @return CorrectorSummary[] */
-    public function allByEssayIdAndCorrectorId(int $essay_id, int $corrector_id): array;
+    public function allByTaskIdAndWriterIdAndCorrectorId(int $task_id, int $writer_id, int $corrector_id): array;
     public function save(CorrectorSummary $entity): void;
     public function delete(int $id): void;
-    public function deleteByEssayId(int $essay_id): void;
+    public function deleteByTaskId(int $task_id): void;
+    public function deleteByTaskIdAndWriterId(int $task_id, int $writer_id): void;
     public function deleteByCorrectorId(int $corrector_id): void;
-    public function deleteByEssayIdAndCorrectorId(int $essay_id, int $corrector_id): void;
+    public function deleteByTaskIdAndWriterIdAndCorrectorId(int $task_id, int $writer_id, int $corrector_id): void;
 }

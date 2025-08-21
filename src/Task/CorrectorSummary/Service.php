@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\EssayTask\CorrectorSummary;
+namespace Edutiek\AssessmentService\Task\CorrectorSummary;
 
-use Edutiek\AssessmentService\EssayTask\Data\Repositories;
-use Edutiek\AssessmentService\EssayTask\Api\ApiException;
-use Edutiek\AssessmentService\EssayTask\Data\CorrectorSummary;
+use Edutiek\AssessmentService\Task\Data\Repositories;
+use Edutiek\AssessmentService\Task\Api\ApiException;
+use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 
 readonly class Service implements FullService
 {

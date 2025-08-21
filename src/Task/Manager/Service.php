@@ -103,6 +103,7 @@ readonly class Service implements Manager
         $this->repos->correctionSettings()->delete($this->ass_id);
         $this->repos->correctorAssignment()->deleteByTaskId($task_id);
         $this->repos->writerComment()->deleteByTaskId($task_id);
+        $this->repos->correctorSummary()->deleteByTaskId($task_id);
         $this->repos->correctorComment()->deleteByTaskId($task_id);
         $this->repos->correctorPoints()->deleteByTaskId($task_id);
 

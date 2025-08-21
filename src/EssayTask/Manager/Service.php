@@ -61,7 +61,6 @@ readonly class Service implements \Edutiek\AssessmentService\Task\TypeInterfaces
                 $this->storage->deleteFile($image->getFileId());
                 $this->repos->essayImage()->delete($image->getId());
             }
-            $this->repos->correctorSummary()->deleteByEssayId($essay->getId());
             $this->repos->writerHistory()->deleteByEssayId($essay->getId());
             $this->repos->writerNotice()->deleteByEssayId($essay->getId());
 

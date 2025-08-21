@@ -14,8 +14,6 @@ use Edutiek\AssessmentService\EssayTask\AssessmentStatus\Service as StatusServic
 use Edutiek\AssessmentService\EssayTask\AssessmentStatus\FullService as StatusFullService;
 use Edutiek\AssessmentService\EssayTask\TaskSettings\Service as TaskSettingsService;
 use Edutiek\AssessmentService\EssayTask\TaskSettings\FullService as TaskSettingsFullService;
-use Edutiek\AssessmentService\EssayTask\CorrectorSummary\FullService as CorrectorSummaryFullService;
-use Edutiek\AssessmentService\EssayTask\CorrectorSummary\Service as CorrectorSummaryService;
 use Edutiek\AssessmentService\EssayTask\PdfInput\FullService as FullPdfInput;
 use Edutiek\AssessmentService\EssayTask\PdfInput\Service as PdfInput;
 use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImageFullService;
@@ -84,11 +82,6 @@ class ForClients
             $task_id,
             $this->dependencies->repositories()
         );
-    }
-
-    public function summary(int $task_id): CorrectorSummaryFullService
-    {
-        return $this->instances[CorrectorSummaryService::class] ??= new CorrectorSummaryService($task_id, $this->dependencies->repositories());
     }
 
     public function pdfInput(): FullPdfInput

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\EssayTask\CorrectorSummary;
+namespace Edutiek\AssessmentService\Task\CorrectorSummary;
 
-use Edutiek\AssessmentService\EssayTask\Data\CorrectorSummary;
+use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 
 interface FullService
 {
