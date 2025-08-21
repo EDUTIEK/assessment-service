@@ -1,8 +1,8 @@
 <?php
 
-namespace Edutiek\AssessmentService\EssayTask\Format;
+namespace Edutiek\AssessmentService\Task\Format;
 
-use Edutiek\AssessmentService\EssayTask\Data\CorrectorSummary;
+use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as GradingService;
 

@@ -24,8 +24,6 @@ use Edutiek\AssessmentService\EssayTask\PdfOutput\Service as PdfOutput;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\LazyService as LazyPdfOutput;
 use LongEssayPDFConverter\ImageMagick\PDFImage;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
-use Edutiek\AssessmentService\EssayTask\Format\FullService as FormatFullService;
-use Edutiek\AssessmentService\EssayTask\Format\Service as FormatService;
 
 class ForClients
 {
@@ -127,13 +125,5 @@ class ForClients
             $this->dependencies->systemApi()->format($this->user_id),
             $this->essayImage(), // lazy
         );        
-    }
-
-    public function format(): FormatFullService
-    {
-        return $this->instances[FormatService::class] ??= new FormatService(
-            $this->dependencies->systemApi()->language(),
-            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->assessment_grading()
-        );
     }
 }

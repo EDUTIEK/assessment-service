@@ -19,6 +19,8 @@ use Edutiek\AssessmentService\Task\RatingCriterion\Service as RatingCriterionSer
 use Edutiek\AssessmentService\Task\RatingCriterion\FullService as RatingCriterionFullService;
 use Edutiek\AssessmentService\Task\AssessmentStatus\Service as StatusService;
 use Edutiek\AssessmentService\Task\AssessmentStatus\FullService as StatusFullService;
+use Edutiek\AssessmentService\Task\Format\FullService as FormatFullService;
+use Edutiek\AssessmentService\Task\Format\Service as FormatService;
 
 class ForClients
 {
@@ -88,5 +90,13 @@ class ForClients
     public function assessmentStatus(): StatusFullService
     {
         return $this->internal->assessmentStatus($this->ass_id, $this->user_id);
+    }
+
+    public function format(): FormatFullService
+    {
+        return $this->instances[FormatService::class] ??= new FormatService(
+            $this->dependencies->systemApi()->language(),
+            $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->assessment_grading()
+        );
     }
 }
