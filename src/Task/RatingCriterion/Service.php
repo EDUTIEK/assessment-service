@@ -2,12 +2,12 @@
 
 declare(strict_types = 1);
 
-namespace Edutiek\AssessmentService\EssayTask\RatingCriterion;
+namespace Edutiek\AssessmentService\Task\RatingCriterion;
 
-use Edutiek\AssessmentService\EssayTask\Data\Repositories;
-use Edutiek\AssessmentService\EssayTask\RatingCriterion\FullService;
-use Edutiek\AssessmentService\EssayTask\Data\RatingCriterion;
-use Edutiek\AssessmentService\EssayTask\Api\ApiException;
+use Edutiek\AssessmentService\Task\Data\Repositories;
+use Edutiek\AssessmentService\Task\RatingCriterion\FullService;
+use Edutiek\AssessmentService\Task\Data\RatingCriterion;
+use Edutiek\AssessmentService\Task\Api\ApiException;
 
 readonly class Service implements FullService
 {

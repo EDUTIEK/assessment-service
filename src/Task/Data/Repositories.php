@@ -16,4 +16,5 @@ interface Repositories
     public function resource(): ResourceRepo;
     public function settings(): SettingsRepo;
     public function writerComment(): WriterCommentRepo;
+    public function ratingCriterion(): RatingCriterionRepo;
 }

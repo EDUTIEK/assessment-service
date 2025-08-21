@@ -8,7 +8,6 @@ interface Repositories
 {
     public function essay(): EssayRepo;
     public function essayImage(): EssayImageRepo;
-    public function ratingCriterion(): RatingCriterionRepo;
     public function taskSettings(): TaskSettingsRepo;
     public function writerHistory(): WriterHistoryRepo;
     public function writerNotice(): WriterNoticeRepo;

@@ -107,6 +107,7 @@ readonly class Service implements Manager
         $this->repos->correctorComment()->deleteByTaskId($task_id);
         $this->repos->correctorPoints()->deleteByTaskId($task_id);
         $this->repos->correctorTaskPrefs()->deleteByTaskId($task_id);
+        $this->repos->ratingCriterion()->deleteByTaskId($task_id);
 
         foreach ($this->repos->resource()->allByTaskId($task_id) as $resource) {
             if ($resource->getFileId() !== null) {
@@ -151,6 +152,11 @@ readonly class Service implements Manager
         if ($this->repos->correctionSettings()->one($new_ass_id) === null) {
             $this->repos->correctionSettings()->save($this->repos->correctionSettings()->one($this->ass_id)
                                                                  ->setAssId($new_ass_id));
+        }
+
+        // clone the common rating criteria (not belonging to a corrector)
+        foreach ($this->repos->ratingCriterion()->allByTaskIdAndCorrectorId($task_id, null) as $criterion) {
+            $this->repos->ratingCriterion()->save($criterion->setTaskId($new_task_id)->setId(0));
         }
 
         $this->types->api($settings->getTaskType())

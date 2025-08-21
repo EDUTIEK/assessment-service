@@ -50,8 +50,6 @@ readonly class Service implements \Edutiek\AssessmentService\Task\TypeInterfaces
             $this->repos->writingSettings()->delete($this->ass_id);
         }
 
-        $this->repos->ratingCriterion()->deleteByTaskId($this->task_id);
-
         foreach ($this->repos->essay()->allByTaskId($this->task_id) as $essay) {
             if ($essay->getPdfVersion() !== null) {
                 $this->storage->deleteFile($essay->getPdfVersion());
@@ -80,11 +78,6 @@ readonly class Service implements \Edutiek\AssessmentService\Task\TypeInterfaces
         if ($this->repos->writingSettings()->one($new_ass_id) === null) {
             $this->repos->writingSettings()->save($this->repos->writingSettings()->one($this->ass_id)
                 ->setAssId($new_ass_id));
-        }
-
-        // clone the common rating criteria (not belonging to a corrector)
-        foreach ($this->repos->ratingCriterion()->allByTaskIdAndCorrectorId($this->task_id, null) as $criterion) {
-            $this->repos->ratingCriterion()->save($criterion->setTaskId($new_task_id)->setId(0));
         }
     }
 }

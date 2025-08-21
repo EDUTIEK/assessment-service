@@ -8,8 +8,6 @@ use Edutiek\AssessmentService\EssayTask\Essay\FullService as EssayFullService;
 use Edutiek\AssessmentService\EssayTask\Essay\Service as EssayService;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\FullService as WritingSettingsFullService;
-use Edutiek\AssessmentService\EssayTask\RatingCriterion\Service as RatingCriterionService;
-use Edutiek\AssessmentService\EssayTask\RatingCriterion\FullService as RatingCriterionFullService;
 use Edutiek\AssessmentService\EssayTask\AssessmentStatus\Service as StatusService;
 use Edutiek\AssessmentService\EssayTask\AssessmentStatus\FullService as StatusFullService;
 use Edutiek\AssessmentService\EssayTask\TaskSettings\Service as TaskSettingsService;
@@ -53,14 +51,6 @@ class ForClients
     {
         return $this->instances[WritingSettingsService::class] = new WritingSettingsService(
             $this->ass_id,
-            $this->dependencies->repositories()
-        );
-    }
-
-    public function ratingCriterion(int $task_id): RatingCriterionFullService
-    {
-        return $this->instances[RatingCriterionService::class][$task_id] ??= new RatingCriterionService(
-            $task_id,
             $this->dependencies->repositories()
         );
     }

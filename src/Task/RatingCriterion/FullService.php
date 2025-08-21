@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Edutiek\AssessmentService\EssayTask\RatingCriterion;
+namespace Edutiek\AssessmentService\Task\RatingCriterion;
 
-use Edutiek\AssessmentService\EssayTask\Data\RatingCriterion;
+use Edutiek\AssessmentService\Task\Data\RatingCriterion;
 
 interface FullService
 {

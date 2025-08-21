@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\EssayTask\Data;
+namespace Edutiek\AssessmentService\Task\Data;
 
-abstract class RatingCriterion implements EssayTaskEntity
+abstract class RatingCriterion implements TaskEntity
 {
     abstract public function getId(): int;
     abstract public function setId(int $id): self;

@@ -15,6 +15,8 @@ use Edutiek\AssessmentService\Task\CorrectorAssignments\Service as CorrectorAssi
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsFullService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as CorrectorSummaryFullService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\Service as CorrectorSummaryService;
+use Edutiek\AssessmentService\Task\RatingCriterion\Service as RatingCriterionService;
+use Edutiek\AssessmentService\Task\RatingCriterion\FullService as RatingCriterionFullService;
 
 class ForClients
 {
@@ -71,5 +73,13 @@ class ForClients
     public function summary(int $task_id): CorrectorSummaryFullService
     {
         return $this->instances[CorrectorSummaryService::class] ??= new CorrectorSummaryService($task_id, $this->dependencies->repositories());
+    }
+
+    public function ratingCriterion(int $task_id): RatingCriterionFullService
+    {
+        return $this->instances[RatingCriterionService::class][$task_id] ??= new RatingCriterionService(
+            $task_id,
+            $this->dependencies->repositories()
+        );
     }
 }
