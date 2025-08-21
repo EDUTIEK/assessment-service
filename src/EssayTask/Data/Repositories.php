@@ -7,7 +7,6 @@ namespace Edutiek\AssessmentService\EssayTask\Data;
 interface Repositories
 {
     public function correctionSettings(): CorrectionSettingsRepo;
-    public function correctorPrefs(): CorrectorPrefsRepo;
     public function correctorSummary(): CorrectorSummaryRepo;
     public function correctorTaskPrefs(): CorrectorTaskPrefsRepo;
     public function essay(): EssayRepo;
