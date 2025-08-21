@@ -15,6 +15,7 @@ interface CorrectorCommentRepo
     public function save(CorrectorComment $entity): void;
     public function delete(int $id): void;
     public function deleteByCorrectorId(int $corrector_id): void;
+    public function deleteByTaskId(int $task_id): void;
     public function deleteByTaskIdAndWriterId(int $task_id, int $writer_id): void;
     public function deleteByTaskIdAndWriterIdAndCorrectorId(int $task_id, int $writer_id, int $corrector_id): void;
 }
