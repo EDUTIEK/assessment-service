@@ -1,8 +1,8 @@
 <?php
 
-namespace Edutiek\AssessmentService\EssayTask\CorrectionSettings;
+namespace Edutiek\AssessmentService\Task\CorrectionSettings;
 
-use Edutiek\AssessmentService\EssayTask\Data\CriteriaMode;
+use Edutiek\AssessmentService\Task\Data\CriteriaMode;
 
 enum CriteriaModeTransition: string
 {

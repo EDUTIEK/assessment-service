@@ -7,7 +7,7 @@ namespace Edutiek\AssessmentService\Task\CorrectionSettings;
 use Edutiek\AssessmentService\Task\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Task\Data\CriteriaMode;
 
-interface FullService extends ReadService
+interface ReadService
 {
-    public function save(CorrectionSettings $settings): void;
+    public function get(): CorrectionSettings;
 }

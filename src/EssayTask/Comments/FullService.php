@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\Comments;
 
-use Edutiek\AssessmentService\EssayTask\Data\CorrectorComment;
-use Edutiek\AssessmentService\EssayTask\Data\CorrectionSettings;
+use Edutiek\AssessmentService\Task\Data\CorrectorComment;
+use Edutiek\AssessmentService\Task\Data\CorrectionSettings;
 use Edutiek\AssessmentService\System\Data\ImageDescriptor;
 
 interface FullService

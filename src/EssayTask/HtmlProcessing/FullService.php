@@ -2,8 +2,8 @@
 
 namespace Edutiek\AssessmentService\EssayTask\HtmlProcessing;
 
-use Edutiek\AssessmentService\EssayTask\Data\CorrectionSettings;
-use Edutiek\AssessmentService\EssayTask\Data\CorrectorComment;
+use Edutiek\AssessmentService\Task\Data\CorrectionSettings;
+use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
 

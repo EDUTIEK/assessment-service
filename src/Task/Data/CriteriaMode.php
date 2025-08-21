@@ -1,6 +1,6 @@
 <?php
 
-namespace Edutiek\AssessmentService\EssayTask\Data;
+namespace Edutiek\AssessmentService\Task\Data;
 
 enum CriteriaMode: string
 {

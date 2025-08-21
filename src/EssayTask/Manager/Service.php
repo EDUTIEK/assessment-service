@@ -39,14 +39,6 @@ readonly class Service implements \Edutiek\AssessmentService\Task\TypeInterfaces
                 ->setAssId($this->ass_id)
             );
         }
-        if ($this->repos->correctionSettings()->one($this->ass_id ?? 0) === null) {
-            $this->repos->correctionSettings()->save(
-                $this->repos->correctionSettings()->new()
-                ->setAssId($this->ass_id)
-                ->setPositiveRating($this->language->txt('comment_rating_positive_default'))
-                ->setNegativeRating($this->language->txt('comment_rating_negative_default'))
-            );
-        }
     }
 
     public function delete(): void
@@ -56,7 +48,6 @@ readonly class Service implements \Edutiek\AssessmentService\Task\TypeInterfaces
         // delete writing and correction setting one the last task is deleted
         if (!$this->repos->taskSettings()->hasByAssId($this->ass_id)) {
             $this->repos->writingSettings()->delete($this->ass_id);
-            $this->repos->correctionSettings()->delete($this->ass_id);
         }
 
         $this->repos->correctorTaskPrefs()->deleteByTaskId($this->task_id);
@@ -90,10 +81,6 @@ readonly class Service implements \Edutiek\AssessmentService\Task\TypeInterfaces
         // clone the task independent writing and correction settings once for an assessment
         if ($this->repos->writingSettings()->one($new_ass_id) === null) {
             $this->repos->writingSettings()->save($this->repos->writingSettings()->one($this->ass_id)
-                ->setAssId($new_ass_id));
-        }
-        if ($this->repos->correctionSettings()->one($new_ass_id) === null) {
-            $this->repos->correctionSettings()->save($this->repos->correctionSettings()->one($this->ass_id)
                 ->setAssId($new_ass_id));
         }
 

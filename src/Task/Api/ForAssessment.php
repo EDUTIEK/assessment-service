@@ -13,7 +13,8 @@ class ForAssessment implements TasksApi
     private array $instances = [];
 
     public function __construct(
-        private readonly Dependencies $dependencies
+        private readonly Dependencies $dependencies,
+        private readonly Internal $internal
     ) {
     }
 
@@ -24,7 +25,8 @@ class ForAssessment implements TasksApi
             $user_id,
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->fileStorage(),
-            $this->dependencies->typeApis()
+            $this->dependencies->typeApis(),
+            $this->internal->language("de"),
         );
     }
 }

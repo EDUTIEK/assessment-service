@@ -2,14 +2,14 @@
 
 declare(strict_types = 1);
 
-namespace Edutiek\AssessmentService\EssayTask\CorrectionSettings;
+namespace Edutiek\AssessmentService\Task\CorrectionSettings;
 
-use Edutiek\AssessmentService\EssayTask\Api\ApiException;
-use Edutiek\AssessmentService\EssayTask\AssessmentStatus\FullService as AssessmentStatus;
-use Edutiek\AssessmentService\EssayTask\Data\CorrectionSettings;
-use Edutiek\AssessmentService\EssayTask\Data\CriteriaMode;
-use Edutiek\AssessmentService\EssayTask\Data\Repositories;
-use Edutiek\AssessmentService\EssayTask\Data\TaskSettings;
+use Edutiek\AssessmentService\Task\Api\ApiException;
+use Edutiek\AssessmentService\Task\AssessmentStatus\FullService as AssessmentStatus;
+use Edutiek\AssessmentService\Task\Data\CorrectionSettings;
+use Edutiek\AssessmentService\Task\Data\CriteriaMode;
+use Edutiek\AssessmentService\Task\Data\Repositories;
+use Edutiek\AssessmentService\Task\Data\TaskSettings;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentService;
 
 class Service implements FullService
@@ -101,9 +101,7 @@ class Service implements FullService
      */
     private function purgeAllPoints(int $task_id)
     {
-        foreach ($this->repos->essay()->allByTaskId($task_id) as $essay) {
-            $this->repos->correctorPoints()->deleteByEssayId($essay->getId());
-        }
+        $this->repos->correctorPoints()->deleteByTaskId($task_id);
     }
 
     /**
@@ -129,15 +127,13 @@ class Service implements FullService
                 $matching[$criterion->getId()] = $corr_criterion->getId();
             }
 
-            foreach ($this->repos->essay()->allByTaskId($task_id) as $essay) {
-                foreach ($this->repos->correctorPoints()->allByEssayIdAndCorrectorId(
-                    $essay->getId(),
-                    $corrector_id
-                ) as $points) {
-                    if (isset($matching[$points->getCriterionId()])) {
-                        $points->setCriterionId($matching[$points->getCriterionId()]);
-                        $this->repos->correctorPoints()->save($points);
-                    }
+            foreach ($this->repos->correctorPoints()->allByTaskIdAndCorrectorId(
+                $task_id,
+                $corrector_id
+            ) as $points) {
+                if (isset($matching[$points->getCriterionId()])) {
+                    $points->setCriterionId($matching[$points->getCriterionId()]);
+                    $this->repos->correctorPoints()->save($points);
                 }
             }
         }
@@ -150,24 +146,22 @@ class Service implements FullService
     private function purgeCriteriaInPoints(int $task_id, array $corrector_ids)
     {
         foreach ($corrector_ids as $corrector_id) {
-            foreach ($this->repos->essay()->allByTaskId($task_id) as $essay) {
-                $comment_points = [];
-                foreach ($this->repos->correctorPoints()->allByEssayIdAndCorrectorId($essay->getId(), $corrector_id) as $points) {
-                    if ($points->getCommentId() !== null) {
-                        $comment_points[$points->getCommentId()] = ($comment_points[$points->getCommentId()] ?? 0) + $points->getPoints();
-                    }
+            $comment_points = [];
+            foreach ($this->repos->correctorPoints()->allByTaskIdAndCorrectorId($task_id, $corrector_id) as $points) {
+                if ($points->getCommentId() !== null) {
+                    $comment_points[$points->getCommentId()] = [(($comment_points[$points->getCommentId()] ?? 0) + $points->getPoints()), $points->getWriterId()];
                 }
-                $this->repos->correctorPoints()->deleteByEssayIdAndCorrectorId($essay->getId(), $corrector_id);
+            }
+            $this->repos->correctorPoints()->deleteByTaskIdAndCorrectorId($task_id, $corrector_id);
 
-                foreach ($comment_points as $comment_id => $sum_of_points) {
-                    $points = $this->repos->correctorPoints()->new()
-                                          ->setEssayId($essay->getId())
-                                          ->setCorrectorId($corrector_id)
-                                          ->setCommentId($comment_id)
-                                          ->setPoints($sum_of_points);
+            foreach ($comment_points as $comment_id => list($sum_of_points, $writer_id)) {
+                $points = $this->repos->correctorPoints()->new()
+                                      ->setWriterId($writer_id)
+                                      ->setCorrectorId($corrector_id)
+                                      ->setCommentId($comment_id)
+                                      ->setPoints($sum_of_points);
 
-                    $this->repos->correctorPoints()->save($points);
-                }
+                $this->repos->correctorPoints()->save($points);
             }
         }
     }

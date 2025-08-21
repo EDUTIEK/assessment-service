@@ -12,6 +12,7 @@ use Edutiek\AssessmentService\Task\Settings\FullService as SettingsFullService;
 use Edutiek\AssessmentService\Task\Settings\Service as SettingsService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as CorrectorAssignmentsFullService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\Service as CorrectorAssignmentsService;
+use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsFullService;
 
 class ForClients
 {
@@ -32,7 +33,8 @@ class ForClients
             $this->user_id,
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->fileStorage(),
-            $this->dependencies->typeApis()
+            $this->dependencies->typeApis(),
+            $this->internal->language("de")
         );
     }
 
@@ -59,4 +61,8 @@ class ForClients
         return $this->internal->correctorAssignments($this->ass_id, $this->user_id);
     }
 
+    public function correctionSettings(): CorrectionSettingsFullService
+    {
+        return $this->internal->correctionSettings($this->ass_id, $this->user_id);
+    }
 }

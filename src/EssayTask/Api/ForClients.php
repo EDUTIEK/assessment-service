@@ -8,8 +8,6 @@ use Edutiek\AssessmentService\EssayTask\Essay\FullService as EssayFullService;
 use Edutiek\AssessmentService\EssayTask\Essay\Service as EssayService;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\FullService as WritingSettingsFullService;
-use Edutiek\AssessmentService\EssayTask\CorrectionSettings\Service as CorrectionSettingsService;
-use Edutiek\AssessmentService\EssayTask\CorrectionSettings\FullService as CorrectionSettingsFullService;
 use Edutiek\AssessmentService\EssayTask\RatingCriterion\Service as RatingCriterionService;
 use Edutiek\AssessmentService\EssayTask\RatingCriterion\FullService as RatingCriterionFullService;
 use Edutiek\AssessmentService\EssayTask\AssessmentStatus\Service as StatusService;
@@ -50,16 +48,6 @@ class ForClients
         return $this->instances[EssayFullService::class] = new EssayService(
             $this->dependencies->repositories(),
             $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->writer()
-        );
-    }
-
-    public function correctionSettings(): CorrectionSettingsFullService
-    {
-        return $this->instances[CorrectionSettingsService::class] = new CorrectionSettingsService(
-            $this->ass_id,
-            $this->dependencies->repositories(),
-            $this->dependencies->taskApi($this->ass_id, $this->user_id)->correctorAssignments(),
-            $this->assessmentStatus()
         );
     }
 

@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Task\Api\ApiException;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\Settings;
 use Edutiek\AssessmentService\Task\TypeInterfaces\ApiFactory as TypeApiFactory;
+use Edutiek\AssessmentService\System\Language\FullService as Language;
 
 readonly class Service implements Manager
 {
@@ -20,6 +21,7 @@ readonly class Service implements Manager
         private Repositories $repos,
         private Storage $storage,
         private TypeApiFactory $types,
+        private Language $language
     ) {
     }
 
@@ -75,6 +77,15 @@ readonly class Service implements Manager
             ->manager($this->ass_id, $settings->getTaskId(), $this->user_id)
             ->create();
 
+        if ($this->repos->correctionSettings()->one($this->ass_id ?? 0) === null) {
+            $this->repos->correctionSettings()->save(
+                $this->repos->correctionSettings()->new()
+                            ->setAssId($this->ass_id)
+                            ->setPositiveRating($this->language->txt('comment_rating_positive_default'))
+                            ->setNegativeRating($this->language->txt('comment_rating_negative_default'))
+            );
+        }
+
         return $settings->getTaskId();
     }
 
@@ -89,6 +100,7 @@ readonly class Service implements Manager
         $task_type = $settings->getTaskType();
 
         $this->repos->settings()->delete($task_id);
+        $this->repos->correctionSettings()->delete($this->ass_id);
         $this->repos->correctorAssignment()->deleteByTaskId($task_id);
         $this->repos->writerComment()->deleteByTaskId($task_id);
         $this->repos->correctorComment()->deleteByTaskId($task_id);
@@ -132,6 +144,11 @@ readonly class Service implements Manager
                 ->setId(0)
                 ->setTaskId($new_task_id)
                 ->setFileId($new_file_id));
+        }
+
+        if ($this->repos->correctionSettings()->one($new_ass_id) === null) {
+            $this->repos->correctionSettings()->save($this->repos->correctionSettings()->one($this->ass_id)
+                                                                 ->setAssId($new_ass_id));
         }
 
         $this->types->api($settings->getTaskType())
