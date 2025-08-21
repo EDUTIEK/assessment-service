@@ -9,7 +9,7 @@ use Edutiek\AssessmentService\Task\AssessmentStatus\FullService as AssessmentSta
 use Edutiek\AssessmentService\Task\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Task\Data\CriteriaMode;
 use Edutiek\AssessmentService\Task\Data\Repositories;
-use Edutiek\AssessmentService\Task\Data\TaskSettings;
+use Edutiek\AssessmentService\Task\Data\Settings;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentService;
 
 class Service implements FullService
@@ -48,7 +48,7 @@ class Service implements FullService
      */
     private function allTaskIds() : array
     {
-        return $this->task_ids ??= array_map(fn (TaskSettings $x) => $x->getTaskId(), $this->repos->taskSettings()->allByAssId($this->ass_id));
+        return $this->task_ids ??= array_map(fn (Settings $x) => $x->getTaskId(), $this->repos->settings()->allByAssId($this->ass_id));
     }
 
     /**
