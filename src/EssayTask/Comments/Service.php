@@ -7,7 +7,7 @@ namespace Edutiek\AssessmentService\EssayTask\Comments;
 use Edutiek\AssessmentService\EssayTask\Comments\FullService;
 use Edutiek\AssessmentService\EssayTask\Data\CommentRating;
 use Edutiek\AssessmentService\EssayTask\Data\CorrectionSettings;
-use Edutiek\AssessmentService\EssayTask\Data\CorrectorComment;
+use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 use Edutiek\AssessmentService\EssayTask\Data\CorrectionMark;
 use Edutiek\AssessmentService\System\Data\ImageDescriptor;
 use Edutiek\AssessmentService\System\ImageSketch\FullService as ImageSketchService;

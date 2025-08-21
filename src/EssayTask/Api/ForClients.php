@@ -29,7 +29,6 @@ use Edutiek\AssessmentService\EssayTask\PdfOutput\FullService as FullPdfOutput;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\Service as PdfOutput;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\LazyService as LazyPdfOutput;
 use LongEssayPDFConverter\ImageMagick\PDFImage;
-use Edutiek\AssessmentService\EssayTask\CorrectorComment\Service as CorrectorComment;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 use Edutiek\AssessmentService\EssayTask\Format\FullService as FormatFullService;
 use Edutiek\AssessmentService\EssayTask\Format\Service as FormatService;
@@ -110,7 +109,7 @@ class ForClients
             $this->essay(),
             $this->backgroundTaskManager(),
             $this->essayImage(),
-            fn(int $id) => new CorrectorComment($id, $this->dependencies->repositories()),
+            fn(int $task_id, int $writer_id) => $this->dependencies->taskApi($this->ass_id, $this->user_id)->correctorComment($task_id, $writer_id),
             $this->internal->language($this->user_id),
         );
     }

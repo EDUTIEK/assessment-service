@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\EssayTask\Data;
+namespace Edutiek\AssessmentService\Task\Data;
 
-abstract class CorrectorComment implements EssayTaskEntity
+abstract class CorrectorComment implements TaskEntity
 {
     // not saved
     protected string $label = '';
@@ -14,8 +14,10 @@ abstract class CorrectorComment implements EssayTaskEntity
 
     abstract public function getId(): int;
     abstract public function setId(int $id): self;
-    abstract public function getEssayId(): int;
-    abstract public function setEssayId(int $essay_id): self;
+    abstract public function getTaskId(): int;
+    abstract public function setTaskId(int $task_id): self;
+    abstract public function getWriterId(): int;
+    abstract public function setWriterId(int $writer_id): self;
     abstract public function getComment(): ?string;
     abstract public function setComment(?string $comment): self;
     abstract public function getStartPosition(): int;

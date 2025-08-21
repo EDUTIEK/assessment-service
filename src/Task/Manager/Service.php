@@ -91,6 +91,7 @@ readonly class Service implements Manager
         $this->repos->settings()->delete($task_id);
         $this->repos->correctorAssignment()->deleteByTaskId($task_id);
         $this->repos->writerComment()->deleteByTaskId($task_id);
+        $this->repos->correctorComment()->deleteByTaskId($task_id);
 
         foreach ($this->repos->resource()->allByTaskId($task_id) as $resource) {
             if ($resource->getFileId() !== null) {

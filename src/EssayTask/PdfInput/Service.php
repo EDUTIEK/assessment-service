@@ -8,7 +8,7 @@ use Edutiek\AssessmentService\EssayTask\Essay\FullService as EssayService;
 use Edutiek\AssessmentService\System\BackgroundTask\Manager as BackgroundTaskManager;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImage;
-use Edutiek\AssessmentService\EssayTask\CorrectorComment\FullService as CorrectorComment;
+use Edutiek\AssessmentService\Task\CorrectorComment\FullService as CorrectorComment;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 use DateTimeImmutable;
@@ -42,7 +42,7 @@ class Service implements FullService
         $this->essay->save($essay);
 
         $this->essay_image->deleteByEssayId($essay->getId());
-        ($this->get_corrector_comment)($essay->getId())->deleteByEssayId($essay->getId());
+        ($this->get_corrector_comment)($essay->getTaskId(), $essay->getWriterId())->delete();
 
         // create page images in background task
         if ($essay->getPdfVersion() !== null) {

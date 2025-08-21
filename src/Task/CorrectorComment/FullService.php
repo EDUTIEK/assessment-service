@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\EssayTask\CorrectorComment;
+namespace Edutiek\AssessmentService\Task\CorrectorComment;
 
-use Edutiek\AssessmentService\EssayTask\Data\CorrectorComment;
+use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 
 interface FullService
 {
@@ -12,5 +12,5 @@ interface FullService
     public function allByCorrectorId(int $corrector_id): array;
     public function new(): CorrectorComment;
     public function save(CorrectorComment $comment): void;
-    public function deleteByEssayId(int $id): void;
+    public function delete(): void;
 }

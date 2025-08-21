@@ -7,7 +7,7 @@ use Edutiek\AssessmentService\EssayTask\Comments\Service as CommentsService;
 use Edutiek\AssessmentService\EssayTask\Data\HeadlineScheme;
 use Mustache_Engine;
 use Edutiek\AssessmentService\EssayTask\Data\CorrectionSettings;
-use Edutiek\AssessmentService\EssayTask\Data\CorrectorComment;
+use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
 
