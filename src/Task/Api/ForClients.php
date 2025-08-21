@@ -17,6 +17,8 @@ use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as CorrectorSumm
 use Edutiek\AssessmentService\Task\CorrectorSummary\Service as CorrectorSummaryService;
 use Edutiek\AssessmentService\Task\RatingCriterion\Service as RatingCriterionService;
 use Edutiek\AssessmentService\Task\RatingCriterion\FullService as RatingCriterionFullService;
+use Edutiek\AssessmentService\Task\AssessmentStatus\Service as StatusService;
+use Edutiek\AssessmentService\Task\AssessmentStatus\FullService as StatusFullService;
 
 class ForClients
 {
@@ -81,5 +83,10 @@ class ForClients
             $task_id,
             $this->dependencies->repositories()
         );
+    }
+
+    public function assessmentStatus(): StatusFullService
+    {
+        return $this->internal->assessmentStatus($this->ass_id, $this->user_id);
     }
 }

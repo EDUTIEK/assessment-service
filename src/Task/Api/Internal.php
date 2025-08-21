@@ -9,6 +9,8 @@ use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as Corrector
 use Edutiek\AssessmentService\Task\CorrectorAssignments\Service as CorrectorAssignmentsService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\Service as CorrectionSettingsService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsFullService;
+use Edutiek\AssessmentService\Task\AssessmentStatus\Service as StatusService;
+use Edutiek\AssessmentService\Task\AssessmentStatus\FullService as StatusFullService;
 
 class Internal
 {
@@ -46,7 +48,17 @@ class Internal
             $ass_id,
             $this->dependencies->repositories(),
             $this->correctorAssignments($ass_id, $user_id),
-            $this->assessmentStatus()
+            $this->assessmentStatus($ass_id, $user_id)
+        );
+    }
+
+    public function assessmentStatus(int $ass_id, int $user_id): StatusFullService
+    {
+        return $this->instances[StatusService::class] = new StatusService(
+            $ass_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->assessmentApis($ass_id, $user_id)->writer(),
+            $this->correctorAssignments($ass_id, $user_id),
         );
     }
 }

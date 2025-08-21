@@ -4,26 +4,13 @@ namespace Edutiek\AssessmentService\EssayTask\AssessmentStatus;
 
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
-use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
-use Edutiek\AssessmentService\EssayTask\Data\CorrectorSummary;
-use Edutiek\AssessmentService\Assessment\Data\Writer;
-use Edutiek\AssessmentService\Assessment\Data\WritingStatus;
-use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
-use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentsService;
-use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 
 readonly class Service implements FullService
 {
     public function __construct(
         private int $ass_id,
-        private Repositories $repos,
-        private WriterService $writer_service,
-        private CorrectorAssignmentsService $assignment_service,
+        private Repositories $repos
     ) {
-    }
-    public function hasComments()
-    {
-        return $this->repos->correctorComment()->hasByAssId($this->ass_id);
     }
 
     public function allWriterEssaySummaries(): array
@@ -56,125 +43,5 @@ readonly class Service implements FullService
             max(array_map(fn (Essay $e) => $e->getPdfVersion(), $essays)) !== null,
             array_sum(array_map(fn (Essay $e) => $e->getWordCount(), $essays))
         );
-    }
-
-    public function allWriterCorrectionStatus() : array
-    {
-        $essay_writer_mapping = [];
-        $writer_summaries = [];
-        $status = [];
-
-        foreach ($this->repos->essay()->allByAssId($this->ass_id) as $essay) {
-            $essay_writer_mapping[$essay->getId()] = $essay->getWriterId();
-        }
-
-        foreach ($this->repos->correctorSummary()->allByAssId($this->ass_id) as $summary) {
-            $writer_id = $essay_writer_mapping[$summary->getEssayId()]??-1;
-            $writer_summaries[$writer_id][] = $summary;
-        }
-
-        foreach ($this->writer_service->all() as $writer) {
-            $summaries = $writer_summaries[$writer->getId()] ?? [];
-            $status[$writer->getId()] = $this->getWriterCorrectionStatus($writer, $summaries);
-        }
-        return $status;
-    }
-
-    public function oneWriterCorrectionStatus(Writer $writer) : CorrectionStatus
-    {
-        $summaries = $this->repos->correctorSummary()->allByWriterId($writer->getId());
-        return $this->getWriterCorrectionStatus($writer, $summaries);
-    }
-
-    /**
-     * @param Writer                $writer
-     * @param Essay[]            $essay
-     * @param CorrectorSummary[]   $summaries
-     * @return CorrectionStatus
-     */
-    private function getWriterCorrectionStatus(Writer $writer, array $summaries) : CorrectionStatus
-    {
-        $writing_status = $writer->getStatus();
-        if ($writing_status !== WritingStatus::AUTHORIZED) {
-            return CorrectionStatus::from($writing_status->value);
-        }
-
-        if ($writer->getCorrectionFinalized() !== null) {
-            return CorrectionStatus::FINALIZED;
-        }
-
-        if (!$writer->getStitchNeeded()) {
-            return CorrectionStatus::STITCH_NEEDED;
-        }
-
-        if (count($summaries) > 0 && max(array_map(fn (CorrectorSummary $s) => $s->getLastChange(), $summaries)) !== null) {
-            return CorrectionStatus::STARTED;
-        }
-
-        return CorrectionStatus::WRITING_AUTHORIZED;
-    }
-
-
-    public function hasAuthorizedSummaries(?int $corrector_id = null)
-    {
-        return $this->repos->correctorSummary()->hasAuthorizedByAssId($this->ass_id, $corrector_id);
-    }
-
-    public function allCorrectorCorrectionSummaries(?array $corrector_ids = null): array
-    {
-        $assignments_by_corrector = [];
-        $summaries_by_corrector = [];
-
-        foreach($this->assignment_service->all() as $assignment) {
-            $assignments_by_corrector[$assignment->getCorrectorId()][] = $assignment;
-        }
-        foreach($this->repos->correctorSummary()->allByAssId($this->ass_id) as $summary) {
-            $summaries_by_corrector[$summary->getCorrectorId()][] = $summary;
-        }
-
-        if($corrector_ids === null) {
-            $corrector_ids = array_unique(array_merge(array_keys($assignments_by_corrector), array_keys($summaries_by_corrector)));
-        }
-
-        $correction_summaries = [];
-        foreach ($corrector_ids as $id) {
-            $correction_summaries[$id] = $this->getCorrectorCorrectionSummary(
-                $id,
-                $assignments_by_corrector[$id]??[],
-                $summaries_by_corrector[$id]??[]
-            );
-        }
-        return $correction_summaries;
-    }
-
-    public function oneCorrectorCorrectionSummary(int $corrector_id): CorrectorCorrectionSummary
-    {
-        return $this->getCorrectorCorrectionSummary(
-            $corrector_id,
-            $this->assignment_service->allByCorrectorId($corrector_id),
-            $this->repos->correctorSummary()->allByCorrectorId($corrector_id)
-        );
-    }
-
-    /**
-     * @param CorrectorAssignment[] $corrector_assignments
-     * @param CorrectorSummary[] $corrector_summaries
-     * @return CorrectorCorrectionSummary
-     */
-    private function getCorrectorCorrectionSummary(int $corrector_id, array $corrector_assignments, array $corrector_summaries): CorrectorCorrectionSummary
-    {
-        return new CorrectorCorrectionSummary(
-            $corrector_id,
-            count(array_filter($corrector_assignments, fn (CorrectorAssignment $ass) => $ass->getPosition() === 0)),
-            count(array_filter($corrector_assignments, fn (CorrectorAssignment $ass) => $ass->getPosition() === 1)),
-            count($corrector_assignments) - count($corrector_summaries),
-            $authorized = count(array_filter($corrector_summaries, fn (CorrectorSummary $sum) => $sum->getCorrectionAuthorized() !== null)),
-            count($corrector_summaries) - $authorized
-        );
-    }
-
-    public function getCorrectorsWithOpenAuthorizations()
-    {
-        // TODO: Implement getCorrectorsWithOpenAuthorizations() method.
     }
 }

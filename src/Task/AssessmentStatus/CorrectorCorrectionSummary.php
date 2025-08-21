@@ -1,6 +1,6 @@
 <?php
 
-namespace Edutiek\AssessmentService\EssayTask\AssessmentStatus;
+namespace Edutiek\AssessmentService\Task\AssessmentStatus;
 
 class CorrectorCorrectionSummary
 {
