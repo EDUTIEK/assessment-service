@@ -6,7 +6,6 @@ namespace Edutiek\AssessmentService\EssayTask\Data;
 
 interface Repositories
 {
-    public function correctorTaskPrefs(): CorrectorTaskPrefsRepo;
     public function essay(): EssayRepo;
     public function essayImage(): EssayImageRepo;
     public function ratingCriterion(): RatingCriterionRepo;

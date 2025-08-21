@@ -106,6 +106,7 @@ readonly class Service implements Manager
         $this->repos->correctorSummary()->deleteByTaskId($task_id);
         $this->repos->correctorComment()->deleteByTaskId($task_id);
         $this->repos->correctorPoints()->deleteByTaskId($task_id);
+        $this->repos->correctorTaskPrefs()->deleteByTaskId($task_id);
 
         foreach ($this->repos->resource()->allByTaskId($task_id) as $resource) {
             if ($resource->getFileId() !== null) {

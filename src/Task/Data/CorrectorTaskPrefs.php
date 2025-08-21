@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\EssayTask\Data;
+namespace Edutiek\AssessmentService\Task\Data;
 
-abstract class CorrectorTaskPrefs implements EssayTaskEntity
+abstract class CorrectorTaskPrefs implements TaskEntity
 {
     abstract public function getCorrectorId(): int;
     abstract public function setCorrectorId(int $corrector_id): self;

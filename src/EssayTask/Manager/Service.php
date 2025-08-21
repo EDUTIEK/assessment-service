@@ -50,7 +50,6 @@ readonly class Service implements \Edutiek\AssessmentService\Task\TypeInterfaces
             $this->repos->writingSettings()->delete($this->ass_id);
         }
 
-        $this->repos->correctorTaskPrefs()->deleteByTaskId($this->task_id);
         $this->repos->ratingCriterion()->deleteByTaskId($this->task_id);
 
         foreach ($this->repos->essay()->allByTaskId($this->task_id) as $essay) {
