@@ -32,7 +32,8 @@ class Factory
     public function forAssessment(): ForAssessment
     {
         return $this->instances[ForAssessment::class] ??= new ForAssessment(
-            $this->dependencies
+            $this->dependencies,
+            $this->internal()
         );
     }
 
@@ -44,7 +45,8 @@ class Factory
         return $this->instances[ForTypes::class] ??= new ForTypes(
             $ass_id,
             $user_id,
-            $this->internal()
+            $this->internal(),
+            $this->dependencies
         );
     }
 
