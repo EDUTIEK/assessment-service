@@ -111,4 +111,6 @@ interface ReadService
      * Check if the user is allowed to upload files
      */
     public function canUploadFiles(): bool;
+
+    public function canEditTemplates(): bool;
 }

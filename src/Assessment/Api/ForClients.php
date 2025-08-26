@@ -38,6 +38,8 @@ use Edutiek\AssessmentService\Assessment\WorkingTime\IndividualWorkingTime;
 use Edutiek\AssessmentService\Assessment\Alert\FullService as FullAlertService;
 use Edutiek\AssessmentService\Assessment\Alert\Service as AlertService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as AssessmentGradingReadService;
+use Edutiek\AssessmentService\Assessment\DisabledGroup\Service as DisabledGroupService;
+use Edutiek\AssessmentService\Assessment\DisabledGroup\FullService as DisabledGroupFullService;
 
 class ForClients
 {
@@ -188,5 +190,13 @@ class ForClients
     public function assessment_grading(): AssessmentGradingReadService
     {
         return $this->internal->assessment_grading($this->ass_id);
+    }
+
+    public function disabledGroup(): DisabledGroupFullService
+    {
+        return $this->instances[DisabledGroupService::class] ??= new DisabledGroupService(
+            $this->ass_id,
+            $this->dependencies->repositories()->disabledGroup()
+        );
     }
 }

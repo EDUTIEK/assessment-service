@@ -18,4 +18,5 @@ interface Repositories
     public function pdfSettings(): PdfSettingsRepo;
     public function token(): TokenRepo;
     public function writer(): WriterRepo;
+    public function disabledGroup(): DisabledGroupRepo;
 }

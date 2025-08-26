@@ -65,7 +65,8 @@ class ForServices
         return $this->instances[ImageSketchFullService::class] ??= new Sketch(
             [
                 // Default font of Sketch is not available on Windows - keep default font of Imagick
-                'font' => ['name' => null, 'size' => 50]]
+                'font' => ['name' => null, 'size' => 50]
+            ]
         );
     }
 

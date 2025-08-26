@@ -23,6 +23,7 @@ use Edutiek\AssessmentService\EssayTask\PdfOutput\FullService as FullPdfOutput;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\Service as PdfOutput;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\LazyService as LazyPdfOutput;
 use LongEssayPDFConverter\ImageMagick\PDFImage;
+use Edutiek\AssessmentService\EssayTask\CorrectorComment\Service as CorrectorComment;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 
 class ForClients
@@ -105,7 +106,7 @@ class ForClients
     private function essayImage(): EssayImageFullService
     {
         return $this->instances[EssayImageFullService::class] = new EssayImageService(
-            new PDFImage(),
+            $this->dependencies->systemApi()->pdfConverter(),
             $this->dependencies->repositories()->essayImage(),
             new LazyPdfOutput($this->pdfOutput(...)),
             $this->dependencies->systemApi()->fileStorage(),

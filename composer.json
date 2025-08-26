@@ -19,12 +19,6 @@
             "email": "lscharmer@databay.de"
         }
     ],
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/edutiek/long-essay-pdf-converter"
-        }
-    ],
     "require": {
         "php": ">=8.2 <8.4",
         "ext-json": "*",
@@ -36,7 +30,6 @@
         "slim/psr7": "^1.6",
         "slim/slim": "^4.14",
         "tecnickcom/tcpdf": "^6.3",
-        "yetanotherape/diff-match-patch": "^1.1",
-        "edutiek/long-essay-pdf-converter": "dev-main"
+        "yetanotherape/diff-match-patch": "^1.1"
     }
 }

@@ -230,6 +230,11 @@ class Service implements ReadService
             || $this->isCorrector() && $this->isOnline();
     }
 
+    public function canEditTemplates(): bool
+    {
+        return $this->permissions->getEditTemplates();
+    }
+
     private function isOnline(): bool
     {
         return (bool) $this->repos->orgaSettings()->one($this->ass_id)?->getOnline();
