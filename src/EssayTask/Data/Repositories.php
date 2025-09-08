@@ -13,4 +13,5 @@ interface Repositories
     public function writerNotice(): WriterNoticeRepo;
     public function writerPrefs(): WriterPrefsRepo;
     public function writingSettings(): WritingSettingsRepo;
+    public function essayImport(): EssayImportRepo;
 }

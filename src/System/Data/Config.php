@@ -52,4 +52,7 @@ abstract class Config implements SystemEntity
     abstract public function getPathToGhostscript(): ?string;
     abstract public function setPathToGhostscript(?string $path_to_ghostscript): Config;
 
+    abstract public function getHashAlgo(): string;
+    abstract public function setHashAlgo(string $algo): Config;
+
 }
