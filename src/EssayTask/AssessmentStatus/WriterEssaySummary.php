@@ -16,7 +16,7 @@ class WriterEssaySummary
         return $this->writer_id;
     }
 
-    public function getLastSave(): \DateTimeImmutable
+    public function getLastSave(): ?\DateTimeImmutable
     {
         return $this->last_save;
     }

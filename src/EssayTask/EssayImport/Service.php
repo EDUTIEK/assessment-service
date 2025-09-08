@@ -6,10 +6,14 @@ namespace Edutiek\AssessmentService\EssayTask\EssayImport;
 
 use Edutiek\AssessmentService\EssayTask\Data\EssayImportRepo;
 use Edutiek\AssessmentService\EssayTask\Data\EssayImport;
+use Edutiek\AssessmentService\System\File\Storage;
 
 class Service implements FullService
 {
-    public function __construct(private readonly EssayImportRepo $repo)
+    public function __construct(
+        private readonly EssayImportRepo $repo,
+        private readonly Storage $file_storage,
+    )
     {
     }
 
@@ -31,8 +35,9 @@ class Service implements FullService
         $this->repo->save($import);
     }
 
-    public function delete(int $id): void
+    public function delete(EssayImport $import): void
     {
-        $this->repo->delete($id);
+        $this->repo->delete($import->getId());
+        $this->file_storage->deleteFile($import->getFileId());
     }
 }

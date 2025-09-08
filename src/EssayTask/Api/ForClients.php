@@ -98,7 +98,10 @@ class ForClients
 
     public function essayImport(): FullEssayImport
     {
-        return $this->instances[EssayImport::class] ??= new EssayImport($this->dependencies->repositories()->essayImport());
+        return $this->instances[EssayImport::class] ??= new EssayImport(
+            $this->dependencies->repositories()->essayImport(),
+            $this->dependencies->systemApi()->fileStorage(),
+        );
     }
 
     private function backgroundTaskManager(): BackgroundTaskManager
