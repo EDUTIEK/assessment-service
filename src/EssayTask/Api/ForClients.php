@@ -25,8 +25,6 @@ use Edutiek\AssessmentService\EssayTask\PdfOutput\LazyService as LazyPdfOutput;
 use LongEssayPDFConverter\ImageMagick\PDFImage;
 use Edutiek\AssessmentService\EssayTask\CorrectorComment\Service as CorrectorComment;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
-use Edutiek\AssessmentService\EssayTask\EssayImport\FullService as FullEssayImport;
-use Edutiek\AssessmentService\EssayTask\EssayImport\Service as EssayImport;
 
 class ForClients
 {
@@ -94,14 +92,6 @@ class ForClients
         ];
 
         return $jobs[$class]();
-    }
-
-    public function essayImport(): FullEssayImport
-    {
-        return $this->instances[EssayImport::class] ??= new EssayImport(
-            $this->dependencies->repositories()->essayImport(),
-            $this->dependencies->systemApi()->fileStorage(),
-        );
     }
 
     private function backgroundTaskManager(): BackgroundTaskManager
