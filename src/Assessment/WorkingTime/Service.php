@@ -26,6 +26,7 @@ readonly class Service implements FullService
     private ?int $writer_time_limit_minutes;
     private ?DateTimeImmutable $working_start;
     private bool $solution_available;
+    private ?DateTimeImmutable $solution_available_date;
 
     public function __construct(
         private Language $language,
@@ -38,6 +39,7 @@ readonly class Service implements FullService
         $this->common_latest_end = $settings->getWritingEnd();
         $this->common_time_limit_minutes = $settings->getWritingLimitMinutes();
         $this->solution_available = $settings->getSolutionAvailable();
+        $this->solution_available_date = $settings->getSolutionAvailableDate();
 
         if ($writer !== null) {
             $this->writer_earliest_start = $writer->getEarliestStart();
@@ -104,7 +106,13 @@ readonly class Service implements FullService
 
     public function isSolutionAvailable(): bool
     {
-        return $this->solution_available;
+        return $this->solution_available
+            && ($this->solution_available_date === null || $this->solution_available_date->getTimestamp() <= time());
+    }
+
+    public function getSolutionavailableDate(): ?DateTimeImmutable
+    {
+        return $this->solution_available_date;
     }
 
     /**
@@ -227,7 +235,7 @@ readonly class Service implements FullService
         if ($this->isLimited()) {
             $string = $system_format->dateRange($this->getEarliestStart(), $this->getLatestEnd());
             if ($this->getTimeLimitMinutes()) {
-                $string .= ', ' . $system_format->duration($this->getTimeLimitMinutes() * 60);
+                $string .= ' | ' . $system_format->duration($this->getTimeLimitMinutes() * 60);
             }
             return $string;
         }
@@ -235,7 +243,7 @@ readonly class Service implements FullService
         return $this->language->txt('not_specified');
     }
 
-    public function validate(?ValidationErrorStore $store = null) : bool
+    public function validate(?ValidationErrorStore $store = null): bool
     {
         $valid = true;
         if ($this->isEndBeforeStart()) {
@@ -246,9 +254,9 @@ readonly class Service implements FullService
             $store?->addValidationError(ValidationError::TIME_LIMIT_TOO_LONG);
             $valid = false;
         }
-        if ($this->isSolutionAvailable()
-            && $this->isSolutionAvailable() !== null && $this->getWorkingDeadline() !== null
-            && $this->isSolutionAvailable() <= $this->getWorkingDeadline()) {
+        if ($this->solution_available
+            && $this->solution_available_date !== null && $this->getWorkingDeadline() !== null
+            && $this->solution_available_date <= $this->getWorkingDeadline()) {
             $store?->addValidationError(ValidationError::TIME_EXCEEDS_SOLUTION_AVAILABILITY);
             $valid = false;
         }

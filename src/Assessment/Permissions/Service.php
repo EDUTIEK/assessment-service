@@ -40,7 +40,7 @@ class Service implements ReadService
     {
         return $this->permissions->getRead() &&
             ($this->isOnline() || $this->canEditOrgaSettings()) &&
-            ($this->orga_settings->getParticipationType() === ParticipationType::INSTANT || $this->isWriter());
+            ($this->orga_settings->getParticipationType() === ParticipationType::INSTANT || $this->isWriter() || $this->canEditOrgaSettings());
     }
 
     public function canViewCorrectorScreen(): bool
@@ -108,7 +108,7 @@ class Service implements ReadService
         }
 
         return $this->orga_settings->getSolutionAvailableDate() === null ||
-            $this->orga_settings->getSolutionAvailableDate()->getTimestamp() >= time();
+            $this->orga_settings->getSolutionAvailableDate()->getTimestamp() <= time();
     }
 
     public function canViewWriterStatistics(): bool

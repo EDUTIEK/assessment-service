@@ -18,7 +18,8 @@ readonly class Service implements FullService
         private Closure $format_date,
         private DateTimeZone $timezone,
         private Language $language
-    ) {}
+    ) {
+    }
 
     public function dateRange(?DateTimeImmutable $start, ?DateTimeImmutable $end): string
     {
@@ -55,11 +56,32 @@ readonly class Service implements FullService
     public function duration(int $duration): string
     {
         $times = [];
-        $times['day'] = floor($duration / (24 * 3600));
-        $times['hour'] = floor(($duration - $times['day'] * 24 * 3600) / 3600);
-        $times['minute'] = floor(($duration - $times['day'] * 24 * 3600 - $times['hour'] * 3600) / 60);
+        $times['day'] = (int) ($duration / (24 * 3600));
+        $times['hour'] = (int) (($duration - $times['day'] * 24 * 3600) / 3600);
+        $times['minute'] = (int) (($duration - $times['day'] * 24 * 3600 - $times['hour'] * 3600) / 60);
         $times['second'] = $duration % 60;
         $txt = $this->language->txt(...);
+
+        if ($times['second'] === 0) {
+            unset($times['second']);
+        }
+
+        if ($times['hour'] !== 0 && $times['minute'] !== 0) {
+            $times['hour'] = sprintf('%02d:%02d', $times['hour'], $times['minute']);
+            $times['minute'] = 0;
+        }
+
+        if ($times['minute'] === 0) {
+            unset($times['minute']);
+        }
+
+        if ($times['hour'] === 0) {
+            unset($times['hour']);
+        }
+
+        if ($times['day'] === 0) {
+            unset($times['day']);
+        }
 
         $parts = [];
         foreach ($times as $name => $value) {
