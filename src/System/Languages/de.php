@@ -1,4 +1,6 @@
 <?php return [
+    'period_only_from' => 'Seit',
+    'period_only_until' => 'Bis',
     'period_from' => 'Von',
     'period_until' => 'bis',
     'one_day' => '%s Tag',
@@ -9,4 +11,5 @@
     'x_hours' => '%s Stunden',
     'x_minutes' => '%s Minuten',
     'x_seconds' => '%s Sekunden',
+    'not_specified' => 'Nicht angegeben',
 ];

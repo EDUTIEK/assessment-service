@@ -24,7 +24,7 @@ class Service implements ReadService
         private readonly int $context_id,
         private readonly int $user_id,
         private readonly Repositories $repos,
-        private WorkingTimeFactory $working_time_factory
+        private readonly WorkingTimeFactory $working_time_factory
     ) {
         $this->permissions = $this->repos->permissions()->one($this->ass_id, $this->context_id, $this->user_id);
         $this->orga_settings = $this->repos->orgaSettings()->one(($this->ass_id)) ?? $this->repos->orgaSettings()->new();
