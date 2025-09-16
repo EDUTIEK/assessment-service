@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Manager;
 
+use Edutiek\AssessmentService\Assessment\Data\DisabledGroup;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Manager\FullService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\Manager;
@@ -91,6 +92,10 @@ readonly class Service implements FullService
             ($this->repos->pdfSettings()->one($this->ass_id) ?? $this->repos->pdfSettings()->new())
                 ->setAssId($new_ass_id)
         );
+
+        foreach ($this->repos->disabledGroup()->allByAssId($this->ass_id) as $entity) {
+            $this->repos->disabledGroup()->save($entity->setAssId($new_ass_id));
+        }
 
         // clone data that is not user related
         foreach ($this->repos->gradeLevel()->allByAssId($this->ass_id) as $entity) {

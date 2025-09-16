@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\DisabledGroup;
 
+use Edutiek\AssessmentService\Assessment\Api\ApiException;
+use Edutiek\AssessmentService\Assessment\Data\DisabledGroup;
 use Edutiek\AssessmentService\Assessment\Data\DisabledGroupRepo;
 
 class Service implements FullService
@@ -11,17 +13,40 @@ class Service implements FullService
     public function __construct(
         private readonly int $ass_id,
         private readonly DisabledGroupRepo $repo
-    )
-    {
+    ) {
     }
 
-    public function get(): array
+    public function new(): DisabledGroup
     {
-        return $this->repo->get($this->ass_id);
+        return $this->repo->new()->setAssId($this->ass_id);
     }
 
-    public function save(array $groups): void
+    public function all(): array
     {
-        $this->repo->save($this->ass_id, $groups);
+        return $this->repo->allByAssId($this->ass_id);
+    }
+
+    public function save(DisabledGroup $group): void
+    {
+        $this->checkScope($group);
+        $this->repo->save($group);
+    }
+
+    public function saveAll(array $groups): void
+    {
+        $this->repo->deleteByAssId($this->ass_id);
+        foreach ($groups as $group) {
+            if (is_string($group)) {
+                $group = $this->repo->new()->setName($group)->setAssId($this->ass_id);
+            }
+            $this->save($group);
+        }
+    }
+
+    private function checkScope(DisabledGroup $group)
+    {
+        if ($group->getAssId() !== $this->ass_id) {
+            throw new ApiException("wrong ass_id", ApiException::ID_SCOPE);
+        }
     }
 }

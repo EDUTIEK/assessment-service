@@ -8,13 +8,17 @@ use Edutiek\AssessmentService\Assessment\Data\DisabledGroup;
 
 interface FullService
 {
+    public function new(): DisabledGroup;
+
     /**
      * @return DisabledGroup[]
      */
-    public function get(): array;
+    public function all(): array;
+
+    public function save(DisabledGroup $group): void;
 
     /**
      * @param string[]|DisabledGroup[] $groups
      */
-    public function save(array $groups): void;
+    public function saveAll(array $groups): void;
 }

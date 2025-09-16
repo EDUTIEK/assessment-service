@@ -6,13 +6,14 @@ namespace Edutiek\AssessmentService\Assessment\Data;
 
 interface DisabledGroupRepo
 {
+    public function new(): DisabledGroup;
+
     /**
      * @return DisabledGroup[]
      */
-    public function get(int $ass_id): array;
+    public function allByAssId(int $ass_id): array;
 
-    /**
-     * @param string[]|DisabledGroup[] $groups
-     */
-    public function save(int $ass_id, array $groups): void;
+    public function save(DisabledGroup $group): void;
+
+    public function deleteByAssId(int $ass_id): void;
 }
