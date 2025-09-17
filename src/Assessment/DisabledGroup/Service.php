@@ -35,12 +35,15 @@ class Service implements FullService
     public function saveAll(array $groups): void
     {
         $this->repo->deleteByAssId($this->ass_id);
+        $insert = []; // Remove duplicates.
         foreach ($groups as $group) {
             if (is_string($group)) {
                 $group = $this->repo->new()->setName($group)->setAssId($this->ass_id);
             }
-            $this->save($group);
+            $insert[$group->getName()] = $group;
         }
+
+        array_map($this->save(...), $insert);
     }
 
     private function checkScope(DisabledGroup $group)
