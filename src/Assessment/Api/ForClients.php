@@ -34,7 +34,7 @@ use Edutiek\AssessmentService\Assessment\WorkingTime\Service as WorkingTime;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\LogEntry\FullService as FullLogEntryService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
-use Edutiek\AssessmentService\Assessment\WorkingTime\IndividualWorkingTime;
+use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as IndividualWorkingTime;
 use Edutiek\AssessmentService\Assessment\Alert\FullService as FullAlertService;
 use Edutiek\AssessmentService\Assessment\Alert\Service as AlertService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as AssessmentGradingReadService;

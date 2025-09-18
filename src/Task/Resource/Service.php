@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Task\Data\Resource;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Task\Data\ResourceAvailability;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
+use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as WorkingTime;
 
 readonly class Service implements FullService
 {
@@ -85,20 +86,20 @@ readonly class Service implements FullService
         }
     }
 
-    public function isAvailable(OrgaSettings $orga, Resource $resource): bool
+    public function isAvailable(OrgaSettings $orga, WorkingTime $working_time, Resource $resource): bool
     {
         if ($resource->getAvailability() === ResourceAvailability::BEFORE) {
             return true;
         }
 
         if ($resource->getAvailability() === ResourceAvailability::DURING
-            && time() < $orga->getWritingStart()?->getTimestamp()) {
+            && $working_time->isStarted()) {
             return true;
         }
 
         return $resource->getAvailability() === ResourceAvailability::AFTER
             && $orga->getSolutionAvailable()
-            && time() < $orga->getSolutionAvailableDate()->getTimestamp();
+            && time() >= $orga->getSolutionAvailableDate()->getTimestamp();
     }
 
     private function checkScope(Resource $resource)

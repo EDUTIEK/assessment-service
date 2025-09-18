@@ -7,6 +7,7 @@ namespace Edutiek\AssessmentService\Task\Resource;
 use Edutiek\AssessmentService\Task\Data\Resource;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
+use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as WorkingTime;
 
 interface FullService
 {
@@ -23,5 +24,5 @@ interface FullService
     public function validate(Resource $resource): bool;
     public function save(Resource $resource): void;
     public function delete(Resource $resource): void;
-    public function isAvailable(OrgaSettings $orga, Resource $resource): bool;
+    public function isAvailable(OrgaSettings $orga, WorkingTime $working_time, Resource $resource): bool;
 }
