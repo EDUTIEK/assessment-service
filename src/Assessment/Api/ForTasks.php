@@ -17,6 +17,9 @@ use Edutiek\AssessmentService\Assessment\CorrectionSettings\Service as Correctio
 use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
 use Edutiek\AssessmentService\Assessment\PdfSettings\Service as PdfSettingsService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as AssessmentGradingService;
+use Edutiek\AssessmentService\Assessment\CorrectionProcess\FullService as CorrectionProcessService;
+use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorReadService;
+use Edutiek\AssessmentService\Assessment\Corrector\Service as CorrectorService;
 
 class ForTasks
 {
@@ -37,6 +40,14 @@ class ForTasks
             $this->dependencies->repositories(),
             $this->internal->workingTimeFactory($this->user_id),
             $this->logEntry()
+        );
+    }
+
+    public function corrector(): CorrectorReadService
+    {
+        return $this->instances[CorrectorService::class] ??= new CorrectorService(
+            $this->ass_id,
+            $this->dependencies->repositories(),
         );
     }
 
@@ -69,5 +80,10 @@ class ForTasks
     public function assessment_grading(): AssessmentGradingService
     {
         return $this->internal->assessment_grading($this->ass_id);
+    }
+
+    public function correction_process(): CorrectionProcessService
+    {
+        return $this->internal->correction_process($this->ass_id);
     }
 }

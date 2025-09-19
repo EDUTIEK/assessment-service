@@ -19,6 +19,8 @@ use Slim\App;
 use Slim\Factory\AppFactory;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\Service as AssessmentGradingService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\FullService as AssessmentGradingFullService;
+use Edutiek\AssessmentService\Assessment\CorrectionProcess\FullService as CorrectionProcessFullService;
+use Edutiek\AssessmentService\Assessment\CorrectionProcess\Service as CorrectionProcessService;
 
 class Internal
 {
@@ -160,5 +162,10 @@ class Internal
     public function assessment_grading(int $ass_id): AssessmentGradingFullService
     {
         return $this->instances[AssessmentGradingService::class][$ass_id] ??= new AssessmentGradingService($ass_id, $this->dependencies->repositories());
+    }
+
+    public function correction_process(int $ass_id): CorrectionProcessFullService
+    {
+        return $this->instances[CorrectionProcessService::class][$ass_id] ??= new CorrectionProcessService($ass_id, $this->dependencies->repositories());
     }
 }
