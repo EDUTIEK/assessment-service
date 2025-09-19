@@ -21,6 +21,8 @@ use Edutiek\AssessmentService\Task\AssessmentStatus\Service as StatusService;
 use Edutiek\AssessmentService\Task\AssessmentStatus\FullService as StatusFullService;
 use Edutiek\AssessmentService\Task\Format\FullService as FormatFullService;
 use Edutiek\AssessmentService\Task\Format\Service as FormatService;
+use Edutiek\AssessmentService\Task\CorrectionProcess\FullService as CorrectionProcessFullService;
+use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
 
 class ForClients
 {
@@ -97,6 +99,19 @@ class ForClients
         return $this->instances[FormatService::class] ??= new FormatService(
             $this->dependencies->systemApi()->language(),
             $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->assessment_grading()
+        );
+    }
+
+    public function correctionProcess(): CorrectionProcessFullService
+    {
+        return $this->instances[CorrectionProcessService::class] ??= new CorrectionProcessService(
+            $this->ass_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->writer(),
+            $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->correction_process(),
+            $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->logEntry(),
+            $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->correctionSettings()->get(),
+            $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->corrector(),
         );
     }
 }

@@ -14,6 +14,7 @@ interface CorrectorAssignmentRepo
     public function allByAssId(int $ass_id): array;
     /** @return CorrectorAssignment[] */
     public function allByWriterId(int $writer_id): array;
+    public function allByTaskIdAndWriterId(int $task_id, int $writer_id): array;
     /** @return CorrectorAssignment[] */
     public function allByCorrectorId(int $corrector_id): array;
     public function save(CorrectorAssignment $entity): void;
@@ -23,4 +24,6 @@ interface CorrectorAssignmentRepo
     public function deleteByCorrectorId(int $corrector_id): void;
     public function deleteByWriterIdAndCorrectorId(int $writer_id, int $corrector_id): void;
     public function oneById(int $id): ?CorrectorAssignment;
+
+    public function deleteByTaskIdAndWriterId(int $task_id, mixed $writer_id);
 }

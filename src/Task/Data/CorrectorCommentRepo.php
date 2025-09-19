@@ -18,4 +18,11 @@ interface CorrectorCommentRepo
     public function deleteByTaskId(int $task_id): void;
     public function deleteByTaskIdAndWriterId(int $task_id, int $writer_id): void;
     public function deleteByTaskIdAndWriterIdAndCorrectorId(int $task_id, int $writer_id, int $corrector_id): void;
+
+    public function moveCorrectorByTaskIdAndWriterId(
+        int $task_id,
+        int $writer_id,
+        int $from_corrector,
+        int $to_corrector
+    );
 }
