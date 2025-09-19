@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Task\Api;
 
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\Manager as ManagerInterface;
+use Edutiek\AssessmentService\Task\Manager\ReadService as ManagerReadService;
 use Edutiek\AssessmentService\Task\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\Service as CorrectorAssignmentService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentReadService;
@@ -22,6 +22,18 @@ class ForTypes
         private readonly Internal $internal,
         private readonly Dependencies $dependencies
     ) {
+    }
+
+    public function tasks(): ManagerReadService
+    {
+        return $this->instances[ManagerService::class] ??= new ManagerService(
+            $this->ass_id,
+            $this->user_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->typeApis(),
+            $this->internal->language("de")
+        );
     }
 
     public function correctorAssignments(): CorrectorAssignmentReadService

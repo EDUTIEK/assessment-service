@@ -1,10 +1,10 @@
 <?php
 
-declare(strict_types=1);
+namespace Edutiek\AssessmentService\Task\Manager;
 
-namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo;
 
-interface Manager
+interface ReadService
 {
     /**
      * Get the number of tasks in this assessment
@@ -33,20 +33,4 @@ interface Manager
      * Get the first found task info
      */
     public function first(): ?TaskInfo;
-
-    /**
-     * Create a new task for the assessment and return its id
-     * The id and position of the input information should be null and is ignored
-     */
-    public function create(TaskInfo $info): int;
-
-    /**
-     * Delete a task of the assessment given by its id
-     */
-    public function delete(int $task_id): void;
-
-    /**
-     * Clone a task given by its id to a new assessment
-     */
-    public function clone(int $task_id, int $new_ass_id): void;
 }

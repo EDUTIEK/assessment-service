@@ -7,6 +7,7 @@ namespace Edutiek\AssessmentService\Task\Data;
 interface SettingsRepo
 {
     public function new(): Settings;
+    public function has(int $ass_id, int $task_id): bool;
     public function one(int $task_id): ?Settings;
     public function countByAssId(int $ass_id): int;
     /** @return Settings[] */

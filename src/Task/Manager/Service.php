@@ -13,7 +13,7 @@ use Edutiek\AssessmentService\Task\Data\Settings;
 use Edutiek\AssessmentService\Task\TypeInterfaces\ApiFactory as TypeApiFactory;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 
-readonly class Service implements Manager
+readonly class Service implements Manager, ReadService
 {
     public function __construct(
         private int $ass_id,
@@ -38,6 +38,11 @@ readonly class Service implements Manager
             $infos[] = $setting->getInfo();
         }
         return $infos;
+    }
+
+    public function has($task_id): bool
+    {
+        return $this->repos->settings()->has($this->ass_id, $task_id);
     }
 
     public function one(int $task_id): ?TaskInfo

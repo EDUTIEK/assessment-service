@@ -42,7 +42,8 @@ class ForClients
     {
         return $this->instances[EssayFullService::class] = new EssayService(
             $this->dependencies->repositories(),
-            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->writer()
+            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->writer(),
+            $this->dependencies->taskApi($this->ass_id, $this->user_id)->tasks(),
         );
     }
 
@@ -125,6 +126,6 @@ class ForClients
             $this->writingSettings(),
             $this->dependencies->systemApi()->format($this->user_id),
             $this->essayImage(), // lazy
-        );        
+        );
     }
 }
