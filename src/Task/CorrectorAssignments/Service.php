@@ -2,7 +2,6 @@
 
 namespace Edutiek\AssessmentService\Task\CorrectorAssignments;
 
-use Edutiek\AssessmentService\EssayTask\TaskInterfaces\CorrectorAssignment as ForTypesService;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
