@@ -131,4 +131,9 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
     {
         return $this->validation_errors;
     }
+
+    public function canDownloadWrittenPdf(): bool
+    {
+        return !empty($this->getWorkingStart());
+    }
 }
