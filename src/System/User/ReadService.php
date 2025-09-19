@@ -11,6 +11,10 @@ interface ReadService
 {
     public function getUser(int $id) : ?UserData;
 
+    /**
+     * @param int[] $ids
+     * @return UserData[]
+     */
     public function getUsersByIds(array $ids): array;
 
     public function getCurrentUser(): ?UserData;
