@@ -3,6 +3,7 @@
 namespace Edutiek\AssessmentService\System\File;
 
 use Edutiek\AssessmentService\System\Data\FileInfo;
+use Psr\Http\Message\StreamInterface as Stream;
 
 interface Storage
 {
@@ -24,9 +25,9 @@ interface Storage
      * Other data is updated from the FileInfo
      * The returned FileInfo object provides the id of the saved file
      * The function will return null if the file could not be saved
-     * @param resource|null $stream_resource
+     * @param Stream|string|resource|null $input
      */
-    public function saveFile(mixed $stream_resource, ?FileInfo $info): ?FileInfo;
+    public function saveFile(mixed $input, ?FileInfo $info): ?FileInfo;
 
     /**
      * Delete a file with the given id

@@ -51,9 +51,9 @@ readonly class Service implements FullService
         $delete_me = null;
         $pdfs = [];
         if ($essay->getWrittenText()) {
-            $text_pdf = fopen('php://memory', 'rw');
-            fwrite($text_pdf, $this->createPdfFromWrittenText($essay));
-            $pdfs[] = $text_pdf;
+
+            $delete_me = $this->storage->saveFile($this->createPdfFromWrittenText($essay), null);
+            $pdfs[] = $this->storage->getFileStream($delete_me->getId());
         }
         if ($essay->getPdfVersion()) {
             $stream = $this->storage->getFileStream($essay->getPdfVersion());
@@ -67,6 +67,8 @@ readonly class Service implements FullService
         }
 
         $page_images = $this->createPageImagesFromPdfs($pdfs);
+        $this->storage->deleteFile($delete_me->getId());
+
         $repo_images = [];
 
         $page = 1;
