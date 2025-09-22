@@ -100,7 +100,7 @@ class ForServices
 
     public function pdfCreator(): PdfCreatorFullService
     {
-        return $this->instances[PdfConverterFullService::class] ??= new PdfCreatorService(
+        return $this->instances[PdfCreatorService::class] ??= new PdfCreatorService(
             $this->config()->getSetup()->getAbsoluteTempPath(),
             $this->config()->getSetup()->getRelativeTempPath()
         );

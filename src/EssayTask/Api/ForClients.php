@@ -22,8 +22,7 @@ use Edutiek\AssessmentService\EssayTask\BackgroundTask\Service as BackgroundTask
 use Edutiek\AssessmentService\EssayTask\PdfOutput\FullService as FullPdfOutput;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\Service as PdfOutput;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\LazyService as LazyPdfOutput;
-use LongEssayPDFConverter\ImageMagick\PDFImage;
-use Edutiek\AssessmentService\EssayTask\CorrectorComment\Service as CorrectorComment;
+use Edutiek\AssessmentService\Task\CorrectorComment\Service as CorrectorComment;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 
 class ForClients
@@ -80,6 +79,7 @@ class ForClients
             $this->essayImage(),
             fn(int $task_id, int $writer_id) => $this->dependencies->taskApi($this->ass_id, $this->user_id)->correctorComment($task_id, $writer_id),
             $this->internal->language($this->user_id),
+            $this->dependencies->systemApi()->fileStorage()
         );
     }
 
@@ -107,11 +107,13 @@ class ForClients
     private function essayImage(): EssayImageFullService
     {
         return $this->instances[EssayImageFullService::class] = new EssayImageService(
-            $this->dependencies->systemApi()->pdfConverter(),
             $this->dependencies->repositories()->essayImage(),
-            new LazyPdfOutput($this->pdfOutput(...)),
-            $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->repositories()->essay(),
+            $this->writingSettings()->get(),
+            $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->systemApi()->pdfConverter(),
+            $this->dependencies->systemApi()->pdfCreator(),
+            $this->internal->htmlProcessing(),
         );
     }
 

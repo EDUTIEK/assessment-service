@@ -31,13 +31,23 @@ abstract class Essay implements EssayTaskEntity
     abstract public function getFirstChange(): ?DateTimeImmutable;
     abstract public function setFirstChange(?DateTimeImmutable $first_change): self;
 
-    public function getWordCount() : int
+    public function getWordCount(): int
     {
-        return str_word_count($this->getWrittenText()??"");
+        return str_word_count($this->getWrittenText() ?? "");
     }
 
-    public function hasPDFVersion() : bool
+    public function hasPDFVersion(): bool
     {
         return $this->getPdfVersion() !== null;
+    }
+
+    public function touch(): self
+    {
+        $now = new DateTimeImmutable();
+        if (!$this->getFirstChange()) {
+            $this->setFirstChange($now);
+        }
+        $this->setLastChange($now);
+        return $this;
     }
 }

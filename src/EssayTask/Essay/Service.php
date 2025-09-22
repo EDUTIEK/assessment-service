@@ -7,6 +7,7 @@ use Edutiek\AssessmentService\EssayTask\Api\ApiException;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TasksReadService;
+use DateTimeImmutable;
 
 readonly class Service implements FullService
 {
@@ -68,11 +69,16 @@ readonly class Service implements FullService
         return $essay;
     }
 
-    public function save(Essay $essay)
+    public function save(Essay $essay): void
+    {
+        $this->checkScope($essay);
+        $this->repos->essay()->save($essay);
+    }
+
+    public function checkScope(Essay $essay): void
     {
         $this->checkWriterScope($essay->getWriterId());
         $this->checkTaskScope($essay->getTaskId());
-        $this->repos->essay()->save($essay);
     }
 
     /**

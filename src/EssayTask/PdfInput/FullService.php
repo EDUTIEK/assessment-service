@@ -8,5 +8,6 @@ use Edutiek\AssessmentService\EssayTask\Data\Essay;
 
 interface FullService
 {
-    public function handleInput(Essay $essay): void;
+    public function replacePdf(Essay $essay, string $file_id): void;
+    public function deletePdf($essay): void;
 }

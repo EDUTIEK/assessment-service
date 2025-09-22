@@ -13,44 +13,44 @@ use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 use DateTimeImmutable;
 use Closure;
+use Edutiek\AssessmentService\System\File\Storage;
 
-class Service implements FullService
+readonly class Service implements FullService
 {
     /**
-     * @param Closure(int): CorrectorComment
+     * @param Closure(int): CorrectorComment $get_corrector_comment
      */
     public function __construct(
-        private readonly EssayService $essay,
-        private readonly BackgroundTaskManager $task_manager,
-        private readonly EssayImage $essay_image,
-        private readonly Closure $get_corrector_comment,
-        private readonly Language $language,
-    )
-    {
+        private EssayService $essay_service,
+        private BackgroundTaskManager $task_manager,
+        private EssayImage $essay_image,
+        private Closure $get_corrector_comment,
+        private Language $language,
+        private Storage $storage,
+    ) {
     }
 
-    public function handleInput(Essay $essay): void
+    public function replacePdf(Essay $essay, string $file_id): void
     {
-        $now = new DateTimeImmutable();
-        if (!$essay->getFirstChange()) {
-            $essay->setFirstChange($now);
-            $this->essay->save($essay);
-        }
-        if(!$essay->getLastChange()) {
-            $essay->setFirstChange($now);
-        }
-        $this->essay->save($essay);
-
+        $this->storage->deleteFile($essay->getPdfVersion());
         $this->essay_image->deleteByEssayId($essay->getId());
+        $this->essay_service->save($essay->setPdfVersion($file_id)->touch());
+
+        // todo: replace direct dependency by event handler
         ($this->get_corrector_comment)($essay->getTaskId(), $essay->getWriterId())->delete();
 
         // create page images in background task
-        if ($essay->getPdfVersion() !== null) {
-            $this->task_manager->run(
-                $this->language->txt('writer_upload_pdf_bt_processing'),
-                GenerateEssayImages::class,
-                $essay->getId()
-            );
-        }
+        $this->task_manager->run(
+            $this->language->txt('writer_upload_pdf_bt_processing'),
+            GenerateEssayImages::class,
+            $essay->getId()
+        );
+    }
+
+    public function deletePdf($essay): void
+    {
+        $this->storage->deleteFile($essay->getPdfVersion());
+        $this->essay_service->save($essay->setPdfVersion(null)->touch());
+        $this->essay_image->deleteByEssayId($essay->getId());
     }
 }

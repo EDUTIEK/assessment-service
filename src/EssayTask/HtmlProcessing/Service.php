@@ -16,41 +16,41 @@ use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
  */
 class Service implements FullService
 {
-    const COLOR_NORMAL = '#D8E5F4';
-    const COLOR_EXCELLENT = '#E3EFDD';
-    const COLOR_CARDINAL = '#FBDED1';
+    public const COLOR_NORMAL = '#D8E5F4';
+    public const COLOR_EXCELLENT = '#E3EFDD';
+    public const COLOR_CARDINAL = '#FBDED1';
 
-    static int $paraCounter = 0;
-    static int $wordCounter = 0;
-    static int $h1Counter = 0;
-    static int $h2Counter = 0;
-    static int $h3Counter = 0;
-    static int $h4Counter = 0;
-    static int $h5Counter = 0;
-    static int $h6Counter = 0;
+    public static int $paraCounter = 0;
+    public static int $wordCounter = 0;
+    public static int $h1Counter = 0;
+    public static int $h2Counter = 0;
+    public static int $h3Counter = 0;
+    public static int $h4Counter = 0;
+    public static int $h5Counter = 0;
+    public static int $h6Counter = 0;
 
-    static CommentsService $comments_service;
+    public static CommentsService $comments_service;
 
-    static ?WritingSettings $writingSettings = null;
-    static ?CorrectionSettings $correctionSettings = null;
-    static bool $forPdf = false;
+    public static ?WritingSettings $writingSettings = null;
+    public static ?CorrectionSettings $correctionSettings = null;
+    public static bool $forPdf = false;
 
     /**
      * All Comments that should be merged
      * @var CorrectorComment[]
      */
-    static array $allComments = [];
+    public static array $allComments = [];
 
     /**
      * Comments for the current paragraph
      * @var CorrectorComment[]
      */
-    static array $currentComments = [];
+    public static array $currentComments = [];
 
 
     public function __construct(
         CommentsService $comments_service
-    ){
+    ) {
         self::$comments_service = $comments_service;
     }
 
@@ -61,15 +61,15 @@ class Service implements FullService
         return $mustache->render($template, $data);
     }
 
-    public function processWrittenText(?Essay $essay, WritingSettings $settings, bool $forPdf = false) : string
+    public function processWrittenText(?Essay $essay, WritingSettings $settings, bool $forPdf = false): string
     {
         self::$writingSettings = $settings;
         self::$forPdf = $forPdf;
-        
+
         self::initParaCounter();
         self::initWordCounter();
         self::initHeadlineCounters();
-        
+
         $html = $essay ? ($essay->getWrittenText() ?? '') : '';
 
         // remove ascii control characters except tab, cr and lf
@@ -81,33 +81,43 @@ class Service implements FullService
             return '';
         }
 
-        $html = $this->processXslt($html, __DIR__ . '/xsl/cleanup.xsl',
-            $essay ? $essay->getServiceVersion() : 0);
-        $html = $this->processXslt($html, __DIR__ . '/xsl/numbers.xsl',
+        $html = $this->processXslt(
+            $html,
+            __DIR__ . '/xsl/cleanup.xsl',
+            $essay ? $essay->getServiceVersion() : 0
+        );
+        $html = $this->processXslt(
+            $html,
+            __DIR__ . '/xsl/numbers.xsl',
             $essay ? $essay->getServiceVersion() : 0,
-            $settings->getAddParagraphNumbers(), $forPdf);
+            $settings->getAddParagraphNumbers(),
+            $forPdf
+        );
 
         return $this->getStyles() . "\n" . $html;
     }
 
-    public function processCommentsForPdf(?Essay $essay, WritingSettings $writingSettings, CorrectionSettings $correctionSettings, array $comments) : string
+    public function processCommentsForPdf(?Essay $essay, WritingSettings $writingSettings, CorrectionSettings $correctionSettings, array $comments): string
     {
         self::$writingSettings = $writingSettings;
         self::$correctionSettings = $correctionSettings;
         self::$allComments = $comments;
         self::$currentComments = [];
         self::$forPdf = true;
-        
+
         $html = $this->processWrittenText($essay, $writingSettings, true);
-        
-        $html = preg_replace('/<w-p w="([0-9]+)" p="([0-9]+)">/','<span data-w="$1" data-p="$2">', $html);
-        $html = str_replace('xlas-table','table', $html);
-        $html = str_replace('xlas-tr','tr', $html);
-        $html = str_replace('xlas-td','td', $html);
-        $html = str_replace('</w-p>','</span>', $html);
-        $html = $this->processXslt($html, __DIR__ . '/xsl/pdf_comments.xsl',
+
+        $html = preg_replace('/<w-p w="([0-9]+)" p="([0-9]+)">/', '<span data-w="$1" data-p="$2">', $html);
+        $html = str_replace('xlas-table', 'table', $html);
+        $html = str_replace('xlas-tr', 'tr', $html);
+        $html = str_replace('xlas-td', 'td', $html);
+        $html = str_replace('</w-p>', '</span>', $html);
+        $html = $this->processXslt(
+            $html,
+            __DIR__ . '/xsl/pdf_comments.xsl',
             $essay ? $essay->getServiceVersion() : 0,
-            $writingSettings->getAddParagraphNumbers());
+            $writingSettings->getAddParagraphNumbers()
+        );
 
         return $this->getStyles() . "\n" . $html;
     }
@@ -118,7 +128,7 @@ class Service implements FullService
      * @param WritingSettings $settings
      * @return void
      */
-    protected function getStyles() : string
+    protected function getStyles(): string
     {
         if (self::$forPdf) {
             $styles = file_get_contents(__DIR__ . '/styles/plain_style.html');
@@ -136,7 +146,7 @@ class Service implements FullService
      * The process_version is a number which can be increased with a new version of the processing
      * This number is provided as a parameter to the XSLT processing
      */
-    protected function processXslt(string $html, string $xslt_file, int $service_version, bool $add_paragraph_numbers = false, bool $for_pdf = false) : string
+    protected function processXslt(string $html, string $xslt_file, int $service_version, bool $add_paragraph_numbers = false, bool $for_pdf = false): string
     {
         try {
             // get the xslt document
@@ -155,18 +165,17 @@ class Service implements FullService
 
             // get the html document
             $dom_doc = new \DOMDocument('1.0', 'UTF-8');
-            $dom_doc->loadHTML('<?xml encoding="UTF-8"?'.'>'. $html);
+            $dom_doc->loadHTML('<?xml encoding="UTF-8"?' . '>' . $html);
 
             //$xml = $xslt->transformToXml($dom_doc);
             $result = $xslt->transformToDoc($dom_doc);
-            $xml= $result->saveHTML();
-            
+            $xml = $result->saveHTML();
+
             $xml = preg_replace('/<\?xml.*\?>/', '', $xml);
-            $xml = str_replace( ' xmlns:php="http://php.net/xsl"', '', $xml);
+            $xml = str_replace(' xmlns:php="http://php.net/xsl"', '', $xml);
 
             return $xml;
-        }
-        catch (\Throwable $e) {
+        } catch (\Throwable $e) {
             return 'HTML PROCESSING ERROR:<br>' . $e->getMessage() . '<hr>' . $html;
         }
     }
@@ -175,7 +184,7 @@ class Service implements FullService
      * Get the paragraph counter tag for PDF generation
      * This should help for a correct vertical alignment with the counted block in TCPDF
      */
-    static function paraCounterTag($tag) : string
+    public static function paraCounterTag($tag): string
     {
         if (self::$forPdf) {
             switch ($tag) {
@@ -188,46 +197,45 @@ class Service implements FullService
                 default:
                     return $tag;
             }
-        }
-        else {
+        } else {
             return 'p';
         }
     }
 
 
-    static function initParaCounter(): void
+    public static function initParaCounter(): void
     {
         self::$paraCounter = 0;
     }
 
-    static function currentParaCounter(): string
+    public static function currentParaCounter(): string
     {
         return self::$paraCounter;
     }
 
-    static function nextParaCounter(): string
+    public static function nextParaCounter(): string
     {
         self::$paraCounter++;
         return self::$paraCounter;
     }
 
-    static function initWordCounter(): void
+    public static function initWordCounter(): void
     {
         self::$wordCounter = 0;
     }
 
-    static function currentWordCounter(): string
+    public static function currentWordCounter(): string
     {
         return self::$wordCounter;
     }
 
-    static function nextWordCounter(): string
+    public static function nextWordCounter(): string
     {
         self::$wordCounter++;
         return self::$wordCounter;
     }
-    
-    static function initHeadlineCounters(): void
+
+    public static function initHeadlineCounters(): void
     {
         self::$h1Counter = 0;
         self::$h2Counter = 0;
@@ -236,8 +244,8 @@ class Service implements FullService
         self::$h5Counter = 0;
         self::$h6Counter = 0;
     }
-    
-    static function nextHeadlinePrefix($tag): string
+
+    public static function nextHeadlinePrefix($tag): string
     {
         switch ($tag) {
             case 'h1':
@@ -248,7 +256,7 @@ class Service implements FullService
                 self::$h5Counter = 0;
                 self::$h6Counter = 0;
                 break;
-                
+
             case 'h2':
                 self::$h2Counter += 1;
                 self::$h3Counter = 0;
@@ -269,7 +277,7 @@ class Service implements FullService
                 self::$h5Counter = 0;
                 self::$h6Counter = 0;
                 break;
-                
+
             case 'h5':
                 self::$h5Counter += 1;
                 self::$h6Counter = 0;
@@ -279,25 +287,26 @@ class Service implements FullService
                 self::$h6Counter += 1;
                 break;
         }
-        
+
         switch (self::$writingSettings->getHeadlineScheme()) {
-            
+
             case HeadlineScheme::NUMERIC->value:
                 switch ($tag) {
                     case 'h1':
                         return self::$h1Counter . ' ';
                     case 'h2':
-                        return self::$h1Counter . '.' . self::$h2Counter  . ' ';
+                        return self::$h1Counter . '.' . self::$h2Counter . ' ';
                     case 'h3':
-                        return self::$h1Counter . '.' . self::$h2Counter . '.' . self::$h3Counter  . ' ';
+                        return self::$h1Counter . '.' . self::$h2Counter . '.' . self::$h3Counter . ' ';
                     case 'h4':
-                        return self::$h1Counter . '.' . self::$h2Counter . '.' . self::$h3Counter  . '.' . self::$h4Counter  . ' ';
+                        return self::$h1Counter . '.' . self::$h2Counter . '.' . self::$h3Counter . '.' . self::$h4Counter . ' ';
                     case 'h5':
-                        return self::$h1Counter . '.' . self::$h2Counter . '.' . self::$h3Counter  . '.' . self::$h4Counter . '.' . self::$h5Counter  . ' ';
+                        return self::$h1Counter . '.' . self::$h2Counter . '.' . self::$h3Counter . '.' . self::$h4Counter . '.' . self::$h5Counter . ' ';
                     case 'h6':
-                        return self::$h1Counter . '.' . self::$h2Counter . '.' . self::$h3Counter  . '.' . self::$h4Counter . '.' . self::$h5Counter  . '.' . self::$h6Counter  . ' ';
+                        return self::$h1Counter . '.' . self::$h2Counter . '.' . self::$h3Counter . '.' . self::$h4Counter . '.' . self::$h5Counter . '.' . self::$h6Counter . ' ';
                 }
 
+                // no break
             case HeadlineScheme::EDUTIEK->value:
                 switch ($tag) {
                     case 'h1':
@@ -305,65 +314,64 @@ class Service implements FullService
                     case 'h2':
                         return self::toRoman(self::$h2Counter) . '. ';
                     case 'h3':
-                        return self::$h3Counter  . '. ';
+                        return self::$h3Counter . '. ';
                     case 'h4':
                         return self::toLatin(self::$h4Counter) . '. ';
                     case 'h5':
                         return self::toLatin(self::$h5Counter) . self::toLatin(self::$h5Counter) . '. ';
                     case 'h6':
-                        return '(' . self::$h6Counter  . ') ';
+                        return '(' . self::$h6Counter . ') ';
                 }
         }
-        
-        
+
+
         return '';
     }
 
     /**
      * Get a latin character representation of a number
      */
-    static function toLatin(int $num, $upper = false) : string
+    public static function toLatin(int $num, $upper = false): string
     {
         if ($num == 0) {
             return '0';
         }
         $num = $num - 1;
-        $text= '';
-        
+        $text = '';
+
         do {
             $char = substr('abcdefghijklmnopqrstuvwxyz', $num % 26, 1);
             $text = ($upper ? ucfirst($char) : $char) . $text;
             $num = intdiv($num, 26);
-        }
-        while ($num > 0);
-        
+        } while ($num > 0);
+
         return $text;
     }
 
     /**
      * Get a roman letter representation of a number
      */
-    static function  toRoman(int $num) : string
+    public static function toRoman(int $num): string
     {
         if ($num == 0) {
             return '0';
         }
         $text = '';
-        
+
         $steps = [
-            'M'  => 1000,
+            'M' => 1000,
             'CM' => 900,
-            'D'  => 500,
+            'D' => 500,
             'CD' => 400,
-            'C'  => 100,
+            'C' => 100,
             'XC' => 90,
-            'L'  => 50,
+            'L' => 50,
             'XL' => 40,
-            'X'  => 10,
+            'X' => 10,
             'IX' => 9,
-            'V'  => 5,
+            'V' => 5,
             'IV' => 4,
-            'I'  => 1
+            'I' => 1
         ];
 
         foreach ($steps as $sign => $step) {
@@ -371,7 +379,7 @@ class Service implements FullService
             $text .= str_repeat($sign, $repeat);
             $num = $num % $step;
         }
-        
+
         return $text;
     }
 
@@ -384,27 +392,26 @@ class Service implements FullService
      * @return \DOMElement
      * @throws \DOMException
      */
-    static function splitWords($text): \DOMElement
+    public static function splitWords($text): \DOMElement
     {
-       $words = preg_split("/([\s]+)/", $text, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+        $words = preg_split("/([\s]+)/", $text, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
 
-       $doc = new DOMDocument;
-       $root = $doc->createElement("root");
+        $doc = new DOMDocument();
+        $root = $doc->createElement("root");
 
-       $current = '';
-       foreach ($words as $word) {
-           if ($word == ' ' && (trim($current) == $current || trim($current) == '')) {
-               // append a space to the last word if it is pure text or pure space
-               // (don't add if a text space is already added to the last word)
-               $current .= $word;
-           }
-           else {
-               if ($current != '') {
-                   $root->appendChild(new \DOMText($current));
-               }
-               $current = $word;
-           }
-       }
+        $current = '';
+        foreach ($words as $word) {
+            if ($word == ' ' && (trim($current) == $current || trim($current) == '')) {
+                // append a space to the last word if it is pure text or pure space
+                // (don't add if a text space is already added to the last word)
+                $current .= $word;
+            } else {
+                if ($current != '') {
+                    $root->appendChild(new \DOMText($current));
+                }
+                $current = $word;
+            }
+        }
         if ($current != '') {
             $root->appendChild(new \DOMText($current));
         }
@@ -415,7 +422,7 @@ class Service implements FullService
     /**
      * Initialize the collection of comments for the current paragraph
      */
-    static function initCurrentComments(string $paraNumber) 
+    public static function initCurrentComments(string $paraNumber)
     {
         self::$currentComments = self::$comments_service->getSortedCommentsOfParent(self::$allComments, (int) $paraNumber);
     }
@@ -423,10 +430,10 @@ class Service implements FullService
     /**
      * Get a label if a comment starts at the given word
      */
-    static function commentLabel(string $wordNumber) : string
+    public static function commentLabel(string $wordNumber): string
     {
         $labels = [];
-        foreach(self::$currentComments as $comment) {
+        foreach (self::$currentComments as $comment) {
             if ((int) $wordNumber == $comment->getStartPosition() && !empty($comment->getLabel())) {
                 $labels[] = $comment->getLabel();
             }
@@ -437,10 +444,10 @@ class Service implements FullService
     /**
      * Get the background color for the word
      */
-    static function commentColor(string $wordNumber) : string
+    public static function commentColor(string $wordNumber): string
     {
         $comments = [];
-        foreach(self::$currentComments as $comment) {
+        foreach (self::$currentComments as $comment) {
             if ((int) $wordNumber >= $comment->getStartPosition() && (int) $wordNumber <= $comment->getEndPosition()) {
                 $comments[] = $comment;
             }
@@ -453,11 +460,11 @@ class Service implements FullService
      * @return \DOMElement
      * @throws \DOMException
      */
-    static function getCurrentComments(): \DOMElement 
+    public static function getCurrentComments(): \DOMElement
     {
         $html = self::$comments_service->getCommentsHtml(self::$currentComments, self::$correctionSettings);
 
-        $doc = new DOMDocument;
+        $doc = new DOMDocument();
         $doc->loadXML('<root xml:id="root">' . $html . '</root>');
         return $doc->getElementById('root');
     }

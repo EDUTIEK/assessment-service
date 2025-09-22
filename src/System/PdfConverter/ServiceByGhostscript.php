@@ -11,6 +11,9 @@ use Exception;
 use Imagick;
 use Iterator;
 use Traversable;
+use CallbackFilterIterator;
+use DirectoryIterator;
+use SplFileInfo;
 
 class ServiceByGhostscript implements FullService
 {
@@ -44,7 +47,7 @@ class ServiceByGhostscript implements FullService
         $inputFile = $meta['uri'];
         $this->assertFile($inputFile);
 
-        $outputDir = rtrim($this->workdir, '/') . '/pdf2jpg_'. bin2hex(random_bytes(8));
+        $outputDir = rtrim($this->workdir, '/') . '/pdf2jpg_' . bin2hex(random_bytes(8));
         mkdir($outputDir);
 
         $this->gs($this->dpiOfSize($size), $inputFile, $outputDir . '/%04d.jpg');
@@ -133,7 +136,7 @@ class ServiceByGhostscript implements FullService
      * @param string $file
      * @return array{int, int}
      */
-    private function getImageSizes(string $file) : array
+    private function getImageSizes(string $file): array
     {
         // prefer gd because of better resource usage
         if (extension_loaded('gd')) {
@@ -147,8 +150,7 @@ class ServiceByGhostscript implements FullService
         }
 
         // try imagick as fallback
-        if (extension_loaded('imagick'))
-        {
+        if (extension_loaded('imagick')) {
             $magic = new Imagick($file);
             $height = $magic->getImageHeight();
             $width = $magic->getImageWidth();

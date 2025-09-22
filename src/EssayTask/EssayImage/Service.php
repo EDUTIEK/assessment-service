@@ -4,56 +4,58 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\EssayImage;
 
-use LongEssayPDFConverter\PDFImage;
+use Edutiek\AssessmentService\EssayTask\Data\EssayImage;
 use Edutiek\AssessmentService\EssayTask\Data\EssayImageRepo;
-use Edutiek\AssessmentService\Assessment\Data\WriterRepo;
-use Edutiek\AssessmentService\EssayTask\PdfOutput\FullService as PdfOutput;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\EssayRepo;
+use Edutiek\AssessmentService\EssayTask\HtmlProcessing\FullService as HtmlProcessing;
+use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverter;
+use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreator;
+use Edutiek\AssessmentService\System\Data\ImageSizeType;
+use Edutiek\AssessmentService\System\Data\ImageDescriptor;
+use Edutiek\AssessmentService\System\PdfCreator\PlainSettings;
+use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
+use Edutiek\AssessmentService\System\PdfCreator\PdfPart;
+use Edutiek\AssessmentService\System\PdfCreator\PdfHtml;
 
-class Service implements FullService
+readonly class Service implements FullService
 {
     public function __construct(
-        private readonly PDFImage $pdf_image,
-        private readonly EssayImageRepo $essay_image,
-        private readonly PdfOutput $pdf_output,
-        private readonly Storage $storage,
-        private readonly EssayRepo $repo,
-    )
-    {
+        private EssayImageRepo $image_repo,
+        private EssayRepo $essay_repo,
+        private WritingSettings $writing_settings,
+        private Storage $storage,
+        private PdfConverter $pdf_converter,
+        private PdfCreator $pdf_creator,
+        private HtmlProcessing $html_processing,
+    ) {
     }
 
     public function getByEssayId(int $id): array
     {
-        $essay = $this->repo->one($id);
-        if ($essay->getPdfVersion() === null) {
+        $essay = $this->essay_repo->one($id);
+        if ($essay?->getPdfVersion() === null) {
             return [];
         }
 
-        $images = $this->essay_image->allByEssayId($essay->getId());
+        $images = $this->image_repo->allByEssayId($essay->getId());
         if ($images !== []) {
             return $images;
         }
-
-        $this->createByEssayId($essay);
-        return $this->essay_image->allByEssayId($essay->getId());
+        return $this->createByEssayId($essay);
     }
 
-    public function createByEssayId(Essay $essay): int
+    public function createByEssayId(Essay $essay): array
     {
         $delete_me = null;
         $pdfs = [];
+        if ($essay->getWrittenText()) {
+            $text_pdf = fopen('php://memory', 'rw');
+            fwrite($text_pdf, $this->createPdfFromWrittenText($essay));
+            $pdfs[] = $text_pdf;
+        }
         if ($essay->getPdfVersion()) {
-            if (false && $essay->getWrittenText()) {
-                // @todo: Anonymous = true
-                $delete_me = $this->storage->saveFile(
-                    $this->pdf_output->getWritingAsPdf($essay, true, true),
-                    null
-                )->getId();
-                $pdfs[] = $this->storage->getFileStream($delete_me);
-            }
-
             $stream = $this->storage->getFileStream($essay->getPdfVersion());
             if ($stream !== null) {
                 $pdfs[] = $stream;
@@ -61,7 +63,7 @@ class Service implements FullService
         }
 
         if ($pdfs === []) {
-            return 0;
+            return [];
         }
 
         $page_images = $this->createPageImagesFromPdfs($pdfs);
@@ -69,80 +71,105 @@ class Service implements FullService
 
         $page = 1;
         foreach ($page_images as $image) {
-            $file_id = $this->storage->saveFile($image['stream'], null)->getId();
+            list($file, $thumb) = $image;
 
-            $thumb_id = $image['thumb-stream'] ?
-                $this->storage->saveFile($image['thumb-stream'], null)->getId() :
-                null;
+            $file_id = $page ? $this->storage->saveFile($file->stream(), null)?->getId() : null;
+            $thumb_id = $thumb ? $this->storage->saveFile($thumb->stream(), null)->getId() : null;
 
-            $repo_images[] = $this->essay_image->new()
-                ->setEssayId($essay->getId())
-                ->setPageNo($page++)
-                ->setFileId($file_id)
-                ->setMime($image['type'])
-                ->setWidth($image['width'])
-                ->setHeight($image['height'])
-                ->setThumbId($thumb_id)
-                ->setThumbMime($image['thumb-type'])
-                ->setThumbWidth($image['thumb-width'])
-                ->setThumbHeight($image['thumb-height']);
+            $repo_images[] = $this->image_repo->new()
+                                              ->setEssayId($essay->getId())
+                                              ->setPageNo($page++)
+                                              ->setFileId($file_id)
+                                              ->setMime($file->type())
+                                              ->setWidth($file->width())
+                                              ->setHeight($file->height())
+                                              ->setThumbId($thumb_id)
+                                              ->setThumbMime($thumb->type())
+                                              ->setThumbWidth($thumb->width())
+                                              ->setThumbHeight($thumb->height());
         }
 
-        $this->storage->deleteFile($delete_me);
-        // @todo no replacement found for this function in EssayRepo
-        // this is an atomic operation to avoid race conditions between background task and creation on demand
-        // $deleted = $this->essayRepo->replaceEssayImagesByEssayId($essay->getId(), $repo_images);
-        // $this->purgeFiles($deleted);
-
-        return count($repo_images);
+        $this->purgeFiles($this->image_repo->replaceByEssayId($essay->getId(), $repo_images));
+        return $repo_images;
     }
 
-    private function createPageImagesFromPdfs(array $pdfs) : array
-    {
-        $images = [];
-        foreach ($pdfs as $pdf) {
-            $images = array_merge($images,  $this->createImagesFromPdf($pdf));
-        }
-        return $images;
-    }
-
-    private function createImagesFromPdf($pdf) : array
-    {
-        $images = [];
-        $page_descriptors = $this->pdf_image->asOnePerPage($pdf, PDFImage::NORMAL);
-        $thumbnail_descriptors = $this->pdf_image->asOnePerPage($pdf, PDFImage::THUMBNAIL);
-
-        foreach ($page_descriptors as $index => $page_desc) {
-            $thumb_desc = $thumbnail_descriptors[$index] ?? null;
-
-            $images[] = [ // new PageImage
-                'stream' => $page_desc->stream(),
-                'type' => $page_desc->type(),
-                'width' => $page_desc->width(),
-                'height' => $page_desc->height(),
-                'thumb-stream' => $thumb_desc?->stream(),
-                'thumb-type' => $thumb_desc?->type(),
-                'thumb-width' => $thumb_desc?->width(),
-                'thumb-height' => $thumb_desc?->height()
-            ];
-        }
-
-        return $images;
-    }
 
     public function deleteByEssayId(int $essay_id): void
     {
-        // @todo: replaceImagesByEssayId has no replacement in the Repository spreadsheet.
-        // this is an atomic operation to avoid race conditions between background task and deletion
-        // $deleted = $this->essay->replaceEssayImagesByEssayId($essay_id, []);
-        // $this->purgeFiles($deleted);
+        $this->purgeFiles($this->image_repo->deleteByEssayId($essay_id));
     }
 
-    private function purgeFiles(array $files): void
+
+    private function createPdfFromWrittenText(Essay $essay)
     {
-        foreach ($files as $file) {
-            $this->storage->deleteFile($file->getFileId());
-            $this->storage->deleteFile($file->getThumbId());
+        $pdf_settings = new PlainSettings();
+        $html = $this->html_processing->processWrittenText($essay, $this->writing_settings, true);
+
+        $element = new PdfHtml(
+            $html,
+            $pdf_settings->getLeftMargin() + $this->writing_settings->getLeftCorrectionMargin(),
+            $pdf_settings->getContentTopMargin(),
+            210 // A4
+            - $pdf_settings->getLeftMargin() - $pdf_settings->getRightMargin()
+            - $this->writing_settings->getLeftCorrectionMargin() - $this->writing_settings->getRightCorrectionMargin(),
+            null
+        );
+        $part = (new PdfPart(
+            PdfPart::FORMAT_A4,
+            PdfPart::ORIENTATION_PORTRAIT,
+            [$element]
+        ))  ->withTopMargin($pdf_settings->getTopMargin())
+             ->withBottomMargin($pdf_settings->getBottomMargin())
+             ->withLeftMargin($pdf_settings->getLeftMargin() + $this->writing_settings->getLeftCorrectionMargin())
+             ->withRightMargin($pdf_settings->getRightMargin() + $this->writing_settings->getRightCorrectionMargin())
+             ->withHeaderMargin($pdf_settings->getHeaderMargin())
+             ->withFooterMargin($pdf_settings->getFooterMargin())
+             ->withPrintHeader($pdf_settings->getAddHeader())
+             ->withPrintFooter($pdf_settings->getAddFooter());
+
+        return $this->pdf_creator->createPdf([$part]);
+    }
+
+
+    /**
+     * @param resource[] $pdfs
+     * @return array<ImageDescriptor, ImageDescriptor>[]
+     */
+    private function createPageImagesFromPdfs(array $pdfs): array
+    {
+        $images = [];
+        foreach ($pdfs as $pdf) {
+            $images = array_merge($images, $this->createImagesFromPdf($pdf));
+        }
+        return $images;
+    }
+
+    /**
+     * @param resource $pdf
+     * @return array<ImageDescriptor, ImageDescriptor> page image, thumb image
+     */
+    private function createImagesFromPdf($pdf): array
+    {
+        $images = [];
+        $page_descriptors = $this->pdf_converter->asOnePerPage($pdf, ImageSizeType::NORMAL);
+        $thumbnail_descriptors = $this->pdf_converter->asOnePerPage($pdf, ImageSizeType::THUMBNAIL);
+
+        foreach ($page_descriptors as $index => $page_desc) {
+            $thumb_desc = $thumbnail_descriptors[$index] ?? null;
+            $images[] = [$page_desc, $thumb_desc];
+        }
+        return $images;
+    }
+
+    /**
+     * Purge the image files of already deleted images
+     * @param EssayImage[] $images
+     */
+    private function purgeFiles(array $images): void
+    {
+        foreach ($images as $image) {
+            $this->storage->deleteFile($image->getFileId());
+            $this->storage->deleteFile($image->getThumbId());
         }
     }
 }

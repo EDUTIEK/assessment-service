@@ -7,14 +7,14 @@ namespace Edutiek\AssessmentService\EssayTask\BackgroundTask;
 use Edutiek\AssessmentService\System\BackgroundTask\Job;
 use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImage;
 use Edutiek\AssessmentService\EssayTask\Data\EssayRepo;
+use Exception;
 
-class GenerateEssayImages implements Job
+readonly class GenerateEssayImages implements Job
 {
     public function __construct(
-        private readonly EssayRepo $essay,
-        private readonly EssayImage $essay_image,
-    )
-    {
+        private EssayRepo $essay,
+        private EssayImage $essay_image,
+    ) {
     }
 
     public function run(int $essay_id): void

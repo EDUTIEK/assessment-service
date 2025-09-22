@@ -29,12 +29,11 @@ class Service implements Manager
         private readonly int $ass_id,
         private readonly int $user_id,
         private readonly ClientManager $manager,
-    )
-    {
+    ) {
     }
 
     public function run(string $title, string $job, ...$args): void
     {
-        $this->manager->run('essayTask', [$ass_id, $user_id], $title, $job, ...$args);
+        $this->manager->run('essayTask', [$this->ass_id, $this->user_id], $title, $job, ...$args);
     }
 }

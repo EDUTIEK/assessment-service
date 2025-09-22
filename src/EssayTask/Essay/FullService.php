@@ -26,5 +26,8 @@ interface FullService
      */
     public function oneByWriterIdAndTaskId(int $writer_id, int $task_id): ?Essay;
     public function new(int $writer_id, int $task_id): Essay;
-    public function save(Essay $essay);
+    public function save(Essay $essay): void;
+
+    /** Check if the essay belongs to this assessment and writer */
+    public function checkScope(Essay $essay): void;
 }
