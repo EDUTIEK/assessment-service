@@ -51,7 +51,6 @@ readonly class Service implements FullService
         $delete_me = null;
         $pdfs = [];
         if ($essay->getWrittenText()) {
-
             $delete_me = $this->storage->saveFile($this->createPdfFromWrittenText($essay), null);
             $pdfs[] = $this->storage->getFileStream($delete_me->getId());
         }
@@ -67,8 +66,6 @@ readonly class Service implements FullService
         }
 
         $page_images = $this->createPageImagesFromPdfs($pdfs);
-        $this->storage->deleteFile($delete_me->getId());
-
         $repo_images = [];
 
         $page = 1;
@@ -91,6 +88,7 @@ readonly class Service implements FullService
                                               ->setThumbHeight($thumb->height());
         }
 
+        $this->storage->deleteFile($delete_me->getId());
         $this->purgeFiles($this->image_repo->replaceByEssayId($essay->getId(), $repo_images));
         return $repo_images;
     }
