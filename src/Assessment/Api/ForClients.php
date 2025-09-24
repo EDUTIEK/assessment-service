@@ -157,6 +157,7 @@ class ForClients
         return new Format(
             $this->internal->language($this->user_id),
             $this->dependencies->systemApi()->format($this->user_id),
+            $this->gradLevel(),
             $orga
         );
     }

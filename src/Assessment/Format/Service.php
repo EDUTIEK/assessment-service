@@ -9,12 +9,14 @@ use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Data\ResultAvailableType;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Assessment\GradeLevel\FullService as GradeLevelService;
 
 readonly class Service implements FullService
 {
     public function __construct(
         private Language $language,
         private SystemFormat $system_format,
+        private GradeLevelService $grade_levels,
         private OrgaSettings $orga_settings,
     ) {
     }
@@ -39,7 +41,7 @@ readonly class Service implements FullService
             return $this->language->txt('result_not_finalized');
         }
 
-        $level = $this->assessment_api->gradLevel()->one((int) $writer->getFinalGradeLevelId());
+        $level = $this->grade_levels->one((int) $writer->getFinalGradeLevelId());
         if (null === $level) {
             $text = $this->language->txt('result_not_graded');
         } else {
