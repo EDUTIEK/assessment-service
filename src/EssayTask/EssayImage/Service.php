@@ -32,21 +32,21 @@ readonly class Service implements FullService
     ) {
     }
 
-    public function getByEssayId(int $id): array
+    public function getByEssayId(int $essay_id): array
     {
-        $essay = $this->essay_repo->one($id);
+        $essay = $this->essay_repo->one($essay_id);
         if ($essay?->getPdfVersion() === null) {
             return [];
         }
 
-        $images = $this->image_repo->allByEssayId($essay->getId());
+        $images = $this->image_repo->allByEssayId($essay_id);
         if ($images !== []) {
             return $images;
         }
-        return $this->createByEssayId($essay);
+        return $this->createForEssay($essay);
     }
 
-    public function createByEssayId(Essay $essay): array
+    public function createForEssay(Essay $essay): array
     {
         $delete_me = null;
         $pdfs = [];
@@ -88,7 +88,7 @@ readonly class Service implements FullService
                                               ->setThumbHeight($thumb->height());
         }
 
-        $this->storage->deleteFile($delete_me->getId());
+        $this->storage->deleteFile($delete_me?->getId());
         $this->purgeFiles($this->image_repo->replaceByEssayId($essay->getId(), $repo_images));
         return $repo_images;
     }

@@ -13,13 +13,13 @@ interface FullService
      * Get the page images of an essay (create, if needed)
      * @return EssayImage[]
      */
-    public function getByEssayId(int $id): array;
+    public function getByEssayId(int $essay_id): array;
 
     /**
      * Create the page images of an essay (replace existing images)
      * @return EssayImage[]
      */
-    public function createByEssayId(Essay $essay): array;
+    public function createForEssay(Essay $essay): array;
 
 
     /**

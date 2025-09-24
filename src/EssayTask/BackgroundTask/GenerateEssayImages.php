@@ -24,7 +24,7 @@ readonly class GenerateEssayImages implements Job
         if ($essay === null) {
             throw new Exception(sprintf('Essay for essay id %s not found!', $essay_id));
         }
-        $count = $this->essay_image->createByEssayId($essay);
+        $count = $this->essay_image->createForEssay($essay);
         // $this->logger->info(sprintf(
         //     'AssessmentService: For Essay %s, %s page images created.',
         //     $essay_id,
