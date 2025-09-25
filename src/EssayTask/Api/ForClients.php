@@ -21,8 +21,6 @@ use Edutiek\AssessmentService\System\BackgroundTask\Manager as BackgroundTaskMan
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\Service as BackgroundTaskService;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\FullService as FullPdfOutput;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\Service as PdfOutput;
-use Edutiek\AssessmentService\EssayTask\PdfOutput\LazyService as LazyPdfOutput;
-use Edutiek\AssessmentService\Task\CorrectorComment\Service as CorrectorComment;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 
 class ForClients
@@ -77,9 +75,9 @@ class ForClients
             $this->essay(),
             $this->backgroundTaskManager(),
             $this->essayImage(),
-            fn(int $task_id, int $writer_id) => $this->dependencies->taskApi($this->ass_id, $this->user_id)->correctorComment($task_id, $writer_id),
             $this->internal->language($this->user_id),
-            $this->dependencies->systemApi()->fileStorage()
+            $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->eventDispatcher($this->ass_id, $this->user_id)
         );
     }
 

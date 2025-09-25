@@ -139,12 +139,7 @@ class ForClients
 
     public function writer(): WriterFullService
     {
-        return $this->instances[WriterFullService::class] ??= new WriterService(
-            $this->ass_id,
-            $this->dependencies->repositories(),
-            $this->internal->workingTimeFactory($this->user_id),
-            $this->logEntry()
-        );
+        return $this->internal->writer($this->ass_id, $this->user_id);
     }
 
     public function writerApp(int $context_id): WriterAppOpenService
@@ -172,12 +167,7 @@ class ForClients
 
     public function logEntry(): FullLogEntryService
     {
-        return $this->instances[LogEntryService::class] ??= new LogEntryService(
-            $this->ass_id,
-            $this->dependencies->repositories(),
-            $this->dependencies->systemApi()->language(),
-            $this->dependencies->systemApi()->user()
-        );
+        return $this->internal->logEntry($this->ass_id);
     }
 
     public function alert(): FullAlertService

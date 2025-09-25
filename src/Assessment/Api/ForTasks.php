@@ -35,12 +35,7 @@ class ForTasks
 
     public function writer(): WriterReadService
     {
-        return $this->instances[WriterReadService::class] ??= new WriterService(
-            $this->ass_id,
-            $this->dependencies->repositories(),
-            $this->internal->workingTimeFactory($this->user_id),
-            $this->logEntry()
-        );
+        return $this->internal->writer($this->ass_id, $this->user_id);
     }
 
     public function corrector(): CorrectorReadService
@@ -53,15 +48,10 @@ class ForTasks
 
     public function logEntry(): LogEntryTasksService
     {
-        return $this->instances[LogEntryService::class] ??= new LogEntryService(
-            $this->ass_id,
-            $this->dependencies->repositories(),
-            $this->dependencies->systemApi()->language(),
-            $this->dependencies->systemApi()->user()
-        );
+        return $this->internal->logEntry($this->ass_id);
     }
 
-    public function correctionSettings() : CorrectionSettingsReadService
+    public function correctionSettings(): CorrectionSettingsReadService
     {
         return $this->instances[CorrectionSettingsService::class] ??= new CorrectionSettingsService(
             $this->ass_id,

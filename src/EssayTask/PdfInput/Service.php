@@ -14,6 +14,8 @@ use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 use DateTimeImmutable;
 use Closure;
 use Edutiek\AssessmentService\System\File\Storage;
+use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
+use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
 
 readonly class Service implements FullService
 {
@@ -24,9 +26,9 @@ readonly class Service implements FullService
         private EssayService $essay_service,
         private BackgroundTaskManager $task_manager,
         private EssayImage $essay_image,
-        private Closure $get_corrector_comment,
         private Language $language,
         private Storage $storage,
+        private Dispatcher $dispatcher
     ) {
     }
 
@@ -35,9 +37,11 @@ readonly class Service implements FullService
         $this->storage->deleteFile($essay->getPdfVersion());
         $this->essay_image->deleteByEssayId($essay->getId());
         $this->essay_service->save($essay->setPdfVersion($file_id)->touch());
-
-        // todo: replace direct dependency by event handler
-        ($this->get_corrector_comment)($essay->getTaskId(), $essay->getWriterId())->delete();
+        $this->dispatcher->dispatchEvent(new WritingContentChanged(
+            $essay->getWriterId(),
+            $essay->getTaskId(),
+            $essay->getLastChange()
+        ));
 
         // create page images in background task
         $this->task_manager->run(
@@ -51,6 +55,11 @@ readonly class Service implements FullService
     {
         $this->storage->deleteFile($essay->getPdfVersion());
         $this->essay_service->save($essay->setPdfVersion(null)->touch());
+        $this->dispatcher->dispatchEvent(new WritingContentChanged(
+            $essay->getWriterId(),
+            $essay->getTaskId(),
+            $essay->getLastChange()
+        ));
         $this->essay_image->deleteByEssayId($essay->getId());
     }
 }

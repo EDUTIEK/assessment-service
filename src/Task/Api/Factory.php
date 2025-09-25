@@ -27,6 +27,16 @@ class Factory
     }
 
     /**
+     * Get the API for event handling
+     */
+    public function forEvents(): ForEvents
+    {
+        return $this->instances[ForEvents::class] ??= new ForEvents(
+            $this->internal()
+        );
+    }
+
+    /**
      * Get the API for the assessment component
      */
     public function forAssessment(): ForAssessment

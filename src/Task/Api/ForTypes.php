@@ -41,11 +41,6 @@ class ForTypes
         return $this->internal->correctorAssignments($this->ass_id, $this->user_id);
     }
 
-    public function correctorComment(int $task_id, int $writer_id): CorrectorCommentFullService
-    {
-        return $this->instances[CorrectorCommentService::class][$task_id][$writer_id] = new CorrectorCommentService($task_id, $writer_id, $this->dependencies->repositories());
-    }
-
     public function correctionSettings(): CorrectionSettingsReadService
     {
         return $this->internal->correctionSettings($this->ass_id, $this->user_id);

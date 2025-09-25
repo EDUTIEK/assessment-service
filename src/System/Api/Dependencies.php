@@ -12,6 +12,7 @@ use Edutiek\AssessmentService\System\Data\SetupRepo;
 use Edutiek\AssessmentService\System\Data\UserDisplayRepo;
 use DateTimeInterface;
 use Edutiek\AssessmentService\System\BackgroundTask\ClientManager as BackgroundTaskManager;
+use Edutiek\AssessmentService\System\EventHandling\ObserverFactory;
 
 interface Dependencies
 {

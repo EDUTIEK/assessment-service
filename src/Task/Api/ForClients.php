@@ -66,7 +66,7 @@ class ForClients
         );
     }
 
-    public function correctorAssignments() : CorrectorAssignmentsFullService
+    public function correctorAssignments(): CorrectorAssignmentsFullService
     {
         return $this->internal->correctorAssignments($this->ass_id, $this->user_id);
     }
@@ -78,7 +78,7 @@ class ForClients
 
     public function summary(int $task_id): CorrectorSummaryFullService
     {
-        return $this->instances[CorrectorSummaryService::class] ??= new CorrectorSummaryService($task_id, $this->dependencies->repositories());
+        return $this->internal->correctorSummary($task_id);
     }
 
     public function ratingCriterion(int $task_id): RatingCriterionFullService

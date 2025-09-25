@@ -28,7 +28,7 @@ readonly class Service implements ReadService, FullService
         return $this->repos->writer()->hasByWriterIdAndAssId($writer_id, $this->ass_id);
     }
 
-    public function getByUserId(int $user_id) : Writer
+    public function getByUserId(int $user_id): Writer
     {
         $writer = $this->oneByUserId($user_id);
         if ($writer === null) {
@@ -40,7 +40,7 @@ readonly class Service implements ReadService, FullService
         return $writer;
     }
 
-    public function oneByUserId(int $user_id) : ?Writer
+    public function oneByUserId(int $user_id): ?Writer
     {
         return $this->repos->writer()->oneByUserIdAndAssId($user_id, $this->ass_id);
     }
@@ -63,20 +63,55 @@ readonly class Service implements ReadService, FullService
         $this->repos->writer()->save($writer);
     }
 
+    public function removeWritingAuthorization(Writer $writer, int $by_user_id): void
+    {
+        $was_authorized = ($writer->getWritingAuthorized() !== null);
+        $writer->setWritingAuthorized(null);
+        $writer->setWritingAuthorizedBy(null);
+        if ($this->validate($writer)) {
+            $this->save($writer);
+            if ($was_authorized) {
+                $this->log_entry_service->addEntry(
+                    LogEntryType::WRITING_REMOVE_AUTHORIZATION,
+                    LogEntryMention::fromSystem($by_user_id),
+                    LogEntryMention::fromWriter($writer)
+                );
+            }
+        }
+    }
+
+    public function removeCorrectionFinalisation(Writer $writer, int $by_user_id): void
+    {
+        $was_finalized = ($writer->getCorrectionFinalized() !== null);
+        $writer->setCorrectionFinalized(null);
+        $writer->setCorrectionFinalizedBy(null);
+        if ($this->validate($writer)) {
+            $this->save($writer);
+            if ($was_finalized) {
+                $this->log_entry_service->addEntry(
+                    LogEntryType::CORRECTION_REMOVE_AUTHORIZATION,
+                    LogEntryMention::fromSystem($by_user_id),
+                    LogEntryMention::fromWriter($writer)
+                );
+            }
+        }
+    }
+
     public function changeWorkingTime(
         Writer $writer,
-        ?\DateTimeImmutable $earliest_start, ?\DateTimeImmutable $latest_end, ?int $time_limit_minutes,
-        int $from_user_id
-    ) : bool
-    {
+        ?\DateTimeImmutable $earliest_start,
+        ?\DateTimeImmutable $latest_end,
+        ?int $time_limit_minutes,
+        int $by_user_id
+    ): bool {
         $writer->setEarliestStart($earliest_start);
         $writer->setLatestEnd($latest_end);
         $writer->setTimeLimitMinutes($time_limit_minutes);
-        if($this->validate($writer)) {
+        if ($this->validate($writer)) {
             $this->save($writer);
             $this->log_entry_service->addEntry(
                 LogEntryType::WORKING_TIME_CHANGE,
-                LogEntryMention::fromSystem($from_user_id),
+                LogEntryMention::fromSystem($by_user_id),
                 LogEntryMention::fromWriter($writer)
             );
             return true;
@@ -85,7 +120,7 @@ readonly class Service implements ReadService, FullService
         }
     }
 
-    public function removeWorkingTime(Writer $writer, int $from_user_id) : void
+    public function removeWorkingTime(Writer $writer, int $by_user_id): void
     {
         $writer->setEarliestStart(null);
         $writer->setLatestEnd(null);
@@ -93,43 +128,43 @@ readonly class Service implements ReadService, FullService
         $this->save($writer);
         $this->log_entry_service->addEntry(
             LogEntryType::WORKING_TIME_DELETE,
-            LogEntryMention::fromSystem($from_user_id),
+            LogEntryMention::fromSystem($by_user_id),
             LogEntryMention::fromWriter($writer)
         );
     }
 
-    public function repealExclusion(Writer $writer, int $from_user_id) : void
+    public function repealExclusion(Writer $writer, int $by_user_id): void
     {
         $writer->setWritingExcluded(null);
         $writer->setWritingExcludedBy(null);
         $this->save($writer);
         $this->log_entry_service->addEntry(
             LogEntryType::WRITER_REPEAL_EXCLUSION,
-            LogEntryMention::fromSystem($from_user_id),
+            LogEntryMention::fromSystem($by_user_id),
             LogEntryMention::fromWriter($writer)
         );
     }
 
-    public function exclude(Writer $writer, int $from_user_id) : void
+    public function exclude(Writer $writer, int $by_user_id): void
     {
         $writer->setWritingExcluded(new \DateTimeImmutable('now'));
-        $writer->setWritingExcludedBy($from_user_id);
+        $writer->setWritingExcludedBy($by_user_id);
         $this->save($writer);
         $this->log_entry_service->addEntry(
             LogEntryType::WRITER_EXCLUSION,
-            LogEntryMention::fromSystem($from_user_id),
+            LogEntryMention::fromSystem($by_user_id),
             LogEntryMention::fromWriter($writer)
         );
     }
 
-    public function remove(Writer $writer, ?int $from_user_id = null) : void
+    public function remove(Writer $writer, ?int $by_user_id = null): void
     {
         $this->checkScope($writer);
         // TODO: Trigger removal of user data
-        if ($from_user_id !== null) {
+        if ($by_user_id !== null) {
             $this->log_entry_service->addEntry(
                 LogEntryType::WRITER_REMOVAL,
-                LogEntryMention::fromSystem($from_user_id),
+                LogEntryMention::fromSystem($by_user_id),
                 LogEntryMention::fromWriter($writer)
             );
         }
@@ -144,7 +179,7 @@ readonly class Service implements ReadService, FullService
         }
     }
 
-    public function validate(Writer $writer) : bool
+    public function validate(Writer $writer): bool
     {
         $this->checkScope($writer);
         $settings = $this->repos->orgaSettings()->one($this->ass_id);

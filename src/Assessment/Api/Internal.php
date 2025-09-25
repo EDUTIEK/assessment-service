@@ -21,6 +21,8 @@ use Edutiek\AssessmentService\Assessment\AssessmentGrading\Service as Assessment
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\FullService as AssessmentGradingFullService;
 use Edutiek\AssessmentService\Assessment\CorrectionProcess\FullService as CorrectionProcessFullService;
 use Edutiek\AssessmentService\Assessment\CorrectionProcess\Service as CorrectionProcessService;
+use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
+use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 
 class Internal
 {
@@ -44,6 +46,16 @@ class Internal
         );
     }
 
+    public function logEntry(int $ass_id): LogEntryService
+    {
+        return $this->instances[LogEntryService::class][$ass_id] ??= new LogEntryService(
+            $ass_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->language(),
+            $this->dependencies->systemApi()->user()
+        );
+    }
+
     /**
      * Service for querying permissions
      * (no caching needed, created once per request)
@@ -56,6 +68,16 @@ class Internal
             $user_id,
             $this->dependencies->repositories(),
             $this->workingTimeFactory($user_id)
+        );
+    }
+
+    public function writer(int $ass_id, int $user_id): WriterService
+    {
+        return $this->instances[WriterService::class][$ass_id] ??= new WriterService(
+            $ass_id,
+            $this->dependencies->repositories(),
+            $this->workingTimeFactory($user_id),
+            $this->logEntry($ass_id)
         );
     }
 

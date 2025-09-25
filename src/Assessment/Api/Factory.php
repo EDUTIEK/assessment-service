@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Api;
 
-use Edutiek\AssessmentService\Assessment\Api\Dependencies;
-use Edutiek\AssessmentService\Assessment\Api\ForClients;
-use Edutiek\AssessmentService\Assessment\Api\ForRest;
-use Edutiek\AssessmentService\Assessment\Api\ForTasks;
-
 class Factory
 {
     private array $instances = [];
@@ -16,6 +11,7 @@ class Factory
     public function __construct(private readonly Dependencies $dependencies)
     {
     }
+
 
     /**
      * Get the API for client systems
@@ -29,6 +25,16 @@ class Factory
             $ass_id,
             $user_id,
             $this->dependencies,
+            $this->internal()
+        );
+    }
+
+    /**
+     * Get the API for event handling
+     */
+    public function forEvents(): ForEvents
+    {
+        return $this->instances[ForEvents::class] ??= new ForEvents(
             $this->internal()
         );
     }
