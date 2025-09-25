@@ -51,7 +51,7 @@ class Internal
         return $this->instances[LogEntryService::class][$ass_id] ??= new LogEntryService(
             $ass_id,
             $this->dependencies->repositories(),
-            $this->dependencies->systemApi()->language(),
+            $this->language($this->dependencies->systemApi()->user()->getCurrentUser()->getId()),
             $this->dependencies->systemApi()->user()
         );
     }
