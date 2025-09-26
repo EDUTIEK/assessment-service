@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Task\Api;
 
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
+use Edutiek\AssessmentService\Task\Checks\Service as ChecksService;
+use Edutiek\AssessmentService\Task\Checks\FullService as ChecksFullService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as CorrectorAssignmentsFullService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\Service as CorrectorAssignmentsService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\Service as CorrectionSettingsService;
@@ -35,6 +37,18 @@ class Internal
             ->setLanguage($code);
     }
 
+    /**
+     * Helper service for scope checks
+     */
+    public function checks(int $ass_id, int $user_id): ChecksFullService
+    {
+        return $this->instances[ChecksService::class][$ass_id] ??= new ChecksService(
+            $ass_id,
+            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
+            $this->dependencies->repositories()
+        );
+    }
 
     public function correctorAssignments(int $ass_id, int $user_id): CorrectorAssignmentsFullService
     {

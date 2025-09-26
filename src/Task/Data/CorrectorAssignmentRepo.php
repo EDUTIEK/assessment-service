@@ -7,7 +7,8 @@ namespace Edutiek\AssessmentService\Task\Data;
 interface CorrectorAssignmentRepo
 {
     public function new(): CorrectorAssignment;
-    public function oneByWriterIdAndCorrectorId(int $writer_id, int $corrector_id): ?CorrectorAssignment;
+    public function hasByIds(int $writer_id, int $corrector_id, int $task_id): bool;
+    public function oneByIds(int $writer_id, int $corrector_id, int $task_id): ?CorrectorAssignment;
     /** @return CorrectorAssignment[] */
     public function allByTaskId(int $task_id): array;
     /** @return CorrectorAssignment[] */
