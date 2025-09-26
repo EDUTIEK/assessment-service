@@ -6,29 +6,39 @@ namespace Edutiek\AssessmentService\Task\CorrectorSummary;
 
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Task\Api\ApiException;
+use Edutiek\AssessmentService\Task\Checks\FullService as ChecksService;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 
 readonly class Service implements FullService
 {
     public function __construct(
-        private int $task_id,
+        private ChecksService $checks,
         private Repositories $repos
     ) {
     }
 
-    public function all(): array
+    public function allByTaskId($task_id): array
     {
-        return $this->repos->correctorSummary()->allByTaskId($this->task_id);
+        $this->checkTaskScope($task_id);
+        return $this->repos->correctorSummary()->allByTaskId($task_id);
     }
 
-    public function allByWriterId(int $writer_id): array
+    public function allByTaskIdAndWriterId(int $task_id, int $writer_id): array
     {
-        return $this->repos->correctorSummary()->allByTaskIdAndWriterIds($this->task_id, [$writer_id]);
+        $this->checkTaskScope($task_id);
+        return $this->repos->correctorSummary()->allByTaskIdAndWriterIds($task_id, [$writer_id]);
     }
 
-    public function allByCorrectorId(int $corrector_id): array
+    public function allByTaskIdAndCorrectorId(int $task_id, int $corrector_id): array
     {
-        return $this->repos->correctorSummary()->allByTaskIdAndCorrectorId($this->task_id, $corrector_id);
+        $this->checkTaskScope($task_id);
+        return $this->repos->correctorSummary()->allByTaskIdAndCorrectorId($task_id, $corrector_id);
     }
 
+    public function checkTaskScope(int $task_id): void
+    {
+        if (!$this->checks->hasTask($task_id)) {
+            throw new ApiException('wrong task_id', ApiException::ID_SCOPE);
+        }
+    }
 }

@@ -69,10 +69,10 @@ class Internal
         );
     }
 
-    public function correctorSummary(int $task_id): CorrectorSummaryFullService
+    public function correctorSummary(int $ass_id, int $user_id): CorrectorSummaryFullService
     {
         return $this->instances[CorrectorSummaryService::class] ??= new CorrectorSummaryService(
-            $task_id,
+            $this->checks($ass_id, $user_id),
             $this->dependencies->repositories()
         );
     }

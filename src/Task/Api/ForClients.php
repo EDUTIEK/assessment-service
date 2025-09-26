@@ -76,9 +76,9 @@ class ForClients
         return $this->internal->correctionSettings($this->ass_id, $this->user_id);
     }
 
-    public function summary(int $task_id): CorrectorSummaryFullService
+    public function correctorSummary(): CorrectorSummaryFullService
     {
-        return $this->internal->correctorSummary($task_id);
+        return $this->internal->correctorSummary($this->ass_id, $this->user_id);
     }
 
     public function ratingCriterion(int $task_id): RatingCriterionFullService
