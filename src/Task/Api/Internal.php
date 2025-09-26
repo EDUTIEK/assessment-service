@@ -40,8 +40,8 @@ class Internal
     {
         return $this->instances[CorrectorAssignmentsService::class][$ass_id] ??= new CorrectorAssignmentsService(
             $ass_id,
-            $this->dependencies->assessmentApis($ass_id, $user_id)->correctionSettings()->get(),
-            $this->dependencies->assessmentApis($ass_id, $user_id)->writer(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->dependencies->repositories()
         );
     }
@@ -78,7 +78,7 @@ class Internal
         return $this->instances[StatusService::class] = new StatusService(
             $ass_id,
             $this->dependencies->repositories(),
-            $this->dependencies->assessmentApis($ass_id, $user_id)->writer(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->correctorAssignments($ass_id, $user_id),
         );
     }

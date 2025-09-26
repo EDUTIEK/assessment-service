@@ -98,7 +98,7 @@ class ForClients
     {
         return $this->instances[FormatService::class] ??= new FormatService(
             $this->dependencies->systemApi()->language(),
-            $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->assessment_grading()
+            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->assessment_grading()
         );
     }
 
@@ -107,11 +107,11 @@ class ForClients
         return $this->instances[CorrectionProcessService::class] ??= new CorrectionProcessService(
             $this->ass_id,
             $this->dependencies->repositories(),
-            $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->writer(),
-            $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->correction_process(),
-            $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->logEntry(),
-            $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->correctionSettings()->get(),
-            $this->dependencies->assessmentApis($this->ass_id, $this->user_id)->corrector(),
+            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->writer(),
+            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->correction_process(),
+            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->logEntry(),
+            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->correctionSettings()->get(),
+            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->corrector(),
         );
     }
 }
