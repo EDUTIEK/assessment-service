@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\Api;
 
+use Edutiek\AssessmentService\EssayTask\AssessmentStatus\FullService as StatusFullService;
+use Edutiek\AssessmentService\EssayTask\AssessmentStatus\Service as StatusService;
+use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
+use Edutiek\AssessmentService\EssayTask\BackgroundTask\Service as BackgroundTaskService;
 use Edutiek\AssessmentService\EssayTask\Essay\FullService as EssayFullService;
 use Edutiek\AssessmentService\EssayTask\Essay\Service as EssayService;
-use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
-use Edutiek\AssessmentService\EssayTask\WritingSettings\FullService as WritingSettingsFullService;
-use Edutiek\AssessmentService\EssayTask\AssessmentStatus\Service as StatusService;
-use Edutiek\AssessmentService\EssayTask\AssessmentStatus\FullService as StatusFullService;
-use Edutiek\AssessmentService\EssayTask\TaskSettings\Service as TaskSettingsService;
-use Edutiek\AssessmentService\EssayTask\TaskSettings\FullService as TaskSettingsFullService;
-use Edutiek\AssessmentService\EssayTask\PdfInput\FullService as FullPdfInput;
-use Edutiek\AssessmentService\EssayTask\PdfInput\Service as PdfInput;
 use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImageFullService;
 use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImageService;
-use Edutiek\AssessmentService\System\BackgroundTask\Job;
-use Edutiek\AssessmentService\System\BackgroundTask\Manager as BackgroundTaskManager;
-use Edutiek\AssessmentService\EssayTask\BackgroundTask\Service as BackgroundTaskService;
+use Edutiek\AssessmentService\EssayTask\PdfInput\FullService as FullPdfInput;
+use Edutiek\AssessmentService\EssayTask\PdfInput\Service as PdfInput;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\FullService as FullPdfOutput;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\Service as PdfOutput;
-use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
+use Edutiek\AssessmentService\EssayTask\TaskSettings\FullService as TaskSettingsFullService;
+use Edutiek\AssessmentService\EssayTask\TaskSettings\Service as TaskSettingsService;
+use Edutiek\AssessmentService\EssayTask\WritingSettings\FullService as WritingSettingsFullService;
+use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
+use Edutiek\AssessmentService\System\BackgroundTask\Job;
+use Edutiek\AssessmentService\System\BackgroundTask\Manager as BackgroundTaskManager;
 
 class ForClients
 {
@@ -69,15 +69,17 @@ class ForClients
         );
     }
 
-    public function pdfInput(): FullPdfInput
+    public function pdfInput(bool $as_admin): FullPdfInput
     {
-        return $this->instances[PdfInput::class] ??= new PdfInput(
+        return $this->instances[PdfInput::class][(string) $as_admin] ??= new PdfInput(
+            $as_admin,
             $this->essay(),
             $this->backgroundTaskManager(),
             $this->essayImage(),
             $this->internal->language($this->user_id),
             $this->dependencies->systemApi()->fileStorage(),
-            $this->dependencies->eventDispatcher($this->ass_id, $this->user_id)
+            $this->dependencies->eventDispatcher($this->ass_id, $this->user_id),
+            $this->dependencies->constraintCollector($this->ass_id, $this->user_id),
         );
     }
 

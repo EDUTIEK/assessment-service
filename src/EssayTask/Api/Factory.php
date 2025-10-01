@@ -26,6 +26,17 @@ class Factory
         );
     }
 
+
+    /**
+     * Get the API for constraint handling
+     */
+    public function forConstraints(): ForConstraints
+    {
+        return $this->instances[ForConstraints::class] ??= new ForConstraints(
+            $this->internal()
+        );
+    }
+
     /**
      * Get the API for event handling
      */

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Api;
 
+use Edutiek\AssessmentService\System\ConstraintHandling\ProviderFactory;
 use Edutiek\AssessmentService\System\EventHandling\ObserverFactory;
 
 class Factory
@@ -20,6 +21,15 @@ class Factory
     public function forClients(): ForClients
     {
         return $this->instances[ForClients::class] ??= new ForClients($this->dependencies, $this->internal());
+    }
+
+    /**
+     * Get the API for constraint handling
+     * @param ProviderFactory[] $provider_factories
+     */
+    public function forConstraints(array $provider_factories): ForConstraints
+    {
+        return $this->instances[ForConstraints::class] ??= new ForConstraints($provider_factories);
     }
 
     /**
