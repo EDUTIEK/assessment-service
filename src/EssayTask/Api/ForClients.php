@@ -8,7 +8,7 @@ use Edutiek\AssessmentService\EssayTask\AssessmentStatus\FullService as StatusFu
 use Edutiek\AssessmentService\EssayTask\AssessmentStatus\Service as StatusService;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\Service as BackgroundTaskService;
-use Edutiek\AssessmentService\EssayTask\Essay\FullService as EssayFullService;
+use Edutiek\AssessmentService\EssayTask\Essay\ClientService as EssayClientService;
 use Edutiek\AssessmentService\EssayTask\Essay\Service as EssayService;
 use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImageFullService;
 use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImageService;
@@ -35,12 +35,19 @@ class ForClients
     ) {
     }
 
-    public function essay(): EssayFullService
+    public function essay(bool $as_admin = false): EssayClientService
     {
-        return $this->instances[EssayFullService::class] = new EssayService(
+        return $this->instances[EssayService::class] = new EssayService(
+            $as_admin,
             $this->dependencies->repositories(),
             $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->writer(),
             $this->dependencies->taskApi($this->ass_id, $this->user_id)->tasks(),
+            $this->backgroundTaskManager(),
+            $this->essayImage(),
+            $this->internal->language($this->user_id),
+            $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->eventDispatcher($this->ass_id, $this->user_id),
+            $this->dependencies->constraintCollector($this->ass_id, $this->user_id),
         );
     }
 
@@ -66,20 +73,6 @@ class ForClients
             $this->ass_id,
             $task_id,
             $this->dependencies->repositories()
-        );
-    }
-
-    public function pdfInput(bool $as_admin): FullPdfInput
-    {
-        return $this->instances[PdfInput::class][(string) $as_admin] ??= new PdfInput(
-            $as_admin,
-            $this->essay(),
-            $this->backgroundTaskManager(),
-            $this->essayImage(),
-            $this->internal->language($this->user_id),
-            $this->dependencies->systemApi()->fileStorage(),
-            $this->dependencies->eventDispatcher($this->ass_id, $this->user_id),
-            $this->dependencies->constraintCollector($this->ass_id, $this->user_id),
         );
     }
 

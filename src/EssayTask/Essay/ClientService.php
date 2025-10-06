@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\EssayTask\Essay;
 
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
+use Edutiek\AssessmentService\System\ConstraintHandling\Result;
 
-interface FullService
+interface ClientService
 {
     /** @return Essay[] */
     public function allByWriterId(int $writer_id): array;
@@ -28,6 +29,11 @@ interface FullService
     public function new(int $writer_id, int $task_id): Essay;
     public function save(Essay $essay): void;
 
-    /** Check if the essay belongs to this assessment and writer */
-    public function checkScope(Essay $essay): void;
+    /**
+     * Check if the PDF file of an essay can be replaced
+     */
+    public function canChange(Essay $essay): Result;
+
+    public function replacePdf(Essay $essay, string $file_id): void;
+    public function deletePdf(Essay $essay): void;
 }

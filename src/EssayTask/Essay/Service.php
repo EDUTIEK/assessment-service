@@ -4,17 +4,34 @@ namespace Edutiek\AssessmentService\EssayTask\Essay;
 
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
 use Edutiek\AssessmentService\EssayTask\Api\ApiException;
+use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
+use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImage;
+use Edutiek\AssessmentService\System\BackgroundTask\Manager as BackgroundTaskManager;
+use Edutiek\AssessmentService\System\ConstraintHandling\Actions\ChangeWritingContent;
+use Edutiek\AssessmentService\System\ConstraintHandling\Collector;
+use Edutiek\AssessmentService\System\ConstraintHandling\Result;
+use Edutiek\AssessmentService\System\ConstraintHandling\ResultStatus;
+use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
+use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
+use Edutiek\AssessmentService\System\File\Storage;
+use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TasksReadService;
-use DateTimeImmutable;
 
-readonly class Service implements FullService
+readonly class Service implements ClientService
 {
     public function __construct(
+        private bool $as_admin,
         private Repositories $repos,
         private WriterReadService $writer_service,
-        private TasksReadService $tasks
+        private TasksReadService $tasks,
+        private BackgroundTaskManager $task_manager,
+        private EssayImage $essay_image,
+        private Language $language,
+        private Storage $storage,
+        private Dispatcher $events,
+        private Collector $constraints
     ) {
     }
 
@@ -71,14 +88,9 @@ readonly class Service implements FullService
 
     public function save(Essay $essay): void
     {
-        $this->checkScope($essay);
-        $this->repos->essay()->save($essay);
-    }
-
-    public function checkScope(Essay $essay): void
-    {
         $this->checkWriterScope($essay->getWriterId());
         $this->checkTaskScope($essay->getTaskId());
+        $this->repos->essay()->save($essay);
     }
 
     /**
@@ -99,5 +111,61 @@ readonly class Service implements FullService
         if (!$this->tasks->has($task_id)) {
             throw new ApiException("wrong task_id", ApiException::ID_SCOPE);
         }
+    }
+
+    /**
+     * Check if the PDF file of an essay can be replaced
+     */
+    public function canChange(Essay $essay): Result
+    {
+        $this->checkWriterScope($essay->getWriterId());
+        $this->checkTaskScope($essay->getTaskId());
+
+        return $this->constraints->check(new ChangeWritingContent(
+            $essay->getWriterId(),
+            $essay->getTaskId(),
+            $this->as_admin
+        ));
+    }
+
+    public function replacePdf(Essay $essay, string $file_id): void
+    {
+        $result = $this->canChange($essay);
+        if ($result->status() == ResultStatus::BLOCK) {
+            throw new ApiException(implode("/n", $result->messages()), ApiException::CONSTRAINT);
+        }
+
+        $this->storage->deleteFile($essay->getPdfVersion());
+        $this->essay_image->deleteByEssayId($essay->getId());
+        $this->repos->essay()->save($essay->setPdfVersion($file_id)->touch());
+        $this->events->dispatchEvent(new WritingContentChanged(
+            $essay->getWriterId(),
+            $essay->getTaskId(),
+            $essay->getLastChange()
+        ));
+
+        // create page images in background task
+        $this->task_manager->run(
+            $this->language->txt('writer_upload_pdf_bt_processing'),
+            GenerateEssayImages::class,
+            $essay->getId()
+        );
+    }
+
+    public function deletePdf(Essay $essay): void
+    {
+        $result = $this->canChange($essay);
+        if ($result->status() == ResultStatus::BLOCK) {
+            throw new ApiException(implode("/n", $result->messages()), ApiException::CONSTRAINT);
+        }
+
+        $this->storage->deleteFile($essay->getPdfVersion());
+        $this->repos->essay()->save($essay->setPdfVersion(null)->touch());
+        $this->events->dispatchEvent(new WritingContentChanged(
+            $essay->getWriterId(),
+            $essay->getTaskId(),
+            $essay->getLastChange()
+        ));
+        $this->essay_image->deleteByEssayId($essay->getId());
     }
 }
