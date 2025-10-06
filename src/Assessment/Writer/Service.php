@@ -55,6 +55,9 @@ readonly class Service implements ReadService, FullService
         return $this->repos->writer()->allByAssId($this->ass_id);
     }
 
+    /**
+     * @todo: replace usage by dedicated operations and make private or remove
+     */
     public function save(Writer $writer): void
     {
         $this->checkScope($writer);
@@ -63,8 +66,13 @@ readonly class Service implements ReadService, FullService
 
     public function authorizeWriting(Writer $writer, int $by_user_id, bool $as_admin): void
     {
+        $now = new DateTimeImmutable();
+
         $was_authorized = ($writer->getWritingAuthorized() !== null);
-        $writer->setWritingAuthorized(new DateTimeImmutable());
+        if ($writer->getWorkingStart() === null) {
+            $writer->setWorkingStart($now);
+        }
+        $writer->setWritingAuthorized($now);
         $writer->setWritingAuthorizedBy($by_user_id);
         if ($this->validate($writer)) {
             $this->save($writer);
