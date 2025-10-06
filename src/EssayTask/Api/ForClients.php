@@ -12,8 +12,6 @@ use Edutiek\AssessmentService\EssayTask\Essay\ClientService as EssayClientServic
 use Edutiek\AssessmentService\EssayTask\Essay\Service as EssayService;
 use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImageFullService;
 use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImageService;
-use Edutiek\AssessmentService\EssayTask\PdfInput\FullService as FullPdfInput;
-use Edutiek\AssessmentService\EssayTask\PdfInput\Service as PdfInput;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\FullService as FullPdfOutput;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\Service as PdfOutput;
 use Edutiek\AssessmentService\EssayTask\TaskSettings\FullService as TaskSettingsFullService;

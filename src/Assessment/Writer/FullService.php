@@ -13,6 +13,7 @@ interface FullService extends ReadService
     public function save(Writer $writer): void;
     public function validate(Writer $writer): bool;
 
+    public function authorizeWriting(Writer $writer, int $by_user_id, bool $as_admin): void;
     public function removeWritingAuthorization(Writer $writer, int $by_user_id): void;
     public function removeCorrectionFinalisation(Writer $writer, int $by_user_id): void;
 

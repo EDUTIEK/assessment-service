@@ -2,15 +2,13 @@
 
 namespace Edutiek\AssessmentService\Assessment\Writer;
 
+use DateTimeImmutable;
+use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
-use Edutiek\AssessmentService\Assessment\Api\ApiException;
-use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
-use Edutiek\AssessmentService\Assessment\WorkingTime\Service as WorkingTimeService;
 use Edutiek\AssessmentService\Assessment\LogEntry\FullService as LogEntryService;
-use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
 use Edutiek\AssessmentService\Assessment\LogEntry\MentionUser as LogEntryMention;
-use Edutiek\AssessmentService\Assessment\LogEntry\Type;
+use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 
 readonly class Service implements ReadService, FullService
@@ -61,6 +59,23 @@ readonly class Service implements ReadService, FullService
     {
         $this->checkScope($writer);
         $this->repos->writer()->save($writer);
+    }
+
+    public function authorizeWriting(Writer $writer, int $by_user_id, bool $as_admin): void
+    {
+        $was_authorized = ($writer->getWritingAuthorized() !== null);
+        $writer->setWritingAuthorized(new DateTimeImmutable());
+        $writer->setWritingAuthorizedBy($by_user_id);
+        if ($this->validate($writer)) {
+            $this->save($writer);
+            if ($as_admin) {
+                $this->log_entry_service->addEntry(
+                    LogEntryType::WRITING_POST_AUTHORIZED,
+                    LogEntryMention::fromSystem($by_user_id),
+                    LogEntryMention::fromWriter($writer)
+                );
+            }
+        }
     }
 
     public function removeWritingAuthorization(Writer $writer, int $by_user_id): void
