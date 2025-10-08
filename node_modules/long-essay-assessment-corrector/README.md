@@ -1,7 +1,7 @@
-# long-essay-assessment-corrector
+# assessment-corrector
 
-Web app to correct long essays of an exam.
-Used by the [long-essay-assessment-service](https://github.com/EDUTIEK/long-essay-assessment-service).
+Web app to Correct an Exam.
+Used by the [assessment-service](https://github.com/EDUTIEK/assessment-service).
 
 
 ## Project Setup

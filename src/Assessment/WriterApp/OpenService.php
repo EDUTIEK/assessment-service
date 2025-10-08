@@ -6,5 +6,5 @@ namespace Edutiek\AssessmentService\Assessment\WriterApp;
 
 interface OpenService
 {
-    public function open(): void;
+    public function open(string $return_url): void;
 }

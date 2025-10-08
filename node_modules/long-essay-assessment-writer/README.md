@@ -1,7 +1,7 @@
-# long-essay-assessment-writer  
+# assessment-writer  
 
-Web App to write long Essays in an exam.
-Used by the [long-essay-assessment-service](https://github.com/EDUTIEK/long-essay-asessment-service).
+Web App to write Exams.
+Used by the [assessment-service](https://github.com/EDUTIEK/assessment-service).
 
 
 ## Project Setup

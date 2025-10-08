@@ -80,28 +80,8 @@ readonly class OpenHelper
      */
     private function createDataToken(): Token
     {
-        $token = $this->auth->getToken($this->user_id, TokenPurpose::DATA);
-        $token->setValidUntil($this->auth->newValitity(TokenPurpose::DATA));
+        $token = $this->auth->newToken($this->user_id, TokenPurpose::DATA);
         $this->auth->saveToken($token);
         return $token;
-    }
-
-    /**
-     * Deliver a redirecting HTML page
-     * use this if browsers prevent cookies being saved for a redirection
-     * @param string $url
-     */
-    private function redirectByHtml($url): never
-    {
-        echo '<!DOCTYPE html>
-            <html>
-            <head>
-               <meta http-equiv="refresh" content="0; url=$url">
-            </head>
-            <body>
-               <a href="$url">Redirect to $url ...</a>
-            </body>
-            </html>';
-        exit;
     }
 }

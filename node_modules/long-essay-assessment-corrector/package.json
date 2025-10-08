@@ -1,9 +1,9 @@
 {
-  "name": "long-essay-assessment-corrector",
-  "version": "1.0.0",
+  "name": "assessment-corrector",
+  "version": "2.0.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/EDUTIEK/long-essay-assessment-corrector.git"
+    "url": "git+https://github.com/EDUTIEK/assessment-corrector.git"
   },
   "files": [
     "dist"

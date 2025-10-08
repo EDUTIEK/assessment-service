@@ -91,6 +91,7 @@ class Internal
             $ass_id,
             $context_id,
             $user_id,
+            $this->dependencies->systemApi()->config(),
             $this->openHelper($ass_id, $context_id, $user_id),
             $this->restHelper($ass_id, $context_id, $user_id),
             $this->slimApp(),
