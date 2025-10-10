@@ -46,8 +46,7 @@ readonly class Service implements ReadService, FullService
 
     public function getPathToGhostscript(): ?string
     {
-        $path = $this->getConfig()->getPathToGhostscript();
-        return empty($path) ? $this->getSetup()->getDefaultPathToGhostscript() : $path;
+        return $this->getConfig()->getPathToGhostscript() ?? $this->getSetup()->getDefaultPathToGhostscript();
     }
 
     /**
