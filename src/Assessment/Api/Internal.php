@@ -136,7 +136,6 @@ class Internal
             $context_id,
             $user_id,
             $this->authentication($ass_id, $context_id),
-            $this->dependencies->repositories(),
             $this->dependencies->systemApi()->config()
         );
     }

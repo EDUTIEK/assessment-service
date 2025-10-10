@@ -63,7 +63,7 @@ readonly class Service implements FullService
 
     public function checkSignature(Token $token, $signature): bool
     {
-        return md5(($token->getUserId() . $this->context_id . $token->getToken()) == $signature);
+        return md5($token->getUserId() . $token->getAssId() . $this->context_id . $token->getToken()) == $signature;
     }
 
     public function checkRemoteAddress(Token $token): bool

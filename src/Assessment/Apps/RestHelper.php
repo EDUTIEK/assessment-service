@@ -37,13 +37,13 @@ readonly class RestHelper
     {
         $token = $this->auth->getToken($this->user_id, $purpose);
         if ($token === null) {
-            throw new RestException(RestException::UNAUTHORIZED, 'current token is not found');
+            throw new RestException('current token is not found', RestException::UNAUTHORIZED);
         }
         if (!$this->auth->checkValidity($token)) {
-            throw new RestException(RestException::UNAUTHORIZED, 'current token is expired');
+            throw new RestException('current token is expired', RestException::UNAUTHORIZED);
         }
         if (!$this->auth->checkSignature($token, $signature)) {
-            throw new RestException(RestException::UNAUTHORIZED, 'signature is wrong');
+            throw new RestException('signature is wrong', RestException::UNAUTHORIZED);
         }
     }
 
@@ -55,7 +55,6 @@ readonly class RestHelper
         if ($this->config_service->getConfig()->getSimulateOffline()) {
             throw new RestException('offline mode', RestException::SERVICE_UNAVAILABLE);
         }
-
         if ($this->user_service->getUser($this->user_id) === null) {
             throw new RestException('user not found', RestException::NOT_FOUND);
         }
@@ -93,7 +92,7 @@ readonly class RestHelper
         $token = $this->auth->getToken($this->user_id, TokenPurpose::DATA);
         $token->setValidUntil($this->auth->newValitity(TokenPurpose::DATA));
         $this->auth->saveToken($token);
-        $response = $response->withHeader('LongEssayDataToken', $token->getToken());
+        $response = $response->withHeader('xlasDataToken', $token->getToken());
     }
 
     /**
@@ -104,7 +103,7 @@ readonly class RestHelper
         $token = $this->auth->getToken($this->user_id, TokenPurpose::DATA);
         $token->setValidUntil($this->auth->newValitity(TokenPurpose::DATA));
         $this->auth->saveToken($token);
-        $response = $response->withHeader('LongEssayDataToken', $token->getToken());
+        $response = $response->withHeader('xlasDataToken', $token->getToken());
     }
 
     /**
@@ -115,7 +114,7 @@ readonly class RestHelper
         $token = $this->auth->getToken($this->user_id, TokenPurpose::FILE);
         $token->setValidUntil($this->auth->newValitity(TokenPurpose::FILE));
         $this->auth->saveToken($token);
-        $response = $response->withHeader('LongEssayFileToken', $token->getToken());
+        $response = $response->withHeader('XlasFileToken', $token->getToken());
     }
 
     /**
@@ -126,7 +125,7 @@ readonly class RestHelper
     {
         $response = $response
             ->withHeader('Content-Type', 'application/json')
-            ->withHeader('LongEssayTime', (string) time())
+            ->withHeader('xlasTime', (string) time())
             ->withStatus($status);
         $response->getBody()->write(json_encode($json));
         return $response;

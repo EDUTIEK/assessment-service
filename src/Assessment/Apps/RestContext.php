@@ -6,17 +6,20 @@ namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 
+/**
+ * This service must be provided by the client system for the REST service
+ */
 interface RestContext
 {
     /**
-     * Get the route of the REST call
+     * Get the route of the current REST call
      * This is a path following the invoked skript
      * e.g. /writer/data
      */
     public function getRoute(): string;
 
     /**
-     * Get the params of the REST call
+     * Get the params of the current REST call
      * These are added by the web apps as query params
      * They should be returned as a key/value array
      */

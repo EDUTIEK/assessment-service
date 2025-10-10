@@ -19,7 +19,6 @@ readonly class OpenHelper
         private int $context_id,
         private int $user_id,
         private Authentication $auth,
-        private Repositories $repos,
         private ConfigReadService $config_service
     ) {
     }
@@ -29,11 +28,11 @@ readonly class OpenHelper
      */
     public function setCommonFrontendParams(string $return_url): void
     {
-        $this->setFrontendParam('Return', $return_url);
-        $this->setFrontendParam('Backend', $this->config_service->getSetup()->getBackendUrl());
-        $this->setFrontendParam('Assessment', (string) $this->ass_id);
-        $this->setFrontendParam('Context', (string) $this->context_id);
-        $this->setFrontendParam('User', (string) $this->user_id);
+        $this->setFrontendParam('ReturnUrl', $return_url);
+        $this->setFrontendParam('BackendUrl', $this->config_service->getSetup()->getBackendUrl());
+        $this->setFrontendParam('AssId', (string) $this->ass_id);
+        $this->setFrontendParam('ContextId', (string) $this->context_id);
+        $this->setFrontendParam('UserId', (string) $this->user_id);
         $this->setFrontendParam('Token', $this->createDataToken()->getToken());
     }
 
@@ -42,12 +41,12 @@ readonly class OpenHelper
      *
      * Parameters are sent as cookies over https
      * They are only needed when the frontend is initialized and can expire afterwards (1 minute)
-     * They should be set for the whole server path to allow a different frontend locations during development
+     * They should be set for the whole server path to allow a different frontend location during development
      */
     public function setFrontendParam(string $name, string $value): void
     {
         setcookie(
-            'LongEssay' . $name,
+            'xlas' . $name,
             $value,
             [
                 'expires' => time() + 60,
@@ -65,9 +64,6 @@ readonly class OpenHelper
      */
     public function openFrontend(string $frontend_url): never
     {
-        // use this if browsers prevent cookies being saved for a redirection
-        // $this->redirectByHtml($frontend_url);
-
         header('Cache-Control: no-cache, no-store, must-revalidate');
         header('Pragma: no-cache');
         header('Expires: 0');
