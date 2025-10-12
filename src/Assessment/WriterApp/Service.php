@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\WriterApp;
 
+use Edutiek\AssessmentService\Assessment\Apps\RestException;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
 use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
@@ -52,13 +53,13 @@ class Service implements OpenService, RestService
      */
     public function handle(): never
     {
-        $this->app->get('/data', [$this,'getData']);
-        $this->app->get('/update', [$this,'getUpdate']);
-        $this->app->get('/file/{key}', [$this,'getFile']);
-        $this->app->put('/start', [$this,'putStart']);
-        $this->app->put('/steps', [$this,'putSteps']);
-        $this->app->put('/changes', [$this, 'putChanges']);
-        $this->app->put('/final', [$this,'putFinal']);
+        $this->app->get('/writer/data', [$this,'getData']);
+        $this->app->get('/writer/update', [$this,'getUpdate']);
+        $this->app->get('/writer/file/{key}', [$this,'getFile']);
+        $this->app->put('/writer/start', [$this,'putStart']);
+        $this->app->put('/writer/steps', [$this,'putSteps']);
+        $this->app->put('/writer/changes', [$this, 'putChanges']);
+        $this->app->put('/writer/final', [$this,'putFinal']);
         $this->app->run();
         exit;
     }

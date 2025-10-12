@@ -168,6 +168,10 @@ class Internal
         $app = AppFactory::create();
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(true, true, true);
+        $app->setBasePath(dirname(parse_url(
+            $this->dependencies->systemApi()->config()->getSetup()->getBackendUrl(),
+            PHP_URL_PATH
+        )));
         return $app;
     }
 
