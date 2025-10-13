@@ -6,16 +6,14 @@ namespace Edutiek\AssessmentService\EssayTask\Manager;
 
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\System\File\Storage;
-use Edutiek\AssessmentService\System\Language\FullService as Language;
 
-readonly class Service implements \Edutiek\AssessmentService\Task\TypeInterfaces\Manager
+readonly class Service implements \Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeManager
 {
     public function __construct(
         private int $ass_id,
         private int $task_id,
         private Repositories $repos,
         private Storage $storage,
-        private Language $language
     ) {
     }
 

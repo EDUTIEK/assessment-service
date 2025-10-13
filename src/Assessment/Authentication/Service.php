@@ -59,6 +59,7 @@ readonly class Service implements FullService
     public function saveToken(Token $token): void
     {
         $this->repos->token()->deleteByIdsAndPurpose($token->getUserId(), $token->getAssId(), $token->getPurpose());
+        $this->repos->token()->save($token);
     }
 
     public function checkSignature(Token $token, $signature): bool

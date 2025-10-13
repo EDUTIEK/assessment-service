@@ -4,25 +4,22 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Task\Api;
 
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\Manager as ManagerInterface;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager as ManagerInterface;
+use Edutiek\AssessmentService\Task\AssessmentStatus\FullService as StatusFullService;
+use Edutiek\AssessmentService\Task\CorrectionProcess\FullService as CorrectionProcessFullService;
+use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
+use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsFullService;
+use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as CorrectorAssignmentsFullService;
+use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as CorrectorSummaryFullService;
+use Edutiek\AssessmentService\Task\Format\FullService as FormatFullService;
+use Edutiek\AssessmentService\Task\Format\Service as FormatService;
 use Edutiek\AssessmentService\Task\Manager\Service as ManagerService;
+use Edutiek\AssessmentService\Task\RatingCriterion\FullService as RatingCriterionFullService;
+use Edutiek\AssessmentService\Task\RatingCriterion\Service as RatingCriterionService;
 use Edutiek\AssessmentService\Task\Resource\FullService as ResourceFullService;
 use Edutiek\AssessmentService\Task\Resource\Service as ResourceService;
 use Edutiek\AssessmentService\Task\Settings\FullService as SettingsFullService;
 use Edutiek\AssessmentService\Task\Settings\Service as SettingsService;
-use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as CorrectorAssignmentsFullService;
-use Edutiek\AssessmentService\Task\CorrectorAssignments\Service as CorrectorAssignmentsService;
-use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsFullService;
-use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as CorrectorSummaryFullService;
-use Edutiek\AssessmentService\Task\CorrectorSummary\Service as CorrectorSummaryService;
-use Edutiek\AssessmentService\Task\RatingCriterion\Service as RatingCriterionService;
-use Edutiek\AssessmentService\Task\RatingCriterion\FullService as RatingCriterionFullService;
-use Edutiek\AssessmentService\Task\AssessmentStatus\Service as StatusService;
-use Edutiek\AssessmentService\Task\AssessmentStatus\FullService as StatusFullService;
-use Edutiek\AssessmentService\Task\Format\FullService as FormatFullService;
-use Edutiek\AssessmentService\Task\Format\Service as FormatService;
-use Edutiek\AssessmentService\Task\CorrectionProcess\FullService as CorrectionProcessFullService;
-use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
 
 class ForClients
 {

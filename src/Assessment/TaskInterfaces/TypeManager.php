@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\Task\TypeInterfaces;
+namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
 
-interface Manager
+/**
+ * Lifecycle manager for type specific task data
+ */
+interface TypeManager
 {
     /**
      * Create the type specific entities for a new task

@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Task\Manager;
 
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\Manager;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApiFactory;
 use Edutiek\AssessmentService\System\File\Storage;
+use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Task\Api\ApiException;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\Settings;
-use Edutiek\AssessmentService\Task\TypeInterfaces\ApiFactory as TypeApiFactory;
-use Edutiek\AssessmentService\System\Language\FullService as Language;
 
-readonly class Service implements Manager, ReadService
+readonly class Service implements TaskManager, ReadService
 {
     public function __construct(
         private int $ass_id,

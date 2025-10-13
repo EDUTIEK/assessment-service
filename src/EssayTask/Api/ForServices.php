@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\Task\Api;
+namespace Edutiek\AssessmentService\EssayTask\Api;
 
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskApi as TasksApi;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager as ManagerInterface;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApi;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeManager as ManagerInterface;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\WriterBridge as WriterBridgeInterface;
-use Edutiek\AssessmentService\Task\Manager\Service as ManagerService;
-use Edutiek\AssessmentService\Task\WriterBridge\Service as WriterBridgeService;
+use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
+use Edutiek\AssessmentService\EssayTask\WriterBridge\Service as WriterBridgeService;
 
-class ForAssessment implements TasksApi
+class ForServices implements TypeApi
 {
     private array $instances = [];
 
@@ -20,15 +20,13 @@ class ForAssessment implements TasksApi
     ) {
     }
 
-    public function taskManager(int $ass_id, int $user_id): ManagerInterface
+    public function manager(int $ass_id, int $task_id, int $user_id): ManagerInterface
     {
-        return $this->instances[ManagerService::class][$ass_id][$user_id] ??= new ManagerService(
+        return $this->instances[ManagerService::class][$ass_id][$task_id][$user_id] ??= new ManagerService(
             $ass_id,
-            $user_id,
+            $task_id,
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->fileStorage(),
-            $this->dependencies->typeApis(),
-            $this->internal->language("de"),
         );
     }
 
@@ -36,10 +34,8 @@ class ForAssessment implements TasksApi
     {
         return $this->instances[WriterBridgeService::class][$ass_id][$user_id] ??= new WriterBridgeService(
             $ass_id,
-            $user_id,
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->fileStorage(),
-            $this->internal->language("de"),
         );
     }
 }

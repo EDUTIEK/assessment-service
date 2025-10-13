@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Manager;
 
-use Edutiek\AssessmentService\Assessment\Data\DisabledGroup;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
-use Edutiek\AssessmentService\Assessment\Manager\FullService;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\Manager;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 
@@ -18,7 +16,7 @@ readonly class Service implements FullService
         private int $ass_id,
         private Repositories $repos,
         private LanguageService $language,
-        private Manager $tasks
+        private TaskManager $tasks
     ) {
     }
 

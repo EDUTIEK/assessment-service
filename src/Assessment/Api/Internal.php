@@ -94,8 +94,9 @@ class Internal
             $this->dependencies->systemApi()->config(),
             $this->openHelper($ass_id, $context_id, $user_id),
             $this->restHelper($ass_id, $context_id, $user_id),
+            $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->slimApp(),
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
         );
     }
 

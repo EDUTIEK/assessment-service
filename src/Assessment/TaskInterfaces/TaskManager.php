@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
 
-interface Manager
+/**
+ * Lifecycle manager for tasks
+ */
+interface TaskManager
 {
     /**
      * Get the number of tasks in this assessment

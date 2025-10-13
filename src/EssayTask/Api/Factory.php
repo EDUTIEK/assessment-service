@@ -48,11 +48,11 @@ class Factory
     }
 
     /**
-     * Get the API for the task
+     * Get the API for the task and assessment
      */
-    public function forTask(): ForTask
+    public function forServices(): ForServices
     {
-        return $this->instances[ForTask::class] ??= new ForTask(
+        return $this->instances[ForServices::class] ??= new ForServices(
             $this->dependencies,
             $this->internal()
         );

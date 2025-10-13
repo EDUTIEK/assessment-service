@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Task\Api;
 
-use Edutiek\AssessmentService\Task\Data\Repositories;
-use Edutiek\AssessmentService\System\Api\ForServices as SystemApi;
-use Edutiek\AssessmentService\Task\TypeInterfaces\ApiFactory as TypeApiFactory;
 use Edutiek\AssessmentService\Assessment\Api\ForTasks as AssessmentApi;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApiFactory as TypeApiFactory;
+use Edutiek\AssessmentService\System\Api\ForServices as SystemApi;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
+use Edutiek\AssessmentService\Task\Data\Repositories;
 
 interface Dependencies
 {

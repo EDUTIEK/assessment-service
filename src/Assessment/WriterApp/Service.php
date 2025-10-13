@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\WriterApp;
 
-use Edutiek\AssessmentService\Assessment\Apps\RestException;
-use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
+use Edutiek\AssessmentService\Assessment\Apps\RestException;
 use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
 use Edutiek\AssessmentService\Assessment\Apps\RestService;
+use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager as TasksManager;
 use Edutiek\AssessmentService\System\Config\FrontendModule;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
+use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
@@ -31,6 +33,7 @@ class Service implements OpenService, RestService
         private readonly ConfigService $config,
         private readonly OpenHelper $open_helper,
         private readonly RestHelper $rest_helper,
+        private readonly TasksManager $tasks_manager,
         private readonly App $app,
         private readonly Repositories $repos,
     ) {
@@ -81,8 +84,23 @@ class Service implements OpenService, RestService
      */
     public function getData(Request $request, Response $response, array $args): Response
     {
+        $task = $this->tasks_manager->first();
+        if ($task === null) {
+            throw new RestException('No Task Found', RestException::NOT_FOUND);
+        }
+
+
+
+        // settings
+
+        // alerts
+        // notes
+        // resources
+
+
+
         $this->prepare($request, $response, $args, TokenPurpose::DATA);
-        return $response;
+        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, 'funzt');
     }
 
     /**
@@ -119,6 +137,17 @@ class Service implements OpenService, RestService
      * The added or changed data is wrapped as 'payload' in the change
      */
     public function putChanges(Request $request, Response $response, array $args): Response
+    {
+        return $response;
+    }
+
+    /**
+     * PUT the final content
+     * "final" means that the writer is intentionally closed
+     * That could be an interruption or the authorized submission
+     * the content is only saved when the essay is not yet authorized
+     */
+    public function putFinal(Request $request, Response $response, array $args): Response
     {
         return $response;
     }
