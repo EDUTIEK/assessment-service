@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Edutiek\AssessmentService\Assessment\Writer;
 
 use DateTimeImmutable;
@@ -9,6 +11,7 @@ use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\LogEntry\FullService as LogEntryService;
 use Edutiek\AssessmentService\Assessment\LogEntry\MentionUser as LogEntryMention;
 use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
+use Edutiek\AssessmentService\Assessment\Pseudonym\Service as PseudonymService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 
 readonly class Service implements ReadService, FullService
@@ -17,7 +20,8 @@ readonly class Service implements ReadService, FullService
         private int $ass_id,
         private Repositories $repos,
         private WorkingTimeFactory $working_time_factory,
-        private LogEntryService $log_entry_service
+        private LogEntryService $log_entry_service,
+        private PseudonymService $pseudonym_service,
     ) {
     }
 
@@ -31,6 +35,9 @@ readonly class Service implements ReadService, FullService
         $writer = $this->oneByUserId($user_id);
         if ($writer === null) {
             $writer = $this->repos->writer()->new()->setAssId($this->ass_id)->setUserId($user_id);
+            // save to get an id for pseudonymisation
+            $this->repos->writer()->save($writer);
+            $writer->setPseudonym($this->pseudonym_service->buildForWriter($writer->getId(), $user_id));
             $this->repos->writer()->save($writer);
         } else {
             $this->checkScope($writer);

@@ -44,4 +44,10 @@ interface FullService
      * @param string  $class  name of the class that defines the abstract getters and setters
      */
     public function secure(object $entity, string $class): object;
+
+
+    /**
+     * Convert array values to primitives
+     */
+    public function arrayToPrimitives(array $array): array;
 }

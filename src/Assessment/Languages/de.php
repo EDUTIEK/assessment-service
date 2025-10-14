@@ -23,4 +23,5 @@ return [
     'via_stitch_decision' => 'per Stichentscheid',
     'writing_is_already_authorized' => 'Die Abgabe ist bereits freigegeben.',
     'correction_is_already_finalized' => 'Die Korrektur ist bereits freigegeben.',
+    'writer_x' => 'Teilnehmer {x}',
 ];

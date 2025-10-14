@@ -65,6 +65,17 @@ class Service implements FullService
     }
 
     /**
+     * Convert array values to primitives
+     */
+    public function arrayToPrimitives(array $array): array
+    {
+        foreach ($array as $key => $value) {
+            $array[$key] = is_array($value) ? $this->arrayToPrimitives($value) : $this->toPrimitive($value);
+        }
+        return $array;
+    }
+
+    /**
      * Get the properties information of a class
      * @see self::$properties
      */

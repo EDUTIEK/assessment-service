@@ -7,24 +7,22 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
 use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
 use Edutiek\AssessmentService\Assessment\Apps\WriterBridge;
+use Edutiek\AssessmentService\Assessment\AssessmentGrading\FullService as AssessmentGradingFullService;
+use Edutiek\AssessmentService\Assessment\AssessmentGrading\Service as AssessmentGradingService;
 use Edutiek\AssessmentService\Assessment\Authentication\Service as AuthenticationService;
+use Edutiek\AssessmentService\Assessment\CorrectionProcess\FullService as CorrectionProcessFullService;
+use Edutiek\AssessmentService\Assessment\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Assessment\CorrectorApp\Service as CorrectorAppService;
-use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
-use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
-use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as FullWorkingTime;
+use Edutiek\AssessmentService\Assessment\Pseudonym\Service as PseudonymService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
+use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
 use Edutiek\AssessmentService\Assessment\WriterApp\Bridge;
 use Edutiek\AssessmentService\Assessment\WriterApp\Service as WriterAppService;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Slim\App;
 use Slim\Factory\AppFactory;
-use Edutiek\AssessmentService\Assessment\AssessmentGrading\Service as AssessmentGradingService;
-use Edutiek\AssessmentService\Assessment\AssessmentGrading\FullService as AssessmentGradingFullService;
-use Edutiek\AssessmentService\Assessment\CorrectionProcess\FullService as CorrectionProcessFullService;
-use Edutiek\AssessmentService\Assessment\CorrectionProcess\Service as CorrectionProcessService;
-use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
-use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 
 class Internal
 {
@@ -53,7 +51,8 @@ class Internal
         return $this->instances[LogEntryService::class][$ass_id] ??= new LogEntryService(
             $ass_id,
             $this->dependencies->repositories(),
-            $this->language($this->dependencies->systemApi()->user()->getCurrentUser()->getId()),
+            // set user_id 0 to use the system default language
+            $this->language(0),
             $this->dependencies->systemApi()->user()
         );
     }
@@ -73,13 +72,26 @@ class Internal
         );
     }
 
+    /**
+     * Service for creating pseudonyms
+     */
+    public function pseudonym(): PseudonymService
+    {
+        return $this->instances[PseudonymService::class] ??= new PseudonymService(
+            // set user_id 0 to use the system default language
+            $this->language(0),
+            $this->dependencies->systemApi()->user()
+        );
+    }
+
     public function writer(int $ass_id, int $user_id): WriterService
     {
         return $this->instances[WriterService::class][$ass_id] ??= new WriterService(
             $ass_id,
             $this->dependencies->repositories(),
             $this->workingTimeFactory($user_id),
-            $this->logEntry($ass_id)
+            $this->logEntry($ass_id),
+            $this->pseudonym()
         );
     }
 
@@ -187,6 +199,7 @@ class Internal
         return $this->instances[Bridge::class][$ass_id][$user_id] ??= new Bridge(
             $ass_id,
             $user_id,
+            $this->workingTimeFactory($user_id),
             $this->dependencies->systemApi()->config(),
             $this->dependencies->systemApi()->entity(),
             $this->dependencies->repositories(),
