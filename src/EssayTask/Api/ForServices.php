@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\Api;
 
+use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApi;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeManager as ManagerInterface;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\WriterBridge as WriterBridgeInterface;
 use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
-use Edutiek\AssessmentService\EssayTask\WriterBridge\Service as WriterBridgeService;
+use Edutiek\AssessmentService\EssayTask\AppBridges\Writer as WriterBridgeService;
 
 class ForServices implements TypeApi
 {

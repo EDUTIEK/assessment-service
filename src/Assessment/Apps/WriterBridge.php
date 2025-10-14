@@ -1,9 +1,10 @@
 <?php
 
-namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
+namespace Edutiek\AssessmentService\Assessment\Apps;
 
 /**
- * Functions to provide and process task data for the assessment-writer WebApp
+ * Functions to provide and process data for the assessment-writer WebApp
+ * Must be implemented by System, Task and all Task Type components
  */
 interface WriterBridge
 {

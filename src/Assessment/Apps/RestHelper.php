@@ -100,7 +100,7 @@ readonly class RestHelper
      */
     public function setNewDataToken(Response $response)
     {
-        $token = $this->auth->getToken($this->user_id, TokenPurpose::DATA);
+        $token = $this->auth->newToken($this->user_id, TokenPurpose::DATA);
         $token->setValidUntil($this->auth->newValitity(TokenPurpose::DATA));
         $this->auth->saveToken($token);
         $response = $response->withHeader('xlasDataToken', $token->getToken());
@@ -111,7 +111,7 @@ readonly class RestHelper
      */
     public function setNewFileToken(Response $response)
     {
-        $token = $this->auth->getToken($this->user_id, TokenPurpose::FILE);
+        $token = $this->auth->newToken($this->user_id, TokenPurpose::FILE);
         $token->setValidUntil($this->auth->newValitity(TokenPurpose::FILE));
         $this->auth->saveToken($token);
         $response = $response->withHeader('XlasFileToken', $token->getToken());
@@ -119,15 +119,15 @@ readonly class RestHelper
 
     /**
      * Modify the response with a status code and json return
-     * @param string|array $json
+     * @param string|array $data
      */
-    public function setResponse(Response $response, int $status, $json = []): Response
+    public function setResponse(Response $response, int $status, $data = []): Response
     {
         $response = $response
             ->withHeader('Content-Type', 'application/json')
             ->withHeader('xlasTime', (string) time())
             ->withStatus($status);
-        $response->getBody()->write(json_encode($json));
+        $response->getBody()->write(json_encode($data));
         return $response;
     }
 

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\System\Api;
 
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigReadService;
+use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
+use Edutiek\AssessmentService\System\Entity\Service as EntityService;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\Format\FullService as FormatFullService;
@@ -35,6 +37,11 @@ class ForServices
     public function config(): ConfigReadService
     {
         return $this->internal->config();
+    }
+
+    public function entity(): EntityFullService
+    {
+        return $this->instances[EntityService::class] ??= new EntityService();
     }
 
     public function fileStorage(): Storage

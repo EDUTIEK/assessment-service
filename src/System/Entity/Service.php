@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Entity;
 
+use BackedEnum;
 use ReflectionClass;
 use ReflectionMethod;
 use Edutiek\AssessmentService\System\Api\HasHtml;
@@ -138,6 +139,7 @@ class Service implements FullService
                     return (new DateTimeImmutable(false))->setTimestamp((int) $value);
                 default:
                     if (enum_exists($type)) {
+                        /** @var BackedEnum $type */
                         $value = $type::tryFrom($value);
                     }
                     return $value;

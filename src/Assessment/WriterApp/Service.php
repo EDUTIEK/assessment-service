@@ -8,12 +8,17 @@ use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
 use Edutiek\AssessmentService\Assessment\Apps\RestException;
 use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
 use Edutiek\AssessmentService\Assessment\Apps\RestService;
+use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridge;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager as TasksManager;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApiFactory;
 use Edutiek\AssessmentService\System\Config\FrontendModule;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
+use Edutiek\AssessmentService\System\Data\Config;
+use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
 use Fig\Http\Message\StatusCodeInterface;
+use ILIAS\Tasks;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
@@ -31,11 +36,15 @@ class Service implements OpenService, RestService
         private readonly int $context_id,
         private readonly int $user_id,
         private readonly ConfigService $config,
+        private readonly EntityService $entity,
         private readonly OpenHelper $open_helper,
         private readonly RestHelper $rest_helper,
         private readonly TasksManager $tasks_manager,
         private readonly App $app,
         private readonly Repositories $repos,
+        private readonly WriterBridge $ass_bridge,
+        private readonly WriterBridge $task_bridge,
+        private readonly TypeApiFactory $types,
     ) {
     }
 
@@ -84,23 +93,28 @@ class Service implements OpenService, RestService
      */
     public function getData(Request $request, Response $response, array $args): Response
     {
+        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+
         $task = $this->tasks_manager->first();
         if ($task === null) {
             throw new RestException('No Task Found', RestException::NOT_FOUND);
         }
 
+        $data = [
+            'Asssessment' => $this->ass_bridge->getData(),
+            'Task' => $this->task_bridge->getData(),
+        ];
 
+        foreach ($this->tasks_manager->all() as $task) {
+            if (!isset($data[$task->getTaskType()->component()])) {
+                $data[$task->getTaskType()->component()] = $this->types->api($task->getTaskType())
+                    ->writerBridge($this->ass_id, $this->user_id)->getData();
+            }
+        }
 
-        // settings
-
-        // alerts
-        // notes
-        // resources
-
-
-
-        $this->prepare($request, $response, $args, TokenPurpose::DATA);
-        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, 'funzt');
+        $this->rest_helper->setNewDataToken($response);
+        $this->rest_helper->setNewFileToken($response);
+        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
     }
 
     /**

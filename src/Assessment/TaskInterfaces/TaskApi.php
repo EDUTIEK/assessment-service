@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
 
+use Edutiek\AssessmentService\Assessment\Apps\WriterBridge;
+
 /**
  * CRUD manager for tasks of an assessment
  */

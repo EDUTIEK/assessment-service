@@ -1,12 +1,12 @@
 <?php
 
-namespace Edutiek\AssessmentService\EssayTask\WriterBridge;
+namespace Edutiek\AssessmentService\EssayTask\AppBridges;
 
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\WriterBridge;
+use Edutiek\AssessmentService\Assessment\Apps\WriterBridge;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\System\File\Storage;
 
-class Service implements WriterBridge
+class Writer implements WriterBridge
 {
     public function __construct(
         private int $ass_id,
@@ -15,17 +15,11 @@ class Service implements WriterBridge
     ) {
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getData(): array
     {
         return [];
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getUpdate(): array
     {
         return [];

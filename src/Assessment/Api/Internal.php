@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 
 use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
 use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
+use Edutiek\AssessmentService\Assessment\Apps\WriterBridge;
 use Edutiek\AssessmentService\Assessment\Authentication\Service as AuthenticationService;
 use Edutiek\AssessmentService\Assessment\CorrectorApp\Service as CorrectorAppService;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
@@ -13,6 +14,7 @@ use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as FullWorkingTime;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
+use Edutiek\AssessmentService\Assessment\WriterApp\Bridge;
 use Edutiek\AssessmentService\Assessment\WriterApp\Service as WriterAppService;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Slim\App;
@@ -92,11 +94,15 @@ class Internal
             $context_id,
             $user_id,
             $this->dependencies->systemApi()->config(),
+            $this->dependencies->systemApi()->entity(),
             $this->openHelper($ass_id, $context_id, $user_id),
             $this->restHelper($ass_id, $context_id, $user_id),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->slimApp(),
             $this->dependencies->repositories(),
+            $this->writerBridge($ass_id, $user_id),
+            $this->dependencies->taskApi()->writerBridge($ass_id, $user_id),
+            $this->dependencies->typeApis(),
         );
     }
 
@@ -164,7 +170,7 @@ class Internal
      * Configured slim app instance
      * (no caching needed, created once per request)
      */
-    public function slimApp(): App
+    private function slimApp(): App
     {
         $app = AppFactory::create();
         $app->addRoutingMiddleware();
@@ -174,6 +180,17 @@ class Internal
             PHP_URL_PATH
         )));
         return $app;
+    }
+
+    private function writerBridge(int $ass_id, int $user_id): WriterBridge
+    {
+        return $this->instances[Bridge::class][$ass_id][$user_id] ??= new Bridge(
+            $ass_id,
+            $user_id,
+            $this->dependencies->systemApi()->config(),
+            $this->dependencies->systemApi()->entity(),
+            $this->dependencies->repositories(),
+        );
     }
 
     /**

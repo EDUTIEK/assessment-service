@@ -1,13 +1,13 @@
 <?php
 
-namespace Edutiek\AssessmentService\Task\WriterBridge;
+namespace Edutiek\AssessmentService\Task\AppBridges;
 
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\WriterBridge;
+use Edutiek\AssessmentService\Assessment\Apps\WriterBridge;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 
-class Service implements WriterBridge
+class Writer implements WriterBridge
 {
     public function __construct(
         private int $ass_id,
