@@ -7,7 +7,7 @@ namespace Edutiek\AssessmentService\Assessment\Pseudonym;
 use Edutiek\AssessmentService\System\Language\Service as LanguageService;
 use Edutiek\AssessmentService\System\User\Service as UserService;
 
-class Service
+class Service implements FullService
 {
     public function __construct(
         private LanguageService $language_service,

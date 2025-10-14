@@ -15,6 +15,7 @@ use Edutiek\AssessmentService\Assessment\CorrectionProcess\Service as Correction
 use Edutiek\AssessmentService\Assessment\CorrectorApp\Service as CorrectorAppService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
+use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymFullService;
 use Edutiek\AssessmentService\Assessment\Pseudonym\Service as PseudonymService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
@@ -75,7 +76,7 @@ class Internal
     /**
      * Service for creating pseudonyms
      */
-    public function pseudonym(): PseudonymService
+    public function pseudonym(): PseudonymFullService
     {
         return $this->instances[PseudonymService::class] ??= new PseudonymService(
             // set user_id 0 to use the system default language

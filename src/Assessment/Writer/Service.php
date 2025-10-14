@@ -11,7 +11,7 @@ use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\LogEntry\FullService as LogEntryService;
 use Edutiek\AssessmentService\Assessment\LogEntry\MentionUser as LogEntryMention;
 use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
-use Edutiek\AssessmentService\Assessment\Pseudonym\Service as PseudonymService;
+use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 
 readonly class Service implements ReadService, FullService
