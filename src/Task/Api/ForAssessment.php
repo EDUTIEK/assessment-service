@@ -7,7 +7,7 @@ namespace Edutiek\AssessmentService\Task\Api;
 use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskApi as TasksApi;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager as ManagerInterface;
-use Edutiek\AssessmentService\Task\AppBridges\Writer as WriterBridgeService;
+use Edutiek\AssessmentService\Task\AppBridges\WriterBridge as WriterBridgeService;
 use Edutiek\AssessmentService\Task\Manager\Service as ManagerService;
 
 class ForAssessment implements TasksApi
@@ -39,6 +39,7 @@ class ForAssessment implements TasksApi
             $user_id,
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->systemApi()->entity(),
             $this->internal->language("de"),
         );
     }
