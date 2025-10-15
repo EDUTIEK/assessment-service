@@ -22,6 +22,7 @@ class WriterBridge implements WriterBridgeInterface
         private Language $language
     ) {
     }
+
     public function getData(): array
     {
         $data = [];
@@ -44,30 +45,20 @@ class WriterBridge implements WriterBridgeInterface
                 $title = null;
 
                 if ($resource->getAvailability() !== ResourceAvailability::AFTER) {
-                    if ($resource->getType() == ResourceType::URL) {
-                        $source = $resource->getUrl();
-                        $title = $resource->getTitle();
-                    } elseif ($resource->getFileId() !== null) {
-                        $info = $this->storage->getFileInfo($resource->getFileId());
-                        $source = $info->getFileName();
-                        $mimetype = $info->getMimetype();
-                        $size = $info->getSize();
-                        $title = $resource->getTitle();
-                    }
-                    if ($resource->getType() == ResourceType::INSTRUCTIONS) {
-                        $title = $this->language->txt('task_instructions');
-                    }
-                    if ($resource->getType() == ResourceType::SOLUTION) {
-                        $title = $this->language->txt('tasksolution');
-                    }
+                    $info = $this->storage->getFileInfo($resource->getFileId());
+                    $title = match ($resource->getType()) {
+                        ResourceType::INSTRUCTIONS => $this->language->txt('task_instructions'),
+                        ResourceType::SOLUTION => $this->language->txt('task_solution'),
+                        default => $resource->getTitle(),
+                    };
 
                     $data['Resources'][] = $this->entity->arrayToPrimitives([
                         'id' => $resource->getId(),
                         'type' => $resource->getType(),
                         'embedded' => $resource->getEmbedded(),
-                        'source' => $source,
-                        'mimetype' => $mimetype,
-                        'size' => $size,
+                        'source' => $info?->getFileName() ?? $resource->getUrl(),
+                        'mimetype' => $info?->getMimetype(),
+                        'size' => $info?->getMimetype(),
                         'title' => $title
                     ]);
                 }

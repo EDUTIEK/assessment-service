@@ -7,8 +7,8 @@ namespace Edutiek\AssessmentService\EssayTask\Api;
 use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApi;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeManager as ManagerInterface;
+use Edutiek\AssessmentService\EssayTask\AppBridges\WriterBridge as WriterBridgeService;
 use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
-use Edutiek\AssessmentService\EssayTask\AppBridges\Writer as WriterBridgeService;
 
 class ForServices implements TypeApi
 {
@@ -34,8 +34,11 @@ class ForServices implements TypeApi
     {
         return $this->instances[WriterBridgeService::class][$ass_id][$user_id] ??= new WriterBridgeService(
             $ass_id,
+            $user_id,
             $this->dependencies->repositories(),
-            $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->systemApi()->entity(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
+            $this->dependencies->taskApi($ass_id, $user_id)->tasks()
         );
     }
 }

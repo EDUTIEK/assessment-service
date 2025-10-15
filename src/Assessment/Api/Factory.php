@@ -65,7 +65,7 @@ class Factory
      */
     public function forTasks(int $ass_id, int $user_id): ForTasks
     {
-        return $this->instances[ForRest::class] ??= new ForTasks(
+        return $this->instances[ForTasks::class] ??= new ForTasks(
             $ass_id,
             $user_id,
             $this->dependencies,

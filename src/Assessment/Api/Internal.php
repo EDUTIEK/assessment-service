@@ -6,7 +6,7 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 
 use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
 use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
-use Edutiek\AssessmentService\Assessment\Apps\WriterBridge;
+use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\FullService as AssessmentGradingFullService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\Service as AssessmentGradingService;
 use Edutiek\AssessmentService\Assessment\Authentication\Service as AuthenticationService;
@@ -19,7 +19,7 @@ use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymFullS
 use Edutiek\AssessmentService\Assessment\Pseudonym\Service as PseudonymService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
-use Edutiek\AssessmentService\Assessment\WriterApp\Bridge;
+use Edutiek\AssessmentService\Assessment\WriterApp\WriterBridge;
 use Edutiek\AssessmentService\Assessment\WriterApp\Service as WriterAppService;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Slim\App;
@@ -195,9 +195,9 @@ class Internal
         return $app;
     }
 
-    private function writerBridge(int $ass_id, int $user_id): WriterBridge
+    private function writerBridge(int $ass_id, int $user_id): WriterBridgeInterface
     {
-        return $this->instances[Bridge::class][$ass_id][$user_id] ??= new Bridge(
+        return $this->instances[WriterBridge::class][$ass_id][$user_id] ??= new WriterBridge(
             $ass_id,
             $user_id,
             $this->workingTimeFactory($user_id),

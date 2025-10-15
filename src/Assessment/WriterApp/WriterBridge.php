@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\WriterApp;
 
-use Edutiek\AssessmentService\Assessment\Apps\WriterBridge;
+use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\Data\Config;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
 
-class Bridge implements WriterBridge
+class WriterBridge implements WriterBridgeInterface
 {
     public function __construct(
         private readonly int $ass_id,
