@@ -43,9 +43,10 @@ class WriterBridge implements WriterBridgeInterface
             $data['Writer'] = $this->entity->arrayToPrimitives([
                'id' => $writer->getId(),
                'writer_name' => $writer->getPseudonym(),
-               'writing_end' => $working_time->getWorkingDeadline(),
-                'started' => $working_time->getWorkingStart(),
-                'authorized' => $writer->isAuthorized(),
+               'working_start' => $working_time->getWorkingStart(),
+               'working_deadline' => $working_time->getWorkingDeadline(),
+               'is_authorized' => $writer->isAuthorized(),
+               'is_excluded' => $writer->isExcluded(),
             ]);
 
             foreach ($this->repos->alert()->allByAssIdAndWriterId($this->ass_id, $writer->getId()) as $alert) {

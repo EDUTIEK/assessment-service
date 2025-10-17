@@ -27,7 +27,7 @@ class WriterBridge implements WriterBridgeInterface
         $data = [];
 
         $settings = $this->repos->writingSettings()->one($this->ass_id);
-        $data['WritingSettings'][] = $this->entity->arrayToPrimitives([
+        $data['WritingSettings'] = $this->entity->arrayToPrimitives([
             'headline_scheme' => $settings?->getHeadlineScheme(),
             'formatting_options' => $settings?->getFormattingOptions(),
             'notice_boards' => $settings?->getNoticeBoards(),
@@ -38,7 +38,7 @@ class WriterBridge implements WriterBridgeInterface
         $writer = $this->writer_service->oneByUserId($this->user_id);
 
         $prefs = $this->repos->writerPrefs()->one($writer->getId());
-        $data['WriterPrefs'][] = $this->entity->arrayToPrimitives([
+        $data['WriterPrefs'] = $this->entity->arrayToPrimitives([
             'instructions_zoom' => $prefs?->getInstructionsZoom(),
             'editor_zoom' => $prefs?->getEditorZoom(),
             'word_count_enabled' => $prefs?->getWordCountEnabled(),

@@ -54,6 +54,7 @@ class WriterBridge implements WriterBridgeInterface
 
                     $data['Resources'][] = $this->entity->arrayToPrimitives([
                         'id' => $resource->getId(),
+                        'task_id' => $resource->getTaskId(),
                         'type' => $resource->getType(),
                         'embedded' => $resource->getEmbedded(),
                         'source' => $info?->getFileName() ?? $resource->getUrl(),
