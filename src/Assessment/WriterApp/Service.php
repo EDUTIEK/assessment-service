@@ -101,7 +101,7 @@ class Service implements OpenService, RestService
         }
 
         $data = [
-            'Asssessment' => $this->ass_bridge->getData(),
+            'Assessment' => $this->ass_bridge->getData(),
             'Task' => $this->task_bridge->getData(),
         ];
 

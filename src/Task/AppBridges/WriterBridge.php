@@ -29,7 +29,7 @@ class WriterBridge implements WriterBridgeInterface
 
         foreach ($this->repos->settings()->allByAssId($this->ass_id) as $task) {
             $data['Tasks'][] = $this->entity->arrayToPrimitives([
-                'id' => $task->getTaskId(),
+                'task_id' => $task->getTaskId(),
                 'position' => $task->getPosition(),
                 'type' => $task->getTaskType(),
                 'title' => $task->getTitle(),
@@ -38,11 +38,6 @@ class WriterBridge implements WriterBridgeInterface
 
             /** @var Resource $resource */
             foreach ($this->repos->resource()->allByTaskId($task->getTaskId()) as $resource) {
-
-                $source = null;
-                $mimetype = null;
-                $size = null;
-                $title = null;
 
                 if ($resource->getAvailability() !== ResourceAvailability::AFTER) {
                     $info = $this->storage->getFileInfo($resource->getFileId());
