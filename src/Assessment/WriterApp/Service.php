@@ -17,6 +17,8 @@ use Edutiek\AssessmentService\System\Config\FrontendModule;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\Data\Config;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
+use Edutiek\AssessmentService\System\File\Delivery;
+use Edutiek\AssessmentService\System\File\Disposition;
 use Fig\Http\Message\StatusCodeInterface;
 use ILIAS\Tasks;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -45,6 +47,7 @@ class Service implements OpenService, RestService
         private readonly WriterBridge $ass_bridge,
         private readonly WriterBridge $task_bridge,
         private readonly TypeApiFactory $types,
+        private readonly Delivery $delivery,
     ) {
     }
 
@@ -67,7 +70,7 @@ class Service implements OpenService, RestService
     {
         $this->app->get('/writer/data', [$this,'getData']);
         $this->app->get('/writer/update', [$this,'getUpdate']);
-        $this->app->get('/writer/file/{key}', [$this,'getFile']);
+        $this->app->get('/writer/file/{entity}/{id}', [$this,'getFile']);
         $this->app->put('/writer/start', [$this,'putStart']);
         $this->app->put('/writer/steps', [$this,'putSteps']);
         $this->app->put('/writer/changes', [$this, 'putChanges']);
@@ -112,8 +115,8 @@ class Service implements OpenService, RestService
             }
         }
 
-        $this->rest_helper->setNewDataToken($response);
-        $this->rest_helper->setNewFileToken($response);
+        $response = $this->rest_helper->setNewDataToken($response);
+        $response = $this->rest_helper->setNewFileToken($response);
         return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
     }
 
@@ -123,6 +126,35 @@ class Service implements OpenService, RestService
     public function getUpdate(Request $request, Response $response, array $args): Response
     {
         return $response;
+    }
+
+    /**
+     * GET a file (sent as inline
+     */
+    public function getFile(Request $request, Response $response, array $args): Response
+    {
+        $this->prepare($request, $response, $args, TokenPurpose::FILE);
+
+        $entity = $args['entity'] ?? null;
+        $id = $args['id'] ?? null;
+
+        if ($id === null) {
+            throw new RestException('No id gven', RestException::NOT_FOUND);
+        }
+
+        switch ($entity) {
+            case 'resource':
+                $file_id = $this->task_bridge->getFileId($entity, (int) $id);
+                break;
+            default:
+                throw new RestException('Wrong file entity', RestException::NOT_FOUND);
+        }
+
+        if ($file_id === null) {
+            throw new RestException('Resource file not found', RestException::NOT_FOUND);
+        }
+
+        $this->delivery->sendFile($file_id, Disposition::INLINE);
     }
 
     /**

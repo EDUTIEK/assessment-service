@@ -69,4 +69,16 @@ class WriterBridge implements WriterBridgeInterface
     {
         return [];
     }
+
+    public function getFileId(string $entity, int $entity_id): ?string
+    {
+        $resource = $this->repos->resource()->one($entity_id);
+        if ($resource != null
+            && $this->repos->settings()->has($this->ass_id, $resource->getTaskId())
+            && $resource->getAvailability() !== ResourceAvailability::AFTER
+        ) {
+            return $resource->getFileId();
+        }
+        return null;
+    }
 }

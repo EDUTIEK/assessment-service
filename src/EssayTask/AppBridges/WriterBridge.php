@@ -79,4 +79,9 @@ class WriterBridge implements WriterBridgeInterface
     {
         return [];
     }
+
+    public function getFileId(string $entity, int $entity_id): ?string
+    {
+        return null;
+    }
 }

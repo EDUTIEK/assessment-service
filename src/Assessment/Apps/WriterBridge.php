@@ -19,4 +19,10 @@ interface WriterBridge
      * @return array - will converted to JSON
      */
     public function getUpdate(): array;
+
+
+    /**
+     * Get the file id of a file associated with an entity
+     */
+    public function getFileId(string $entity, int $entity_id): ?string;
 }

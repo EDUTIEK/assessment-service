@@ -116,6 +116,7 @@ class Internal
             $this->writerBridge($ass_id, $user_id),
             $this->dependencies->taskApi()->writerBridge($ass_id, $user_id),
             $this->dependencies->typeApis(),
+            $this->dependencies->systemApi()->fileDelivery()
         );
     }
 

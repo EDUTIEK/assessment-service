@@ -87,34 +87,32 @@ readonly class RestHelper
     /**
      * Set a new expiration time for the data token and set it in the response
      */
-    public function refreshDataToken(Response $response)
+    public function refreshDataToken(Response $response): Response
     {
         $token = $this->auth->getToken($this->user_id, TokenPurpose::DATA);
         $token->setValidUntil($this->auth->newValitity(TokenPurpose::DATA));
         $this->auth->saveToken($token);
-        $response = $response->withHeader('xlasDataToken', $token->getToken());
+        return $response->withHeader('xlasDataToken', $token->getToken());
     }
 
     /**
      * Generate a new data token and set it in the response
      */
-    public function setNewDataToken(Response $response)
+    public function setNewDataToken(Response $response): Response
     {
         $token = $this->auth->newToken($this->user_id, TokenPurpose::DATA);
-        $token->setValidUntil($this->auth->newValitity(TokenPurpose::DATA));
         $this->auth->saveToken($token);
-        $response = $response->withHeader('xlasDataToken', $token->getToken());
+        return $response->withHeader('xlasDataToken', $token->getToken());
     }
 
     /**
      * Generate a new file token and set it in the response
      */
-    public function setNewFileToken(Response $response)
+    public function setNewFileToken(Response $response): Response
     {
         $token = $this->auth->newToken($this->user_id, TokenPurpose::FILE);
-        $token->setValidUntil($this->auth->newValitity(TokenPurpose::FILE));
         $this->auth->saveToken($token);
-        $response = $response->withHeader('XlasFileToken', $token->getToken());
+        return $response->withHeader('xlasFileToken', $token->getToken());
     }
 
     /**
