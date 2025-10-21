@@ -41,4 +41,9 @@ readonly class Service implements ReadService
     {
         return $this->user_display->some($ids, $back_link);
     }
+
+    public function getUserIdByLogin(string $login): int
+    {
+        return $this->user_repo->idByLogin($login);
+    }
 }

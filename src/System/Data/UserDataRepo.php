@@ -26,4 +26,5 @@ interface UserDataRepo
      */
     public function current(): ?UserData;
 
+    public function idByLogin(string $login): int;
 }

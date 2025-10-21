@@ -5,20 +5,8 @@ namespace Edutiek\AssessmentService\System\File;
 use Edutiek\AssessmentService\System\Data\FileInfo;
 use Psr\Http\Message\StreamInterface as Stream;
 
-interface Storage
+interface Storage extends ReadOnlyStorage
 {
-    /**
-     * Get basic information about a saved file
-     * The function will return null if the file is not found
-     */
-    public function getFileInfo(?string $id): ?FileInfo;
-
-    /**
-     * Get the resource handle of an opened file stream for reading
-     * @return resource|null
-     */
-    public function getFileStream(?string $id): mixed;
-
     /**
      * Save a file from an open stream for reading
      * If the provided FileInfo has an id, then this file is replaced

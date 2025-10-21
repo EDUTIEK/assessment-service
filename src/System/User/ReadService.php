@@ -23,4 +23,5 @@ interface ReadService
 
     public function getUserDisplaysByIds(array $ids, ?string $back_link): array;
 
+    public function getUserIdByLogin(string $login): int;
 }

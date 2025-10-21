@@ -20,6 +20,12 @@ use Edutiek\AssessmentService\EssayTask\WritingSettings\FullService as WritingSe
 use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
 use Edutiek\AssessmentService\System\BackgroundTask\Job;
 use Edutiek\AssessmentService\System\BackgroundTask\Manager as BackgroundTaskManager;
+use Edutiek\AssessmentService\EssayTask\EssayImport\Service as ImportService;
+use Edutiek\AssessmentService\EssayTask\EssayImport\FullService as FullImportService;
+use Edutiek\AssessmentService\EssayTask\EssayImport\Import;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use Edutiek\AssessmentService\EssayTask\EssayImport\Nrw;
+use Edutiek\AssessmentService\EssayTask\EssayImport\Bavaria;
 
 class ForClients
 {
@@ -84,6 +90,28 @@ class ForClients
         ];
 
         return $jobs[$class]();
+    }
+
+    public function import(Import $import): FullImportService
+    {
+        return $this->instances[ImportService::class] ??= new ImportService(
+            $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->writer(),
+            $this->dependencies->taskApi($this->ass_id, $this->user_id)->tasks(),
+            $this->essay(true),
+            $this->dependencies->systemApi()->user(),
+            $this->user_id,
+            $import,
+            [
+                'by' => fn($p) => new Bavaria($p, $import, $this->loadExcelDataFromFile(...)),
+                'nrw' => fn($p) => new Nrw($p, $import),
+            ]
+        );
+    }
+
+    private function loadExcelDataFromFile(string $filename): array
+    {
+        return IOFactory::load($filename)->getActiveSheet()->toArray();
     }
 
     private function backgroundTaskManager(): BackgroundTaskManager
