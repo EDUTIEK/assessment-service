@@ -90,13 +90,16 @@ abstract class OrgaSettings implements AssessmentEntity, ValidationErrorStore
     abstract public function getStatisticsAvailable(): bool;
     abstract public function setStatisticsAvailable(bool $statistics_available): self;
 
+    abstract public function getForwardingUrl(): ?string;
+    abstract public function setForwardingUrl(?string $forwarding_url): self;
+
     abstract public function getTemplate(): bool;
     abstract public function setTemplate(bool $template): self;
 
     abstract public function getSrcTemplateName(): ?string;
     abstract public function setSrcTemplateName(?string $name): self;
 
-    public function addValidationError(ValidationError $error) : void
+    public function addValidationError(ValidationError $error): void
     {
         $this->validation_errors[] = $error;
     }
