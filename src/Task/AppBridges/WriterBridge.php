@@ -25,7 +25,11 @@ class WriterBridge implements WriterBridgeInterface
 
     public function getData(): array
     {
-        $data = [];
+        $data = [
+            'Tasks' => [],
+            'Resources' => [],
+            'Annotations' => []
+        ];
 
         foreach ($this->repos->settings()->allByAssId($this->ass_id) as $task) {
             $data['Tasks'][] = $this->entity->arrayToPrimitives([
@@ -37,7 +41,6 @@ class WriterBridge implements WriterBridgeInterface
             ]);
 
             foreach ($this->repos->resource()->allByTaskId($task->getTaskId()) as $resource) {
-
                 if ($resource->getAvailability() !== ResourceAvailability::AFTER) {
                     $info = $this->storage->getFileInfo($resource->getFileId());
                     $title = match ($resource->getType()) {
@@ -74,7 +77,6 @@ class WriterBridge implements WriterBridgeInterface
                 ]);
             }
         }
-
 
         return $data;
     }
