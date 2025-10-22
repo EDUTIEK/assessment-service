@@ -15,6 +15,6 @@ interface Repositories
     public function correctorPrefs(): CorrectorPrefsRepo;
     public function resource(): ResourceRepo;
     public function settings(): SettingsRepo;
-    public function writerComment(): WriterCommentRepo;
+    public function writerAnnotation(): WriterAnnotationRepo;
     public function ratingCriterion(): RatingCriterionRepo;
 }

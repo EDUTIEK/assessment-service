@@ -36,7 +36,6 @@ class WriterBridge implements WriterBridgeInterface
                 'instructions' => $task->getInstructions(),
             ]);
 
-            /** @var Resource $resource */
             foreach ($this->repos->resource()->allByTaskId($task->getTaskId()) as $resource) {
 
                 if ($resource->getAvailability() !== ResourceAvailability::AFTER) {
@@ -58,6 +57,21 @@ class WriterBridge implements WriterBridgeInterface
                         'title' => $title
                     ]);
                 }
+            }
+
+            foreach ($this->repos->writerAnnotation()->allByTaskId($task->getTaskId()) as $annotation) {
+                $data['Annotations'][] = $this->entity->arrayToPrimitives([
+                    'id' => $annotation->getId(),
+                    'task_id' => $annotation->getTaskId(),
+                    'writer_id' => $annotation->getWriterId(),
+                    'resource_id' => $annotation->getResourceId(),
+                    'mark_key' => $annotation->getMarkKey(),
+                    'mark_value' => $annotation->getMarkValue(),
+                    'comment' => $annotation->getComment(),
+                    'parent_number' => $annotation->getParentNumber(),
+                    'start_position' => $annotation->getStartPosition(),
+                    'end_position' => $annotation->getEndPosition()
+                ]);
             }
         }
 
