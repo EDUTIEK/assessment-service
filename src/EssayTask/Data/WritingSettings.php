@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\Data;
 
+use Edutiek\AssessmentService\System\Data\FormattingOptions;
+use Edutiek\AssessmentService\System\Data\HeadlineScheme;
+
 abstract class WritingSettings implements EssayTaskEntity
 {
     abstract public function getAssId(): int;

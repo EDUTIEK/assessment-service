@@ -1,25 +1,15 @@
 <?php
 
-namespace Edutiek\AssessmentService\EssayTask\HtmlProcessing;
+namespace Edutiek\AssessmentService\System\HtmlProcessing;
 
 use DOMDocument;
-use Edutiek\AssessmentService\EssayTask\Comments\Service as CommentsService;
 use Edutiek\AssessmentService\System\Data\HeadlineScheme;
-use Mustache_Engine;
-use Edutiek\AssessmentService\Task\Data\CorrectionSettings;
-use Edutiek\AssessmentService\Task\Data\CorrectorComment;
-use Edutiek\AssessmentService\EssayTask\Data\Essay;
-use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
 
 /**
  * Tool for processing HTML code coming from the rich text editor
  */
 class Service implements FullService
 {
-    public const COLOR_NORMAL = '#D8E5F4';
-    public const COLOR_EXCELLENT = '#E3EFDD';
-    public const COLOR_CARDINAL = '#FBDED1';
-
     public static int $paraCounter = 0;
     public static int $wordCounter = 0;
     public static int $h1Counter = 0;
@@ -29,48 +19,22 @@ class Service implements FullService
     public static int $h5Counter = 0;
     public static int $h6Counter = 0;
 
-    public static CommentsService $comments_service;
-
-    public static ?WritingSettings $writingSettings = null;
-    public static ?CorrectionSettings $correctionSettings = null;
+    public static $headline_scheme = HeadlineScheme::NUMERIC;
     public static bool $forPdf = false;
 
-    /**
-     * All Comments that should be merged
-     * @var CorrectorComment[]
-     */
-    public static array $allComments = [];
 
     /**
-     * Comments for the current paragraph
-     * @var CorrectorComment[]
+     * Process html text for marking
+     * This will add the paragraph numbers and headline prefixes
+     * and split up all text to single word embedded in <w-p> elements.
+     *      the 'w' attribute is the word number
+     *      the 'p' attribute is the paragraph number
      */
-    public static array $currentComments = [];
-
-
-    public function __construct(
-        CommentsService $comments_service
-    ) {
-        self::$comments_service = $comments_service;
-    }
-
-    public function fillTemplate(string $template, array $data): string
+    public function processHtmlForMarking(string $html) : string
     {
-        $mustache = new Mustache_Engine(array('entity_flags' => ENT_QUOTES));
-        $template = file_get_contents($template);
-        return $mustache->render($template, $data);
-    }
-
-    public function processWrittenText(?Essay $essay, WritingSettings $settings, bool $forPdf = false): string
-    {
-        self::$writingSettings = $settings;
-        self::$forPdf = $forPdf;
-
         self::initParaCounter();
         self::initWordCounter();
         self::initHeadlineCounters();
-
-        $html = $essay ? ($essay->getWrittenText() ?? '') : '';
 
         // remove ascii control characters except tab, cr and lf
         $html = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $html);
@@ -81,63 +45,10 @@ class Service implements FullService
             return '';
         }
 
-        $html = $this->processXslt(
-            $html,
-            __DIR__ . '/xsl/cleanup.xsl',
-            $essay ? $essay->getServiceVersion() : 0
-        );
-        $html = $this->processXslt(
-            $html,
-            __DIR__ . '/xsl/numbers.xsl',
-            $essay ? $essay->getServiceVersion() : 0,
-            $settings->getAddParagraphNumbers(),
-            $forPdf
-        );
+        $html = $this->processXslt($html, __DIR__ . '/xsl/cleanup.xsl', 0);
+        $html = $this->processXslt($html, __DIR__ . '/xsl/numbers.xsl', 0);
 
-        return $this->getStyles() . "\n" . $html;
-    }
-
-    public function processCommentsForPdf(?Essay $essay, WritingSettings $writingSettings, CorrectionSettings $correctionSettings, array $comments): string
-    {
-        self::$writingSettings = $writingSettings;
-        self::$correctionSettings = $correctionSettings;
-        self::$allComments = $comments;
-        self::$currentComments = [];
-        self::$forPdf = true;
-
-        $html = $this->processWrittenText($essay, $writingSettings, true);
-
-        $html = preg_replace('/<w-p w="([0-9]+)" p="([0-9]+)">/', '<span data-w="$1" data-p="$2">', $html);
-        $html = str_replace('xlas-table', 'table', $html);
-        $html = str_replace('xlas-tr', 'tr', $html);
-        $html = str_replace('xlas-td', 'td', $html);
-        $html = str_replace('</w-p>', '</span>', $html);
-        $html = $this->processXslt(
-            $html,
-            __DIR__ . '/xsl/pdf_comments.xsl',
-            $essay ? $essay->getServiceVersion() : 0,
-            $writingSettings->getAddParagraphNumbers()
-        );
-
-        return $this->getStyles() . "\n" . $html;
-    }
-
-
-    /**
-     * Get styles to be added to the HTML
-     * @param WritingSettings $settings
-     * @return void
-     */
-    protected function getStyles(): string
-    {
-        if (self::$forPdf) {
-            $styles = file_get_contents(__DIR__ . '/styles/plain_style.html');
-            if (self::$writingSettings->getHeadlineScheme() == 'three') {
-                $styles .= "\n" . file_get_contents(__DIR__ . '/styles/headlines-three.html');
-            }
-            return $styles;
-        }
-        return '';
+        return $html;
     }
 
 
@@ -146,9 +57,18 @@ class Service implements FullService
      * The process_version is a number which can be increased with a new version of the processing
      * This number is provided as a parameter to the XSLT processing
      */
-    protected function processXslt(string $html, string $xslt_file, int $service_version, bool $add_paragraph_numbers = false, bool $for_pdf = false): string
+    protected function processXslt(
+        string $html,
+        string $xslt_file,
+        int $service_version,
+        bool $add_paragraph_numbers = false,
+        bool $for_pdf = false,
+        HeadlineScheme $headline_scheme = HeadlineScheme::NUMERIC,
+    ): string
     {
         try {
+            self::$headline_scheme = $headline_scheme;
+
             // get the xslt document
             // set the URI to allow document() within the XSL file
             $xslt_doc = new \DOMDocument('1.0', 'UTF-8');
@@ -288,7 +208,7 @@ class Service implements FullService
                 break;
         }
 
-        switch (self::$writingSettings->getHeadlineScheme()) {
+        switch (self::$headline_scheme) {
 
             case HeadlineScheme::NUMERIC->value:
                 switch ($tag) {
@@ -417,55 +337,5 @@ class Service implements FullService
         }
 
         return $root;
-    }
-
-    /**
-     * Initialize the collection of comments for the current paragraph
-     */
-    public static function initCurrentComments(string $paraNumber)
-    {
-        self::$currentComments = self::$comments_service->getSortedCommentsOfParent(self::$allComments, (int) $paraNumber);
-    }
-
-    /**
-     * Get a label if a comment starts at the given word
-     */
-    public static function commentLabel(string $wordNumber): string
-    {
-        $labels = [];
-        foreach (self::$currentComments as $comment) {
-            if ((int) $wordNumber == $comment->getStartPosition() && !empty($comment->getLabel())) {
-                $labels[] = $comment->getLabel();
-            }
-        }
-        return(implode(',', $labels));
-    }
-
-    /**
-     * Get the background color for the word
-     */
-    public static function commentColor(string $wordNumber): string
-    {
-        $comments = [];
-        foreach (self::$currentComments as $comment) {
-            if ((int) $wordNumber >= $comment->getStartPosition() && (int) $wordNumber <= $comment->getEndPosition()) {
-                $comments[] = $comment;
-            }
-        }
-        return self::$comments_service->getTextBackgroundColor($comments);
-    }
-
-    /**
-     * Get the comments for the current paragraph
-     * @return \DOMElement
-     * @throws \DOMException
-     */
-    public static function getCurrentComments(): \DOMElement
-    {
-        $html = self::$comments_service->getCommentsHtml(self::$currentComments, self::$correctionSettings);
-
-        $doc = new DOMDocument();
-        $doc->loadXML('<root xml:id="root">' . $html . '</root>');
-        return $doc->getElementById('root');
     }
 }

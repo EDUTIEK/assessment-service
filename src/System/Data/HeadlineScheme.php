@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\EssayTask\Data;
+namespace Edutiek\AssessmentService\System\Data;
 
 enum HeadlineScheme: string
 {

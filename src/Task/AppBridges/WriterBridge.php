@@ -3,11 +3,11 @@
 namespace Edutiek\AssessmentService\Task\AppBridges;
 
 use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
+use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
 use Edutiek\AssessmentService\System\File\Storage;
+use Edutiek\AssessmentService\System\HtmlProcessing\FullService as HtmlProcessing;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
-use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
-use Edutiek\AssessmentService\Task\Data\Resource;
 use Edutiek\AssessmentService\Task\Data\ResourceAvailability;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
 
@@ -19,6 +19,7 @@ class WriterBridge implements WriterBridgeInterface
         private Repositories $repos,
         private Storage $storage,
         private EntityFullService $entity,
+        private HtmlProcessing $html,
         private Language $language
     ) {
     }
@@ -37,7 +38,7 @@ class WriterBridge implements WriterBridgeInterface
                 'position' => $task->getPosition(),
                 'type' => $task->getTaskType(),
                 'title' => $task->getTitle(),
-                'instructions' => $task->getInstructions(),
+                'instructions' => $this->html->processHtmlForMarking($task->getInstructions()),
             ]);
 
             foreach ($this->repos->resource()->allByTaskId($task->getTaskId()) as $resource) {

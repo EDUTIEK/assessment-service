@@ -40,6 +40,7 @@ class ForAssessment implements TasksApi
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->entity(),
+            $this->dependencies->systemApi()->htmlProcessing(),
             $this->internal->language("de"),
         );
     }

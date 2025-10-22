@@ -4,25 +4,27 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Api;
 
+use Edutiek\AssessmentService\System\BackgroundTask\ClientManager as BackgroundTaskManager;
+use Edutiek\AssessmentService\System\BackgroundTask\Service as BackgroundTaskService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigReadService;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
 use Edutiek\AssessmentService\System\Entity\Service as EntityService;
-use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\File\Delivery;
+use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Format\FullService as FormatFullService;
 use Edutiek\AssessmentService\System\Format\Service as FormatService;
+use Edutiek\AssessmentService\System\HtmlProcessing\FullService as HtmlProcessingFullService;
+use Edutiek\AssessmentService\System\HtmlProcessing\Service as HtmlProcessingService;
+use Edutiek\AssessmentService\System\ImageSketch\FullService as ImageSketchFullService;
 use Edutiek\AssessmentService\System\ImageSketch\ImageMagick\Sketch;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageFullService;
 use Edutiek\AssessmentService\System\Language\Service as LanguageService;
-use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverterFullService;
-use Edutiek\AssessmentService\System\PdfConverter\ServiceByImageMagick;
 use Edutiek\AssessmentService\System\PdfConverter\ServiceByGhostscript;
+use Edutiek\AssessmentService\System\PdfConverter\ServiceByImageMagick;
 use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreatorFullService;
 use Edutiek\AssessmentService\System\PdfCreator\Service as PdfCreatorService;
-use Edutiek\AssessmentService\System\ImageSketch\FullService as ImageSketchFullService;
-use Edutiek\AssessmentService\System\BackgroundTask\ClientManager as BackgroundTaskManager;
-use Edutiek\AssessmentService\System\BackgroundTask\Service as BackgroundTaskService;
+use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 
 class ForServices
 {
@@ -60,6 +62,11 @@ class ForServices
         $timezone ??= $this->config()->getSetup()->getDefaultTimezone();
 
         return new FormatService($this->dependencies->formatDate(...), $timezone, $language);
+    }
+
+    public function htmlProcessing(): HtmlProcessingFullService
+    {
+        return new HtmlProcessingService();
     }
 
     public function user(): UserReadService
