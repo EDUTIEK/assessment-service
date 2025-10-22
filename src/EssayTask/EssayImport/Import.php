@@ -33,6 +33,7 @@ interface Import
     public function keysBy(callable $proc, array $array): array;
     public function extract(string $pattern, string $subject, int $sub_match): ?string;
     public function hash(string $string): string;
+
     public function permanentId(string $file_id): string;
     public function getRealPath(string $id): ?string;
     public function txt(string $lang_var): string;
