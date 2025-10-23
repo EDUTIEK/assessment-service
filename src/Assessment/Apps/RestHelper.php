@@ -26,7 +26,8 @@ readonly class RestHelper
         private Repositories $repos,
         private ConfigReadService $config_service,
         private UserReadService $user_service,
-        private FileDelivery $file_delivery
+        private FileDelivery $file_delivery,
+        private RestContext $rest_context
     ) {
     }
 
@@ -68,20 +69,18 @@ readonly class RestHelper
 
     /**
      * Parses the JSON body from the incoming HTTP request if the `Content-Type`
-     * header indicates a JSON payload. Converts the body into an associative
-     * array and attaches it to the request.
-     *
-     * @param Request $request The HTTP request instance to process.
+     * header indicates a JSON payload. Converts the body into an associative array
      */
-    public function parseJsonBody(Request $request)
+    public function getJsonData(Request $request): array
     {
         $contentType = $request->getHeaderLine('Content-Type');
         if (strstr($contentType, 'application/json')) {
             $contents = json_decode(file_get_contents('php://input'), true);
             if (json_last_error() === JSON_ERROR_NONE) {
-                $request = $request->withParsedBody($contents);
+                return (array) $contents;
             }
         }
+        return [];
     }
 
     /**
@@ -135,5 +134,13 @@ readonly class RestHelper
     public function sendFile(string $file_id): Response
     {
         $this->file_delivery->sendFile($file_id, Disposition::INLINE);
+    }
+
+    /**
+     * Extend the user session in the client system
+     */
+    public function setAlive(): void
+    {
+        $this->rest_context->setAlive($this->user_id);
     }
 }

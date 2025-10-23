@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\WriterApp;
 
+use Edutiek\AssessmentService\Assessment\Apps\ChangeAction;
+use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
+use Edutiek\AssessmentService\Assessment\Apps\RestContext;
 use Edutiek\AssessmentService\Assessment\Apps\RestException;
 use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
 use Edutiek\AssessmentService\Assessment\Apps\RestService;
@@ -24,6 +27,7 @@ use ILIAS\Tasks;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
+use Slim\Http\StatusCode;
 
 class Service implements OpenService, RestService
 {
@@ -108,11 +112,10 @@ class Service implements OpenService, RestService
             'Task' => $this->task_bridge->getData(),
         ];
 
+        // get the data of task types
         foreach ($this->tasks_manager->all() as $task) {
-            if (!isset($data[$task->getTaskType()->component()])) {
-                $data[$task->getTaskType()->component()] = $this->types->api($task->getTaskType())
-                    ->writerBridge($this->ass_id, $this->user_id)->getData();
-            }
+            $data[$task->getTaskType()->component()] = $this->types->api($task->getTaskType())
+                ->writerBridge($this->ass_id, $this->user_id)->getData();
         }
 
         $response = $this->rest_helper->setNewDataToken($response);
@@ -174,17 +177,39 @@ class Service implements OpenService, RestService
     }
 
     /**
-     * PUT the unsent changes in the writer app
-     * Currently only the notes are sent as changes
-     *
-     * The changes are available from the parsed body as assoc arrays with properties:
-     * - key: existing or temporary key of the object to be saved
-     *
-     * The added or changed data is wrapped as 'payload' in the change
+     * PUT changes from the writer app
+     * Request and response are json arrays: component => entity => change data
      */
     public function putChanges(Request $request, Response $response, array $args): Response
     {
-        return $response;
+        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+
+        $json = [];
+
+        foreach ($this->rest_helper->getJsonData($request) as $component => $component_data) {
+            $bridge = $this->getBridge((string) $component);
+            if ($bridge === null) {
+                continue;
+            }
+
+            foreach ((array) $component_data as $list => $changes) {
+                foreach ((array) $changes as $change_data) {
+                    $change = new ChangeRequest(
+                        (string) $change_data['type'] ?? '',
+                        (string) $change_data['key'] ?? '',
+                        (int) $change_data['last_change'] ?? 0,
+                        ChangeAction::tryFrom($change_data['action'] ?? ''),
+                        $change_data['payload'] ?? null
+                    );
+
+                    $json[$component][$list][] = $bridge->applyChange($change)->toArray();
+                }
+            }
+        }
+
+        $this->rest_helper->setAlive();
+        $this->rest_helper->refreshDataToken($response);
+        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $json);
     }
 
     /**
@@ -196,5 +221,26 @@ class Service implements OpenService, RestService
     public function putFinal(Request $request, Response $response, array $args): Response
     {
         return $response;
+    }
+
+    /**
+     * Get the responsible bridge by a component string
+     */
+    private function getBridge(string $component): ?WriterBridge
+    {
+        switch (strtolower($component)) {
+            case 'assessment':
+                return $this->ass_bridge;
+            case 'task':
+                return $this->task_bridge;
+            default:
+                foreach ($this->tasks_manager->all() as $task) {
+                    if (strtolower($task->getTaskType()->component()) === $component) {
+                        return $this->types->api($task->getTaskType())
+                            ->writerBridge($this->ass_id, $this->user_id);
+                    }
+                }
+        }
+        return null;
     }
 }

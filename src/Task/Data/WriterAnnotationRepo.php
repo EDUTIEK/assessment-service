@@ -8,6 +8,7 @@ interface WriterAnnotationRepo
 {
     public function new(): WriterAnnotation;
     public function one(int $id): ?WriterAnnotation;
+    public function oneByResourceIdAndMarkKey(int $resource_id, string $mark_key): ?WriterAnnotation;
     /** @return WriterAnnotation[] */
     public function allByTaskId(int $task_id): array;
     /** @return WriterAnnotation[] */

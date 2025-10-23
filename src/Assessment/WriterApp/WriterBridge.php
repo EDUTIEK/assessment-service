@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\WriterApp;
 
+use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
+use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
 use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
@@ -69,5 +71,10 @@ class WriterBridge implements WriterBridgeInterface
     public function getFileId(string $entity, int $entity_id): ?string
     {
         return null;
+    }
+
+    public function applyChange(ChangeRequest $change): ChangeResponse
+    {
+        return $change->toResponse(false);
     }
 }

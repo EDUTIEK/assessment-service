@@ -36,7 +36,8 @@ class Service implements FullService
     {
         foreach ($this->getProperties($class) as $name => $meta) {
             $setter = 'set' . $name;
-            $entity->$setter($this->fromPrimitive($primitives[$name] ?? null, $meta['type'], $meta['null']));
+            $key = $this->convertCase($name, KeyCase::PASCAL_CASE, $case);
+            $entity->$setter($this->fromPrimitive($primitives[$key] ?? null, $meta['type'], $meta['null']));
         }
     }
 

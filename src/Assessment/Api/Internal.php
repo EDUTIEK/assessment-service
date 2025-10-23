@@ -176,7 +176,8 @@ class Internal
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->config(),
             $this->dependencies->systemApi()->user(),
-            $this->dependencies->systemApi()->fileDelivery()
+            $this->dependencies->systemApi()->fileDelivery(),
+            $this->dependencies->restContext()
         );
     }
 

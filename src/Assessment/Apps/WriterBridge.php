@@ -25,4 +25,9 @@ interface WriterBridge
      * Get the file id of a file associated with an entity
      */
     public function getFileId(string $entity, int $entity_id): ?string;
+
+    /**
+     * Apply a data change request
+     */
+    public function applyChange(ChangeRequest $change): ChangeResponse;
 }
