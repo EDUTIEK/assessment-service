@@ -136,7 +136,7 @@ class ForClients
         );
     }
 
-    private function pdfOutput(): FullPdfOutput
+    public function pdfOutput(): FullPdfOutput
     {
         return $this->instances[PdfOutput::class] = new PdfOutput(
             $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->pdfSettings(),

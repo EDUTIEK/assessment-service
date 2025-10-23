@@ -68,8 +68,8 @@ class Service implements FullService
                         - $writingSettings->getLeftCorrectionMargin() - $writingSettings->getRightCorrectionMargin(),
                     null
                 )], $pdfSettings
-                    ->withTopMargin($pdfSettings->getTopMargin() + $writingSettings->getTopCorrectionMargin())
-                    ->withBottomMargin($pdfSettings->getBottomMargin() + $writingSettings->getBottomCorrectionMargin())
+                    ->setTopMargin($pdfSettings->getTopMargin() /* + $writingSettings->getTopCorrectionMargin() */)
+                    ->setBottomMargin($pdfSettings->getBottomMargin() /* + $writingSettings->getBottomCorrectionMargin() */)
             );
         }
 
@@ -79,7 +79,7 @@ class Service implements FullService
             '', // $task->getWriterName(), // @todo: Same for WritingTask
             '', // $task->getTitle(),
             '' . // , $task->getWriterName() . ' ' .
-            $this->format->dateRange($essay->getEditStarted(), $essay->getEditEnded())
+            $this->format->dateRange($essay->getFirstChange(), $essay->getLastChange())
         );
     }
 
