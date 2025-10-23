@@ -31,6 +31,7 @@
         "slim/slim": "^4.14",
         "tecnickcom/tcpdf": "^6.3",
         "yetanotherape/diff-match-patch": "^1.1",
-        "phpoffice/phpspreadsheet": "^2.2"
+        "phpoffice/phpspreadsheet": "^2.2",
+        "dompdf/dompdf": "^v3.1.3"
     }
 }

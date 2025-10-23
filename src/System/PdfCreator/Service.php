@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\System\PdfCreator;
 
 use Edutiek\AssessmentService\System\Data\ImageDescriptor;
+use Closure;
 
 class Service implements FullService
 {
@@ -41,7 +42,8 @@ class Service implements FullService
 
     public function __construct(
        private string $absolute_temp_path,
-       private string $relative_temp_path
+       private string $relative_temp_path,
+       private Closure $dom_pdf
     ) {}
 
     public function createPdf(
@@ -51,6 +53,73 @@ class Service implements FullService
         string $title = "",
         string $subject = "",
         string $keywords = ""
+    ): string
+    {
+        $pdf = ($this->dom_pdf)();
+        $pdf->setPaper('A4');
+        $pdf->addInfo('Creator', $creator);
+        $pdf->addInfo('Author', $author);
+        $pdf->addInfo('Title', $title);
+        $pdf->addInfo('Subject', $subject);
+        $pdf->addInfo('Keywords', $keywords);
+
+        $options = $pdf->getOptions();
+        // $options->setDpi(150);
+
+        $pages = [];
+        $css = '';
+        $id = 0;
+        foreach ($parts as $part)
+        {
+            $id++;
+            $html = '';
+            foreach ($part->getElements() as $element) {
+                if ($element instanceof PdfHtml) {
+                    $html .= $element->getHtml();
+                }
+                elseif ($element instanceof PdfImage) {
+                    $html .= sprintf('<p><img src="data:image/png;base64,%s"/></p>', base64_encode(file_get_contents($element->getPath())));
+                }
+            }
+
+            if ($html) {
+                $html_id = 'part_' . $id;
+                $pages[] = sprintf('<div id="%s">%s</div>', $html_id, $html);
+                $css .= sprintf(
+                    '#%s{margin: %dmm %dmm %dmm %dmm;}',
+                    $html_id,
+                    $part->getTopMargin(),
+                    $part->getRightMargin(),
+                    $part->getBottomMargin(),
+                    $part->getLeftMargin()
+                );
+            }
+        }
+        $css .= '
+         .force-new-page {page-break-after: always;}
+         /* p{margin: 0;} */
+         :root
+         {
+             margin: 0;
+         }';
+        $html = sprintf(
+            '<!DOCTYPE html><html><head><meta charset="utf-8"/><style>%s</style></head><body>%s</body></html>',
+            $css,
+            join('<div class="force-new-page"></div>', $pages),
+        );
+        $pdf->loadHtml($html);
+        $pdf->render();
+
+        return $pdf->output();
+    }
+
+    public function createPdf2(
+        array $parts,
+        string $creator = "",
+        string $author = "",
+        string $title = "",
+        string $subject = "",
+        string $keywords = ''
     ) : string
     {
         // create new PDF document
