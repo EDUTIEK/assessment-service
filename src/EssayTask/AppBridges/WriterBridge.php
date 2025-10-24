@@ -11,9 +11,13 @@ use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TasksService;
+use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
 
 class WriterBridge implements WriterBridgeInterface
 {
+    private ?Writer $writer;
+    private $tasks = [];
+
     public function __construct(
         private int $ass_id,
         private int $user_id,
@@ -22,10 +26,19 @@ class WriterBridge implements WriterBridgeInterface
         private WriterReadService $writer_service,
         private TasksService $tasks_service
     ) {
+        $this->writer = $this->writer_service->oneByUserId($this->user_id);
+        foreach ($this->tasks_service->all() as $task) {
+            $this->tasks[$task->getId()] = $task;
+        }
+
     }
 
     public function getData(): array
     {
+        if ($this->writer === null) {
+            return [];
+        }
+
         $data = [];
 
         $settings = $this->repos->writingSettings()->one($this->ass_id);
@@ -37,9 +50,7 @@ class WriterBridge implements WriterBridgeInterface
             'allow_spellcheck' => $settings?->getAllowSpellcheck(),
         ]);
 
-        $writer = $this->writer_service->oneByUserId($this->user_id);
-
-        $prefs = $this->repos->writerPrefs()->one($writer->getId());
+        $prefs = $this->repos->writerPrefs()->one($this->writer->getId());
         $data['WriterPrefs'] = $this->entity->arrayToPrimitives([
             'instructions_zoom' => $prefs?->getInstructionsZoom(),
             'editor_zoom' => $prefs?->getEditorZoom(),
@@ -47,11 +58,11 @@ class WriterBridge implements WriterBridgeInterface
             'word_count_characters' => $prefs?->getWordCountCharacters(),
         ]);
 
-        foreach ($this->tasks_service->all() as $task) {
-            $essay = $this->repos->essay()->oneByWriterIdAndTaskId($writer->getId(), $task->getId());
+        foreach ($this->tasks as $task) {
+            $essay = $this->repos->essay()->oneByWriterIdAndTaskId($this->writer->getId(), $task->getId());
             if (!$essay) {
                 $essay = $this->repos->essay()->new()
-                ->setWriterId($writer->getId())
+                ->setWriterId($this->writer->getId())
                 ->setTaskId($task->getId());
                 $this->repos->essay()->save($essay);
             }
@@ -79,6 +90,10 @@ class WriterBridge implements WriterBridgeInterface
 
     public function getUpdate(): array
     {
+        if ($this->writer === null) {
+            return [];
+        }
+
         return [];
     }
 
@@ -90,5 +105,11 @@ class WriterBridge implements WriterBridgeInterface
     public function applyChange(ChangeRequest $change): ChangeResponse
     {
         return $change->toResponse(false);
+    }
+
+
+    private Function applyEssay(ChangeRequest $change): ChangeResponse
+    {
+
     }
 }
