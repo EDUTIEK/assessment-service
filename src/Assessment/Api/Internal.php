@@ -104,15 +104,12 @@ class Internal
     {
         return new WriterAppService(
             $ass_id,
-            $context_id,
             $user_id,
             $this->dependencies->systemApi()->config(),
-            $this->dependencies->systemApi()->entity(),
             $this->openHelper($ass_id, $context_id, $user_id),
             $this->restHelper($ass_id, $context_id, $user_id),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->slimApp(),
-            $this->dependencies->repositories(),
             $this->writerBridge($ass_id, $user_id),
             $this->dependencies->taskApi()->writerBridge($ass_id, $user_id),
             $this->dependencies->typeApis(),

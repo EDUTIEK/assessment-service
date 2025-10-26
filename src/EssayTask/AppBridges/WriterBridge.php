@@ -2,14 +2,17 @@
 
 namespace Edutiek\AssessmentService\EssayTask\AppBridges;
 
+use Edutiek\AssessmentService\Assessment\Apps\ChangeAction;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
 use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
+use Edutiek\AssessmentService\EssayTask\Data\WriterNotice;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
+use Edutiek\AssessmentService\Task\Data\WriterAnnotation;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TasksService;
 use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
 
@@ -77,7 +80,6 @@ class WriterBridge implements WriterBridgeInterface
                 $data['WriterNotices'][] = $this->entity->arrayToPrimitives([
                     'id' => $notice->getId(),
                     'task_id' => $task->getId(),
-                    'essay_id' => $essay->getId(),
                     'note_no' => $notice->getNoteNo(),
                     'note_text' => $notice->getNoteText(),
                     'last_change' => $notice->getLastChange(),
@@ -104,12 +106,58 @@ class WriterBridge implements WriterBridgeInterface
 
     public function applyChange(ChangeRequest $change): ChangeResponse
     {
-        return $change->toResponse(false);
+        if ($this->writer !== null) {
+            switch ($change->getType()) {
+                case 'notes':
+                    return $this->applyNotes($change);
+            }
+        }
+        return $change->toResponse(false, 'type not found');
     }
 
 
-    private Function applyEssay(ChangeRequest $change): ChangeResponse
+    private function applyEssay(ChangeRequest $change): ChangeResponse
     {
+        return $change->toResponse(false, 'wrong action');
+    }
 
+    private function applyNotes(ChangeRequest $change): ChangeResponse
+    {
+        $repo = $this->repos->writerNotice();
+
+        $note = $repo->new();
+        $data = $change->getPayload();
+
+        $this->entity->fromPrimitives([
+            'task_id' => $data['task_id'] ?? null,
+            'note_no' => $data['note_no'] ?? null,
+            'note_text' => $data['note_text'] ?? null,
+            'last_change' => $data['last_change'] ?? null,
+
+        ], $note, WriterNotice::class);
+        $this->entity->secure($note, WriterNotice::class);
+
+        $essay = $this->repos->essay()->oneByWriterIdAndTaskId($this->writer->getId(), (int) $data['task_id']);
+        if ($essay === null) {
+            return $change->toResponse(false, 'wrong task');
+        }
+
+        $found = $this->repos->writerNotice()->oneByEssayIdAndNo($essay->getId(), $note->getNoteNo());
+
+        switch ($change->getAction()) {
+            case ChangeAction::SAVE:
+                $note->setId($found?->getId() ?? 0);
+                $note->setEssayId($essay->getId());
+                $repo->save($note);
+                return $change->toResponse(true);
+
+            case ChangeAction::DELETE:
+                if ($found) {
+                    $repo->delete($found);
+                }
+                return $change->toResponse(true);
+        }
+
+        return $change->toResponse(false, 'wrong action');
     }
 }
