@@ -78,7 +78,6 @@ class WriterBridge implements WriterBridgeInterface
 
             foreach ($this->repos->writerNotice()->allByEssayId($essay->getId()) as $notice) {
                 $data['WriterNotices'][] = $this->entity->arrayToPrimitives([
-                    'id' => $notice->getId(),
                     'task_id' => $task->getId(),
                     'note_no' => $notice->getNoteNo(),
                     'note_text' => $notice->getNoteText(),
@@ -110,6 +109,10 @@ class WriterBridge implements WriterBridgeInterface
             switch ($change->getType()) {
                 case 'notes':
                     return $this->applyNotes($change);
+                case 'steps':
+                case 'preferences':
+                case 'annotations':
+                    break;
             }
         }
         return $change->toResponse(false, 'type not found');

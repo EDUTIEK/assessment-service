@@ -17,8 +17,9 @@ readonly class ChangeRequest
     }
 
     /**
-     * Type of the entity for which the change should be executed
+     * Type of the change that should be executed
      * This is component specific
+     * @see type property of class Change in writer app
      */
     public function getType(): string
     {
