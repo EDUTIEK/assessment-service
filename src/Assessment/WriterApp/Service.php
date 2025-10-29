@@ -111,7 +111,7 @@ readonly class Service implements OpenService, RestService
             throw new RestException('Component not found', RestException::NOT_FOUND);
         }
 
-        $file_id = $bridge->getFileId($entity, $id);
+        $file_id = $bridge->getFileId((string) $entity, (int) $id);
         if ($file_id === null) {
             throw new RestException('Resource file not found', RestException::NOT_FOUND);
         }
