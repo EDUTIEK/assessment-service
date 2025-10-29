@@ -35,6 +35,7 @@ class ForServices implements TypeApi
         return $this->instances[WriterBridgeService::class][$ass_id][$user_id] ??= new WriterBridgeService(
             $ass_id,
             $user_id,
+            $this->internal->serviceVersion(),
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->entity(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),

@@ -2,6 +2,7 @@
 
 namespace Edutiek\AssessmentService\EssayTask\AppBridges;
 
+use DiffMatchPatch\DiffMatchPatch;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeAction;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
@@ -9,6 +10,7 @@ use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterf
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\Data\WriterNotice;
+use Edutiek\AssessmentService\EssayTask\Data\WritingStep;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
@@ -24,6 +26,7 @@ class WriterBridge implements WriterBridgeInterface
     public function __construct(
         private int $ass_id,
         private int $user_id,
+        private int $service_version,
         private Repositories $repos,
         private EntityService $entity,
         private WriterReadService $writer_service,
@@ -107,12 +110,10 @@ class WriterBridge implements WriterBridgeInterface
     {
         if ($this->writer !== null) {
             switch ($change->getType()) {
-                case 'notes':
-                    return $this->applyNotes($change);
-                case 'steps':
-                case 'preferences':
-                case 'annotations':
-                    break;
+                case 'note':
+                    return $this->applyNote($change);
+                case 'step':
+                    return $this->applyStep($change);
             }
         }
         return $change->toResponse(false, 'type not found');
@@ -124,7 +125,7 @@ class WriterBridge implements WriterBridgeInterface
         return $change->toResponse(false, 'wrong action');
     }
 
-    private function applyNotes(ChangeRequest $change): ChangeResponse
+    private function applyNote(ChangeRequest $change): ChangeResponse
     {
         $repo = $this->repos->writerNotice();
 
@@ -162,5 +163,78 @@ class WriterBridge implements WriterBridgeInterface
         }
 
         return $change->toResponse(false, 'wrong action');
+    }
+
+    // todo performance optimization needed - essay should not be saved multiple times
+    // todo check if step can be saved within writing time
+    private function applyStep(ChangeRequest $change): ChangeResponse
+    {
+        if ($this->writer->isAuthorized() || $this->writer->isExcluded()) {
+
+        }
+
+        $dmp = new DiffMatchPatch();
+
+        $step_repo = $this->repos->writingStep();
+        $essay_repo = $this->repos->essay();
+
+        $step = $step_repo->new();
+        $data = $change->getPayload();
+
+        $essay = $essay_repo->oneByWriterIdAndTaskId($this->writer->getId(), (int) $data['task_id']);
+        if ($essay === null) {
+            return $change->toResponse(false, 'wrong task');
+        }
+
+        $currentText = $essay->getWrittenText();
+        $currentHash = $essay->getRawTextHash();
+
+        $this->entity->fromPrimitives([
+            'essay_id' => $essay->getId(),
+            'timestamp' => $data['timestamp'] ?? null,
+            'content' => $data['content'] ?? null,
+            'is_delta' => $data['is_delta'] ?? null,
+            'hash_before' => $data['hash_before'] ?? null,
+            'hash_after' => $data['hash_after'] ?? null,
+
+        ], $step, WritingStep::class);
+        $this->entity->secure($step, WritingStep::class);
+
+        // check if step can be added
+        // fault tolerance if a former put was partially applied or the response to the app was lost
+        // then this list may include steps that are already saved
+        // exclude these steps because they will corrupt the sequence
+        // later steps may fit again
+        if ($step->getHashBefore() !== $currentHash) {
+            if ($step->getIsDelta()) {
+                // don't add a delta step that can't be applied
+                // step may already be saved, so a later new step may fit
+                return($change->toResponse(true));
+            } elseif ($step_repo->hasByEssayIdAndHashAfter($essay->getId(), $step->getHashAfter())) {
+                // the same full save should not be saved twice
+                // note: hash_after is salted by timestamp and is unique
+                return($change->toResponse(true));
+            }
+        }
+
+        if ($step->getIsDelta()) {
+            $patches = $dmp->patch_fromText($step->getContent());
+            $result = $dmp->patch_apply($patches, $currentText);
+            $currentText = $result[0];
+        } else {
+            $currentText = $step->getContent();
+        }
+        $currentHash = $step->getHashAfter();
+
+        $step_repo->create($step);
+        $essay_repo->save(
+            $essay
+            ->setWrittenText($currentText)
+            ->setRawTextHash($currentHash)
+            ->setServiceVersion($this->service_version)
+            ->setLastChange($step->getTimestamp())
+        );
+
+        return($change->toResponse(true));
     }
 }

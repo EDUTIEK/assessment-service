@@ -4,7 +4,7 @@ namespace Edutiek\AssessmentService\Assessment\Apps;
 
 /**
  * Functions to provide and process data for the assessment-writer WebApp
- * Must be implemented by System, Task and all Task Type components
+ * Must be implemented by Assessment, Task and all Task Type components
  */
 interface WriterBridge
 {
@@ -19,7 +19,6 @@ interface WriterBridge
      * @return array - will converted to JSON
      */
     public function getUpdate(): array;
-
 
     /**
      * Get the file id of a file associated with an entity

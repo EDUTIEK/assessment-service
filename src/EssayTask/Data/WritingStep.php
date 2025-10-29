@@ -7,7 +7,7 @@ namespace Edutiek\AssessmentService\EssayTask\Data;
 use DateTimeImmutable;
 use Edutiek\AssessmentService\System\Api\HasHtml;
 
-abstract class WriterHistory implements EssayTaskEntity
+abstract class WritingStep implements EssayTaskEntity
 {
     abstract public function getId(): int;
     abstract public function setId(int $id): self;

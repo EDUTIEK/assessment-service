@@ -43,25 +43,14 @@ readonly class Service implements OpenService, RestService
     public function open(string $return_url): never
     {
         $this->open_helper->setCommonFrontendParams($return_url);
-
-        // add the hash of the current essay content
-        // this will be used to check if the writer content is up to date
-        // todo: either use hashes of all essays or omit
-        //$this->open_helper->setFrontendParam('xlasLastHash', (string) $essay->getWrittenHash());
-
         $this->open_helper->openFrontend($this->config->getFrontendUrl(FrontendModule::WRITER));
     }
 
-    /**
-     * Handle a REST call
-     */
     public function handle(): never
     {
         $this->app->get('/writer/data', [$this,'getData']);
         $this->app->get('/writer/update', [$this,'getUpdate']);
-        $this->app->get('/writer/file/{entity}/{id}', [$this,'getFile']);
-        $this->app->put('/writer/start', [$this,'putStart']);
-        $this->app->put('/writer/steps', [$this,'putSteps']);
+        $this->app->get('/writer/file/{component}/{entity}/{id}', [$this,'getFile']);
         $this->app->put('/writer/changes', [$this, 'putChanges']);
         $this->app->put('/writer/final', [$this,'putFinal']);
         $this->app->run();
@@ -100,48 +89,34 @@ readonly class Service implements OpenService, RestService
     }
 
     /**
-     * GET a file (sent as inline
+     * GET a file (well be sent inline)
      */
     public function getFile(Request $request, Response $response, array $args): Response
     {
         $this->prepare($request, $response, $args, TokenPurpose::FILE);
 
+        $component = $args['component'] ?? '';
         $entity = $args['entity'] ?? null;
         $id = $args['id'] ?? null;
 
         if ($id === null) {
             throw new RestException('No id gven', RestException::NOT_FOUND);
         }
-
-        switch ($entity) {
-            case 'resource':
-                $file_id = $this->task_bridge->getFileId($entity, (int) $id);
-                break;
-            default:
-                throw new RestException('Wrong file entity', RestException::NOT_FOUND);
+        if ($entity === null) {
+            throw new RestException('No entity given', RestException::NOT_FOUND);
         }
 
+        $bridge = $this->getBridge($component);
+        if ($bridge === null) {
+            throw new RestException('Component not found', RestException::NOT_FOUND);
+        }
+
+        $file_id = $bridge->getFileId($entity, $id);
         if ($file_id === null) {
             throw new RestException('Resource file not found', RestException::NOT_FOUND);
         }
 
         $this->delivery->sendFile($file_id, Disposition::INLINE);
-    }
-
-    /**
-     * PUT the writing start timestamp
-     */
-    public function putStart(Request $request, Response $response, array $args): Response
-    {
-        return $response;
-    }
-
-    /**
-     * PUT a list of writing steps
-     */
-    public function putSteps(Request $request, Response $response, array $args): Response
-    {
-        return $response;
     }
 
     /**
@@ -205,17 +180,19 @@ readonly class Service implements OpenService, RestService
 
     /**
      * Get the responsible bridge by a component string
+     * Components may be given in lower case, e.g. in REST paths
      */
     private function getBridge(string $component): ?WriterBridge
     {
-        switch ($component) {
-            case 'Assessment':
+        $compare = strtolower($component);
+        switch ($compare) {
+            case 'assessment':
                 return $this->ass_bridge;
-            case 'Task':
+            case 'task':
                 return $this->task_bridge;
             default:
                 foreach ($this->tasks_manager->all() as $task) {
-                    if ($task->getTaskType()->component() === $component) {
+                    if (strtolower($task->getTaskType()->component()) == $compare) {
                         return $this->types->api($task->getTaskType())
                             ->writerBridge($this->ass_id, $this->user_id);
                     }

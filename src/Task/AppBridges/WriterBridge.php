@@ -126,7 +126,7 @@ class WriterBridge implements WriterBridgeInterface
     {
         if ($this->writer !== null) {
             switch ($change->getType()) {
-                case 'annotations':
+                case 'anno':
                     return $this->applyAnnotation($change);
             }
         }
