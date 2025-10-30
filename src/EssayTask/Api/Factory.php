@@ -21,20 +21,16 @@ class Factory
         return $this->instances[ForClients::class][$ass_id][$user_id] ??= new ForClients(
             $ass_id,
             $user_id,
-            $this->dependencies,
             $this->internal(),
         );
     }
-
 
     /**
      * Get the API for constraint handling
      */
     public function forConstraints(): ForConstraints
     {
-        return $this->instances[ForConstraints::class] ??= new ForConstraints(
-            $this->internal()
-        );
+        return $this->instances[ForConstraints::class] ??= new ForConstraints($this->internal());
     }
 
     /**
@@ -42,9 +38,7 @@ class Factory
      */
     public function forEvents(): ForEvents
     {
-        return $this->instances[ForEvents::class] ??= new ForEvents(
-            $this->internal()
-        );
+        return $this->instances[ForEvents::class] ??= new ForEvents($this->internal());
     }
 
     /**
@@ -52,10 +46,7 @@ class Factory
      */
     public function forServices(): ForServices
     {
-        return $this->instances[ForServices::class] ??= new ForServices(
-            $this->dependencies,
-            $this->internal()
-        );
+        return $this->instances[ForServices::class] ??= new ForServices($this->internal());
     }
 
     /**
@@ -63,8 +54,6 @@ class Factory
      */
     private function internal(): Internal
     {
-        return $this->instances[Internal::class] ??= new Internal(
-            $this->dependencies
-        );
+        return $this->instances[Internal::class] ??= new Internal($this->dependencies);
     }
 }

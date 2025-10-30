@@ -10,36 +10,20 @@ use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeManager as ManagerIn
 use Edutiek\AssessmentService\EssayTask\AppBridges\WriterBridge as WriterBridgeService;
 use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
 
-class ForServices implements TypeApi
+readonly class ForServices implements TypeApi
 {
-    private array $instances = [];
-
     public function __construct(
-        private readonly Dependencies $dependencies,
-        private readonly Internal $internal
+        private Internal $internal
     ) {
     }
 
     public function manager(int $ass_id, int $task_id, int $user_id): ManagerInterface
     {
-        return $this->instances[ManagerService::class][$ass_id][$task_id][$user_id] ??= new ManagerService(
-            $ass_id,
-            $task_id,
-            $this->dependencies->repositories(),
-            $this->dependencies->systemApi()->fileStorage(),
-        );
+        return $this->internal->manager($ass_id, $task_id, $user_id);
     }
 
     public function writerBridge(int $ass_id, int $user_id): WriterBridgeInterface
     {
-        return $this->instances[WriterBridgeService::class][$ass_id][$user_id] ??= new WriterBridgeService(
-            $ass_id,
-            $user_id,
-            $this->internal->serviceVersion(),
-            $this->dependencies->repositories(),
-            $this->dependencies->systemApi()->entity(),
-            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
-            $this->dependencies->taskApi($ass_id, $user_id)->tasks()
-        );
+        return $this->internal->writerBridge($ass_id, $user_id);
     }
 }
