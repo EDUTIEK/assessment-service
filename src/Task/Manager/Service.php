@@ -107,7 +107,7 @@ readonly class Service implements TaskManager, ReadService
         $this->repos->settings()->delete($task_id);
         $this->repos->correctionSettings()->delete($this->ass_id);
         $this->repos->correctorAssignment()->deleteByTaskId($task_id);
-        $this->repos->writerComment()->deleteByTaskId($task_id);
+        $this->repos->writerAnnotation()->deleteByTaskId($task_id);
         $this->repos->correctorSummary()->deleteByTaskId($task_id);
         $this->repos->correctorComment()->deleteByTaskId($task_id);
         $this->repos->correctorPoints()->deleteByTaskId($task_id);

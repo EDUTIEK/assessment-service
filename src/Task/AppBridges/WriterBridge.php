@@ -61,7 +61,7 @@ class WriterBridge implements WriterBridgeInterface
                 'position' => $task->getPosition(),
                 'type' => $task->getTaskType(),
                 'title' => $task->getTitle(),
-                'instructions' => $this->html->processHtmlForMarking($task->getInstructions()),
+                'instructions' => $this->html->processHtmlForMarking((string) $task->getInstructions()),
             ]);
         }
 
