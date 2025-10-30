@@ -41,7 +41,7 @@ class Bavaria implements Type
      * @param Closure(string): array $load_table_from_file
      */
     public function __construct(
-        private readonly Problems $problems,
+        private readonly Info $info,
         private readonly Import $import,
         private readonly Closure $load_table_from_file,
     ) {
@@ -50,12 +50,12 @@ class Bavaria implements Type
     public function rows(array $files, array $hashes): array
     {
         $protocol = $this->readProtocol();
-        $pdfs = $this->import->keysBy(fn($f) => $this->import->extract(self::FILE_PATTERN, $f, 1), $files);
+        $pdfs = $this->info->keysBy(fn($f) => $this->info->extract(self::FILE_PATTERN, $f, 1), $files);
         unset($pdfs['']);
 
         return array_map(function (array $row) use ($hashes, $pdfs) {
             $login = $this->loginName($row['id']);
-            $problems = $this->problems->problems($login, $pdfs, $hashes);
+            $problems = $this->info->problems($login, $pdfs, $hashes);
             $hash_ok = $row['pdf_hash'] === ($hashes[$pdfs[$login] ?? false] ?? false);
             return new Row($row['id'], [
                 'file' => $pdfs[$login] ?? null,
@@ -82,12 +82,12 @@ class Bavaria implements Type
     public function columns(): array
     {
         return [
-            'file' => new Column('text', $this->import->txt('essay_import_column_file')),
-            'user' => new Column('text', $this->import->txt('essay_import_column_user')),
-            'id' => new Column('text', $this->import->txt('essay_import_column_id')),
-            'hash_ok' => new Column('boolean', $this->import->txt('essay_import_column_hash_ok')),
-            'import_possible' => new Column('boolean', $this->import->txt('essay_import_column_import_possible')),
-            'comment' => new Column('text', $this->import->txt('essay_import_column_comment')),
+            'file' => new Column('text', $this->info->txt('essay_import_column_file')),
+            'user' => new Column('text', $this->info->txt('essay_import_column_user')),
+            'id' => new Column('text', $this->info->txt('essay_import_column_id')),
+            'hash_ok' => new Column('boolean', $this->info->txt('essay_import_column_hash_ok')),
+            'import_possible' => new Column('boolean', $this->info->txt('essay_import_column_import_possible')),
+            'comment' => new Column('text', $this->info->txt('essay_import_column_comment')),
         ];
     }
 
@@ -104,15 +104,15 @@ class Bavaria implements Type
             array_shift($array);
         }
         // Numeric to named index by header:
-        $rename_index = $this->csvRow($array[0]);
+        $rename_index = $this->renameIndexBy($array[0]);
         array_shift($array);
 
         return array_map($rename_index, $array);
     }
 
-    private function csvRow(array $header): Closure
+    private function renameIndexBy(array $header): Closure
     {
-        $txts = array_flip(array_map($this->import->txt(...), self::CSV_MAP));
+        $txts = array_flip(array_map($this->info->txt(...), self::CSV_MAP));
 
         $header = array_map(fn($key) => $txts[$key] ?? 'unknown', $header);
         return fn(array $row) => array_combine($header, $row);

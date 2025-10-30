@@ -142,6 +142,8 @@ class Internal
             $this->dependencies->taskApi($ass_id, $user_id)->tasks(),
             $this->essay($ass_id, $user_id, true),
             $this->dependencies->systemApi()->user(),
+            $this->language($user_id),
+            $this->dependencies->systemApi()->config(),
             $user_id,
             $import,
             [

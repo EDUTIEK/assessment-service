@@ -23,19 +23,11 @@ namespace Edutiek\AssessmentService\EssayTask\EssayImport;
 interface Import
 {
     /**
-     * @template A
-     * @template B
+     * @param string[] $pdfs
      *
-     * @param callable(A): B $proc
-     * @param A[] $array
-     * @return array<B, A>
+     * @return array<string, string> where array_keys($this->buildPdfHashes($pdfs)) === $pdfs and values are the hashed pdfs.
      */
-    public function keysBy(callable $proc, array $array): array;
-    public function extract(string $pattern, string $subject, int $sub_match): ?string;
-    public function hash(string $string): string;
-
+    public function buildPdfHashes(array $pdfs): array;
     public function permanentId(string $file_id): string;
     public function getRealPath(string $id): ?string;
-    public function txt(string $lang_var): string;
-    public function buildPdfHashes(array $pdfs): array;
 }

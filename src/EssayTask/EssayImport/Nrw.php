@@ -27,18 +27,18 @@ class Nrw implements Type
     private const FILE_PATTERN = '/^\d+von\d+_(\d+-\d+).pdf$/';
 
     public function __construct(
-        private readonly Problems $problems,
+        private readonly Info $info,
         private readonly Import $import,
     ) {
     }
 
     public function rows(array $files, array $hashes): array
     {
-        $pdfs = $this->import->keysBy(fn($f) => $this->import->extract(self::FILE_PATTERN, $f, 1), $files);
+        $pdfs = $this->info->keysBy(fn($f) => $this->info->extract(self::FILE_PATTERN, $f, 1), $files);
         unset($pdfs['']);
 
         return array_map(function (string $login, string $file) use ($hashes, $pdfs) {
-            $problems = $this->problems->problems($login, $pdfs, $hashes);
+            $problems = $this->info->problems($login, $pdfs, $hashes);
             return new Row($login, [
                 'file' => $file,
                 'id' => $login,
@@ -50,8 +50,8 @@ class Nrw implements Type
 
     public function validFilesByLogin(array $files): array
     {
-        return $this->import->keysBy(
-            fn($file) => $this->import->extract(self::FILE_PATTERN, $file, 1),
+        return $this->info->keysBy(
+            fn($file) => $this->info->extract(self::FILE_PATTERN, $file, 1),
             $files
         );
     }
@@ -59,10 +59,10 @@ class Nrw implements Type
     public function columns(): array
     {
         return [
-            'file' => new Column('text', $this->import->txt('essay_import_column_file')),
-            'id' => new Column('text', $this->import->txt('essay_import_column_user')),
-            'import_possible' => new Column('boolean', $this->import->txt('essay_import_column_import_possible')),
-            'comment' => new Column('text', $this->import->txt('essay_import_column_comment')),
+            'file' => new Column('text', $this->info->txt('essay_import_column_file')),
+            'id' => new Column('text', $this->info->txt('essay_import_column_user')),
+            'import_possible' => new Column('boolean', $this->info->txt('essay_import_column_import_possible')),
+            'comment' => new Column('text', $this->info->txt('essay_import_column_comment')),
         ];
     }
 

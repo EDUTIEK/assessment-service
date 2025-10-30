@@ -13,8 +13,10 @@ use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo as Task;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use DateTimeImmutable;
+use Edutiek\AssessmentService\System\Language\FullService as Language;
+use Edutiek\AssessmentService\System\Config\ReadService as SystemConfig;
 
-class Service implements Problems, FullService
+class Service implements Info, FullService
 {
     private array $cache = [];
 
@@ -27,6 +29,8 @@ class Service implements Problems, FullService
         private readonly TaskReadService $task_service,
         private readonly EssayService $essay_service,
         private readonly UserService $user_service,
+        private readonly Language $lng,
+        private readonly SystemConfig $sys_config,
         private readonly int $user_id,
         private readonly Import $import,
         private readonly array $available_types,
@@ -95,12 +99,12 @@ class Service implements Problems, FullService
     {
         $ret = ['errors' => [], 'overwrites' => []];
         if (!isset($pdfs[$login])) {
-            $ret['errors'][] = $this->import->txt('import_file_missing');
+            $ret['errors'][] = $this->txt('import_file_missing');
         }
 
         $user_id = $this->user_service->getUserIdByLogin($login);
         if (!$user_id) {
-            $ret['errors'][] = $this->import->txt('import_user_not_existing');
+            $ret['errors'][] = $this->txt('import_user_not_existing');
             return $ret;
         }
 
@@ -122,18 +126,52 @@ class Service implements Problems, FullService
             return $ret;
         }
 
-        $same = $hashes[$pdfs[$login]] === $this->import->hash(stream_get_contents($stream));
+        $same = $hashes[$pdfs[$login]] === $this->hash(stream_get_contents($stream));
         fclose($stream);
         $ret['overwrites'][] = $same ?
-            $this->import->txt('import_same_file_exists') :
-            $this->import->txt('import_another_file_exists');
+            $this->txt('import_same_file_exists') :
+            $this->txt('import_another_file_exists');
 
         return $ret;
     }
 
+    public function extract(string $pattern, string $subject, int $index): ?string
+    {
+        return preg_match($pattern, $subject, $matches) ?
+            $matches[$index] :
+            null;
+    }
+
+    /**
+     * @template A
+     * @template B
+     *
+     * @param callable(A): B $proc
+     * @param A[] $array
+     * @return array<B, A>
+     */
+    public function keysBy(callable $proc, array $array): array
+    {
+        return array_column(array_map(
+            fn($x) => ['value' => $x, 'key' => $proc($x)],
+            $array
+        ), 'value', 'key');
+    }
+
+    public function txt(string $lang_var): string
+    {
+        return $this->lng->txt($lang_var);
+    }
+
+    private function hash(string $value): string
+    {
+        return hash($this->sys_config->getConfig()->getHashAlgo(), $value);
+    }
+
+
     private function writerByUser(int $user_id): ?Writer
     {
-        $this->cache['writers'] ??= $this->import->keysBy(
+        $this->cache['writers'] ??= $this->keysBy(
             fn(Writer $writer) => $writer->getUserId(),
             $this->writer_service->all()
         );
@@ -148,7 +186,7 @@ class Service implements Problems, FullService
 
     private function essayByWriter(int $writer_id): ?Essay
     {
-        $this->cache['essays'] ??= $this->import->keysBy(
+        $this->cache['essays'] ??= $this->keysBy(
             fn(Essay $essay) => $essay->getWriterId(),
             $this->essay_service->allByTaskId($this->task()->getId())
         );
@@ -161,7 +199,7 @@ class Service implements Problems, FullService
      */
     private function loginsByUserId(array $logins): array
     {
-        $users = $this->import->keysBy($this->user_service->getUserIdByLogin(...), $logins);
+        $users = $this->keysBy($this->user_service->getUserIdByLogin(...), $logins);
         unset($users[0]); // Remove not found users.
 
         return $users;
