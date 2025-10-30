@@ -66,7 +66,6 @@ class ForClients
         );
     }
 
-
     public function correctorApp(int $context_id): CorrectorAppOpenService
     {
         return $this->internal->correctorApp($this->ass_id, $context_id, $this->user_id);

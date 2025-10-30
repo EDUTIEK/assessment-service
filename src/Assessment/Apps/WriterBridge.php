@@ -12,13 +12,7 @@ interface WriterBridge
      * Get all data to open the the writer app
      * @return array - will converted to JSON
      */
-    public function getData(): array;
-
-    /**
-     * Get the data for periodic updates (e.g. every second)
-     * @return array - will converted to JSON
-     */
-    public function getUpdate(): array;
+    public function getData(bool $for_update): array;
 
     /**
      * Get the file id of a file associated with an entity

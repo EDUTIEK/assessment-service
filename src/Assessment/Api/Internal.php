@@ -110,7 +110,7 @@ class Internal
             $this->restHelper($ass_id, $context_id, $user_id),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->slimApp(),
-            $this->writerBridge($ass_id, $user_id),
+            $this->writerBridge($ass_id, $context_id, $user_id),
             $this->dependencies->taskApi()->writerBridge($ass_id, $user_id),
             $this->dependencies->typeApis(),
             $this->dependencies->systemApi()->fileDelivery()
@@ -194,12 +194,13 @@ class Internal
         return $app;
     }
 
-    private function writerBridge(int $ass_id, int $user_id): WriterBridgeInterface
+    private function writerBridge(int $ass_id, $context_id, int $user_id): WriterBridgeInterface
     {
-        return $this->instances[WriterBridge::class][$ass_id][$user_id] ??= new WriterBridge(
+        return $this->instances[WriterBridge::class][$ass_id][$context_id][$user_id] ??= new WriterBridge(
             $ass_id,
             $user_id,
             $this->workingTimeFactory($user_id),
+            $this->writer($ass_id, $user_id),
             $this->dependencies->systemApi()->config(),
             $this->dependencies->systemApi()->entity(),
             $this->dependencies->repositories(),

@@ -112,5 +112,8 @@ interface ReadService
      */
     public function canUploadFiles(): bool;
 
+    /**
+     * Check if the user can set the assessment as template and fix/unfix settings
+     */
     public function canEditTemplates(): bool;
 }

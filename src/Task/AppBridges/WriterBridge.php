@@ -43,9 +43,9 @@ class WriterBridge implements WriterBridgeInterface
         }
     }
 
-    public function getData(): array
+    public function getData($for_update): array
     {
-        if ($this->writer === null) {
+        if ($this->writer === null || $for_update) {
             return [];
         }
 
@@ -102,15 +102,6 @@ class WriterBridge implements WriterBridgeInterface
         }
 
         return $data;
-    }
-
-    public function getUpdate(): array
-    {
-        if ($this->writer === null) {
-            return [];
-        }
-
-        return [];
     }
 
     public function getFileId(string $entity, int $entity_id): ?string

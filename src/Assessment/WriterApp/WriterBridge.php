@@ -4,29 +4,39 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\WriterApp;
 
+use Edutiek\AssessmentService\Assessment\Apps\ChangeAction;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
 use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
+use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\Data\Config;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
 
 class WriterBridge implements WriterBridgeInterface
 {
+    private ?\Edutiek\AssessmentService\Assessment\Data\Writer $writer;
+
     public function __construct(
         private readonly int $ass_id,
         private readonly int $user_id,
         private readonly WorkingTimeFactory $working_time_factory,
+        private readonly WriterService $writer_service,
         private readonly ConfigService $config,
         private readonly EntityService $entity,
         private readonly Repositories $repos,
     ) {
+        $this->writer = $this->repos->writer()->oneByUserIdAndAssId($this->user_id, $this->ass_id);
     }
 
-    public function getData(): array
+    public function getData(bool $for_update): array
     {
+        if ($this->writer === null) {
+            return [];
+        }
+
         $data = [];
 
         $config = $this->config->getConfig();
@@ -35,23 +45,21 @@ class WriterBridge implements WriterBridgeInterface
             'primary_text_color' => $config->getPrimaryTextColor(),
         ]);
 
-        $writer = $this->repos->writer()->oneByUserIdAndAssId($this->user_id, $this->ass_id);
-        if ($writer !== null) {
+        if ($this->writer !== null) {
             $working_time = $this->working_time_factory->workingTime(
                 $this->repos->orgaSettings()->one($this->ass_id),
-                $writer
+                $this->writer
             );
 
             $data['Writer'] = $this->entity->arrayToPrimitives([
-               'id' => $writer->getId(),
-               'writer_name' => $writer->getPseudonym(),
+               'writer_name' => $this->writer->getPseudonym(),
                'working_start' => $working_time->getWorkingStart(),
                'working_deadline' => $working_time->getWorkingDeadline(),
-               'is_authorized' => $writer->isAuthorized(),
-               'is_excluded' => $writer->isExcluded(),
+               'is_authorized' => $this->writer->isAuthorized(),
+               'is_excluded' => $this->writer->isExcluded(),
             ]);
 
-            foreach ($this->repos->alert()->allByAssIdAndWriterId($this->ass_id, $writer->getId()) as $alert) {
+            foreach ($this->repos->alert()->allByAssIdAndWriterId($this->ass_id, $this->writer->getId()) as $alert) {
                 $data['Alerts'][] = $this->entity->arrayToPrimitives([
                     'id' => $alert->getId(),
                     'time' => $alert->getShownFrom(),
@@ -63,18 +71,30 @@ class WriterBridge implements WriterBridgeInterface
         return $data;
     }
 
-    public function getUpdate(): array
-    {
-        return[];
-    }
 
     public function getFileId(string $entity, int $entity_id): ?string
     {
+        // no files handled in assessment component
         return null;
     }
 
     public function applyChange(ChangeRequest $change): ChangeResponse
     {
-        return $change->toResponse(false);
+        if ($this->writer !== null && $change->getType() == 'writer') {
+            return $this->applyWriter($change);
+        }
+        return $change->toResponse(false, 'writer or type not found');
+    }
+
+    public function applyWriter(ChangeRequest $change): ChangeResponse
+    {
+        if ($change->getAction() === ChangeAction::SAVE) {
+            $data = $change->getPayload();
+            if ($data['is_authorized'] ?? false) {
+                $this->writer_service->authorizeWriting($this->writer, $this->user_id, false);
+                return $change->toResponse(true, ['is_authorized' => true]);
+            }
+        }
+        return $change->toResponse(false, 'wrong action');
     }
 }

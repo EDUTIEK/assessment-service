@@ -30,7 +30,7 @@ interface ClientService
     public function save(Essay $essay): void;
 
     /**
-     * Check if the PDF file of an essay can be replaced
+     * Check if the content of an essay can be replaced
      */
     public function canChange(Essay $essay): Result;
 

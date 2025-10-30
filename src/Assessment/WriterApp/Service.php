@@ -52,7 +52,7 @@ readonly class Service implements OpenService, RestService
         $this->app->get('/writer/update', [$this,'getUpdate']);
         $this->app->get('/writer/file/{component}/{entity}/{id}', [$this,'getFile']);
         $this->app->put('/writer/changes', [$this, 'putChanges']);
-        $this->app->put('/writer/final', [$this,'putFinal']);
+        $this->app->put('/writer/final', [$this, 'putChanges']);
         $this->app->run();
         exit;
     }
@@ -69,11 +69,13 @@ readonly class Service implements OpenService, RestService
      */
     public function getData(Request $request, Response $response, array $args): Response
     {
+        $for_update = (bool) ($args['for_update'] ?? false);
+
         $this->prepare($request, $response, $args, TokenPurpose::DATA);
 
         $data = [];
         foreach ($this->getComponents() as $component) {
-            $data[$component] = $this->getBridge($component)->getData();
+            $data[$component] = $this->getBridge($component)->getData($for_update);
         }
         $response = $this->rest_helper->setNewDataToken($response);
         $response = $this->rest_helper->setNewFileToken($response);
@@ -85,7 +87,8 @@ readonly class Service implements OpenService, RestService
      */
     public function getUpdate(Request $request, Response $response, array $args): Response
     {
-        return $response;
+        $args['for_update'] = true;
+        return $this->getData($request, $response, $args);
     }
 
     /**
@@ -153,17 +156,6 @@ readonly class Service implements OpenService, RestService
         $this->rest_helper->setAlive();
         $this->rest_helper->refreshDataToken($response);
         return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $json);
-    }
-
-    /**
-     * PUT the final content
-     * "final" means that the writer is intentionally closed
-     * That could be an interruption or the authorized submission
-     * the content is only saved when the essay is not yet authorized
-     */
-    public function putFinal(Request $request, Response $response, array $args): Response
-    {
-        return $response;
     }
 
     /**
