@@ -5,6 +5,10 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\System\PdfCreator;
 
 use Edutiek\AssessmentService\System\Data\ImageDescriptor;
+use Closure;
+use Dompdf\Dompdf;
+use Dompdf\Canvas;
+use Dompdf\FontMetrics;
 
 class Service implements FullService
 {
@@ -38,10 +42,13 @@ class Service implements FullService
 
     protected $mono_font = 'courier';
 
-
+    /**
+     * @param Closure(): Dompdf $dom_pdf
+     */
     public function __construct(
        private string $absolute_temp_path,
-       private string $relative_temp_path
+       private string $relative_temp_path,
+       private Closure $dom_pdf
     ) {}
 
     public function createPdf(
@@ -51,6 +58,52 @@ class Service implements FullService
         string $title = "",
         string $subject = "",
         string $keywords = ""
+    ): string
+    {
+        return $this->createPdfWithDompdf($parts, $creator, $author, $title, $subject, $keywords);
+    }
+
+    public function createPdfWithDompdf(
+        array $parts,
+        string $creator,
+        string $author,
+        string $title,
+        string $subject,
+        string $keywords
+    ): string
+    {
+        $pdf = $this->initPdf($creator, $author, $title, $subject, $keywords);
+
+        [$pages, $css] = $this->renderParts($parts, $subject);
+        $css .= $this->css();
+        $html = sprintf(
+            '<!DOCTYPE html><html><head><meta charset="utf-8"/><style>%s</style></head><body>%s</body></html>',
+            $css,
+            join('<div class="force-new-page"></div>', $pages),
+        );
+        $pdf->loadHtml($html);
+        $pdf->render();
+
+        // Cannot change this per part because we don't know when a new part begins in the page_script callback,
+        // as one part can be rendered as multiple pages.
+        $part = current($parts);
+        if ($part && $part->getPrintFooter()) {
+            $pdf->getCanvas()->page_script($this->renderPageNumbers(
+                $this->mm2px($part->getRightMargin()),
+                $this->mm2px($part->getFooterMargin())
+            ));
+        }
+
+        return $pdf->output();
+    }
+
+    public function createPdfWithTCPDF(
+        array $parts,
+        string $creator = "",
+        string $author = "",
+        string $title = "",
+        string $subject = "",
+        string $keywords = ''
     ) : string
     {
         // create new PDF document
@@ -179,5 +232,168 @@ class Service implements FullService
             return $this->relative_temp_path . '/' . basename($file);
         }
         return '';
+    }
+
+    /**
+     * @param PdfPart[] $parts
+     * @return array{0: string[], 1: string}
+     */
+    private function renderParts(array $parts, string $subject): array
+    {
+        $pages = [];
+        $css = '';
+        $id = 0;
+        foreach ($parts as $part)
+        {
+            $id++;
+            $html = $this->renderElements($part->getElements());
+            if ($html) {
+                if ($part->getPrintHeader()) {
+                    $html = $this->header($subject, $part) . $html;
+                }
+                $html_id = 'part_' . $id;
+                // Add div for each page, so custom page margins can be set.
+                $pages[] = sprintf('<div id="%s">%s</div>', $html_id, $html);
+                $css .= sprintf(
+                    '#%s{margin: %dmm %dmm %dmm %dmm;}',
+                    $html_id,
+                    $part->getTopMargin(),
+                    $part->getRightMargin(),
+                    $part->getBottomMargin(),
+                    $part->getLeftMargin()
+                );
+            }
+        }
+
+        return [$pages, $css];
+    }
+
+    /**
+     * @param PdfElement[] $elements
+     */
+    private function renderElements(array $elements): string
+    {
+        $html = '';
+        foreach ($elements as $element) {
+            if ($element instanceof PdfHtml) {
+                $html .= $element->getHtml();
+            }
+            elseif ($element instanceof PdfImage) {
+                // Dompdf doesn't allow loading files from any place. To allow from which folder files can be loaded set:
+                // $pdf->getOptions()->set('chroot', '/your/directory');
+                // But as it isn't known if all images are located in the same folder, base64 is used instead.
+                $html .= sprintf('<p><img src="data:image/png;base64,%s"/></p>', base64_encode(file_get_contents($element->getPath())));
+            }
+        }
+
+        return $html;
+    }
+
+    private function header(string $content, PdfPart $part): string
+    {
+        return sprintf(
+            '<header style="top: %dmm; left: %dmm; right: %dmm; transform: translateY(-100%%);">%s</header>',
+            $part->getTopMargin(),
+            $part->getLeftMargin(),
+            $part->getRightMargin(),
+            $content
+        );
+    }
+
+    private function mm2px(float $mm): float
+    {
+        return $mm * 3.78;
+    }
+
+    private function css(): string
+    {
+        return '
+.force-new-page
+{
+    page-break-after: always;
+}
+body
+{
+    font-size: ' . $this->main_font_size . ';
+}
+:root
+{
+    margin: 0;
+}
+header
+{
+    font-family: ' . $this->header_font . ';
+    font-size: ' . $this->header_font_size . ';
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 20px;
+    border-bottom: 1px solid black;
+    right: 0;
+}';
+    }
+
+    /**
+     * @param float $right_margin in px
+     * @param float $bottom_margin in px
+     */
+    private function renderPageNumbers(float $right_margin, float $bottom_margin): Closure
+    {
+        return function(int $page, int $max_pages, Canvas $canvas, FontMetrics $font_metrics) use ($right_margin, $bottom_margin): void {
+            $text = $page .  '/' . $max_pages;
+            $font = $font_metrics->getFont($this->footer_font);
+            $w = $font_metrics->getTextWidth($text, $font, $this->footer_font_size);
+            $h = $font_metrics->getFontHeight($font, $this->footer_font_size);
+            $canvas->text(
+                $canvas->get_width() - $w - $right_margin,
+                $canvas->get_height() - $h - $bottom_margin,
+                $text,
+                $font,
+                $this->footer_font_size
+            );
+        };
+    }
+
+    private function initPdf(
+        string $creator,
+        string $author,
+        string $title,
+        string $subject,
+        string $keywords,
+    ): Dompdf
+    {
+        $pdf = ($this->dom_pdf)();
+        $pdf->setPaper($this->page_format);
+        $pdf->addInfo('Creator', $creator);
+        $pdf->addInfo('Author', $author);
+        $pdf->addInfo('Title', $title);
+        $pdf->addInfo('Subject', $subject);
+        $pdf->addInfo('Keywords', $keywords);
+
+        $options = $pdf->getOptions();
+        $options->set('isPdfAEnabled', true);
+        $options->set('defaultFont', $this->main_font);
+        // $options->setDpi(150);
+        // $options->setChroot($dir);
+        // $options->set('fontDir', $tmp);
+        // $options->set('fontCache', $tmp);
+        // $options->set('tempDir', $tmp);
+        $pdf->setOptions($options);
+        $this->setupFonts($pdf);
+
+        return $pdf;
+    }
+
+    private function setupFonts(Dompdf $pdf): void
+    {
+        $font_metrics = $pdf->getFontMetrics();
+        $font_metrics->setFontFamily('courier', $font_metrics->getFamily('DejaVu Sans Mono'));
+        $font_metrics->setFontFamily('fixed', $font_metrics->getFamily('DejaVu Sans Mono'));
+        $font_metrics->setFontFamily('helvetica', $font_metrics->getFamily('DejaVu Sans'));
+        $font_metrics->setFontFamily('monospace', $font_metrics->getFamily('DejaVu Sans Mono'));
+        $font_metrics->setFontFamily('sans-serif', $font_metrics->getFamily('DejaVu Sans'));
+        $font_metrics->setFontFamily('serif', $font_metrics->getFamily('DejaVu Serif'));
+        $font_metrics->setFontFamily('times', $font_metrics->getFamily('DejaVu Serif'));
+        $font_metrics->setFontFamily('times-roman', $font_metrics->getFamily('DejaVu Serif'));
     }
 }

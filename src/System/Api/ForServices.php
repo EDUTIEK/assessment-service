@@ -25,6 +25,7 @@ use Edutiek\AssessmentService\System\PdfConverter\ServiceByImageMagick;
 use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreatorFullService;
 use Edutiek\AssessmentService\System\PdfCreator\Service as PdfCreatorService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
+use Dompdf\Dompdf;
 
 class ForServices
 {
@@ -116,7 +117,8 @@ class ForServices
     {
         return $this->instances[PdfCreatorService::class] ??= new PdfCreatorService(
             $this->config()->getSetup()->getAbsoluteTempPath(),
-            $this->config()->getSetup()->getRelativeTempPath()
+            $this->config()->getSetup()->getRelativeTempPath(),
+            fn() => new Dompdf(),
         );
     }
 
