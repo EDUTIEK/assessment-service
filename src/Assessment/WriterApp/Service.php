@@ -69,14 +69,13 @@ readonly class Service implements OpenService, RestService
      */
     public function getData(Request $request, Response $response, array $args): Response
     {
-        $for_update = (bool) ($args['for_update'] ?? false);
-
         $this->prepare($request, $response, $args, TokenPurpose::DATA);
 
         $data = [];
         foreach ($this->getComponents() as $component) {
-            $data[$component] = $this->getBridge($component)->getData($for_update);
+            $data[$component] = $this->getBridge($component)->getData(false);
         }
+        // create new tokens - these will be replaced in the app
         $response = $this->rest_helper->setNewDataToken($response);
         $response = $this->rest_helper->setNewFileToken($response);
         return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
@@ -87,8 +86,15 @@ readonly class Service implements OpenService, RestService
      */
     public function getUpdate(Request $request, Response $response, array $args): Response
     {
-        $args['for_update'] = true;
-        return $this->getData($request, $response, $args);
+        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+
+        $data = [];
+        foreach ($this->getComponents() as $component) {
+            $data[$component] = $this->getBridge($component)->getData(true);
+        }
+        // just
+        $this->rest_helper->extendDataToken($response);
+        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
     }
 
     /**
@@ -154,7 +160,7 @@ readonly class Service implements OpenService, RestService
         }
 
         $this->rest_helper->setAlive();
-        $this->rest_helper->refreshDataToken($response);
+        $this->rest_helper->extendDataToken($response);
         return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $json);
     }
 

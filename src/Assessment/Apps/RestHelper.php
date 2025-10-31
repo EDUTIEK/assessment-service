@@ -86,7 +86,7 @@ readonly class RestHelper
     /**
      * Set a new expiration time for the data token and set it in the response
      */
-    public function refreshDataToken(Response $response): Response
+    public function extendDataToken(Response $response): Response
     {
         $token = $this->auth->getToken($this->user_id, TokenPurpose::DATA);
         $token->setValidUntil($this->auth->newValitity(TokenPurpose::DATA));

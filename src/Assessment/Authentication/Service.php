@@ -21,7 +21,7 @@ readonly class Service implements FullService
         switch ($purpose) {
             case TokenPurpose::FILE:
             case TokenPurpose::DATA:
-                return null;                   // todo: temporary solution for both until re-authentication is possible
+                return null;     // todo: temporary solution for both until re-authentication is possible
         }
 
         return null;

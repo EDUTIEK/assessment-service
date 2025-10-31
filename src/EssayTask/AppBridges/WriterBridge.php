@@ -131,7 +131,6 @@ class WriterBridge implements WriterBridgeInterface
         $this->entity->fromPrimitives([
             'editor_zoom' => $data['editor_zoom'] ?? null,
             'instructions_zoom' => $data['instructions_zoom'] ?? null,
-
             'word_count_enabled' => $data['word_count_enabled'] ?? null,
             'word_count_characters' => $data['word_count_characters'] ?? null,
         ], $prefs, WriterPrefs::class);
