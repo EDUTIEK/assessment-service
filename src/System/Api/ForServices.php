@@ -25,6 +25,8 @@ use Edutiek\AssessmentService\System\PdfConverter\ServiceByImageMagick;
 use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreatorFullService;
 use Edutiek\AssessmentService\System\PdfCreator\Service as PdfCreatorService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
+use Edutiek\AssessmentService\System\PdfProcessing\Service as PdfProcessing;
+use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingService;
 use Dompdf\Dompdf;
 
 class ForServices
@@ -125,5 +127,17 @@ class ForServices
     public function backgroundTask(): BackgroundTaskManager
     {
         return new BackgroundTaskService($this->dependencies->backgroundTaskManager());
+    }
+
+    public function pdfProcessing(): PdfProcessingService
+    {
+        return $this->instances[PdfProcessing::class] ??= new PdfProcessing(
+            $this->pdfCreator(),
+            $this->pdfConverter(),
+            $this->fileStorage(),
+            exec('which pdflatex'),
+            exec('which pdftk'),
+            $this->config()->getSetup()->getAbsoluteTempPath(),
+        );
     }
 }
