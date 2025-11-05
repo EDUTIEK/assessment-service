@@ -7,22 +7,16 @@ namespace Edutiek\AssessmentService\Task\Api;
 use Edutiek\AssessmentService\System\EventHandling\ObserverFactory;
 use Edutiek\AssessmentService\Task\EventHandling\Observer;
 
-class ForEvents implements ObserverFactory
+readonly class ForEvents implements ObserverFactory
 {
-    private array $instances = [];
-
     public function __construct(
-        private readonly Internal $internal
+        private Internal $internal
     ) {
     }
 
 
     public function observer(int $ass_id, int $user_id): Observer
     {
-        return $this->instances[Observer::class] ??= new Observer(
-            $ass_id,
-            $user_id,
-            $this->internal
-        );
+        return $this->internal->eventObserver($ass_id, $user_id);
     }
 }

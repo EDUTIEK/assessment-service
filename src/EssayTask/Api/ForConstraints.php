@@ -18,6 +18,5 @@ readonly class ForConstraints implements ProviderFactory
     public function provider(int $ass_id, int $user_id): Provider
     {
         return $this->internal->constraintProvider($ass_id, $user_id);
-        ;
     }
 }

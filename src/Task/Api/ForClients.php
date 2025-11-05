@@ -7,60 +7,36 @@ namespace Edutiek\AssessmentService\Task\Api;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager as ManagerInterface;
 use Edutiek\AssessmentService\Task\AssessmentStatus\FullService as StatusFullService;
 use Edutiek\AssessmentService\Task\CorrectionProcess\FullService as CorrectionProcessFullService;
-use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsFullService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as CorrectorAssignmentsFullService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as CorrectorSummaryFullService;
 use Edutiek\AssessmentService\Task\Format\FullService as FormatFullService;
-use Edutiek\AssessmentService\Task\Format\Service as FormatService;
-use Edutiek\AssessmentService\Task\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\Task\RatingCriterion\FullService as RatingCriterionFullService;
-use Edutiek\AssessmentService\Task\RatingCriterion\Service as RatingCriterionService;
 use Edutiek\AssessmentService\Task\Resource\FullService as ResourceFullService;
-use Edutiek\AssessmentService\Task\Resource\Service as ResourceService;
 use Edutiek\AssessmentService\Task\Settings\FullService as SettingsFullService;
-use Edutiek\AssessmentService\Task\Settings\Service as SettingsService;
 
-class ForClients
+readonly class ForClients
 {
-    private array $instances = [];
-
     public function __construct(
-        private readonly int $ass_id,
-        private readonly int $user_id,
-        private readonly Dependencies $dependencies,
-        private readonly Internal $internal
+        private int $ass_id,
+        private int $user_id,
+        private Internal $internal
     ) {
     }
 
     public function manager(): ManagerInterface
     {
-        return $this->instances[ManagerService::class] ??= new ManagerService(
-            $this->ass_id,
-            $this->user_id,
-            $this->dependencies->repositories(),
-            $this->dependencies->systemApi()->fileStorage(),
-            $this->dependencies->typeApis(),
-            $this->internal->language("de")
-        );
+        return $this->internal->manager($this->ass_id, $this->user_id);
     }
 
     public function resource(int $task_id): ResourceFullService
     {
-        return $this->instances[ResourceService::class][$task_id] ??= new ResourceService(
-            $task_id,
-            $this->dependencies->repositories(),
-            $this->dependencies->systemApi()->fileStorage(),
-        );
+        return $this->internal->resource($task_id);
     }
 
     public function settings(int $task_id): SettingsFullService
     {
-        return $this->instances[SettingsService::class][$task_id] ??= new SettingsService(
-            $this->ass_id,
-            $task_id,
-            $this->dependencies->repositories()
-        );
+        return $this->internal->settings($this->ass_id, $task_id);
     }
 
     public function correctorAssignments(): CorrectorAssignmentsFullService
@@ -80,10 +56,7 @@ class ForClients
 
     public function ratingCriterion(int $task_id): RatingCriterionFullService
     {
-        return $this->instances[RatingCriterionService::class][$task_id] ??= new RatingCriterionService(
-            $task_id,
-            $this->dependencies->repositories()
-        );
+        return $this->internal->ratingCriterion($task_id);
     }
 
     public function assessmentStatus(): StatusFullService
@@ -93,22 +66,11 @@ class ForClients
 
     public function format(): FormatFullService
     {
-        return $this->instances[FormatService::class] ??= new FormatService(
-            $this->dependencies->systemApi()->language(),
-            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->assessment_grading()
-        );
+        return $this->internal->format($this->ass_id, $this->user_id);
     }
 
     public function correctionProcess(): CorrectionProcessFullService
     {
-        return $this->instances[CorrectionProcessService::class] ??= new CorrectionProcessService(
-            $this->ass_id,
-            $this->dependencies->repositories(),
-            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->writer(),
-            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->correction_process(),
-            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->logEntry(),
-            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->correctionSettings()->get(),
-            $this->dependencies->assessmentApi($this->ass_id, $this->user_id)->corrector(),
-        );
+        return $this->internal->correctionProcess($this->ass_id, $this->user_id);
     }
 }

@@ -4,41 +4,31 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Api;
 
-use Edutiek\AssessmentService\System\Config\FullService as ConfigFullService;
-use Edutiek\AssessmentService\System\Config\Service as ConfigService;
-use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
-use Edutiek\AssessmentService\System\Entity\Service as EntityService;
-use Edutiek\AssessmentService\System\File\Storage;
-use Edutiek\AssessmentService\System\File\Delivery;
-use Edutiek\AssessmentService\System\Format\FullService as FormatFullService;
-use Edutiek\AssessmentService\System\Format\Service as FormatService;
-use Edutiek\AssessmentService\System\Transform\FullService as TransformFullService;
-use Edutiek\AssessmentService\System\Transform\Service as TransformService;
-use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
-use Edutiek\AssessmentService\System\User\Service as UserService;
 use DateTimeZone;
+use Edutiek\AssessmentService\System\Config\FullService as ConfigFullService;
+use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
+use Edutiek\AssessmentService\System\File\Delivery;
+use Edutiek\AssessmentService\System\File\Storage;
+use Edutiek\AssessmentService\System\Format\FullService as FormatFullService;
+use Edutiek\AssessmentService\System\Transform\FullService as TransformFullService;
+use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 
-class ForClients
+readonly class ForClients
 {
-    private array $instances = [];
-
     public function __construct(
-        private readonly Dependencies $dependencies,
-        private readonly Internal $internal
+        private Dependencies $dependencies,
+        private Internal $internal
     ) {
     }
 
     public function config(): ConfigFullService
     {
-        return $this->instances[ConfigService::class] ??= new ConfigService(
-            $this->dependencies->configRepo(),
-            $this->dependencies->setupRepo()
-        );
+        return $this->internal->config();
     }
 
     public function entity(): EntityFullService
     {
-        return $this->instances[EntityService::class] ??= new EntityService();
+        return $this->internal->entity();
     }
 
     public function fileStorage(): Storage
@@ -53,20 +43,16 @@ class ForClients
 
     public function format(int $user_id, ?DateTimeZone $timezone = null): FormatFullService
     {
-        $timezone ??= $this->config()->getSetup()->getDefaultTimezone();
-        return new FormatService($this->dependencies->formatDate(...), $timezone, $this->internal->language($user_id));
+        return $this->internal->format($user_id, $timezone);
     }
 
     public function transform(): TransformFullService
     {
-        return $this->instances[TransformService::class] ??= new TransformService();
+        return $this->internal->transform();
     }
 
     public function user(): UserReadService
     {
-        return $this->instances[UserService::class] ??= new UserService(
-            $this->dependencies->userDataRepo(),
-            $this->dependencies->userDisplayRepo()
-        );
+        return $this->internal->user();
     }
 }

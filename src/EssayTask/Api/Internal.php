@@ -156,8 +156,7 @@ class Internal
 
     public function language(int $user_id): LanguageService
     {
-        return $this->instances[LanguageService::class][$user_id] ??=
-            $this->dependencies->systemApi()->loadLanguagFromFile($user_id, __DIR__ . '/../Languages/');
+        return $this->dependencies->systemApi()->language($user_id, __DIR__ . '/../Languages/');
     }
 
     public function manager(int $ass_id, int $task_id, int $user_id): ManagerService

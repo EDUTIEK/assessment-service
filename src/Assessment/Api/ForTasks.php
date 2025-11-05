@@ -4,32 +4,20 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Api;
 
-use Edutiek\AssessmentService\Assessment\Authentication\FullService as AuthenticationFullService;
-use Edutiek\AssessmentService\Assessment\Authentication\Service as AuthenticationService;
-use Edutiek\AssessmentService\Assessment\Apps\RestService as RestService;
-use Edutiek\AssessmentService\Assessment\Apps\Service as AppService;
-use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
-use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
-use Edutiek\AssessmentService\Assessment\LogEntry\TasksService as LogEntryTasksService;
-use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
-use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
-use Edutiek\AssessmentService\Assessment\CorrectionSettings\Service as CorrectionSettingsService;
-use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
-use Edutiek\AssessmentService\Assessment\PdfSettings\Service as PdfSettingsService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as AssessmentGradingService;
 use Edutiek\AssessmentService\Assessment\CorrectionProcess\FullService as CorrectionProcessService;
+use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorReadService;
-use Edutiek\AssessmentService\Assessment\Corrector\Service as CorrectorService;
+use Edutiek\AssessmentService\Assessment\LogEntry\TasksService as LogEntryTasksService;
+use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
+use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
 
-class ForTasks
+readonly class ForTasks
 {
-    private array $instances = [];
-
     public function __construct(
-        private readonly int $ass_id,
-        private readonly int $user_id,
-        private readonly Dependencies $dependencies,
-        private readonly Internal $internal
+        private int $ass_id,
+        private int $user_id,
+        private Internal $internal
     ) {
     }
 
@@ -40,10 +28,7 @@ class ForTasks
 
     public function corrector(): CorrectorReadService
     {
-        return $this->instances[CorrectorService::class] ??= new CorrectorService(
-            $this->ass_id,
-            $this->dependencies->repositories(),
-        );
+        return $this->internal->corrector($this->ass_id);
     }
 
     public function logEntry(): LogEntryTasksService
@@ -53,27 +38,21 @@ class ForTasks
 
     public function correctionSettings(): CorrectionSettingsReadService
     {
-        return $this->instances[CorrectionSettingsService::class] ??= new CorrectionSettingsService(
-            $this->ass_id,
-            $this->dependencies->repositories()
-        );
+        return $this->internal->correctionSettings($this->ass_id);
     }
 
     public function pdfSettings(): PdfSettingsFullService
     {
-        return $this->instances[PdfSettingsService::class] = new PdfSettingsService(
-            $this->ass_id,
-            $this->dependencies->repositories()
-        );
+        return $this->internal->pdfSettings($this->ass_id);
     }
 
-    public function assessment_grading(): AssessmentGradingService
+    public function assessmentGrading(): AssessmentGradingService
     {
-        return $this->internal->assessment_grading($this->ass_id);
+        return $this->internal->assessmentGrading($this->ass_id);
     }
 
-    public function correction_process(): CorrectionProcessService
+    public function correctionProcess(): CorrectionProcessService
     {
-        return $this->internal->correction_process($this->ass_id);
+        return $this->internal->correctionProcess($this->ass_id);
     }
 }

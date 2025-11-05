@@ -24,7 +24,6 @@ class Factory
         return $this->instances[ForClients::class][$ass_id][$user_id] ??= new ForClients(
             $ass_id,
             $user_id,
-            $this->dependencies,
             $this->internal()
         );
     }
@@ -55,20 +54,20 @@ class Factory
     public function forRest(): ForRest
     {
         return $this->instances[ForRest::class] ??= new ForRest(
-            $this->dependencies,
             $this->internal()
         );
     }
 
     /**
      * Get the API for Tasks and Task Types
+     * @param int $ass_id id of the assessment object
+     * @param int $user_id id of the currently active user
      */
     public function forTasks(int $ass_id, int $user_id): ForTasks
     {
-        return $this->instances[ForTasks::class] ??= new ForTasks(
+        return $this->instances[ForTasks::class][$ass_id][$user_id] ??= new ForTasks(
             $ass_id,
             $user_id,
-            $this->dependencies,
             $this->internal()
         );
     }

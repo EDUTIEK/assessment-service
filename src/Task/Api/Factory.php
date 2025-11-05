@@ -21,7 +21,6 @@ class Factory
         return $this->instances[ForClients::class][$ass_id][$user_id] ??= new ForClients(
             $ass_id,
             $user_id,
-            $this->dependencies,
             $this->internal()
         );
     }
@@ -52,7 +51,6 @@ class Factory
     public function forAssessment(): ForAssessment
     {
         return $this->instances[ForAssessment::class] ??= new ForAssessment(
-            $this->dependencies,
             $this->internal()
         );
     }
