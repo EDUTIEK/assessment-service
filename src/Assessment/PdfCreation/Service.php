@@ -20,11 +20,11 @@ class Service implements FullService
     ) {
     }
 
-    public function getSortedParts(string $purpose): array
+    public function getSortedParts(PdfPurpose $purpose): array
     {
         $configs = [];
         $max = 0;
-        foreach ($this->repos->pdfConfig()->allByAssIdAndPurpose($this->ass_id, $purpose) as $config) {
+        foreach ($this->repos->pdfConfig()->allByAssIdAndPurpose($this->ass_id, $purpose->value) as $config) {
             $configs[$config->getComponent()][$config->getKey()] = $config;
             $max = max($max, $config->getPosition());
         }
@@ -52,15 +52,15 @@ class Service implements FullService
      * Save the activation and sorting
      * @param PdfConfigPart[] $parts
      */
-    public function saveSortedParts(string $purpose, array $parts): void
+    public function saveSortedParts(PdfPurpose $purpose, array $parts): void
     {
         $repo = $this->repos->pdfConfig();
-        $this->repos->pdfConfig()->deleteByAssIdAndPurpose($this->ass_id, $purpose);
+        $this->repos->pdfConfig()->deleteByAssIdAndPurpose($this->ass_id, $purpose->value);
 
         foreach ($parts as $part) {
             $repo->save($repo->new()
                 ->setAssId($this->ass_id)
-                ->setPurpose($purpose)
+                ->setPurpose($purpose->value)
                 ->setComponent($part->getComponent())
                 ->setKey($part->getKey())
                 ->setIsActive($part->getIsActive())
@@ -71,11 +71,8 @@ class Service implements FullService
     public function createWritingPdf(int $writer_id): string
     {
         // todo: replace experimental stuff
-        $parts = $this->getSortedParts(PdfConfig::PURPOSE_CORRECTION);
-        foreach ($parts as $part) {
-
-        }
-        $this->saveSortedParts(PdfConfig::PURPOSE_CORRECTION, $parts);
+        $parts = $this->getSortedParts(PdfPurpose::CORRECTION);
+        $this->saveSortedParts(PdfPurpose::CORRECTION, $parts);
         return '';
     }
 
@@ -85,13 +82,13 @@ class Service implements FullService
         return '';
     }
 
-    private function getProvider(string $component, string $purpose): ?PdfPartProvider
+    private function getProvider(string $component, PdfPurpose $purpose): ?PdfPartProvider
     {
         switch ($purpose) {
-            case PdfConfig::PURPOSE_WRITING:
+            case PdfPurpose::WRITING:
                 return $this->apis->api($component)?->writingPartProvider($this->ass_id, $this->user_id);
 
-            case PdfConfig::PURPOSE_CORRECTION:
+            case PdfPurpose::CORRECTION:
                 return $this->apis->api($component)?->correctionPartProvider($this->ass_id, $this->user_id);
         }
         return null;

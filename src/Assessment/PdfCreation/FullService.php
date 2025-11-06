@@ -10,7 +10,7 @@ interface FullService
      * Get the parts for PDF generation, sorted by their position
      * @return PdfConfigPart[]
      */
-    public function getSortedParts(string $purpose): array;
+    public function getSortedParts(PdfPurpose $purpose): array;
 
     /**
      * Save the position and activation of the parts for PDF generation
@@ -18,7 +18,7 @@ interface FullService
      *
      * @param PdfConfigPart[] $parts
      */
-    public function saveSortedParts(string $purpose, array $parts): void;
+    public function saveSortedParts(PdfPurpose $purpose, array $parts): void;
 
 
     /**

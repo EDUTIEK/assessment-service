@@ -6,9 +6,6 @@ namespace Edutiek\AssessmentService\Assessment\Data;
 
 abstract class PdfConfig implements AssessmentEntity
 {
-    public const PURPOSE_WRITING = 'writing';
-    public const PURPOSE_CORRECTION = 'correction';
-
     abstract public function getId(): int;
     abstract public function setId(int $id): self;
     abstract public function getAssId(): int;
