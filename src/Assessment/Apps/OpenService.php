@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\Assessment\WriterApp;
+namespace Edutiek\AssessmentService\Assessment\Apps;
 
 interface OpenService
 {

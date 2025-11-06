@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Api;
 
 use Edutiek\AssessmentService\Assessment\Alert\FullService as FullAlertService;
+use Edutiek\AssessmentService\Assessment\Apps\OpenService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as AssessmentGradingReadService;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\FullService as CorrectionSettingsFullService;
 use Edutiek\AssessmentService\Assessment\Corrector\FullService as CorrectorFullService;
-use Edutiek\AssessmentService\Assessment\CorrectorApp\OpenService as CorrectorAppOpenService;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\DisabledGroup\FullService as DisabledGroupFullService;
@@ -24,7 +24,6 @@ use Edutiek\AssessmentService\Assessment\Properties\FullService as PropertiesFul
 use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as FullWorkingTime;
 use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as IndividualWorkingTime;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterFullService;
-use Edutiek\AssessmentService\Assessment\WriterApp\OpenService as WriterAppOpenService;
 
 readonly class ForClients
 {
@@ -45,7 +44,7 @@ readonly class ForClients
         return $this->internal->corrector($this->ass_id);
     }
 
-    public function correctorApp(int $context_id): CorrectorAppOpenService
+    public function correctorApp(int $context_id): OpenService
     {
         return $this->internal->correctorApp($this->ass_id, $context_id, $this->user_id);
     }
@@ -90,7 +89,7 @@ readonly class ForClients
         return $this->internal->writer($this->ass_id, $this->user_id);
     }
 
-    public function writerApp(int $context_id): WriterAppOpenService
+    public function writerApp(int $context_id): OpenService
     {
         return $this->internal->writerApp($this->ass_id, $context_id, $this->user_id);
     }

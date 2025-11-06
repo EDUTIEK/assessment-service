@@ -2,10 +2,10 @@
 
 namespace Edutiek\AssessmentService\Task\AppBridges;
 
+use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeAction;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
-use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
 use Edutiek\AssessmentService\System\File\Storage;
@@ -17,7 +17,7 @@ use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Task\Data\WriterAnnotation;
 use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
 
-class WriterBridge implements WriterBridgeInterface
+class WriterBridge implements AppBridge
 {
     private ?Writer $writer;
     private $tasks = [];

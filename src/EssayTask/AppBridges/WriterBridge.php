@@ -6,7 +6,7 @@ use DiffMatchPatch\DiffMatchPatch;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeAction;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
-use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
+use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\Data\WriterNotice;
@@ -21,7 +21,7 @@ use Edutiek\AssessmentService\Task\Data\WriterAnnotation;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TasksService;
 use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
 
-class WriterBridge implements WriterBridgeInterface
+class WriterBridge implements AppBridge
 {
     private ?Writer $writer;
     private $tasks = [];
@@ -45,7 +45,7 @@ class WriterBridge implements WriterBridgeInterface
 
     public function getData(bool $for_update): array
     {
-        if ($this->writer === null ) {
+        if ($this->writer === null) {
             return [];
         }
 
@@ -123,10 +123,10 @@ class WriterBridge implements WriterBridgeInterface
 
     private function applyPreferences(ChangeRequest $change): ChangeResponse
     {
-        $repo =  $this->repos->writerPrefs();
+        $repo = $this->repos->writerPrefs();
         $data = $change->getPayload();
         $prefs = $repo->one($this->writer->getId())
-            ??  $repo->new()->setWriterId($this->writer->getId());
+            ?? $repo->new()->setWriterId($this->writer->getId());
 
         $this->entity->fromPrimitives([
             'editor_zoom' => $data['editor_zoom'] ?? null,

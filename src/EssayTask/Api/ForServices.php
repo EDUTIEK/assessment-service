@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\Api;
 
-use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
+use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
+use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApi;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeManager as ManagerInterface;
 use Edutiek\AssessmentService\EssayTask\AppBridges\WriterBridge as WriterBridgeService;
@@ -22,8 +23,23 @@ readonly class ForServices implements TypeApi
         return $this->internal->manager($ass_id, $task_id, $user_id);
     }
 
-    public function writerBridge(int $ass_id, int $user_id): WriterBridgeInterface
+    public function writerBridge(int $ass_id, int $user_id): ?AppBridge
     {
         return $this->internal->writerBridge($ass_id, $user_id);
+    }
+
+    public function correctorBridge(int $ass_id, int $user_id): ?AppBridge
+    {
+        return null;
+    }
+
+    public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
+    {
+        return null;
+    }
+
+    public function correctionPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
+    {
+        return null;
     }
 }

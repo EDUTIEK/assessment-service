@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\WriterApp;
 
+use Edutiek\AssessmentService\Assessment\Api\ComponentApiFactory;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeAction;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
+use Edutiek\AssessmentService\Assessment\Apps\OpenService;
 use Edutiek\AssessmentService\Assessment\Apps\RestException;
 use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
 use Edutiek\AssessmentService\Assessment\Apps\RestService;
-use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridge;
 use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager as TasksManager;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApiFactory;
 use Edutiek\AssessmentService\System\Config\FrontendModule;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\File\Delivery;
@@ -31,11 +30,8 @@ readonly class Service implements OpenService, RestService
         private ConfigService $config,
         private OpenHelper $open_helper,
         private RestHelper $rest_helper,
-        private TasksManager $tasks_manager,
+        private ComponentApiFactory $apis,
         private App $app,
-        private WriterBridge $ass_bridge,
-        private WriterBridge $task_bridge,
-        private TypeApiFactory $types,
         private Delivery $delivery,
     ) {
     }
@@ -72,8 +68,9 @@ readonly class Service implements OpenService, RestService
         $this->prepare($request, $response, $args, TokenPurpose::DATA);
 
         $data = [];
-        foreach ($this->getComponents() as $component) {
-            $data[$component] = $this->getBridge($component)->getData(false);
+        foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
+            $bridge = $this->apis->api($component)->writerBridge($this->ass_id, $this->user_id);
+            $data[$component] = $bridge->getData(false);
         }
         // create new tokens - these will be replaced in the app
         $response = $this->rest_helper->setNewDataToken($response);
@@ -89,8 +86,9 @@ readonly class Service implements OpenService, RestService
         $this->prepare($request, $response, $args, TokenPurpose::DATA);
 
         $data = [];
-        foreach ($this->getComponents() as $component) {
-            $data[$component] = $this->getBridge($component)->getData(true);
+        foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
+            $bridge = $this->apis->api($component)->writerBridge($this->ass_id, $this->user_id);
+            $data[$component] = $bridge->getData(true);
         }
         // just
         $this->rest_helper->extendDataToken($response);
@@ -115,7 +113,7 @@ readonly class Service implements OpenService, RestService
             throw new RestException('No entity given', RestException::NOT_FOUND);
         }
 
-        $bridge = $this->getBridge($component);
+        $bridge = $this->apis->api((string) $component)?->writerBridge($this->ass_id, $this->user_id);
         if ($bridge === null) {
             throw new RestException('Component not found', RestException::NOT_FOUND);
         }
@@ -139,7 +137,7 @@ readonly class Service implements OpenService, RestService
         $json = [];
 
         foreach ($this->rest_helper->getJsonData($request) as $component => $component_data) {
-            $bridge = $this->getBridge((string) $component);
+            $bridge = $this->apis->api((string) $component)?->writerBridge($this->ass_id, $this->user_id);
             if ($bridge === null) {
                 continue;
             }
@@ -162,40 +160,5 @@ readonly class Service implements OpenService, RestService
         $this->rest_helper->setAlive();
         $this->rest_helper->extendDataToken($response);
         return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $json);
-    }
-
-    /**
-     * Get all relevant components for the tasks of the assessment
-     */
-    private function getComponents()
-    {
-        $components = ['Assessment', 'Task'];
-        foreach ($this->tasks_manager->all() as $task) {
-            $components[] = $task->getTaskType()->component();
-        }
-        return array_unique($components);
-    }
-
-    /**
-     * Get the responsible bridge by a component string
-     * Components may be given in lower case, e.g. in REST paths
-     */
-    private function getBridge(string $component): ?WriterBridge
-    {
-        $compare = strtolower($component);
-        switch ($compare) {
-            case 'assessment':
-                return $this->ass_bridge;
-            case 'task':
-                return $this->task_bridge;
-            default:
-                foreach ($this->tasks_manager->all() as $task) {
-                    if (strtolower($task->getTaskType()->component()) == $compare) {
-                        return $this->types->api($task->getTaskType())
-                            ->writerBridge($this->ass_id, $this->user_id);
-                    }
-                }
-        }
-        return null;
     }
 }

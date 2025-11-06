@@ -3,13 +3,13 @@
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
 /**
- * Functions to provide and process data for the assessment-writer WebApp
+ * Functions to provide and process data for an app
  * Must be implemented by Assessment, Task and all Task Type components
  */
-interface WriterBridge
+interface AppBridge
 {
     /**
-     * Get all data to open the the writer app
+     * Get all data to open the app
      * @return array - will converted to JSON
      */
     public function getData(bool $for_update): array;

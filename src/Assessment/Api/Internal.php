@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Api;
 
 use Edutiek\AssessmentService\Assessment\Alert\Service as AlertService;
+use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
 use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
 use Edutiek\AssessmentService\Assessment\Apps\Service as AppService;
-use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\Service as AssessmentGradingService;
 use Edutiek\AssessmentService\Assessment\Authentication\Service as AuthenticationService;
 use Edutiek\AssessmentService\Assessment\ConstraintHandling\Provider as ConstraintProvider;
@@ -26,20 +26,23 @@ use Edutiek\AssessmentService\Assessment\Location\Service as LocationService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 use Edutiek\AssessmentService\Assessment\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\Service as OrgaSettingsService;
+use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\PdfSettings\Service as PdfSettingsService;
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
 use Edutiek\AssessmentService\Assessment\Properties\Service as PropertiesService;
 use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymFullService;
 use Edutiek\AssessmentService\Assessment\Pseudonym\Service as PseudonymService;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApi;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
 use Edutiek\AssessmentService\Assessment\WriterApp\Service as WriterAppService;
-use Edutiek\AssessmentService\Assessment\WriterApp\WriterBridge;
+use Edutiek\AssessmentService\Assessment\AppBridges\WriterBridge;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Slim\App;
 use Slim\Factory\AppFactory;
 
-class Internal
+class Internal implements ComponentApi, ComponentApiFactory
 {
     private array $instances = [];
 
@@ -48,6 +51,42 @@ class Internal
     ) {
     }
 
+    /**
+     * Get the names of components needed in the assessment
+     * these are "Assessment", "Task" and all task types which are used by the tasks in the assessment
+     * @return string[]
+     */
+    public function components(int $ass_id, int $user_id): array
+    {
+        $components = ['Assessment', 'Task'];
+        foreach ($this->dependencies->taskApi()->taskManager($ass_id, $user_id)->all() as $task) {
+            $components[] = $task->getTaskType()->component();
+        }
+        return array_unique($components);
+    }
+
+    /**
+     * Get the api for a named component
+     * The name may be given in lower case, e.g. in REST paths
+     */
+    public function api(string $component): ?ComponentApi
+    {
+        $compare = strtolower($component);
+        switch ($compare) {
+            case 'assessment':
+                return $this;
+            case 'task':
+                return $this->dependencies->taskApi();
+            default:
+                foreach (TaskType::cases() as $task_type) {
+                    if (strtolower($task_type->component()) === $compare) {
+                        return  $this->dependencies->typeApis()->api($task_type);
+                    }
+                }
+        }
+        return null;
+
+    }
     /**
      * Internal authentication service for REST handlers
      */
@@ -128,11 +167,8 @@ class Internal
             $this->dependencies->systemApi()->config(),
             $this->openHelper($ass_id, $context_id, $user_id),
             $this->restHelper($ass_id, $context_id, $user_id),
-            $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
+            $this,
             $this->slimApp(),
-            $this->writerBridge($ass_id, $context_id, $user_id),
-            $this->dependencies->taskApi()->writerBridge($ass_id, $user_id),
-            $this->dependencies->typeApis(),
             $this->dependencies->systemApi()->fileDelivery()
         );
     }
@@ -145,12 +181,13 @@ class Internal
     {
         return new CorrectorAppService(
             $ass_id,
-            $context_id,
             $user_id,
+            $this->dependencies->systemApi()->config(),
             $this->openHelper($ass_id, $context_id, $user_id),
             $this->restHelper($ass_id, $context_id, $user_id),
+            $this,
             $this->slimApp(),
-            $this->dependencies->repositories()
+            $this->dependencies->systemApi()->fileDelivery()
         );
     }
 
@@ -224,9 +261,9 @@ class Internal
         return $app;
     }
 
-    private function writerBridge(int $ass_id, $context_id, int $user_id): WriterBridgeInterface
+    public function writerBridge(int $ass_id, int $user_id): ?AppBridge
     {
-        return $this->instances[WriterBridge::class][$ass_id][$context_id][$user_id] ??= new WriterBridge(
+        return $this->instances[WriterBridge::class][$ass_id][$user_id] ??= new WriterBridge(
             $ass_id,
             $user_id,
             $this->workingTimeFactory($user_id),
@@ -273,6 +310,18 @@ class Internal
         );
     }
 
+    public function correctorBridge(int $ass_id, int $user_id): ?AppBridge
+    {
+        // todo: provide corrector bridge
+        return null;
+    }
+
+    public function correctionPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
+    {
+        // TODO: Implement correctionPartProvider() method.
+        return null;
+    }
+
     public function gradeLevel(int $ass_id): GradeLevelService
     {
         return $this->instances[GradeLevelService::class][$ass_id] = new GradeLevelService(
@@ -293,7 +342,7 @@ class Internal
 
     public function location(int $ass_id): LocationService
     {
-        return $this->instances[LocationService::class][$ass_id]  = new LocationService(
+        return $this->instances[LocationService::class][$ass_id] = new LocationService(
             $ass_id,
             $this->dependencies->repositories()
         );
@@ -360,4 +409,11 @@ class Internal
             $this
         );
     }
+
+    public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
+    {
+        // TODO: Implement writingPartProvider() method.
+        return null;
+    }
+
 }

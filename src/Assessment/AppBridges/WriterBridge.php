@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\Assessment\WriterApp;
+namespace Edutiek\AssessmentService\Assessment\AppBridges;
 
 use Edutiek\AssessmentService\Assessment\Apps\ChangeAction;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
-use Edutiek\AssessmentService\Assessment\Apps\WriterBridge as WriterBridgeInterface;
+use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
@@ -15,7 +15,7 @@ use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\Data\Config;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
 
-class WriterBridge implements WriterBridgeInterface
+class WriterBridge implements AppBridge
 {
     private ?\Edutiek\AssessmentService\Assessment\Data\Writer $writer;
 
