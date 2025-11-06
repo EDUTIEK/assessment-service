@@ -35,11 +35,12 @@ readonly class ForServices implements TypeApi
 
     public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
     {
+        // currently the essay task component provides no writing pdf parts
         return null;
     }
 
     public function correctionPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
     {
-        return null;
+        return $this->internal->correctionPartProvider($ass_id, $user_id);
     }
 }

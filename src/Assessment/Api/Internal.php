@@ -27,6 +27,7 @@ use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 use Edutiek\AssessmentService\Assessment\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\Service as OrgaSettingsService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
+use Edutiek\AssessmentService\Assessment\PdfCreation\Service as PdfCreationService;
 use Edutiek\AssessmentService\Assessment\PdfSettings\Service as PdfSettingsService;
 use Edutiek\AssessmentService\Assessment\Permissions\Service as PermissionsService;
 use Edutiek\AssessmentService\Assessment\Properties\Service as PropertiesService;
@@ -41,6 +42,7 @@ use Edutiek\AssessmentService\Assessment\AppBridges\WriterBridge;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Slim\App;
 use Slim\Factory\AppFactory;
+use Edutiek\AssessmentService\Assessment\PdfCreation\CorrectionProvider;
 
 class Internal implements ComponentApi, ComponentApiFactory
 {
@@ -51,11 +53,6 @@ class Internal implements ComponentApi, ComponentApiFactory
     ) {
     }
 
-    /**
-     * Get the names of components needed in the assessment
-     * these are "Assessment", "Task" and all task types which are used by the tasks in the assessment
-     * @return string[]
-     */
     public function components(int $ass_id, int $user_id): array
     {
         $components = ['Assessment', 'Task'];
@@ -65,10 +62,6 @@ class Internal implements ComponentApi, ComponentApiFactory
         return array_unique($components);
     }
 
-    /**
-     * Get the api for a named component
-     * The name may be given in lower case, e.g. in REST paths
-     */
     public function api(string $component): ?ComponentApi
     {
         $compare = strtolower($component);
@@ -85,8 +78,8 @@ class Internal implements ComponentApi, ComponentApiFactory
                 }
         }
         return null;
-
     }
+
     /**
      * Internal authentication service for REST handlers
      */
@@ -318,8 +311,11 @@ class Internal implements ComponentApi, ComponentApiFactory
 
     public function correctionPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
     {
-        // TODO: Implement correctionPartProvider() method.
-        return null;
+        return $this->instances[CorrectionProvider::class][$ass_id][$user_id] ?? new CorrectionProvider(
+            $ass_id,
+            $this->dependencies->systemApi()->pdfProcessing(),
+            $this->language($user_id),
+        );
     }
 
     public function gradeLevel(int $ass_id): GradeLevelService
@@ -354,6 +350,16 @@ class Internal implements ComponentApi, ComponentApiFactory
             $ass_id,
             $this->dependencies->repositories(),
             $this->workingTimeFactory($user_id)
+        );
+    }
+
+    public function pdfCreation(int $ass_id, int $user_id): PdfCreationService
+    {
+        return $this->instances[PdfCreationService::class][$ass_id][$user_id] = new PdfCreationService(
+            $ass_id,
+            $user_id,
+            $this,
+            $this->dependencies->repositories()
         );
     }
 
@@ -412,7 +418,7 @@ class Internal implements ComponentApi, ComponentApiFactory
 
     public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
     {
-        // TODO: Implement writingPartProvider() method.
+        // currently the assessment component provides no writing parts
         return null;
     }
 

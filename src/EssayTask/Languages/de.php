@@ -17,4 +17,9 @@ return [
     'import_user_not_existing' => 'User existiert nicht',
     'import_same_file_exists' => 'Gleiche Datei existiert',
     'import_another_file_exists' => 'Unterschiedliche Datei existiert bereits',
+    'pdf_part_criteria_corrector1' => 'Bewertungsschema Erstkorrektor',
+    'pdf_part_criteria_corrector2' => 'Bewertungsschema Zweitkorrektor',
+    'pdf_part_comments_corrector1' => 'Anmerkungen Erstkorrektor',
+    'pdf_part_comments_corrector2' => 'Anmerkungen Zweitkorrektor',
+    'pdf_part_comments_all_correctors' => 'Anmerkungen alle Korrektoren'
 ];

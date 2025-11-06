@@ -12,7 +12,7 @@ interface PdfPartProvider
 
     /**
      * @param string $key
-     * @return string id of a saved pdf file
+     * @return string id of a temporarily saved pdf file
      */
-    public function renderPart(string $key): string;
+    public function renderPart(string $key, int $task_id, int $writer_id): string;
 }

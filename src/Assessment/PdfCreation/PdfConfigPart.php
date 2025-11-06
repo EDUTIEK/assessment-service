@@ -4,14 +4,17 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\PdfCreation;
 
-readonly class PdfConfigPart
+class PdfConfigPart
 {
+    private bool $active = false;
+    private int $position = 0;
+
     public function __construct(
-        private string $component,
-        private string $key,
-        private string $type,
-        private string $title,
-        private bool $hasPageNumbers
+        private readonly string $component,
+        private readonly string $key,
+        private readonly string $type,
+        private readonly string $title,
+        private readonly bool $hasPageNumbers
     ) {
     }
 
@@ -54,4 +57,43 @@ readonly class PdfConfigPart
     {
         return $this->hasPageNumbers;
     }
+
+    /**
+     * Get the activation of the part in the pdf of an assessment
+     * This is set by the PDF creation service
+     */
+    public function getIsActive(): bool
+    {
+        return $this->active;
+    }
+
+    /**
+     * Set the activation of the part in the pdf of an assessment
+     * This is set by the PDF creation service
+     */
+    public function setIsActive(bool $active): self
+    {
+        $this->active = $active;
+        return $this;
+    }
+
+    /**
+     * Set the position of the part in the pdf of an assessment
+     * This is set by the PDF creation service
+     */
+    public function getPosition(): int
+    {
+        return $this->position;
+    }
+
+    /**
+     * Set the position of the part in the pdf of an assessment
+     * This is set by the PDF creation service
+     */
+    public function setPosition(int $position): self
+    {
+        $this->position = $position;
+        return $this;
+    }
+
 }

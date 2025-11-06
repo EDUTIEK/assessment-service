@@ -20,6 +20,8 @@ use Edutiek\AssessmentService\Task\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\Task\RatingCriterion\Service as RatingCriterionService;
 use Edutiek\AssessmentService\Task\Resource\Service as ResourceService;
 use Edutiek\AssessmentService\Task\Settings\Service as SettingsService;
+use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
+use Edutiek\AssessmentService\Task\PdfCreation\CorrectionProvider;
 
 class Internal
 {
@@ -105,6 +107,15 @@ class Internal
         return $this->instances[CorrectorSummaryService::class][$ass_id][$user_id] ??= new CorrectorSummaryService(
             $this->checks($ass_id, $user_id),
             $this->dependencies->repositories()
+        );
+    }
+
+    public function correctionPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
+    {
+        return $this->instances[CorrectionProvider::class][$ass_id][$user_id] ?? new CorrectionProvider(
+            $ass_id,
+            $this->dependencies->systemApi()->pdfProcessing(),
+            $this->language($user_id),
         );
     }
 

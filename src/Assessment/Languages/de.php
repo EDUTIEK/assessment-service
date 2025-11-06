@@ -13,6 +13,7 @@ return [
     'log_entry_writing_removed_authorized' => 'Die Freigabe der Abgabe von %s wurde durch %s zurückgezogen.',
     'log_entry_writer_note' => 'Notiz zu Teilnehmer %s von %s.',
     'log_entry_note' => 'Notiz von %s:',
+    'pdf_part_frontpage' => 'Deckblatt',
     'sub_task' => 'Teilaufgabe {number}',
     'result_available_finalised' => 'wenn die Abgabe korrigiert ist',
     'result_available_review' => 'zur Einsichtnahme',

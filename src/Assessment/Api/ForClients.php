@@ -18,6 +18,7 @@ use Edutiek\AssessmentService\Assessment\Location\FullService as LocationFullSer
 use Edutiek\AssessmentService\Assessment\LogEntry\FullService as FullLogEntryService;
 use Edutiek\AssessmentService\Assessment\Manager\FullService as ManagerFullService;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\FullService as OrgaSettingsFullService;
+use Edutiek\AssessmentService\Assessment\PdfCreation\FullService as PdfCreationService;
 use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
 use Edutiek\AssessmentService\Assessment\Properties\FullService as PropertiesFullSrvice;
@@ -67,6 +68,11 @@ readonly class ForClients
     public function orgaSettings(): OrgaSettingsFullService
     {
         return $this->internal->orgaSettings($this->ass_id, $this->user_id);
+    }
+
+    public function pdfCreation(): PdfCreationService
+    {
+        return $this->internal->pdfCreation($this->ass_id, $this->user_id);
     }
 
     public function pdfSettings(): PdfSettingsFullService

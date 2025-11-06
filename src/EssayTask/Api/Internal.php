@@ -26,6 +26,8 @@ use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettin
 use Edutiek\AssessmentService\System\BackgroundTask\Job;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
+use Edutiek\AssessmentService\EssayTask\PdfCreation\CorrectionProvider;
 
 class Internal
 {
@@ -86,6 +88,15 @@ class Internal
             $ass_id,
             $user_id,
             $this
+        );
+    }
+
+    public function correctionPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
+    {
+        return $this->instances[CorrectionProvider::class][$ass_id][$user_id] ?? new CorrectionProvider(
+            $ass_id,
+            $this->dependencies->systemApi()->pdfProcessing(),
+            $this->language($user_id),
         );
     }
 
