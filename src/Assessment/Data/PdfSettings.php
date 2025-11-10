@@ -37,6 +37,11 @@ abstract class PdfSettings implements AssessmentEntity, PdfCreatorSettings
     abstract public function setLeftMargin(int $left_margin): self;
     abstract public function getRightMargin(): int;
     abstract public function setRightMargin(int $right_margin): self;
+    abstract public function getFormat(): PdfFormat;
+    abstract public function setFormat(PdfFormat $format): self;
+
+    abstract public function getFeedbackMode(): PdfFeedbackMode;
+    abstract public function setFeedbackMode(PdfFeedbackMode $mode): self;
 
 
     public function getHeaderMargin(): int
