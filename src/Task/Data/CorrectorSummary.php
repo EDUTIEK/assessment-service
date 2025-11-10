@@ -18,6 +18,8 @@ abstract class CorrectorSummary implements TaskEntity
     abstract public function setCorrectorId(int $corrector_id): self;
     abstract public function getSummaryText(): ?string;
     abstract public function setSummaryText(?string $summary_text): self;
+    abstract public function getSummaryPdf(): ?string;
+    abstract public function setSummaryPdf(?string $summary_pdf): self;
     abstract public function getPoints(): ?float;
     abstract public function setPoints(?float $points): self;
     abstract public function getLastChange(): ?DateTimeImmutable;
@@ -27,9 +29,9 @@ abstract class CorrectorSummary implements TaskEntity
     abstract public function getCorrectionAuthorizedBy(): ?int;
     abstract public function setCorrectionAuthorizedBy(?int $correction_authorized_by): self;
 
-    public function getGradingStatus() : GradingStatus
+    public function getGradingStatus(): GradingStatus
     {
-        if(empty($this->getLastChange())) {
+        if (empty($this->getLastChange())) {
             return GradingStatus::NOT_STARTED;
         }
 
@@ -41,7 +43,7 @@ abstract class CorrectorSummary implements TaskEntity
         return GradingStatus::AUTHORIZED;
     }
 
-    public function isAuthorized() : bool
+    public function isAuthorized(): bool
     {
         return $this->getCorrectionAuthorized() !== null;
     }

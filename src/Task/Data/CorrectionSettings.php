@@ -20,4 +20,8 @@ abstract class CorrectionSettings implements TaskEntity
     abstract public function setEnableCommentRatings(bool $enable_comment_ratings): self;
     abstract public function getEnablePartialPoints(): bool;
     abstract public function setEnablePartialPoints(bool $enable_partial_points): self;
+    abstract public function getEnableSummaryPdf(): bool;
+    abstract public function setEnableSummaryPdf(bool $enable_summary_pdf): self;
+    abstract public function getSummaryPdfAdvice(): ?string;
+    abstract public function setSummaryPdfAdvice(?string $summary_pdf_advice): self;
 }
