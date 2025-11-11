@@ -53,6 +53,6 @@ readonly class ForTasks
 
     public function correctionProcess(): CorrectionProcessService
     {
-        return $this->internal->correctionProcess($this->ass_id);
+        return $this->internal->correctionProcess($this->ass_id, $this->user_id);
     }
 }

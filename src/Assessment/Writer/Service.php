@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\Assessment\Writer;
 
 use DateTimeImmutable;
 use Edutiek\AssessmentService\Assessment\Api\ApiException;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\LogEntry\FullService as LogEntryService;
@@ -110,11 +111,13 @@ readonly class Service implements ReadService, FullService
         }
     }
 
+    // todo: handle in CorrectionProcess
     public function removeCorrectionFinalisation(Writer $writer, int $by_user_id): void
     {
-        $was_finalized = ($writer->getCorrectionFinalized() !== null);
-        $writer->setCorrectionFinalized(null);
-        $writer->setCorrectionFinalizedBy(null);
+        $was_finalized = ($writer->getCorrectionStatus() !== CorrectionStatus::FINALIZED);
+        $writer->setCorrectionStatus(CorrectionStatus::OPEN);
+        $writer->setCorrectionStatusChanged(new \DateTimeImmutable("now"));
+        $writer->setCorrectionStatusChangedBy($by_user_id);
         if ($this->validate($writer)) {
             $this->save($writer);
             if ($was_finalized) {

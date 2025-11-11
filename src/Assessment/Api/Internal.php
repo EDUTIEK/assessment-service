@@ -282,9 +282,13 @@ class Internal implements ComponentApi, ComponentApiFactory
         return $this->instances[AssessmentGradingService::class][$ass_id] ??= new AssessmentGradingService($ass_id, $this->dependencies->repositories());
     }
 
-    public function correctionProcess(int $ass_id): CorrectionProcessService
+    public function correctionProcess(int $ass_id, int $user_id): CorrectionProcessService
     {
-        return $this->instances[CorrectionProcessService::class][$ass_id] ??= new CorrectionProcessService($ass_id, $this->dependencies->repositories());
+        return $this->instances[CorrectionProcessService::class][$ass_id][$user_id] ??= new CorrectionProcessService(
+            $ass_id,
+            $user_id,
+            $this->dependencies->repositories()
+        );
     }
 
     public function correctionSettings(int $ass_id): CorrectionSettingsService

@@ -37,92 +37,118 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
     abstract public function setWritingAuthorized(?DateTimeImmutable $writing_authorized): self;
     abstract public function getWritingAuthorizedBy(): ?int;
     abstract public function setWritingAuthorizedBy(?int $writing_authorized_by): self;
-    abstract public function getCorrectionFinalized(): ?DateTimeImmutable;
-    abstract public function setCorrectionFinalized(?DateTimeImmutable $correction_finalized): self;
-    abstract public function getCorrectionFinalizedBy(): ?int;
-    abstract public function setCorrectionFinalizedBy(?int $correction_finalized_by): self;
     abstract public function getWritingExcluded(): ?DateTimeImmutable;
     abstract public function setWritingExcluded(?DateTimeImmutable $writing_excluded): self;
     abstract public function getWritingExcludedBy(): ?int;
     abstract public function setWritingExcludedBy(?int $writing_excluded_by): self;
+    abstract public function getCorrectionStatus(): CorrectionStatus;
+    abstract public function setCorrectionStatus(CorrectionStatus $status): self;
+    abstract public function getCorrectionStatusChanged(): ?DateTimeImmutable;
+    abstract public function setCorrectionStatusChanged(DateTimeImmutable $correction_status_changed): self;
+    abstract public function getCorrectionStatusChangedBy(): ?int;
+    abstract public function setCorrectionStatusChangedBy(?int $correction_status_changed_by): self;
     abstract public function getStitchComment(): ?string;
     abstract public function setStitchComment(?string $stitch_comment): self;
     abstract public function getLocation(): ?int;
     abstract public function setLocation(?int $location): self;
     abstract public function getReviewNotification(): int;
     abstract public function setReviewNotification(int $review_notification): self;
-    abstract public function setStitchNeeded(bool $stitch_needed): self;
-    abstract public function getStitchNeeded(): bool;
 
     public function getWritingStatus(): WritingStatus
     {
-        if($this->getWritingExcluded() !== null){
+        if ($this->getWritingExcluded() !== null) {
             return WritingStatus::EXCLUDED;
         }
-        if($this->getWritingAuthorized() !== null) {
+        if ($this->getWritingAuthorized() !== null) {
             return WritingStatus::AUTHORIZED;
         }
-        if($this->getWorkingStart() !== null) {
+        if ($this->getWorkingStart() !== null) {
             return WritingStatus::STARTED;
         }
         return WritingStatus::NOT_STARTED;
     }
 
-    public function isAuthorized() : bool
+    public function isAuthorized(): bool
     {
         return $this->getWritingAuthorized() !== null;
     }
 
-    public function canGetAuthorized() : bool
+    public function canGetAuthorized(): bool
     {
         return $this->getWorkingStart() !== null
             && $this->getWritingAuthorized() === null;
     }
 
-    public function canGetUnauthorized() : bool
+    public function canGetUnauthorized(): bool
     {
         return $this->getWorkingStart() !== null
             && $this->getWritingAuthorized() !== null;
     }
 
-    public function hasChangedTimeLimit() : bool
+    public function hasChangedTimeLimit(): bool
     {
         return $this->getEarliestStart() !== null
             || $this->getLatestEnd() !== null
             || !empty($this->getTimeLimitMinutes());
     }
 
-    public function canChangeWorkingTime() : bool
+    public function canChangeWorkingTime(): bool
     {
         return $this->getWritingAuthorized() === null && $this->getCorrectionFinalized() === null;
     }
 
-    public function isExcluded() : bool
+    public function isExcluded(): bool
     {
         return $this->getWritingExcluded() !== null;
     }
 
-    public function canGetExcluded() : bool
+    public function canGetExcluded(): bool
     {
         return $this->getWritingExcluded() === null;
     }
 
-    public function canGetRepealed() : bool
+    public function canGetRepealed(): bool
     {
         return $this->getWritingExcluded() !== null;
     }
 
-    public function canGetSight() : bool
+    public function canGetSight(): bool
     {
         return $this->getWorkingStart() !== null;
     }
 
-    public function isCorrectionFinalized() : bool
+    public function canDownloadWrittenPdf(): bool
     {
-        return $this->getCorrectionFinalized() !== null;
+        return !empty($this->getWorkingStart());
     }
 
-    public function addValidationError(ValidationError $error) : void
+    public function getStitchNeeded(): bool
+    {
+        return $this->getCorrectionStatus() === CorrectionStatus::STITCH;
+    }
+
+    public function getCorrectionFinalized(): ?DateTimeImmutable
+    {
+        if ($this->getCorrectionStatus() === CorrectionStatus::FINALIZED) {
+            return $this->getCorrectionStatusChanged();
+        }
+        return null;
+    }
+
+    public function getCorrectionFinalizedBy(): ?int
+    {
+        if ($this->getCorrectionStatus() === CorrectionStatus::FINALIZED) {
+            return $this->getCorrectionStatusChangedBy();
+        }
+        return null;
+    }
+
+    public function isCorrectionFinalized(): bool
+    {
+        return $this->getCorrectionStatus() === CorrectionStatus::FINALIZED;
+    }
+
+    public function addValidationError(ValidationError $error): void
     {
         $this->validation_errors[] = $error;
     }
@@ -130,10 +156,5 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
     public function getValidationErrors(): array
     {
         return $this->validation_errors;
-    }
-
-    public function canDownloadWrittenPdf(): bool
-    {
-        return !empty($this->getWorkingStart());
     }
 }
