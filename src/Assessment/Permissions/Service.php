@@ -254,4 +254,10 @@ class Service implements ReadService
     {
         return $this->repos->writer()->oneByUserIdAndAssId($this->user_id, $this->ass_id);
     }
+
+    public function canEditDocumentationSettings()
+    {
+        return $this->permissions->getMaintainSettings();
+    }
+
 }
