@@ -54,7 +54,7 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
     abstract public function setStitchNeeded(bool $stitch_needed): self;
     abstract public function getStitchNeeded(): bool;
 
-    public function getStatus(): WritingStatus
+    public function getWritingStatus(): WritingStatus
     {
         if($this->getWritingExcluded() !== null){
             return WritingStatus::EXCLUDED;

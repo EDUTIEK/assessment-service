@@ -8,9 +8,9 @@ interface FullService
 {
     public function hasComments();
     public function hasAuthorizedSummaries(?int $corrector_id = null);
-    /** @return CorrectionStatus[] */
-    public function allWriterCorrectionStatus() : array;
-    public function oneWriterCorrectionStatus(Writer $writer) : CorrectionStatus;
+    /** @return CombinedStatus[] */
+    public function allWriterCombinedStatus() : array;
+    public function oneWriterCmbinedStatus(Writer $writer) : CombinedStatus;
 
     /**
      * @param int[]|null $corrector_ids

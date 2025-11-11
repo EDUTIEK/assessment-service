@@ -2,7 +2,7 @@
 
 namespace Edutiek\AssessmentService\Task\AssessmentStatus;
 
-enum CorrectionStatus : int
+enum CombinedStatus : int
 {
     //Numbers match WritingStatus
 

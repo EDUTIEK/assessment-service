@@ -25,7 +25,7 @@ readonly class Service implements FullService
         return $this->repos->correctorComment()->hasByAssId($this->ass_id);
     }
 
-    public function allWriterCorrectionStatus() : array
+    public function allWriterCombinedStatus() : array
     {
         $essay_writer_mapping = [];
         $writer_summaries = [];
@@ -38,42 +38,42 @@ readonly class Service implements FullService
 
         foreach ($this->writer_service->all() as $writer) {
             $summaries = $writer_summaries[$writer->getId()] ?? [];
-            $status[$writer->getId()] = $this->getWriterCorrectionStatus($writer, $summaries);
+            $status[$writer->getId()] = $this->getWriterCombinedStatus($writer, $summaries);
         }
         return $status;
     }
 
-    public function oneWriterCorrectionStatus(Writer $writer) : CorrectionStatus
+    public function oneWriterCmbinedStatus(Writer $writer) : CombinedStatus
     {
         $summaries = $this->repos->correctorSummary()->allByWriterId($writer->getId());
-        return $this->getWriterCorrectionStatus($writer, $summaries);
+        return $this->getWriterCombinedStatus($writer, $summaries);
     }
 
     /**
      * @param Writer                $writer
      * @param CorrectorSummary[]   $summaries
-     * @return CorrectionStatus
+     * @return CombinedStatus
      */
-    private function getWriterCorrectionStatus(Writer $writer, array $summaries) : CorrectionStatus
+    private function getWriterCombinedStatus(Writer $writer, array $summaries) : CombinedStatus
     {
-        $writing_status = $writer->getStatus();
+        $writing_status = $writer->getWritingStatus();
         if ($writing_status !== WritingStatus::AUTHORIZED) {
-            return CorrectionStatus::from($writing_status->value);
+            return CombinedStatus::from($writing_status->value);
         }
 
         if ($writer->getCorrectionFinalized() !== null) {
-            return CorrectionStatus::FINALIZED;
+            return CombinedStatus::FINALIZED;
         }
 
         if (!$writer->getStitchNeeded()) {
-            return CorrectionStatus::STITCH_NEEDED;
+            return CombinedStatus::STITCH_NEEDED;
         }
 
         if (count($summaries) > 0 && max(array_map(fn (CorrectorSummary $s) => $s->getLastChange(), $summaries)) !== null) {
-            return CorrectionStatus::STARTED;
+            return CombinedStatus::STARTED;
         }
 
-        return CorrectionStatus::WRITING_AUTHORIZED;
+        return CombinedStatus::WRITING_AUTHORIZED;
     }
 
 
