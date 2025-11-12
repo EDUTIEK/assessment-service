@@ -18,6 +18,7 @@ use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImageServ
 use Edutiek\AssessmentService\EssayTask\Data\EssayImage;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\FullService as WritingSettings;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
+use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessing;
 
 class Service implements FullService
 {
@@ -30,6 +31,7 @@ class Service implements FullService
         private readonly WritingSettings $writing_settings,
         private readonly Format $format,
         private readonly EssayImageService $essay_image_service,
+        private readonly PdfProcessing $pdf_processing,
     ) {
     }
 
@@ -43,44 +45,43 @@ class Service implements FullService
             foreach ($images as $essay_image) {
                 $image = $this->getPageImage((string) $essay_image->getId());
                 $path = $this->pdf_creator->getPageImagePathForPdf($image);
-                $pdfParts[] = $this->pdf_creator->createStandardPart([
-                    new PdfImage(
-                        $path,
-                        $pdfSettings->getLeftMargin(),
-                        $pdfSettings->getContentTopMargin(),
-                        210 // A4
-                            - $pdfSettings->getLeftMargin() - $pdfSettings->getRightMargin(),
-                        297 // A4
-                            - $pdfSettings->getContentTopMargin() - $pdfSettings->getContentBottomMargin()
-                    )
-                ], $pdfSettings);
+                $pdfParts[] = new PdfImage(
+                    $path,
+                    $pdfSettings->getLeftMargin(),
+                    $pdfSettings->getContentTopMargin(),
+                    210 // A4
+                        - $pdfSettings->getLeftMargin() - $pdfSettings->getRightMargin(),
+                    297 // A4
+                        - $pdfSettings->getContentTopMargin() - $pdfSettings->getContentBottomMargin()
+                );
             }
         } else {
             $writingSettings = $this->writing_settings->get();
             $html = $this->html_processing->processWrittenText($essay, $writingSettings, true);
-            $pdfParts[] = $this->pdf_creator->createStandardPart([
-                new PdfHtml(
-                    $html,
-                    $pdfSettings->getLeftMargin() + $writingSettings->getLeftCorrectionMargin(),
-                    $pdfSettings->getContentTopMargin(),
-                    210 // A4
-                        - $pdfSettings->getLeftMargin() - $pdfSettings->getRightMargin()
-                        - $writingSettings->getLeftCorrectionMargin() - $writingSettings->getRightCorrectionMargin(),
-                    null
-                )], $pdfSettings
-                    ->setTopMargin($pdfSettings->getTopMargin() /* + $writingSettings->getTopCorrectionMargin() */)
-                    ->setBottomMargin($pdfSettings->getBottomMargin() /* + $writingSettings->getBottomCorrectionMargin() */)
+            $pdfParts[] = new PdfHtml(
+                $html,
+                $pdfSettings->getLeftMargin() + $writingSettings->getLeftCorrectionMargin(),
+                $pdfSettings->getContentTopMargin(),
+                210 // A4
+                    - $pdfSettings->getLeftMargin() - $pdfSettings->getRightMargin()
+                    - $writingSettings->getLeftCorrectionMargin() - $writingSettings->getRightCorrectionMargin(),
+                null
             );
         }
 
-        return $this->pdf_creator->createPdf(
-            $pdfParts,
-            '', // @todo: Search replacement: $this->context->getSystemName(),
-            '', // $task->getWriterName(), // @todo: Same for WritingTask
-            '', // $task->getTitle(),
-            '' . // , $task->getWriterName() . ' ' .
-            $this->format->dateRange($essay->getFirstChange(), $essay->getLastChange())
-        );
+        // $pdf_settings = $pdfSettings
+        //     ->setTopMargin($pdfSettings->getTopMargin() + $writingSettings->getTopCorrectionMargin())
+        //     ->setBottomMargin($pdfSettings->getBottomMargin() + $writingSettings->getBottomCorrectionMargin());
+
+        return $this->pdf_processing->cleanUpTrashFiles(function($keep_file) use ($pdfParts, $pdfSettings, $essay) {
+            $options = $this->pdf_creator->options($pdfSettings)
+                ->withSubject($this->format->dateRange($essay->getFirstChange(), $essay->getLastChange()));
+            $file = $this->pdf_processing->createFromParts($pdfParts, $options);
+            $file = $this->pdf_processing->join($this->pdf_processing->number($file));
+            $file = stream_get_meta_data($this->storage->getFileStream($file))['uri'];
+
+            return file_get_contents($file);
+        });
     }
 
     public function getPageImage(string $key): ?ImageDescriptor

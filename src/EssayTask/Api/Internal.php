@@ -196,6 +196,7 @@ class Internal
             $this->writingSettings($ass_id),
             $this->dependencies->systemApi()->format($user_id),
             $this->essayImage($ass_id), // lazy
+            $this->dependencies->systemApi()->pdfProcessing(),
         );
     }
 

@@ -114,20 +114,8 @@ readonly class Service implements FullService
             - $this->writing_settings->getLeftCorrectionMargin() - $this->writing_settings->getRightCorrectionMargin(),
             null
         );
-        $part = (new PdfPart(
-            PdfPart::FORMAT_A4,
-            PdfPart::ORIENTATION_PORTRAIT,
-            [$element]
-        ))  ->withTopMargin($pdf_settings->getTopMargin())
-             ->withBottomMargin($pdf_settings->getBottomMargin())
-             ->withLeftMargin($pdf_settings->getLeftMargin() + $this->writing_settings->getLeftCorrectionMargin())
-             ->withRightMargin($pdf_settings->getRightMargin() + $this->writing_settings->getRightCorrectionMargin())
-             ->withHeaderMargin($pdf_settings->getHeaderMargin())
-             ->withFooterMargin($pdf_settings->getFooterMargin())
-             ->withPrintHeader($pdf_settings->getAddHeader())
-             ->withPrintFooter($pdf_settings->getAddFooter());
 
-        return $this->pdf_creator->createPdf([$part]);
+        return $this->pdf_creator->createPdfFromParts([$element], $this->pdf_creator->options($pdf_settings));
     }
 
 

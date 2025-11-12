@@ -10,10 +10,12 @@ use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Data\ImageSizeType;
 use Exception;
 use Generator;
+use Edutiek\AssessmentService\System\PdfCreator\Options;
 
 class Service implements FullService
 {
     private readonly string $temp_dir;
+    private ?array $trash_can = null;
 
     public function __construct(
         private readonly PdfCreator $pdf_creator,
@@ -27,16 +29,20 @@ class Service implements FullService
         $this->temp_dir = rtrim($temp_dir, '/');
     }
 
-    public function create(array $parts, array $meta_data = []): string
+    public function create(string $html, Options $options): string
     {
-        return $this->pdf_creator->createPdf(
-            $parts,
-            $meta_data['creator'] ?? '',
-            $meta_data['author'] ?? '',
-            $meta_data['title'] ?? '',
-            $meta_data['subject'] ?? '',
-            $meta_data['keywords'] ?? '',
-        );
+        $pdf = fopen('php://memory', 'w+');
+        fwrite($pdf, $this->pdf_creator->createPdf($html, $options));
+
+        return $this->saveFile($pdf);
+    }
+
+    public function createFromParts(array $elements, Options $options): string
+    {
+        $pdf = fopen('php://memory', 'w+');
+        fwrite($pdf, $this->pdf_creator->createPdfFromParts($elements, $options));
+
+        return $this->saveFile($pdf);
     }
 
     public function toImage($pdf, ConvertType $how, ImageSizeType $size = ImageSizeType::THUMBNAIL)
@@ -48,7 +54,7 @@ class Service implements FullService
     {
         $in_file = $this->pathOfId($pdf_id);
         foreach (range(1, $this->count($pdf_id)) as $page) {
-            $target = $this->storage->saveFile(fopen('php://memory', 'w+'))->getId();
+            $target = $this->saveFile(fopen('php://memory', 'w+'));
             $this->exec(sprintf(
                 'gs -dNOPAUSE -dQUIET -dBATCH -sOutputFile=%s -dFirstPage=%d -dLastPage=%d -sDEVICE=pdfwrite %s',
                 escapeshellarg($this->pathOfId($target)),
@@ -63,7 +69,7 @@ class Service implements FullService
 
     public function join(array $pdf_ids): string
     {
-        $target = $this->storage->saveFile(fopen('php://memory', 'w+'))->getId();
+        $target = $this->saveFile(fopen('php://memory', 'w+'));
         $this->exec(sprintf(
             'gs -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -sOutputFile=%s %s',
             escapeshellarg($this->pathOfId($target)),
@@ -83,9 +89,26 @@ class Service implements FullService
         )));
     }
 
-    public function number()
+    public function number(string $pdf_id, int $start_page_number = 1): array
     {
+        return $this->cleanUpTrashFiles(function($keep_file) use ($pdf_id, $start_page_number){
+            foreach ($this->split($pdf_id) as $page) {
+                $nr = $this->create('', (new Options())->withPrintFooter(true)->withPrintHeader(false)->withStartPageNumber($start_page_number));
+                $out = $this->saveFile(fopen('php://memory', 'w+'));
+                $this->exec(sprintf(
+                    '%s %s stamp %s output %s 2>&1',
+                    escapeshellcmd($this->pdftk_bin),
+                    escapeshellarg($this->pathOfId($page)),
+                    escapeshellarg($this->pathOfId($nr)),
+                    escapeshellarg($this->pathOfId($out)),
+                ));
+                $start_page_number++;
+                $keep_file($out);
+                $ret[] = $out;
+            }
 
+            return $ret;
+        });
     }
 
     public function nextToEachOther(string $pdf_left, string $pdf_right): string
@@ -106,7 +129,7 @@ class Service implements FullService
             escapeshellarg($dir),
             escapeshellarg($tex_filename),
         ));
-        $id = $this->storage->saveFile(fopen($dir . '/def.pdf', 'rb'))->getId();
+        $id = $this->saveFile(fopen($dir . '/def.pdf', 'rb'));
         $delme = ['def.pdf', 'left.pdf', 'right.pdf', 'def.aux', 'def.log', 'def.out', 'def.tex', 'pdfa.xmpi'];
         array_map(fn($f) => unlink($dir . '/' . $f), $delme);
         rmdir($dir);
@@ -118,7 +141,7 @@ class Service implements FullService
     {
         $pdf_top = $this->pathOfId($pdf_top);
         $pdf_bot = $this->pathOfId($pdf_bot);
-        $target = $this->storage->saveFile(fopen('php://memory', 'w+'))->getId();
+        $target = $this->saveFile(fopen('php://memory', 'w+'));
 
         $this->exec(sprintf(
             '%s %s stamp %s output %s 2>&1',
@@ -129,6 +152,26 @@ class Service implements FullService
         ));
 
         return $target;
+    }
+
+    public function cleanUpTrashFiles(callable $thunk)
+    {
+        $old_can = $this->trash_can;
+        $this->trash_can = [];
+        $to_keep = [];
+        $keep = function ($id) use (&$to_keep) {
+            $to_keep[] = $id;
+            return $id;
+        };
+
+        $ret = $thunk($keep);
+        array_map($this->storage->deleteFile(...), array_filter($this->trash_can, fn($f) => !in_array($f, $to_keep, true)));
+        $this->trash_can = $old_can;
+        if ($old_can !== null) {
+            $this->trash_can = array_merge($old_can, $to_keep);
+        }
+
+        return $ret;
     }
 
     private function template(): string
@@ -167,5 +210,15 @@ END;
         fclose($s);
 
         return $path;
+    }
+
+    private function saveFile($content): string
+    {
+        $id = $this->storage->saveFile($content)->getId();
+        if ($this->trash_can !== null) {
+            $this->trash_can[] = $id;
+        }
+
+        return $id;
     }
 }

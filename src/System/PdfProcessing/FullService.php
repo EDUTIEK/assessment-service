@@ -8,14 +8,17 @@ use Edutiek\AssessmentService\System\PdfCreator\PdfPart;
 use Edutiek\AssessmentService\System\Data\ImageDescriptor;
 use Edutiek\AssessmentService\System\Data\ImageSizeType;
 use Generator;
+use Edutiek\AssessmentService\System\PdfCreator\Options;
 
 interface FullService
 {
+
+    public function create(string $html, Options $options): string;
+
     /**
-     * @param PdfPart[] $parts
-     * @param array<string, string> $meta_data
+     * @param PdfElement[] $elements
      */
-    public function create(array $parts, array $meta_data = []): string;
+    public function createFromParts(array $elements, Options $options): string;
 
     /**
      * @param resource $pdf
@@ -55,5 +58,24 @@ interface FullService
     /**
      * @todo
      */
-    public function number();
+    public function number(string $pdf_id, int $start_page_number = 1): array;
+
+        /**
+     * Many "trash" files are created when using split, join, number, etc,
+     * to have them deleted automatically use this method.
+     * To keep files use the provided $keep_file argument:
+     *
+     * return $this->cleanUpTrashFiles(function($keep_file){
+     *     return $keep_file($this->join($this->number($this->create('huhu', new Options()))));
+     * });
+     *
+     * The above example deletes all generated files except the returned one.
+     *
+     *
+     * @template A
+     *
+     * @param callable(callable(string): string): A
+     * @return A
+     */
+    public function cleanUpTrashFiles(callable $thunk);
 }
