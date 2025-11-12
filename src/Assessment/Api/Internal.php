@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Api;
 
 use Edutiek\AssessmentService\Assessment\Alert\Service as AlertService;
+use Edutiek\AssessmentService\Assessment\AppBridges\CorrectorBridge;
 use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
 use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
@@ -309,8 +310,13 @@ class Internal implements ComponentApi, ComponentApiFactory
 
     public function correctorBridge(int $ass_id, int $user_id): ?AppBridge
     {
-        // todo: provide corrector bridge
-        return null;
+        return $this->instances[CorrectorBridge::class][$ass_id][$user_id] ??= new CorrectorBridge(
+            $ass_id,
+            $user_id,
+            $this->dependencies->systemApi()->config(),
+            $this->dependencies->systemApi()->entity(),
+            $this->dependencies->repositories(),
+        );
     }
 
     public function correctionPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
