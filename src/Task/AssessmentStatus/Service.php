@@ -25,7 +25,7 @@ readonly class Service implements FullService
         return $this->repos->correctorComment()->hasByAssId($this->ass_id);
     }
 
-    public function allWriterCombinedStatus() : array
+    public function allWriterCombinedStatus(): array
     {
         $essay_writer_mapping = [];
         $writer_summaries = [];
@@ -43,7 +43,7 @@ readonly class Service implements FullService
         return $status;
     }
 
-    public function oneWriterCmbinedStatus(Writer $writer) : CombinedStatus
+    public function oneWriterCombinedStatus(Writer $writer): CombinedStatus
     {
         $summaries = $this->repos->correctorSummary()->allByWriterId($writer->getId());
         return $this->getWriterCombinedStatus($writer, $summaries);
@@ -54,7 +54,7 @@ readonly class Service implements FullService
      * @param CorrectorSummary[]   $summaries
      * @return CombinedStatus
      */
-    private function getWriterCombinedStatus(Writer $writer, array $summaries) : CombinedStatus
+    private function getWriterCombinedStatus(Writer $writer, array $summaries): CombinedStatus
     {
         $writing_status = $writer->getWritingStatus();
         if ($writing_status !== WritingStatus::AUTHORIZED) {
@@ -65,11 +65,11 @@ readonly class Service implements FullService
             return CombinedStatus::FINALIZED;
         }
 
-        if (!$writer->getStitchNeeded()) {
+        if ($writer->getStitchNeeded()) {
             return CombinedStatus::STITCH_NEEDED;
         }
 
-        if (count($summaries) > 0 && max(array_map(fn (CorrectorSummary $s) => $s->getLastChange(), $summaries)) !== null) {
+        if (count($summaries) > 0 && max(array_map(fn(CorrectorSummary $s) => $s->getLastChange(), $summaries)) !== null) {
             return CombinedStatus::STARTED;
         }
 
@@ -87,14 +87,14 @@ readonly class Service implements FullService
         $assignments_by_corrector = [];
         $summaries_by_corrector = [];
 
-        foreach($this->assignment_service->all() as $assignment) {
+        foreach ($this->assignment_service->all() as $assignment) {
             $assignments_by_corrector[$assignment->getCorrectorId()][] = $assignment;
         }
-        foreach($this->repos->correctorSummary()->allByAssId($this->ass_id) as $summary) {
+        foreach ($this->repos->correctorSummary()->allByAssId($this->ass_id) as $summary) {
             $summaries_by_corrector[$summary->getCorrectorId()][] = $summary;
         }
 
-        if($corrector_ids === null) {
+        if ($corrector_ids === null) {
             $corrector_ids = array_unique(array_merge(array_keys($assignments_by_corrector), array_keys($summaries_by_corrector)));
         }
 
@@ -102,8 +102,8 @@ readonly class Service implements FullService
         foreach ($corrector_ids as $id) {
             $correction_summaries[$id] = $this->getCorrectorCorrectionSummary(
                 $id,
-                $assignments_by_corrector[$id]??[],
-                $summaries_by_corrector[$id]??[]
+                $assignments_by_corrector[$id] ?? [],
+                $summaries_by_corrector[$id] ?? []
             );
         }
         return $correction_summaries;
@@ -127,10 +127,10 @@ readonly class Service implements FullService
     {
         return new CorrectorCorrectionSummary(
             $corrector_id,
-            count(array_filter($corrector_assignments, fn (CorrectorAssignment $ass) => $ass->getPosition() === 0)),
-            count(array_filter($corrector_assignments, fn (CorrectorAssignment $ass) => $ass->getPosition() === 1)),
+            count(array_filter($corrector_assignments, fn(CorrectorAssignment $ass) => $ass->getPosition() === 0)),
+            count(array_filter($corrector_assignments, fn(CorrectorAssignment $ass) => $ass->getPosition() === 1)),
             count($corrector_assignments) - count($corrector_summaries),
-            $authorized = count(array_filter($corrector_summaries, fn (CorrectorSummary $sum) => $sum->getCorrectionAuthorized() !== null)),
+            $authorized = count(array_filter($corrector_summaries, fn(CorrectorSummary $sum) => $sum->getCorrectionAuthorized() !== null)),
             count($corrector_summaries) - $authorized
         );
     }

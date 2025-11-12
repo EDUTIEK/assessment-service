@@ -54,7 +54,9 @@ readonly class Service implements ReadService, FullService
     public function oneByWriterId(int $writer_id): ?Writer
     {
         $writer = $this->repos->writer()->one($writer_id);
-        $this->checkScope($writer);
+        if ($writer) {
+            $this->checkScope($writer);
+        }
         return $writer;
     }
 
