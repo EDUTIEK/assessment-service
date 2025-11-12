@@ -18,4 +18,6 @@ abstract class GradeLevel implements AssessmentEntity
     abstract public function setPassed(bool $passed): self;
     abstract public function getAssId(): int;
     abstract public function setAssId(int $ass_id): self;
+    abstract public function getStatement() : ?string;
+    abstract public function setStatement(?string $statement) : self;
 }
