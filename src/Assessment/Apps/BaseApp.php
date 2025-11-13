@@ -11,7 +11,7 @@ use Edutiek\AssessmentService\System\File\Disposition;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\App;
+use Slim\App as SlimApp;
 use Edutiek\AssessmentService\System\Config\Frontend;
 
 abstract class BaseApp implements RestService
@@ -26,7 +26,7 @@ abstract class BaseApp implements RestService
         protected readonly int $user_id,
         protected readonly RestHelper $rest_helper,
         protected readonly ComponentApiFactory $apis,
-        protected readonly App $app,
+        protected readonly SlimApp $app,
         protected readonly Delivery $delivery
     ) {
     }

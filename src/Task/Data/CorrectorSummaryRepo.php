@@ -22,7 +22,7 @@ interface CorrectorSummaryRepo
     public function allByTaskIdAndCorrectorId(int $task_id, int $corrector_id): array;
     public function allByCorrectorId(int $corrector_id): array;
     /** @return CorrectorSummary[] */
-    public function allByTaskIdAndWriterIdAndCorrectorId(int $task_id, int $writer_id, int $corrector_id): array;
+    public function oneByTaskIdAndWriterIdAndCorrectorId(int $task_id, int $writer_id, int $corrector_id): ?CorrectorSummary;
     public function save(CorrectorSummary $entity): void;
     public function delete(int $id): void;
     public function deleteByTaskId(int $task_id): void;

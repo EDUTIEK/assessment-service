@@ -38,18 +38,13 @@ class CorrectorBridge implements AppBridge
 
     public function getData(bool $for_update): array
     {
-        $data = [
-            'Config' => [],
-            'GradeLevels' => [],
-            'Settings' => []
-        ];
-
         $config = $this->config->getConfig();
         $data['Config'] = $this->entity->arrayToPrimitives([
             'primary_color' => $config->getPrimaryColor(),
             'primary_text_color' => $config->getPrimaryTextColor(),
         ]);
 
+        $data['GradeLevels'] = [];
         foreach ($this->repos->gradeLevel()->allByAssId($this->ass_id) as $level) {
             $data['GradeLevels'][] = $this->entity->arrayToPrimitives([
                 'id' => $level->getId(),
@@ -75,7 +70,6 @@ class CorrectorBridge implements AppBridge
         return $data;
     }
 
-
     public function getFileId(string $entity, int $entity_id): ?string
     {
         // no files handled in assessment component
@@ -84,7 +78,7 @@ class CorrectorBridge implements AppBridge
 
     public function applyChange(ChangeRequest $change): ChangeResponse
     {
-        return $change->toResponse(false, 'corrector type not found');
+        return $change->toResponse(false, 'no changes for assessment');
     }
 
 

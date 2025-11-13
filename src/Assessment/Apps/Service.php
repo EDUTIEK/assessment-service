@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Api\Internal;
+use Edutiek\AssessmentService\Task\Data\GradingStatus;
 use Throwable;
 use Edutiek\AssessmentService\System\Config\Frontend;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
@@ -35,10 +36,36 @@ class Service implements OpenService, RestService
     }
 
     /**
+     * Open the writer frontend
+     */
+    public function openWriter(int $context_id, string $return_url): never
+    {
+        $this->frontend = Frontend::WRITER;
+        $this->context_id = $context_id;
+        $helper = $this->internal->openHelper($this->ass_id, $this->context_id, $this->user_id);
+        $helper->setCommonFrontendParams($return_url);
+        $helper->openFrontend($this->config->getFrontendUrl($this->frontend));
+    }
+
+    /**
+     * Open the corrector frontend
+     */
+    public function openCorrector(int $context_id, string $return_url, ?int $task_id = null, ?int $writer_id = null): void
+    {
+        $this->frontend = Frontend::CORRECTOR;
+        $this->context_id = $context_id;
+        $helper = $this->internal->openHelper($this->ass_id, $this->context_id, $this->user_id);
+        $helper->setCommonFrontendParams($return_url);
+        $helper->setFrontendParam('TaskId', (string) $task_id);
+        $helper->setFrontendParam('WriterId', (string) $writer_id);
+        $helper->openFrontend($this->config->getFrontendUrl($this->frontend));
+    }
+
+    /**
      * Init the service from a REST call
      * Here the properties have to be extracted from the call
      */
-    private function initForRestCall()
+    private function initForRestCall(): void
     {
         $params = $this->context->getParams();
         foreach (['ass_id', 'context_id', 'user_id'] as $key) {
@@ -55,17 +82,9 @@ class Service implements OpenService, RestService
         if ($this->frontend === null) {
             throw new RestException("Frontend not found by the REST route", RestException::NOT_FOUND);
         }
-    }
 
-    /**
-     * Open a frontend
-     */
-    public function open(Frontend $frontend, int $context_id, string $return_url): never
-    {
-        $this->context_id = $context_id;
-        $open_helper = $this->internal->openHelper($this->ass_id, $this->context_id, $this->user_id);
-        $open_helper->setCommonFrontendParams($return_url);
-        $open_helper->openFrontend($this->config->getFrontendUrl($frontend));
+        // init the hosting system for the REST call (e.g. set the current user)
+        $this->context->initCall($this->ass_id, $this->context_id, $this->user_id);
     }
 
     /**
@@ -75,25 +94,27 @@ class Service implements OpenService, RestService
     {
         try {
             $this->initForRestCall();
-            $this->context->initCall($this->ass_id, $this->context_id, $this->user_id);
-
-            switch ($this->frontend) {
-                case Frontend::WRITER:
-                    $this->internal->appWriter($this->ass_id, $this->context_id, $this->user_id)->handle();
-                    break;
-
-                case Frontend::CORRECTOR:
-                    $this->internal->appCorrector($this->ass_id, $this->context_id, $this->user_id)->handle();
-                    break;
-            }
-            $this->context->sendResponse(RestException::NOT_IMPLEMENTED, "Handler for frontend '{$this->frontend->value}' not implemented.");
-
+            $this->getApp()->handle();
         } catch (RestException $e) {
             $this->context->sendResponse($e->getCode(), $e->getMessage());
         } catch (Throwable $e) {
             $this->context->sendResponse(RestException::INTERNAL_SERVER_ERROR, $e->getMessage());
         }
-
         exit;
+    }
+
+    /**
+     * Get the app handler
+     */
+    private function getApp(): BaseApp
+    {
+        switch ($this->frontend) {
+            case Frontend::WRITER:
+                return $this->internal->appWriter($this->ass_id, $this->context_id, $this->user_id);
+            case Frontend::CORRECTOR:
+                return $this->internal->appCorrector($this->ass_id, $this->context_id, $this->user_id);
+        };
+        $this->context->sendResponse(RestException::NOT_IMPLEMENTED, "Handler for frontend '{$this->frontend->value}' not implemented.");
+
     }
 }

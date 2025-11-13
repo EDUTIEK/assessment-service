@@ -8,6 +8,7 @@ interface CorrectorSnippetRepo
 {
     public function new(): CorrectorSnippet;
     public function oneByKey(int $ass_id, int $corrector_id, string $key): ?CorrectorSnippet;
+    /** @return CorrectorSnippet[] */
     public function allByCorrectorId(int $ass_id, int $corrector_id): array;
     public function save(CorrectorSnippet $entity): void;
     public function deleteByKey(int $ass_id, int $corrector_id, string $key): void;

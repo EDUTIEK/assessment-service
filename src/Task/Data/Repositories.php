@@ -13,6 +13,7 @@ interface Repositories
     public function correctorComment(): CorrectorCommentRepo;
     public function correctorPoints(): CorrectorPointsRepo;
     public function correctorPrefs(): CorrectorPrefsRepo;
+    public function correctorSnippets(): CorrectorSnippetRepo;
     public function resource(): ResourceRepo;
     public function settings(): SettingsRepo;
     public function writerAnnotation(): WriterAnnotationRepo;
