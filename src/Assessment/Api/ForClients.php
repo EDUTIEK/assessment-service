@@ -35,6 +35,11 @@ readonly class ForClients
     ) {
     }
 
+    public function appService(): OpenService
+    {
+        return $this->internal->appService()->initForClientApi($this->ass_id, $this->user_id);
+    }
+
     public function correctionSettings(): CorrectionSettingsFullService
     {
         return $this->internal->correctionSettings($this->ass_id);
@@ -43,11 +48,6 @@ readonly class ForClients
     public function corrector(): CorrectorFullService
     {
         return $this->internal->corrector($this->ass_id);
-    }
-
-    public function correctorApp(int $context_id): OpenService
-    {
-        return $this->internal->correctorApp($this->ass_id, $context_id, $this->user_id);
     }
 
     public function gradeLevel(): GradeLevelFullService
@@ -93,11 +93,6 @@ readonly class ForClients
     public function writer(): WriterFullService
     {
         return $this->internal->writer($this->ass_id, $this->user_id);
-    }
-
-    public function writerApp(int $context_id): OpenService
-    {
-        return $this->internal->writerApp($this->ass_id, $context_id, $this->user_id);
     }
 
     public function format(OrgaSettings $orga): FormatInterface

@@ -18,6 +18,6 @@ readonly class ForRest
      */
     public function service(): RestService
     {
-        return $this->internal->restService();
+        return $this->internal->appService();
     }
 }

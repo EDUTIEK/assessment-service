@@ -16,7 +16,7 @@ use Edutiek\AssessmentService\Assessment\ConstraintHandling\Provider as Constrai
 use Edutiek\AssessmentService\Assessment\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\Service as CorrectionSettingsService;
 use Edutiek\AssessmentService\Assessment\Corrector\Service as CorrectorService;
-use Edutiek\AssessmentService\Assessment\CorrectorApp\Service as CorrectorAppService;
+use Edutiek\AssessmentService\Assessment\Apps\AppCorrector;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\DisabledGroup\Service as DisabledGroupService;
 use Edutiek\AssessmentService\Assessment\EventHandling\Observer as EventObserver;
@@ -35,15 +35,14 @@ use Edutiek\AssessmentService\Assessment\Properties\Service as PropertiesService
 use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymFullService;
 use Edutiek\AssessmentService\Assessment\Pseudonym\Service as PseudonymService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApi;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
-use Edutiek\AssessmentService\Assessment\WriterApp\Service as WriterAppService;
 use Edutiek\AssessmentService\Assessment\AppBridges\WriterBridge;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Slim\App;
 use Slim\Factory\AppFactory;
 use Edutiek\AssessmentService\Assessment\PdfCreation\CorrectionProvider;
+use Edutiek\AssessmentService\Assessment\Apps\AppWriter;
 
 class Internal implements ComponentApi, ComponentApiFactory
 {
@@ -80,6 +79,52 @@ class Internal implements ComponentApi, ComponentApiFactory
         }
         return null;
     }
+
+    /**
+     * Common service for all web apps
+     * (no caching needed, created once per request)
+     */
+    public function appService(): AppService
+    {
+        return $this->instances[AppService::class] ??= new AppService(
+            $this->dependencies->systemApi()->config(),
+            $this->dependencies->restContext(),
+            $this
+        );
+    }
+
+    /**
+     * REST handler for corrector web app
+     * (no caching needed, created once per request)
+     */
+    public function appCorrector(int $ass_id, int $context_id, int $user_id): AppCorrector
+    {
+        return new AppCorrector(
+            $ass_id,
+            $user_id,
+            $this->restHelper($ass_id, $context_id, $user_id),
+            $this,
+            $this->slimApp(),
+            $this->dependencies->systemApi()->fileDelivery()
+        );
+    }
+
+    /**
+     * REST handler for writer web app
+     * (no caching needed, created once per request)
+     */
+    public function appWriter(int $ass_id, int $context_id, int $user_id): AppWriter
+    {
+        return new AppWriter(
+            $ass_id,
+            $user_id,
+            $this->restHelper($ass_id, $context_id, $user_id),
+            $this,
+            $this->slimApp(),
+            $this->dependencies->systemApi()->fileDelivery()
+        );
+    }
+
 
     /**
      * Internal authentication service for REST handlers
@@ -150,42 +195,6 @@ class Internal implements ComponentApi, ComponentApiFactory
     }
 
     /**
-     * REST handler for writer web app
-     * (no caching needed, created once per request)
-     */
-    public function writerApp(int $ass_id, int $context_id, int $user_id): WriterAppService
-    {
-        return new WriterAppService(
-            $ass_id,
-            $user_id,
-            $this->dependencies->systemApi()->config(),
-            $this->openHelper($ass_id, $context_id, $user_id),
-            $this->restHelper($ass_id, $context_id, $user_id),
-            $this,
-            $this->slimApp(),
-            $this->dependencies->systemApi()->fileDelivery()
-        );
-    }
-
-    /**
-     * REST handler for corrector web app
-     * (no caching needed, created once per request)
-     */
-    public function correctorApp(int $ass_id, int $context_id, int $user_id): CorrectorAppService
-    {
-        return new CorrectorAppService(
-            $ass_id,
-            $user_id,
-            $this->dependencies->systemApi()->config(),
-            $this->openHelper($ass_id, $context_id, $user_id),
-            $this->restHelper($ass_id, $context_id, $user_id),
-            $this,
-            $this->slimApp(),
-            $this->dependencies->systemApi()->fileDelivery()
-        );
-    }
-
-    /**
      * Translation of language variables
      */
     public function language(int $user_id): LanguageService
@@ -228,16 +237,6 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    /**
-     * Common handler for all REST calls
-     */
-    public function restService(): AppService
-    {
-        return $this->instances[AppService::class] ??= new AppService(
-            $this->dependencies->restContext(),
-            $this
-        );
-    }
 
     /**
      * Configured slim app instance

@@ -5,30 +5,40 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Api\Internal;
-use GuzzleHttp\Psr7\Response;
-use Slim\App;
 use Throwable;
+use Edutiek\AssessmentService\System\Config\Frontend;
+use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 
-class Service implements RestService
+class Service implements OpenService, RestService
 {
-    private const MODULE_WRITER = 'writer';
-    private const MODULE_CORRECTOR = 'corrector';
-
-    private string $module;
+    private Frontend $frontend;
     private int $ass_id;
     private int $context_id;
     private int $user_id;
 
     public function __construct(
+        private readonly ConfigService $config,
         private readonly RestContext $context,
         private readonly Internal $internal
     ) {
     }
 
     /**
-     * Init the service properties from the REST call
+     * Init the service properties for a use by the client api
+     * Here the assessment and user ids are already provided by the API
      */
-    private function initProperties()
+    public function initForClientApi(int $ass_id, int $user_id): self
+    {
+        $this->ass_id = $ass_id;
+        $this->user_id = $user_id;
+        return $this;
+    }
+
+    /**
+     * Init the service from a REST call
+     * Here the properties have to be extracted from the call
+     */
+    private function initForRestCall()
     {
         $params = $this->context->getParams();
         foreach (['ass_id', 'context_id', 'user_id'] as $key) {
@@ -41,7 +51,21 @@ class Service implements RestService
         $this->user_id = (int) $params['user_id'];
 
         $parts = explode('/', $this->context->getRoute());
-        $this->module = $parts[1] ?? '';
+        $this->frontend = Frontend::fromRoutePart($parts[1]);
+        if ($this->frontend === null) {
+            throw new RestException("Frontend not found by the REST route", RestException::NOT_FOUND);
+        }
+    }
+
+    /**
+     * Open a frontend
+     */
+    public function open(Frontend $frontend, int $context_id, string $return_url): never
+    {
+        $this->context_id = $context_id;
+        $open_helper = $this->internal->openHelper($this->ass_id, $this->context_id, $this->user_id);
+        $open_helper->setCommonFrontendParams($return_url);
+        $open_helper->openFrontend($this->config->getFrontendUrl($frontend));
     }
 
     /**
@@ -50,19 +74,19 @@ class Service implements RestService
     public function handle(): never
     {
         try {
-            $this->initProperties();
+            $this->initForRestCall();
             $this->context->initCall($this->ass_id, $this->context_id, $this->user_id);
 
-            switch ($this->module) {
-                case self::MODULE_WRITER:
-                    $this->internal->writerApp($this->ass_id, $this->context_id, $this->user_id)->handle();
+            switch ($this->frontend) {
+                case Frontend::WRITER:
+                    $this->internal->appWriter($this->ass_id, $this->context_id, $this->user_id)->handle();
                     break;
 
-                case self::MODULE_CORRECTOR:
-                    $this->internal->correctorApp($this->ass_id, $this->context_id, $this->user_id)->handle();
+                case Frontend::CORRECTOR:
+                    $this->internal->appCorrector($this->ass_id, $this->context_id, $this->user_id)->handle();
                     break;
             }
-            $this->context->sendResponse(RestException::NOT_IMPLEMENTED, "Module '{$this->module}' not found");
+            $this->context->sendResponse(RestException::NOT_IMPLEMENTED, "Handler for frontend '{$this->frontend->value}' not implemented.");
 
         } catch (RestException $e) {
             $this->context->sendResponse($e->getCode(), $e->getMessage());

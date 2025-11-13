@@ -2,57 +2,46 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\Assessment\WriterApp;
+namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Api\ComponentApiFactory;
-use Edutiek\AssessmentService\Assessment\Apps\ChangeAction;
-use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
-use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
-use Edutiek\AssessmentService\Assessment\Apps\OpenService;
-use Edutiek\AssessmentService\Assessment\Apps\RestException;
-use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
-use Edutiek\AssessmentService\Assessment\Apps\RestService;
 use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
-use Edutiek\AssessmentService\System\Config\FrontendModule;
-use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\File\Disposition;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
+use Edutiek\AssessmentService\System\Config\Frontend;
 
-readonly class Service implements OpenService, RestService
+abstract class BaseApp implements RestService
 {
+    /**
+     * Needs to be set by the child class
+     */
+    protected Frontend $frontend;
+
     public function __construct(
-        private int $ass_id,
-        private int $user_id,
-        private ConfigService $config,
-        private OpenHelper $open_helper,
-        private RestHelper $rest_helper,
-        private ComponentApiFactory $apis,
-        private App $app,
-        private Delivery $delivery,
+        protected readonly int $ass_id,
+        protected readonly int $user_id,
+        protected readonly RestHelper $rest_helper,
+        protected readonly ComponentApiFactory $apis,
+        protected readonly App $app,
+        protected readonly Delivery $delivery
     ) {
     }
 
-    public function open(string $return_url): never
-    {
-        $this->open_helper->setCommonFrontendParams($return_url);
-        $this->open_helper->openFrontend($this->config->getFrontendUrl(FrontendModule::WRITER));
-    }
+    /**
+     * Define the routes and their callback functions and run the app
+     * The callback function getData(), getUpdate(), getFile(), and putChanges() are implemented here
+     */
+    abstract public function handle(): never;
 
-    public function handle(): never
-    {
-        $this->app->get('/writer/data', [$this,'getData']);
-        $this->app->get('/writer/update', [$this,'getUpdate']);
-        $this->app->get('/writer/file/{component}/{entity}/{id}', [$this,'getFile']);
-        $this->app->put('/writer/changes', [$this, 'putChanges']);
-        $this->app->put('/writer/final', [$this, 'putChanges']);
-        $this->app->run();
-        exit;
-    }
-
+    /**
+     * Prepare handling the REST call
+     * This must be called by all functions assigned to routes
+     * It can't be done in handle() because the TokenPurpose depends on the function
+     */
     protected function prepare(Request $request, Response $response, array $args, TokenPurpose $purpose): void
     {
         $params = $request->getQueryParams();
@@ -61,7 +50,7 @@ readonly class Service implements OpenService, RestService
     }
 
     /**
-     * GET the data for initializing the writer
+     * GET the data for initializing the app
      */
     public function getData(Request $request, Response $response, array $args): Response
     {
@@ -69,7 +58,7 @@ readonly class Service implements OpenService, RestService
 
         $data = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
-            $bridge = $this->apis->api($component)->writerBridge($this->ass_id, $this->user_id);
+            $bridge = $this->getBridge($component);
             $data[$component] = $bridge->getData(false);
         }
         // create new tokens - these will be replaced in the app
@@ -79,7 +68,7 @@ readonly class Service implements OpenService, RestService
     }
 
     /**
-     * GET the data for updating the writer
+     * GET the data for updating the status in the app
      */
     public function getUpdate(Request $request, Response $response, array $args): Response
     {
@@ -87,7 +76,7 @@ readonly class Service implements OpenService, RestService
 
         $data = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
-            $bridge = $this->apis->api($component)->writerBridge($this->ass_id, $this->user_id);
+            $bridge = $this->getBridge($component);
             $data[$component] = $bridge->getData(true);
         }
         // just
@@ -96,7 +85,7 @@ readonly class Service implements OpenService, RestService
     }
 
     /**
-     * GET a file (well be sent inline)
+     * GET a file (will be sent inline)
      */
     public function getFile(Request $request, Response $response, array $args): Response
     {
@@ -113,7 +102,7 @@ readonly class Service implements OpenService, RestService
             throw new RestException('No entity given', RestException::NOT_FOUND);
         }
 
-        $bridge = $this->apis->api((string) $component)?->writerBridge($this->ass_id, $this->user_id);
+        $bridge = $this->getBridge((string) $component);
         if ($bridge === null) {
             throw new RestException('Component not found', RestException::NOT_FOUND);
         }
@@ -127,7 +116,7 @@ readonly class Service implements OpenService, RestService
     }
 
     /**
-     * PUT changes from the writer app
+     * PUT changes coming from the app
      * Request and response are json arrays: component => entity => change data
      */
     public function putChanges(Request $request, Response $response, array $args): Response
@@ -137,7 +126,7 @@ readonly class Service implements OpenService, RestService
         $json = [];
 
         foreach ($this->rest_helper->getJsonData($request) as $component => $component_data) {
-            $bridge = $this->apis->api((string) $component)?->writerBridge($this->ass_id, $this->user_id);
+            $bridge = $this->getBridge((string) $component);
             if ($bridge === null) {
                 continue;
             }
@@ -160,5 +149,17 @@ readonly class Service implements OpenService, RestService
         $this->rest_helper->setAlive();
         $this->rest_helper->extendDataToken($response);
         return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $json);
+    }
+
+    /**
+     * Get the bridge of a component to handle the data transfer
+     */
+    protected function getBridge(string $component): ?AppBridge
+    {
+        $api = $this->apis->api($component);
+        return match($this->frontend) {
+            Frontend::WRITER => $api?->writerBridge($this->ass_id, $this->user_id),
+            Frontend::CORRECTOR => $api?->correctorBridge($this->ass_id, $this->user_id)
+        };
     }
 }

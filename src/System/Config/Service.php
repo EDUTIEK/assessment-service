@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Config;
 
-use Edutiek\AssessmentService\System\Api\Dependencies;
 use Edutiek\AssessmentService\System\Data\Config;
 use Edutiek\AssessmentService\System\Data\ConfigRepo;
 use Edutiek\AssessmentService\System\Data\Setup;
@@ -33,13 +32,13 @@ readonly class Service implements ReadService, FullService
         return $this->setup_repo->one();
     }
 
-    public function getFrontendUrl(FrontendModule $module): string
+    public function getFrontendUrl(Frontend $frontend): string
     {
-        switch ($module) {
-            case FrontendModule::WRITER:
-                return $this->getConfig()->getWriterUrl() ?? $this->buildFrontendUrl($module);
-            case FrontendModule::CORRECTOR:
-                return $this->getConfig()->getCorrectorUrl() ?? $this->buildFrontendUrl($module);
+        switch ($frontend) {
+            case Frontend::WRITER:
+                return $this->getConfig()->getWriterUrl() ?? $this->buildFrontendUrl($frontend);
+            case Frontend::CORRECTOR:
+                return $this->getConfig()->getCorrectorUrl() ?? $this->buildFrontendUrl($frontend);
         }
         return '';
     }
@@ -52,15 +51,15 @@ readonly class Service implements ReadService, FullService
     /**
      * Build the URL of a frontend web app
      * Add a query string with the revision to avoid an outdated cached app
-     * @param string $module name and path of the web app in node_modules
+     * @param string $frontend name and path of the web app in node_modules
      */
-    private function buildFrontendUrl(FrontendModule $module): string
+    private function buildFrontendUrl(Frontend $frontend): string
     {
         $json = json_decode(file_get_contents(__DIR__ . '/../../../package-lock.json'), true);
-        $resolved = $json['packages']['node_modules/' . $module->value]['resolved'] ?? '';
+        $resolved = $json['packages']['node_modules/' . $frontend->module()]['resolved'] ?? '';
         $revision = (string) parse_url($resolved, PHP_URL_FRAGMENT);
 
         return $this->getSetup()->getFrontendsBaseUrl()
-            . '/' . $module->value . '/' . '/dist/index.html?' . substr($revision, 0, 7);
+            . '/' . $frontend->module() . '/' . '/dist/index.html?' . substr($revision, 0, 7);
     }
 }
