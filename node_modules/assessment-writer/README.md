@@ -2,6 +2,10 @@
 
 Web App to write Exams.
 Used by the [assessment-service](https://github.com/EDUTIEK/assessment-service).
+A build of this web app is committed there and changed with new versions.
+
+This repository is part of the [EDUTIEK project](https://www.edutiek.de). At the moment we don't recommend its use
+outside the project. The REST API may change at any time if neded by the project.
 
 
 ## Project Setup
