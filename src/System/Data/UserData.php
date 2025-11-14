@@ -86,4 +86,17 @@ abstract readonly class UserData implements SystemEntity
 
         return $name;
     }
+
+    /**
+     * 2-Letter string of either the initials or first letters of the login
+     */
+    public function getInitials(): string
+    {
+        if ($this->getFirstname() !== '' && $this->getLastname() !== '') {
+            return ucfirst(substr($this->getFirstname(), 0, 1))
+                . ' ' . ucfirst(substr($this->getLastname(), 0, 1));
+        } else {
+            return strtoupper(substr($this->getLogin(), 0, 2));
+        }
+    }
 }

@@ -3,9 +3,11 @@
 namespace Edutiek\AssessmentService\Task\AppBridges;
 
 use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
+use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeAction;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
+use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as AssessmentSettingsService;
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorReadService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
@@ -13,6 +15,7 @@ use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\HtmlProcessing\FullService as HtmlProcessing;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
+use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentService;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\Resource;
@@ -22,7 +25,7 @@ use Edutiek\AssessmentService\Task\Data\Settings;
 use Edutiek\AssessmentService\Task\Data\WriterAnnotation;
 use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
 
-class CorrectorBridge implements AppBridge
+class CorrectorBridge implements AppCorrectorBridge
 {
     private ?Corrector $corrector;
     /** @var Settings */
@@ -31,17 +34,18 @@ class CorrectorBridge implements AppBridge
     private array $resources = [];
 
     public function __construct(
-        private int $ass_id,
-        private int $user_id,
-        private Repositories $repos,
-        private Storage $storage,
-        private EntityFullService $entity,
-        private CorrectorReadService $corrector_service,
-        private WriterReadService $writer_service,
-        private AssignmentService $assignment_service,
-        private Language $language
+        private readonly int $ass_id,
+        private readonly int $user_id,
+        private readonly Repositories $repos,
+        private readonly Storage $storage,
+        private readonly EntityFullService $entity,
+        private readonly CorrectorReadService $corrector_service,
+        private readonly WriterReadService $writer_service,
+        private readonly AssessmentSettingsService $assesment_settings,
+        private readonly AssignmentService $assignment_service,
+        private readonly Language $language,
+        private readonly UserReadService $user_service,
     ) {
-
         $this->corrector = $this->corrector_service->oneByUserId($this->user_id);
         foreach ($this->repos->settings()->allByAssId($this->ass_id) as $task) {
             $this->tasks[$task->getTaskId()] = $task;
@@ -53,6 +57,8 @@ class CorrectorBridge implements AppBridge
 
     public function getData($for_update): array
     {
+        $data = [];
+
         $settings = $this->repos->correctionSettings()->one($this->ass_id) ??
             $this->repos->correctionSettings()->new()->setAssId($this->ass_id);
 
@@ -94,10 +100,12 @@ class CorrectorBridge implements AppBridge
             $writer = $writers[$assignment->getWriterId()] ?? null;
             if ($writer?->isAuthorized()) {
                 $data['Items'] = $this->entity->arrayToPrimitives([
+                    'id' => $assignment->getId(),
                     'task_id' => $assignment->getTaskId(),
                     'writer_id' => $writer->getId(),
+                    'position' => $assignment->getPosition(),
                     'title' => $writer->getPseudonym() . ' | ' . $this->tasks[$assignment->getTaskId()]->getTitle(),
-                    'status' => $writer->getCorrectionStatus()->value
+                    'correction_status' => $writer->getCorrectionStatus()->value
                 ]);
             }
         }
@@ -166,10 +174,127 @@ class CorrectorBridge implements AppBridge
         return $data;
     }
 
+    public function getItem(int $assignment_id): ?array
+    {
+        $data = [
+            'item' => [],
+            'Correctors' => [],
+            'Summaries' => [],
+            'Comments' => [],
+            'Points' => []
+        ];
+        $assignment = $this->assignment_service->oneById($assignment_id);
+        if ($assignment === null) {
+            return [];
+        }
+        $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
+        if ($writer?->isAuthorized()) {
+            $data['Item'] = $this->entity->arrayToPrimitives([
+                'id' => $assignment->getId(),
+                'task_id' => $assignment->getTaskId(),
+                'writer_id' => $writer->getId(),
+                'title' => $writer->getPseudonym() . ' | ' . $this->tasks[$assignment->getTaskId()]->getTitle(),
+                'correction_status' => $writer->getCorrectionStatus()->value
+            ]);
+        } else {
+            return [];
+        }
+
+        $settings = $this->assesment_settings->get();
+        foreach ($this->assignment_service->allByWriterId($writer->getId()) as $assignment) {
+            if ($this->corrector === null || $this->corrector->getId() === $assignment->getCorrectorId() || $settings->getMutualVisibility()) {
+                $corrector = $this->corrector_service->oneById($assignment->getCorrectorId());
+                if ($corrector) {
+                    $user = $this->user_service->getUser($corrector->getUserId());
+
+                    $data['Correctors'][] = $this->entity->arrayToPrimitives([
+                       'id' => $corrector->getId(),
+                       'corrector_id' => $corrector->getId(),
+                       'title' => $user?->getFullname(false)
+                           ?? sprintf($this->language->txt('corrector_x'), $assignment->getPosition()),
+                       'initials' => $user->getInitials() ?? sprintf($this->language->txt('corr_x'), $assignment->getPosition()),
+                       'position' => $assignment->getPosition(),
+                    ]);
+
+                    $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+                        $assignment->getTaskId(),
+                        $assignment->getWriterId(),
+                        $assignment->getCorrectorId()
+                    );
+                    if ($summary?->getCorrectorId() === $this->corrector?->getId() || $summary?->isAuthorized()) {
+                        $add_details = true;
+                    } else {
+                        $add_details = false;
+                        $summary = $this->repos->correctorSummary()->new()->setCorrectorId($corrector->getId());
+                    }
+
+                    $data['Summaries'][] = $this->entity->arrayToPrimitives([
+                        'item_id' => $assignment->getId(),
+                        'corrector_id' => $corrector->getId(),
+                        'text' => $summary->getSummaryText(),
+                        'points' => $summary->getPoints(),
+                        'pdf' => $summary->getSummaryPdf(),
+                        'status' => $summary->getGradingStatus(),
+                        'revision_text' => $summary->getRevisionText(),
+                        'revision_points' => $summary->getRevisionPoints(),
+                        'last_change' => $summary->getLastChange(),
+                    ]);
+
+                    if ($add_details) {
+                        $comments = $this->repos->correctorComment()->allByTaskIdAndWriterIdAndCorrectorId(
+                            $assignment->getTaskId(),
+                            $assignment->getWriterId(),
+                            $assignment->getCorrectorId()
+                        );
+                        foreach ($comments as $comment) {
+                            $data['Comments'][] = $this->entity->arrayToPrimitives([
+                               'id' => $comment->getId(),
+                               'item_id' => $assignment->getId(),
+                               'corrector_id' => $comment->getCorrectorId(),
+                               'start_position' => $comment->getStartPosition(),
+                               'end_position' => $comment->getEndPosition(),
+                               'parent_number' => $comment->getParentNumber(),
+                               'comment' => $comment->getComment(),
+                               'rating' => $comment->getRating(),
+                               'marks' => $comment->getMarks(),
+                            ]);
+                        }
+
+                        $points = $this->repos->correctorPoints()->allByTaskIdAndWriterIdAndCorrectorId(
+                            $assignment->getTaskId(),
+                            $assignment->getWriterId(),
+                            $assignment->getCorrectorId()
+                        );
+                        foreach ($points as $point) {
+                            $data['Points'][] = $this->entity->arrayToPrimitives([
+                               'id' => $point->getId(),
+                               'item_id' => $assignment->getId(),
+                               'corrector_id' => $point->getCorrectorId(),
+                               'comment_id' => $point->getCommentId(),
+                               'criterion_id' => $point->getCriterionId(),
+                               'points' => $point->getPoints(),
+                            ]);
+                        }
+                    }
+                }
+            }
+        }
+
+        return $data;
+    }
+
     public function getFileId(string $entity, int $entity_id): ?string
     {
-        $resource = $this->resources[$entity_id] ?? null;
-        return $resource?->getFileId();
+        switch ($entity) {
+            case 'image':
+            case 'thumb':
+                return null;
+
+            case 'resource':
+                $resource = $this->resources[$entity_id] ?? null;
+                return $resource?->getFileId();
+        }
+        return null;
     }
 
     public function applyChange(ChangeRequest $change): ChangeResponse
@@ -180,4 +305,5 @@ class CorrectorBridge implements AppBridge
         }
         return $change->toResponse(false, 'change type not found');
     }
+
 }

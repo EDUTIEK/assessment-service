@@ -12,4 +12,6 @@
     'x_minutes' => '%s Minuten',
     'x_seconds' => '%s Sekunden',
     'not_specified' => 'Nicht angegeben',
+    'corrector_x' => 'Korrektor %s',
+    'corr_x' => 'K%s'
 ];

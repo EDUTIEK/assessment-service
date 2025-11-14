@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\Task\Api;
 
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Task\AppBridges\WriterBridge as WriterBridgeService;
+use Edutiek\AssessmentService\Task\AppBridges\CorrectorBridge as CorrectorBridgeService;
 use Edutiek\AssessmentService\Task\AssessmentStatus\Service as StatusService;
 use Edutiek\AssessmentService\Task\Checks\Service as ChecksService;
 use Edutiek\AssessmentService\Task\ConstraintHandling\Provider as ConstraintProvider;
@@ -90,6 +91,23 @@ class Internal
             $this->dependencies->assessmentApi($ass_id, $user_id)->logEntry(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
+        );
+    }
+
+    public function correctorBridge(int $ass_id, int $user_id): CorrectorBridgeService
+    {
+        return $this->instances[CorrectorBridgeService::class][$ass_id][$user_id] ??= new CorrectorBridgeService(
+            $ass_id,
+            $user_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->systemApi()->entity(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings(),
+            $this->correctorAssignments($ass_id, $user_id),
+            $this->language($user_id),
+            $this->dependencies->systemApi()->user()
         );
     }
 
