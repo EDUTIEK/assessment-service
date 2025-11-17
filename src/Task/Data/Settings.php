@@ -26,6 +26,8 @@ abstract class Settings implements TaskEntity
     #[HasHtml]
     abstract public function getSolution(): ?string;
     abstract public function setSolution(?string $solution): self;
+    abstract public function getWeight(): float;
+    abstract public function setWeight(float $weight): self;
 
     public function getInfo(): TaskInfo
     {
