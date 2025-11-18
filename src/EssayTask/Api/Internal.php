@@ -20,8 +20,6 @@ use Edutiek\AssessmentService\EssayTask\EssayImport\Service as ImportService;
 use Edutiek\AssessmentService\EssayTask\EventHandling\Observer as EventObserver;
 use Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service as HtmlService;
 use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
-use Edutiek\AssessmentService\EssayTask\PdfOutput\Service as PdfOutput;
-use Edutiek\AssessmentService\EssayTask\TaskSettings\Service as TaskSettingsService;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
 use Edutiek\AssessmentService\System\BackgroundTask\Job;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
@@ -177,6 +175,7 @@ class Internal
             $task_id,
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->taskApi($ass_id, $user_id)->tasks()
         );
     }
 
@@ -204,15 +203,6 @@ class Internal
     {
         return $this->instances[WritingSettingsService::class] = new WritingSettingsService(
             $ass_id,
-            $this->dependencies->repositories()
-        );
-    }
-
-    public function taskSettings(int $ass_id, int $task_id): TaskSettingsService
-    {
-        return $this->instances[TaskSettingsService::class][$ass_id][$task_id] ??= new TaskSettingsService(
-            $ass_id,
-            $task_id,
             $this->dependencies->repositories()
         );
     }
