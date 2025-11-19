@@ -46,11 +46,11 @@ class Internal
         return 20240603;
     }
 
-    public function assessmentStatus(int $ass_id): StatusService
+    public function assessmentStatus(int $ass_id, int $user_id): StatusService
     {
-        return $this->instances[StatusService::class] = new StatusService(
-            $ass_id,
-            $this->dependencies->repositories()
+        return $this->instances[StatusService::class][$ass_id][$user_id] = new StatusService(
+            $this->dependencies->repositories(),
+            $this->dependencies->taskApi($ass_id, $user_id)->tasks(),
         );
     }
 

@@ -4,20 +4,21 @@ namespace Edutiek\AssessmentService\EssayTask\AssessmentStatus;
 
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
+use Edutiek\AssessmentService\Task\Manager\ReadService as TasksService;
 
 readonly class Service implements FullService
 {
     public function __construct(
-        private int $ass_id,
-        private Repositories $repos
+        private Repositories $repos,
+        private TasksService $tasks
     ) {
     }
 
     public function allWriterEssaySummaries(): array
     {
         $writer_essays = [];
-        foreach ($this->repos->taskSettings()->allByAssId($this->ass_id) as $task) {
-            foreach ($this->repos->essay()->allByTaskId($task->getTaskId()) as $essay) {
+        foreach ($this->tasks->all() as $task) {
+            foreach ($this->repos->essay()->allByTaskId($task->getId()) as $essay) {
                 $writer_essays[$essay->getWriterId()][] = $essay;
             }
         }
@@ -25,9 +26,9 @@ readonly class Service implements FullService
         foreach ($writer_essays as $id => $essays) {
             $writer_essay_status[$id] = new WriterEssaySummary(
                 $id,
-                max(array_map(fn (Essay $e) => $e->getLastChange(), $essays)),
-                max(array_map(fn (Essay $e) => $e->getPdfVersion(), $essays)) !== null,
-                array_sum(array_map(fn (Essay $e) => $e->getWordCount(), $essays))
+                max(array_map(fn(Essay $e) => $e->getLastChange(), $essays)),
+                max(array_map(fn(Essay $e) => $e->getPdfVersion(), $essays)) !== null,
+                array_sum(array_map(fn(Essay $e) => $e->getWordCount(), $essays))
             );
         }
         return $writer_essay_status;
@@ -39,9 +40,9 @@ readonly class Service implements FullService
 
         return new WriterEssaySummary(
             $writer_id,
-            max(array_map(fn (Essay $e) => $e->getLastChange(), $essays)),
-            max(array_map(fn (Essay $e) => $e->getPdfVersion(), $essays)) !== null,
-            array_sum(array_map(fn (Essay $e) => $e->getWordCount(), $essays))
+            max(array_map(fn(Essay $e) => $e->getLastChange(), $essays)),
+            max(array_map(fn(Essay $e) => $e->getPdfVersion(), $essays)) !== null,
+            array_sum(array_map(fn(Essay $e) => $e->getWordCount(), $essays))
         );
     }
 }

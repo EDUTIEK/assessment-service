@@ -33,7 +33,7 @@ readonly class ForClients
 
     public function assessmentStatus(): StatusFullService
     {
-        return $this->internal->assessmentStatus($this->ass_id);
+        return $this->internal->assessmentStatus($this->ass_id, $this->user_id);
     }
 
     public function backgroundTask(string $class): Job
