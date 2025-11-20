@@ -95,6 +95,7 @@ class Internal
             $ass_id,
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->language($user_id),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()
         );
     }
 

@@ -50,6 +50,11 @@ abstract class CorrectionSettings implements AssessmentEntity
     abstract public function getMaxPoints(): ?int;
     abstract public function setMaxPoints(?int $max_points): self;
 
+    public function hasMultipleCorrectors(): bool
+    {
+        return $this->getRequiredCorrectors() > 1;
+    }
+
     public function isStitchPossible(): bool
     {
         return $this->getRequiredCorrectors() > 1 && ($this->getProcedureWhenDecimals() || $this->getProcedureWhenDistance());

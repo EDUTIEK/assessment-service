@@ -39,9 +39,9 @@ class Service implements FullService
                     $part->setPosition($config->getPosition());
                 } else {
                     $part->setIsActive(true);
-                    $part->setPosition(++$max);
+                    $part->setPosition($max++);
                 }
-                $parts[sprintf('part%04d', $part->getPosition())] = $part;
+                $parts[sprintf('part_%04d_%s_%s', $part->getPosition(), $part->getComponent(), $part->getKey())] = $part;
             }
         }
         sort($parts);
