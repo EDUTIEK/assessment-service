@@ -2,6 +2,7 @@
 
 namespace Edutiek\AssessmentService\Task\CorrectorAssignments;
 
+use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\GradingStatus;
 
 interface FullService extends ReadService
@@ -15,4 +16,8 @@ interface FullService extends ReadService
      */
     public function saveCorrectorFilter(int $corrector_id, ?array $grading_status, ?int $position);
 
+    /**
+     * Remove a corrector assignment
+     */
+    public function removeAssignment(CorrectorAssignment $assignment);
 }

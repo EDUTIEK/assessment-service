@@ -14,6 +14,9 @@ use Edutiek\AssessmentService\Assessment\LogEntry\MentionUser as LogEntryMention
 use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
 use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
+use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
+use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
+use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
 
 readonly class Service implements ReadService, FullService
 {
@@ -23,6 +26,7 @@ readonly class Service implements ReadService, FullService
         private WorkingTimeFactory $working_time_factory,
         private LogEntryService $log_entry_service,
         private PseudonymService $pseudonym_service,
+        private Dispatcher $events
     ) {
     }
 
@@ -205,6 +209,7 @@ readonly class Service implements ReadService, FullService
         }
 
         $this->repos->writer()->delete($writer->getId());
+        $this->events->dispatchEvent(new WriterRemoved($writer->getId(), $this->ass_id));
     }
 
     private function checkScope(Writer $writer)

@@ -245,7 +245,7 @@ class WriterBridge implements AppBridge
                 // don't add a delta step that can't be applied
                 // step may already be saved, so a later new step may fit
                 return($change->toResponse(true));
-            } elseif ($step_repo->hasByEssayIdAndHashAfter($essay->getId(), $step->getHashAfter())) {
+            } elseif ($step_repo->hasByEssayIdAndHashAfter($essay->getId(), (string) $step->getHashAfter())) {
                 // the same full save should not be saved twice
                 // note: hash_after is salted by timestamp and is unique
                 return($change->toResponse(true));
@@ -265,7 +265,7 @@ class WriterBridge implements AppBridge
         $essay_repo->save(
             $essay
             ->setWrittenText($currentText)
-            ->setRawTextHash($currentHash)
+            ->setRawTextHash((string) $currentHash)
             ->setServiceVersion($this->service_version)
             ->setLastChange($step->getTimestamp())
         );

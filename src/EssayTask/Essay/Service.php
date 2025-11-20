@@ -19,7 +19,7 @@ use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TasksReadService;
 
-readonly class Service implements ClientService
+readonly class Service implements ClientService, EventService
 {
     public function __construct(
         private bool $as_admin,
@@ -167,5 +167,17 @@ readonly class Service implements ClientService
             $essay->getLastChange()
         ));
         $this->essay_image->deleteByEssayId($essay->getId());
+    }
+
+    /**
+     * This function is called from an event handler
+     * No constraints to be checked
+     */
+    public function delete(Essay $essay): void
+    {
+        $this->storage->deleteFile($essay->getPdfVersion());
+        $this->essay_image->deleteByEssayId($essay->getId());
+        $this->repos->essay()->delete($essay->getId());
+        $this->repos->writerNotice()->deleteByEssayId($essay->getId());
     }
 }

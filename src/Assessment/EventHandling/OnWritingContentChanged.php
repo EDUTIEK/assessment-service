@@ -22,6 +22,9 @@ readonly class OnWritingContentChanged implements Handler
     ) {
     }
 
+    /**
+     * @param WritingContentChanged $event
+     */
     public function handle(Event $event): void
     {
         $writer = $this->writer_service->oneByWriterId($event->getWriterId());

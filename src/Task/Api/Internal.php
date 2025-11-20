@@ -77,7 +77,8 @@ class Internal
             $ass_id,
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->dependencies->eventDispatcher($ass_id, $user_id)
         );
     }
 
@@ -162,7 +163,8 @@ class Internal
         return $this->instances[EventObserver::class][$ass_id][$user_id] ??= new EventObserver(
             $ass_id,
             $user_id,
-            $this
+            $this,
+            $this->dependencies->repositories()
         );
     }
 

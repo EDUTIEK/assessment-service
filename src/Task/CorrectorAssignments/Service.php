@@ -2,6 +2,8 @@
 
 namespace Edutiek\AssessmentService\Task\CorrectorAssignments;
 
+use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
+use Edutiek\AssessmentService\System\EventHandling\Events\AssignmentRemoved;
 use Edutiek\AssessmentService\Task\Data\GradingStatus;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
@@ -14,7 +16,8 @@ readonly class Service implements FullService
         private int $ass_id,
         private CorrectionSettings $correction_settings,
         private WriterService $writer_service,
-        private Repositories $repos
+        private Repositories $repos,
+        private Dispatcher $events
     ) {
     }
 
@@ -110,5 +113,16 @@ readonly class Service implements FullService
         }
 
         return $filtered;
+    }
+
+    public function removeAssignment(CorrectorAssignment $assignment): void
+    {
+        // todo: check scope
+        $this->repos->correctorAssignment()->delete($assignment->getId());
+        $this->events->dispatchEvent(new AssignmentRemoved(
+            $assignment->getTaskId(),
+            $assignment->getCorrectorId(),
+            $assignment->getCorrectorId()
+        ));
     }
 }

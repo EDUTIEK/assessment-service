@@ -23,6 +23,9 @@ readonly class OnWritingContentChanged implements Handler
     ) {
     }
 
+    /**
+     * @param WritingContentChanged $event
+     */
     public function handle(Event $event): void
     {
         // todo: delete comments and points for writer and task

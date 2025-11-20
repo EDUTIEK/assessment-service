@@ -190,7 +190,8 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->repositories(),
             $this->workingTimeFactory($user_id),
             $this->logEntry($ass_id),
-            $this->pseudonym()
+            $this->pseudonym(),
+            $this->dependencies->eventDispatcher($ass_id, $user_id),
         );
     }
 
@@ -421,7 +422,8 @@ class Internal implements ComponentApi, ComponentApiFactory
         return $this->instances[EventObserver::class][$ass_id][$user_id] ??= new EventObserver(
             $ass_id,
             $user_id,
-            $this
+            $this,
+            $this->dependencies->repositories()
         );
     }
 

@@ -132,7 +132,8 @@ class Internal
         return $this->instances[EventObserver::class][$ass_id][$user_id] ??= new EventObserver(
             $ass_id,
             $user_id,
-            $this
+            $this,
+            $this->dependencies->repositories()
         );
     }
 
