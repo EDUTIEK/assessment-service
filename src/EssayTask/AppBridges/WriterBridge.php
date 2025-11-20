@@ -209,7 +209,6 @@ class WriterBridge implements AppBridge
     // todo performance optimization needed - essay should not be saved multiple times
     private function applyStep(ChangeRequest $change): ChangeResponse
     {
-        //return $change->toResponse(false, 'fake');
         $data = $change->getPayload();
         $essay = $this->getAndCheckEssay((int) $data['task_id']);
         if ($essay === null) {
@@ -240,7 +239,7 @@ class WriterBridge implements AppBridge
         // then this list may include steps that are already saved
         // exclude these steps because they will corrupt the sequence
         // later steps may fit again
-        if ($step->getHashBefore() !== $currentHash) {
+        if ((string) $step->getHashBefore() !== $currentHash) {
             if ($step->getIsDelta()) {
                 // don't add a delta step that can't be applied
                 // step may already be saved, so a later new step may fit
