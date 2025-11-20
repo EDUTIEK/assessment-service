@@ -369,7 +369,8 @@ class Internal implements ComponentApi, ComponentApiFactory
             $ass_id,
             $user_id,
             $this,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->pdfProcessing()
         );
     }
 
@@ -380,7 +381,6 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->repositories()
         );
     }
-
 
     public function format(OrgaSettings $orga, int $user_id): FormatInterface
     {

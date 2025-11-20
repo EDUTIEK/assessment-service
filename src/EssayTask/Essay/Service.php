@@ -179,5 +179,6 @@ readonly class Service implements ClientService, EventService
         $this->essay_image->deleteByEssayId($essay->getId());
         $this->repos->essay()->delete($essay->getId());
         $this->repos->writerNotice()->deleteByEssayId($essay->getId());
+        $this->repos->writingStep()->deleteByEssayId($essay->getId());
     }
 }

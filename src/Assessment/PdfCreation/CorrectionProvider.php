@@ -32,9 +32,9 @@ readonly class CorrectionProvider implements PdfPartProvider
         ];
     }
 
-    public function renderPart(string $key, int $task_id, int $writer_id): string
+    public function renderPart(string $key, int $task_id, int $writer_id): ?string
     {
-        // todo: fill with content
-        return $this->processing->create([], []);
+        // todo: fill with content for a task and writer
+        return null;
     }
 }

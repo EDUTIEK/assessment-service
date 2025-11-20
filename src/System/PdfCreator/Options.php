@@ -12,11 +12,11 @@ class Options
     private string $subject = '';
     private string $keywords = '';
     private int $start_page_number = 1;
-    private bool $print_header = true;
+    private bool $print_header = false;
     private bool $print_footer = true;
     private int $header_margin = 5; // In mm
     private int $footer_margin = 10; // In mm
-    private int $top_margin = 20; // In mm
+    private int $top_margin = 10; // In mm
     private int $bottom_margin = 10; // In mm
     private int $left_margin = 15; // In mm
     private int $right_margin = 15; // In mm

@@ -30,10 +30,11 @@ class Service implements FullService
      * @param Closure(): Dompdf $dom_pdf
      */
     public function __construct(
-       private string $absolute_temp_path,
-       private string $relative_temp_path,
-       private Closure $dom_pdf
-    ) {}
+        private string $absolute_temp_path,
+        private string $relative_temp_path,
+        private Closure $dom_pdf
+    ) {
+    }
 
     public function createPdf(string $html, Options $options): string
     {
@@ -98,11 +99,12 @@ class Service implements FullService
         );
     }
 
-    public function getImagePathForPdf(?ImageDescriptor $image): string {
+    public function getImagePathForPdf(?ImageDescriptor $image): string
+    {
         if ($image !== null) {
             $content = stream_get_contents($image->stream());
             $file = tempnam($this->absolute_temp_path, 'LAS');
-            file_put_contents ($file, $content);
+            file_put_contents($file, $content);
             return $this->relative_temp_path . '/' . basename($file);
         }
         return '';
@@ -123,17 +125,22 @@ class Service implements FullService
 body
 {
     font-size: ' . $this->main_font_size . ';
+    margin: 0;
+    margin-top: ' . $options->getTopMargin() . 'mm;
+    margin-left: ' . $options->getLeftMargin() . 'mm;
+    margin-right: ' . $options->getRightMargin() . 'mm;
+    margin-bottom: ' . $options->getBottomMargin() . 'mm;
 }
 :root
 {
-    margin: 0;
+
 }
 header
 {
     font-family: ' . $this->header_font . ';
     font-size: ' . $this->header_font_size . ';
     position: fixed;
-    top: ' . $options->getTopMargin() . 'mm;
+    top: ' . $options->getHeaderMargin() . 'mm;
     left: ' . $options->getLeftMargin() . 'mm;
     right: ' . $options->getRightMargin() . 'mm;
     transform: translateY(-100%);
@@ -147,8 +154,8 @@ header
     {
         $right = $options->getRightMargin();
         $bot = $options->getFooterMargin();
-        return function(int $page, int $max_pages, Canvas $canvas, FontMetrics $font_metrics) use ($options, $right, $bot): void {
-            $text = (string) ($page + $options->getStartPageNumber() -1);
+        return function (int $page, int $max_pages, Canvas $canvas, FontMetrics $font_metrics) use ($options, $right, $bot): void {
+            $text = (string) ($page + $options->getStartPageNumber() - 1);
             $font = $font_metrics->getFont($this->footer_font);
             $w = $font_metrics->getTextWidth($text, $font, $this->footer_font_size);
             $h = $font_metrics->getFontHeight($font, $this->footer_font_size);

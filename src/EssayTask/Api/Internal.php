@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\Api;
 
+use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\EssayTask\AppBridges\WriterBridge as WriterBridgeService;
 use Edutiek\AssessmentService\EssayTask\AssessmentStatus\Service as StatusService;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
@@ -20,12 +21,12 @@ use Edutiek\AssessmentService\EssayTask\EssayImport\Service as ImportService;
 use Edutiek\AssessmentService\EssayTask\EventHandling\Observer as EventObserver;
 use Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service as HtmlService;
 use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
+use Edutiek\AssessmentService\EssayTask\PdfCreation\CorrectionProvider;
+use Edutiek\AssessmentService\EssayTask\PdfCreation\WritingProvider;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
 use Edutiek\AssessmentService\System\BackgroundTask\Job;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
-use Edutiek\AssessmentService\EssayTask\PdfCreation\CorrectionProvider;
 
 class Internal
 {
@@ -80,6 +81,7 @@ class Internal
             $this->dependencies->systemApi()->backgroundTask(),
         );
     }
+
     public function constraintProvider(int $ass_id, int $user_id): ConstraintProvider
     {
         return $this->instances[ConstraintProvider::class][$ass_id][$user_id] ??= new ConstraintProvider(
@@ -198,6 +200,16 @@ class Internal
             $this->dependencies->systemApi()->format($user_id),
             $this->essayImage($ass_id), // lazy
             $this->dependencies->systemApi()->pdfProcessing(),
+        );
+    }
+
+    public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
+    {
+        return $this->instances[WritingProvider::class][$ass_id][$user_id] ?? new WritingProvider(
+            $ass_id,
+            $this->dependencies->systemApi()->pdfProcessing(),
+            $this->language($user_id),
+            $this->dependencies->repositories()
         );
     }
 

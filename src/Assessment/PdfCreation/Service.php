@@ -9,6 +9,7 @@ use Edutiek\AssessmentService\Assessment\Api\ComponentApiFactory;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\PdfConfig;
 use Edutiek\AssessmentService\System\PdfCreator\PdfPart;
+use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingService;
 
 class Service implements FullService
 {
@@ -17,6 +18,7 @@ class Service implements FullService
         private int $user_id,
         private ComponentApiFactory $apis,
         private Repositories $repos,
+        private PdfProcessingService $processor
     ) {
     }
 
@@ -68,18 +70,32 @@ class Service implements FullService
         }
     }
 
-    public function createWritingPdf(int $writer_id): string
+    public function createWritingPdf(int $task_id, int $writer_id): string
     {
-        // todo: replace experimental stuff
-        $parts = $this->getSortedParts(PdfPurpose::CORRECTION);
-        $this->saveSortedParts(PdfPurpose::CORRECTION, $parts);
-        return '';
+        $pdf_ids = [];
+        foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
+            $provider = $this->getProvider($component, PdfPurpose::WRITING);
+            foreach ($provider?->getAvailableParts() ?? [] as $part) {
+                $id = $provider->renderPart($part->getKey(), $task_id, $writer_id);
+                if ($id !== null) {
+                    $pdf_ids[] = $id;
+                }
+            }
+        }
+
+        // todo number and add meta data
+        return $this->processor->join($pdf_ids);
     }
 
-    public function createCorrectionPdf(int $writer_id): string
+    public function createCorrectionPdf(int $task_id, int $writer_id): string
     {
         // TODO: Implement createCorrectionPdf() method.
         return '';
+    }
+
+    public function createCorrectionReport(int $ass_id): string
+    {
+        // TODO: Implement createCorrectionReport() method.
     }
 
     private function getProvider(string $component, PdfPurpose $purpose): ?PdfPartProvider
@@ -93,4 +109,5 @@ class Service implements FullService
         }
         return null;
     }
+
 }
