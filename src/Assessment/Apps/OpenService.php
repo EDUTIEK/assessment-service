@@ -12,5 +12,5 @@ interface OpenService
      * Open a frontend for writing
      */
     public function openWriter(int $context_id, string $return_url): void;
-    public function openCorrector(int $context_id, string $return_url, ?int $assignment_id): void;
+    public function openCorrector(int $context_id, string $return_url, ?int $task_id, ?int $writer_id): void;
 }

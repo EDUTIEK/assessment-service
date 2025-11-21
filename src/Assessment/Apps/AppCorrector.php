@@ -17,7 +17,7 @@ class AppCorrector extends BaseApp implements RestService
     public function handle(): never
     {
         $this->app->get('/corrector/data', [$this,'getData']);
-        $this->app->get('/corrector/item/{id}', [$this,'getItem']);
+        $this->app->get('/corrector/item/{task_id}/{writer_id}', [$this,'getItem']);
         $this->app->get('/corrector/file/{component}/{entity}/{id}', [$this,'getFile']);
         $this->app->run();
         exit;
@@ -40,7 +40,8 @@ class AppCorrector extends BaseApp implements RestService
      */
     public function getItem(Request $request, Response $response, array $args): Response
     {
-        $assignment_id = (int) ($args['id'] ?? 0);
+        $task_id = (int) ($args['id'] ?? 0);
+        $writer_id = (int) ($args['writer_id'] ?? 0);
 
         $this->prepare($request, $response, $args, TokenPurpose::DATA);
 
@@ -48,7 +49,7 @@ class AppCorrector extends BaseApp implements RestService
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
             $bridge = $this->getBridge($component);
             if ($bridge instanceof AppCorrectorBridge) {
-                $data[$component] = $bridge->getItem($assignment_id);
+                $data[$component] = $bridge->getItem($task_id, $writer_id);
             }
         }
         $this->rest_helper->extendDataToken($response);

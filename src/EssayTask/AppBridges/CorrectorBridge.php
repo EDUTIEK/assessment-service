@@ -45,27 +45,25 @@ class CorrectorBridge implements AppCorrectorBridge
         return [];
     }
 
-    public function getItem(int $assignment_id): ?array
+    public function getItem(int $task_id, int $writer_id): ?array
     {
-        $assignment = $this->assignment_service->oneById($assignment_id);
-        if ($assignment === null) {
-            return [];
-        }
-
         $data = [];
 
         $essay = $this->repos->essay()->oneByWriterIdAndTaskId(
-            $assignment->getWriterId(),
-            $assignment->getTaskId()
+            $writer_id,
+            $task_id,
         );
-        if ($essay) {
-            $data['Essay'] = $this->entity->arrayToPrimitives([
-               'id' => $essay->getId(),
-               'text' => $this->html_processing->processHtmlForMarking($essay->getWrittenText()),
-                'started' => $essay->getFirstChange(),
-                'ended' => $essay->getLastChange()
-            ]);
+
+        if ($essay === null) {
+            return [];
         }
+
+        $data['Essay'] = $this->entity->arrayToPrimitives([
+            'id' => $essay->getId(),
+            'text' => $this->html_processing->processHtmlForMarking($essay->getWrittenText()),
+            'started' => $essay->getFirstChange(),
+            'ended' => $essay->getLastChange()
+        ]);
 
         $pages = $this->repos->essayImage()->allByEssayId($essay->getId());
         foreach ($pages as $page) {

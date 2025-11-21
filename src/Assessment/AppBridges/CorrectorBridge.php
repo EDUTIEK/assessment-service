@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\AppBridges;
 
+use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeAction;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
@@ -19,7 +20,7 @@ use Edutiek\AssessmentService\Task\Data\ResourceAvailability;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Task\Data\Settings;
 
-class CorrectorBridge implements AppBridge
+class CorrectorBridge implements AppCorrectorBridge
 {
     private ?Corrector $corrector;
 
@@ -56,15 +57,15 @@ class CorrectorBridge implements AppBridge
 
         $settings = $this->repos->correctionSettings()->one($this->ass_id);
         $data['Settings'] = $this->entity->arrayToPrimitives([
-           'mutual_visibility' => $settings->getMutualVisibility(),
-           'no_manual_decimals' => $settings->getNoManualDecimals(),
-           'procedure' => $settings->getProcedure(),
-           'procedure_when_decimals' => $settings->getProcedureWhenDecimals(),
-           'procedure_when_distance' => $settings->getProcedureWhenDistance(),
-           'max_auto_distance' => $settings->getMaxAutoDistance(),
-           'approximation' => $settings->getApproximation(),
-           'revision_between' > $settings->getRevisionBetween(),
-           'stitch_after_procedure' => $settings->getStitchAfterProcedure(),
+            'multiple_correctors' => $settings->hasMultipleCorrectors(),
+            'mutual_visibility' => $settings->getMutualVisibility(),
+            'procedure_when_distance' => $settings->getProcedureWhenDistance(),
+            'procedure' => $settings->getProcedure(),
+            'max_auto_distance' => $settings->getMaxAutoDistance(),
+            'revision_between' > $settings->getRevisionBetween(),
+            'stitch_after_procedure' => $settings->getStitchAfterProcedure(),
+            'max_points' => $settings->getMaxPoints(),
+            'no_manual_decimals' => $settings->getNoManualDecimals(),
         ]);
 
         return $data;
@@ -82,4 +83,9 @@ class CorrectorBridge implements AppBridge
     }
 
 
+    public function getItem(int $task_id, int $writer_id): ?array
+    {
+        // no items handled in assessment component
+        return null;
+    }
 }

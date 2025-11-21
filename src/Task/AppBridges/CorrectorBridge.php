@@ -100,7 +100,6 @@ class CorrectorBridge implements AppCorrectorBridge
             $writer = $writers[$assignment->getWriterId()] ?? null;
             if ($writer?->isAuthorized()) {
                 $data['Items'] = $this->entity->arrayToPrimitives([
-                    'id' => $assignment->getId(),
                     'task_id' => $assignment->getTaskId(),
                     'writer_id' => $writer->getId(),
                     'position' => $assignment->getPosition(),
@@ -174,7 +173,7 @@ class CorrectorBridge implements AppCorrectorBridge
         return $data;
     }
 
-    public function getItem(int $assignment_id): ?array
+    public function getItem(int $task_id, int $writer_id): ?array
     {
         $data = [
             'item' => [],
@@ -183,25 +182,27 @@ class CorrectorBridge implements AppCorrectorBridge
             'Comments' => [],
             'Points' => []
         ];
-        $assignment = $this->assignment_service->oneById($assignment_id);
-        if ($assignment === null) {
-            return [];
-        }
-        $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
+
+        $assignment = $this->assignment_service->oneByIds($writer_id, (int) $this->corrector?->getId(), $task_id);
+
+        $writer = $this->writer_service->oneByWriterId($writer_id);
         if ($writer?->isAuthorized()) {
             $data['Item'] = $this->entity->arrayToPrimitives([
-                'id' => $assignment->getId(),
-                'task_id' => $assignment->getTaskId(),
-                'writer_id' => $writer->getId(),
-                'title' => $writer->getPseudonym() . ' | ' . $this->tasks[$assignment->getTaskId()]->getTitle(),
-                'correction_status' => $writer->getCorrectionStatus()->value
+                'task_id' => $task_id,
+                'writer_id' => $writer_id,
+                'position' => $assignment?->getPosition(),
+                'title' => $writer->getPseudonym() . ' | ' . $this->tasks[$task_id]->getTitle(),
+                'correction_status' => $writer->getCorrectionStatus()->value,
+                'can_correct' => false,
+                'can_authorize' => false,
+                'can_review' => false,
             ]);
         } else {
             return [];
         }
 
         $settings = $this->assesment_settings->get();
-        foreach ($this->assignment_service->allByWriterId($writer->getId()) as $assignment) {
+        foreach ($this->assignment_service->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
             if ($this->corrector === null || $this->corrector->getId() === $assignment->getCorrectorId() || $settings->getMutualVisibility()) {
                 $corrector = $this->corrector_service->oneById($assignment->getCorrectorId());
                 if ($corrector) {
@@ -213,7 +214,6 @@ class CorrectorBridge implements AppCorrectorBridge
                        'title' => $user?->getFullname(false)
                            ?? sprintf($this->language->txt('corrector_x'), $assignment->getPosition()),
                        'initials' => $user->getInitials() ?? sprintf($this->language->txt('corr_x'), $assignment->getPosition()),
-                       'position' => $assignment->getPosition(),
                     ]);
 
                     $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
@@ -229,8 +229,11 @@ class CorrectorBridge implements AppCorrectorBridge
                     }
 
                     $data['Summaries'][] = $this->entity->arrayToPrimitives([
-                        'item_id' => $assignment->getId(),
-                        'corrector_id' => $corrector->getId(),
+                        'task_id' => $assignment->getTaskId(),
+                        'writer_id' => $assignment->getWriterId(),
+                        'corrector_id' => $assignment->getCorrectorId(),
+                        'position' => $assignment->getPosition(),
+
                         'text' => $summary->getSummaryText(),
                         'points' => $summary->getPoints(),
                         'pdf' => $summary->getSummaryPdf(),
@@ -248,15 +251,16 @@ class CorrectorBridge implements AppCorrectorBridge
                         );
                         foreach ($comments as $comment) {
                             $data['Comments'][] = $this->entity->arrayToPrimitives([
-                               'id' => $comment->getId(),
-                               'item_id' => $assignment->getId(),
-                               'corrector_id' => $comment->getCorrectorId(),
-                               'start_position' => $comment->getStartPosition(),
-                               'end_position' => $comment->getEndPosition(),
-                               'parent_number' => $comment->getParentNumber(),
-                               'comment' => $comment->getComment(),
-                               'rating' => $comment->getRating(),
-                               'marks' => $comment->getMarks(),
+                                'id' => $comment->getId(),
+                                'task_id' => $assignment->getTaskId(),
+                                'writer_id' => $assignment->getWriterId(),
+                                'corrector_id' => $comment->getCorrectorId(),
+                                'start_position' => $comment->getStartPosition(),
+                                'end_position' => $comment->getEndPosition(),
+                                'parent_number' => $comment->getParentNumber(),
+                                'comment' => $comment->getComment(),
+                                'rating' => $comment->getRating(),
+                                'marks' => $comment->getMarks(),
                             ]);
                         }
 
@@ -267,12 +271,13 @@ class CorrectorBridge implements AppCorrectorBridge
                         );
                         foreach ($points as $point) {
                             $data['Points'][] = $this->entity->arrayToPrimitives([
-                               'id' => $point->getId(),
-                               'item_id' => $assignment->getId(),
-                               'corrector_id' => $point->getCorrectorId(),
-                               'comment_id' => $point->getCommentId(),
-                               'criterion_id' => $point->getCriterionId(),
-                               'points' => $point->getPoints(),
+                                'id' => $point->getId(),
+                                'task_id' => $assignment->getTaskId(),
+                                'writer_id' => $assignment->getWriterId(),
+                                'corrector_id' => $point->getCorrectorId(),
+                                'comment_id' => $point->getCommentId(),
+                                'criterion_id' => $point->getCriterionId(),
+                                'points' => $point->getPoints(),
                             ]);
                         }
                     }

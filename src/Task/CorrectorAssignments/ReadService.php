@@ -7,6 +7,9 @@ use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 interface ReadService
 {
     public function oneById(int $id): ?CorrectorAssignment;
+
+    public function oneByIds(int $writer_id, int $corrector_id, int $task_id): ?CorrectorAssignment;
+
     /**
      * @return CorrectorAssignment[]
      */
@@ -15,6 +18,11 @@ interface ReadService
      * @return CorrectorAssignment[]
      */
     public function allByWriterId(int $writer_id): array;
+
+    /**
+     * @return CorrectorAssignment[]
+     */
+    public function allByTaskIdAndWriterId(int $task_id, int $writer_id): array;
 
     /**
      * @return CorrectorAssignment[]

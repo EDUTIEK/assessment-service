@@ -31,6 +31,11 @@ readonly class Service implements FullService
         return $this->repos->correctorAssignment()->allByWriterId($writer_id);
     }
 
+    public function allByTaskIdAndWriterId(int $task_id, int $writer_id): array
+    {
+        return $this->repos->correctorAssignment()->allByTaskIdAndWriterId($task_id, $writer_id);
+    }
+
     public function countMissingCorrectors(): int
     {
         $required = $this->correction_settings->getRequiredCorrectors();
@@ -60,6 +65,11 @@ readonly class Service implements FullService
     public function oneById(int $id): ?CorrectorAssignment
     {
         return $this->repos->correctorAssignment()->oneById($id);
+    }
+
+    public function oneByIds(int $writer_id, int $corrector_id, int $task_id): ?CorrectorAssignment
+    {
+        return $this->repos->correctorAssignment()->oneByIds($writer_id, $corrector_id, $task_id);
     }
 
     public function saveCorrectorFilter(int $corrector_id, ?array $grading_status, ?int $position): void
