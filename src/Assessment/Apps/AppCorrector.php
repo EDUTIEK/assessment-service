@@ -40,7 +40,7 @@ class AppCorrector extends BaseApp implements RestService
      */
     public function getItem(Request $request, Response $response, array $args): Response
     {
-        $task_id = (int) ($args['id'] ?? 0);
+        $task_id = (int) ($args['task_id'] ?? 0);
         $writer_id = (int) ($args['writer_id'] ?? 0);
 
         $this->prepare($request, $response, $args, TokenPurpose::DATA);

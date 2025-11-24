@@ -30,4 +30,10 @@ enum CorrectionStatus: string
      * The correction is finalized
      */
     case FINALIZED = 'finalized';
+
+
+    public function isToRevise(): bool
+    {
+        return $this === self::APPROXIMATION || $this === self::CONSULTING;
+    }
 }

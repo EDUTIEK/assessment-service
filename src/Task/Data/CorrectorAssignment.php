@@ -14,6 +14,6 @@ abstract class CorrectorAssignment implements TaskEntity
     abstract public function setWriterId(int $writer_id): self;
     abstract public function getCorrectorId(): int;
     abstract public function setCorrectorId(int $corrector_id): self;
-    abstract public function getPosition(): int;
-    abstract public function setPosition(int $position): self;
+    abstract public function getPosition(): AssignmentPosition;
+    abstract public function setPosition(AssignmentPosition $position): self;
 }

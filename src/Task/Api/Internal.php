@@ -107,6 +107,7 @@ class Internal
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings(),
             $this->correctorAssignments($ass_id, $user_id),
+            $this->correctionProcess($ass_id, $user_id),
             $this->language($user_id),
             $this->dependencies->systemApi()->user()
         );

@@ -2,6 +2,9 @@
 
 namespace Edutiek\AssessmentService\Task\CorrectionProcess;
 
+use Edutiek\AssessmentService\Assessment\Data\CorrectionProcedure;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
+use Edutiek\AssessmentService\Task\Data\AssignmentPosition;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
@@ -31,6 +34,142 @@ readonly class Service implements FullService
         private CorrectionSettings $correction_settings,
         private CorrectorService $corrector_service
     ) {
+    }
+
+    public function canCorrect(CorrectorAssignment $assignment): bool
+    {
+        $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
+        if (!$writer->getWritingAuthorized()) {
+            return false;
+        }
+        if ($assignment->getPosition()->isCorrector() && $writer->getCorrectionStatus() !== CorrectionStatus::OPEN) {
+            return false;
+        }
+        if ($assignment->getPosition()->isStitch() && $writer->getCorrectionStatus() !== CorrectionStatus::STITCH) {
+            return false;
+        }
+
+        if ($assignment->getPosition() === AssignmentPosition::SECOND && $this->correction_settings->getWaitForFirst()
+        ) {
+            $first = $this->repos->correctorAssignment()->oneByPosition(
+                $assignment->getTaskId(),
+                $assignment->getWriterId(),
+                AssignmentPosition::FIRST
+            );
+            $first_summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+                $first?->getTaskId(),
+                $first?->getWriterId(),
+                $first?->getCorrectorId()
+            );
+            if (!($first_summary?->isAuthorized() ?? false)) {
+                return false;
+            }
+        }
+
+        $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+            $assignment->getTaskId(),
+            $assignment->getWriterId(),
+            $assignment->getCorrectorId()
+        );
+        if ($summary !== null && !$summary->getGradingStatus()?->isToCorrect()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canAuthorize(CorrectorAssignment $assignment): bool
+    {
+        $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
+        if (!$writer->getWritingAuthorized()) {
+            return false;
+        }
+        if ($assignment->getPosition()->isCorrector() && $writer->getCorrectionStatus() !== CorrectionStatus::OPEN) {
+            return false;
+        }
+        if ($assignment->getPosition()->isStitch() && $writer->getCorrectionStatus() !== CorrectionStatus::STITCH) {
+            return false;
+        }
+
+        if ($assignment->getPosition() === AssignmentPosition::SECOND) {
+            $first = $this->repos->correctorAssignment()->oneByPosition(
+                $assignment->getTaskId(),
+                $assignment->getWriterId(),
+                AssignmentPosition::FIRST
+            );
+            $first_summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+                $first?->getTaskId(),
+                $first?->getWriterId(),
+                $first?->getCorrectorId()
+            );
+            if ($first_summary === null || !$first_summary->isAuthorized()) {
+                return false;
+            }
+        }
+
+        $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+            $assignment->getTaskId(),
+            $assignment->getWriterId(),
+            $assignment->getCorrectorId()
+        );
+        if ($summary === null || !$summary->getGradingStatus()?->isToAuthorize()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canRevise(CorrectorAssignment $assignment): bool
+    {
+        if (!$assignment->getPosition()->isCorrector()) {
+            return false;
+        }
+        $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
+        if (!$writer->getWritingAuthorized()) {
+            return false;
+        }
+        $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+            $assignment->getTaskId(),
+            $assignment->getWriterId(),
+            $assignment->getCorrectorId()
+        );
+        if ($summary === null || !$summary->isAuthorized() || $summary->isRevised()) {
+            return false;
+        }
+
+        switch ($writer->getCorrectionStatus()) {
+            case CorrectionProcedure::APPROXIMATION:
+                if ($assignment->getPosition() === AssignmentPosition::FIRST) {
+                    return true;
+                }
+                $first = $this->repos->correctorAssignment()->oneByPosition(
+                    $assignment->getTaskId(),
+                    $assignment->getWriterId(),
+                    AssignmentPosition::FIRST
+                );
+                $first_summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+                    $first?->getTaskId(),
+                    $first?->getWriterId(),
+                    $first?->getCorrectorId()
+                );
+                if ($first_summary === null || !$first_summary->isRevised()) {
+                    return false;
+                }
+
+                // todo check if first corrector has set that second corrector must revise (field needed)
+
+                // no break
+            case CorrectionProcedure::CONSULTING:
+                // both correctors must change the points
+                // only second corrector should enter a revision text
+                return true;
+
+            case CorrectionProcedure::NONE:
+            default:
+                return false;
+        }
+
+        return true;
     }
 
     public function authorizeCorrection(CorrectorSummary $summary, int $user_id): void
@@ -67,7 +206,10 @@ readonly class Service implements FullService
 
         if ($changed) {
             $this->log_entry->addEntry(
-                LogEntryType::CORRECTION_REMOVE_AUTHORIZATION, MentionUser::fromSystem($user_id), MentionUser::fromWriter($writer));
+                LogEntryType::CORRECTION_REMOVE_AUTHORIZATION,
+                MentionUser::fromSystem($user_id),
+                MentionUser::fromWriter($writer)
+            );
         }
 
         return $changed;
@@ -80,11 +222,11 @@ readonly class Service implements FullService
         }
         $writers = [];
 
-        foreach($this->writer_service->all() as $writer) {
+        foreach ($this->writer_service->all() as $writer) {
             $writers[$writer->getId()] = $writer;
         }
 
-        foreach($summaries as $summary) {
+        foreach ($summaries as $summary) {
             $writer = $writers[$summary->getWriterId()] ?? null;
             // don't remove a singe authorization from a finalized correction
             if (empty($writer) || !empty($writer->getCorrectionFinalized())) {
@@ -106,11 +248,11 @@ readonly class Service implements FullService
         int $first_corrector,
         int $second_corrector,
         array $writer_ids,
-        $dry_run = false): array
-    {
+        $dry_run = false
+    ): array {
         $assignments = [];
-        foreach($this->repos->correctorAssignment()->allByTaskId($task_id) as $assignment) {
-            $assignments[$assignment->getWriterId()][$assignment->getPosition()] = $assignment;
+        foreach ($this->repos->correctorAssignment()->allByTaskId($task_id) as $assignment) {
+            $assignments[$assignment->getWriterId()][$assignment->getPosition()->value] = $assignment;
         }
         $summaries = $this->repos->correctorSummary()->allByTaskIdAndWriterIds($task_id, $writer_ids);
 
@@ -119,13 +261,10 @@ readonly class Service implements FullService
         foreach ($writer_ids as $writer_id) {
             $first_assignment = $assignments[$writer_id][0] ?? null;
             $second_assignment = $assignments[$writer_id][1] ?? null;
-            $old_first_corrector = $first_assignment !== null
-                ? $first_assignment->getCorrectorId()
-                : null;
-            $old_second_corrector = $second_assignment !== null ?
-                $second_assignment->getCorrectorId() : null;
+            $old_first_corrector = $first_assignment?->getCorrectorId();
+            $old_second_corrector = $second_assignment?->getCorrectorId();
 
-            $first_summary =  $first_assignment !== null ?
+            $first_summary = $first_assignment !== null ?
                 ($summaries[$writer_id][$first_assignment->getCorrectorId()] ?? null) : null;
             $second_summary = $second_assignment !== null ?
                 ($summaries[$writer_id][$second_assignment->getCorrectorId()] ?? null) : null;
@@ -134,9 +273,9 @@ readonly class Service implements FullService
             $second_unchanged = $this->assign($task_id, $writer_id, $second_corrector, $second_assignment, $second_summary, 1); // assignment is changed by reference
 
             // Do nothing if both are unchanged
-            if($first_unchanged && $second_unchanged) {
+            if ($first_unchanged && $second_unchanged) {
                 $result["unchanged"][] = $writer_id;
-            } elseif($first_assignment !== null
+            } elseif ($first_assignment !== null
                 && $second_assignment !== null
                 && $first_assignment->getCorrectorId() == $second_assignment->getCorrectorId()
             ) {// Do not proceed if first and second position is the same
@@ -144,15 +283,15 @@ readonly class Service implements FullService
             } else {
 
                 $result["changed"][] = $writer_id;
-                if(!$dry_run) {// Stop here if it's a dry run
+                if (!$dry_run) {// Stop here if it's a dry run
 
-                    if($old_first_corrector !== null && $first_assignment !== null && $first_summary !== null) {
+                    if ($old_first_corrector !== null && $first_assignment !== null && $first_summary !== null) {
                         // Move all comments and summaries of first correction to new corrector if they changed,
                         // criterium points are individual and are removed
                         $this->moveCorrection($task_id, $old_first_corrector, $first_assignment->getCorrectorId(), $first_summary->getEssayId());
                     }
 
-                    if($old_second_corrector !== null && $second_assignment !== null && $second_summary !== null) {
+                    if ($old_second_corrector !== null && $second_assignment !== null && $second_summary !== null) {
                         // Move all comments and summaries of second correction to new corrector if they changed,
                         // criterium points are individual and are removed
                         $this->moveCorrection(
@@ -163,12 +302,12 @@ readonly class Service implements FullService
                         );
                     }
 
-                    if($first_assignment === null && $old_first_corrector !== null && $first_summary !== null) {
+                    if ($first_assignment === null && $old_first_corrector !== null && $first_summary !== null) {
                         // if the first assignment is removed, also its comments and summary are removed
                         $this->deleteCorrection($task_id, $first_summary->getWriterId(), $old_first_corrector);
                     }
 
-                    if($second_assignment === null && $old_second_corrector !== null  && $second_summary !== null) {
+                    if ($second_assignment === null && $old_second_corrector !== null && $second_summary !== null) {
                         // if the second assignment is removed, also its comments and summary are removed
                         $this->deleteCorrection($task_id, $second_summary->getWriterId(), $old_second_corrector);
                     }
@@ -176,11 +315,11 @@ readonly class Service implements FullService
                     // If something changed remove old assignments
                     $this->repos->correctorAssignment()->deleteByTaskIdAndWriterId($task_id, $writer_id);
 
-                    if($first_assignment !== null) {
+                    if ($first_assignment !== null) {
                         $this->repos->correctorAssignment()->save($first_assignment);
                     }
 
-                    if($second_assignment !== null) {
+                    if ($second_assignment !== null) {
                         $this->repos->correctorAssignment()->save($second_assignment);
                     }
                 }
@@ -192,7 +331,7 @@ readonly class Service implements FullService
 
     private function moveCorrection(int $task_id, int $writer_id, int $from_corrector, int $to_corrector)
     {
-        if($from_corrector === $to_corrector) {
+        if ($from_corrector === $to_corrector) {
             return;
         }//Prevent removal of criterion points and useless queries if nothing has changed
         $this->repos->correctorSummary()->moveCorrectorByTaskIdAndWriterId($task_id, $writer_id, $from_corrector, $to_corrector);
@@ -207,12 +346,12 @@ readonly class Service implements FullService
         $this->repos->correctorPoints()->deleteByTaskIdAndWriterIdAndCorrectorId($task_id, $writer_id, $corrector);
     }
 
-    private function assign(int $task_id, int $writer_id, int $corrector, ?CorrectorAssignment &$assignment, ?CorrectorSummary $summary, int $position) : bool
+    private function assign(int $task_id, int $writer_id, int $corrector, ?CorrectorAssignment &$assignment, ?CorrectorSummary $summary, int $position): bool
     {
         $unchanged = true;
         $authorized = isset($summary) && $summary->getCorrectionAuthorized() !== null;
 
-        if($corrector > -1) {// corrector is real and not removed or keep unchanged
+        if ($corrector > -1) {// corrector is real and not removed or keep unchanged
             if ($assignment == null) { // if assignment is missing create a new
                 $assignment = $this->repos->correctorAssignment()->new()
                                           ->setTaskId($task_id)
@@ -227,14 +366,14 @@ readonly class Service implements FullService
                 $unchanged = false;
             }
         }
-        if($corrector == self::BLANK_CORRECTOR_ASSIGNMENT && !$authorized) {// corrector assignment is actively removed
+        if ($corrector == self::BLANK_CORRECTOR_ASSIGNMENT && !$authorized) {// corrector assignment is actively removed
             $assignment = null;
             $unchanged = false;
         }
         return $unchanged;
     }
 
-    public function assignMissing(int $task_id) : int
+    public function assignMissing(int $task_id): int
     {
         switch ($this->correction_settings->getAssignMode()) {
             case AssignMode::RANDOM_EQUAL:
@@ -247,7 +386,7 @@ readonly class Service implements FullService
      * Assign correctors randomly so that they get nearly equal number of corrections
      * @return int number of new assignments
      */
-    protected function assignByRandomEqualMode(int $task_id) : int
+    protected function assignByRandomEqualMode(int $task_id): int
     {
         $required = $this->correction_settings->getRequiredCorrectors();
         if ($required < 1) {
@@ -277,7 +416,7 @@ readonly class Service implements FullService
             // init list writers with correctors
             $writerCorrectors[$writer->getId()] = [];
 
-            foreach($this->repos->correctorAssignment()->allByTaskIdAndWriterId($task_id, $writer->getId()) as $assignment) {
+            foreach ($this->repos->correctorAssignment()->allByTaskIdAndWriterId($task_id, $writer->getId()) as $assignment) {
                 // list the assigned corrector positions for each writer, give the corrector for each position
                 $writerCorrectors[$assignment->getWriterId()][$assignment->getPosition()] = $assignment->getCorrectorId();
                 // list the assigned writers for each corrector, give the corrector position per writer

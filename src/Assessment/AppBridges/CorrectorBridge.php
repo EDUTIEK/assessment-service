@@ -34,12 +34,17 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly EntityService $entity,
         private readonly Repositories $repos,
     ) {
-        $this->corrector = $this->repos->writer()->oneByUserIdAndAssId($this->user_id, $this->ass_id);
+        $this->corrector = $this->repos->corrector()->oneByUserIdAndAssId($this->user_id, $this->ass_id);
     }
 
     public function getData(bool $for_update): array
     {
         $config = $this->config->getConfig();
+
+        $data['Corrector'] = $this->entity->arrayToPrimitives([
+           'id' => $this->corrector?->getId(),
+        ]);
+
         $data['Config'] = $this->entity->arrayToPrimitives([
             'primary_color' => $config->getPrimaryColor(),
             'primary_text_color' => $config->getPrimaryTextColor(),

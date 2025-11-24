@@ -17,6 +17,7 @@ use Edutiek\AssessmentService\System\HtmlProcessing\FullService as HtmlProcessin
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentService;
+use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\Resource;
 use Edutiek\AssessmentService\Task\Data\ResourceAvailability;
@@ -43,6 +44,7 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly WriterReadService $writer_service,
         private readonly AssessmentSettingsService $assesment_settings,
         private readonly AssignmentService $assignment_service,
+        private readonly CorrectionProcessService $process_service,
         private readonly Language $language,
         private readonly UserReadService $user_service,
     ) {
@@ -72,18 +74,6 @@ class CorrectorBridge implements AppCorrectorBridge
             'summary_pdf_advice' => $settings->getSummaryPdfAdvice(),
         ]);
 
-        $data['Tasks'] = [];
-        foreach ($this->tasks as $task) {
-            $data['Tasks'][] = $this->entity->arrayToPrimitives([
-                'task_id' => $task->getTaskId(),
-                'position' => $task->getPosition(),
-                'type' => $task->getTaskType(),
-                'title' => $task->getTitle(),
-                'instructions' => $task->getInstructions(),
-                'solution' => $task->getSolution(),
-            ]);
-        }
-
         /** @var Writer[] $writers */
         $writers = [];
         foreach ($this->writer_service->all() as $writer) {
@@ -96,22 +86,42 @@ class CorrectorBridge implements AppCorrectorBridge
         } else {
             $assignments = $this->assignment_service->all();
         }
+
+        $task_ids = [];
         foreach ($assignments as $assignment) {
             $writer = $writers[$assignment->getWriterId()] ?? null;
             if ($writer?->isAuthorized()) {
-                $data['Items'] = $this->entity->arrayToPrimitives([
+                $data['Items'][] = $this->entity->arrayToPrimitives([
                     'task_id' => $assignment->getTaskId(),
                     'writer_id' => $writer->getId(),
-                    'position' => $assignment->getPosition(),
-                    'title' => $writer->getPseudonym() . ' | ' . $this->tasks[$assignment->getTaskId()]->getTitle(),
-                    'correction_status' => $writer->getCorrectionStatus()->value
+                    'position' => $assignment->getPosition()->value,
+                    'title' => $writer->getPseudonym(),
+                    'correction_status' => $writer->getCorrectionStatus()->value,
+                    'correction_allowed' => $this->process_service->canCorrect($assignment),
+                    'authorization_allowed' => $this->process_service->canAuthorize($assignment),
+                    'revision_allowed' => $this->process_service->canRevise($assignment),
                 ]);
             }
+            $task_ids[] = $assignment->getTaskId();
+        }
+        $task_ids = array_unique($task_ids);
+
+        $data['Tasks'] = [];
+        foreach ($task_ids as $task_id) {
+            $task = $this->tasks[$task_id] ?? null;
+            $data['Tasks'][] = $this->entity->arrayToPrimitives([
+                'task_id' => $task->getTaskId(),
+                'position' => $task->getPosition(),
+                'type' => $task->getTaskType(),
+                'title' => $task->getTitle(),
+                'instructions' => $task->getInstructions(),
+                'solution' => $task->getSolution(),
+            ]);
         }
 
         $data['Resources'] = [];
         foreach ($this->resources as $resource) {
-            if ($resource->getAvailability() !== ResourceAvailability::AFTER) {
+            if (in_array($resource->getTaskId(), $task_ids)) {
                 $info = $this->storage->getFileInfo($resource->getFileId());
                 $title = match ($resource->getType()) {
                     ResourceType::INSTRUCTIONS => $this->language->txt('task_instructions'),
@@ -128,21 +138,6 @@ class CorrectorBridge implements AppCorrectorBridge
                     'mimetype' => $info?->getMimetype(),
                     'size' => $info?->getMimetype(),
                     'title' => $title
-                ]);
-            }
-        }
-
-        $data['Criteria'] = [];
-        foreach ($this->tasks as $task) {
-            foreach ($this->repos->ratingCriterion()->allByTaskIdAndCorrectorId($task->getId(), null) as $criterion) {
-                $data['Criteria'][] = $this->entity->arrayToPrimitives([
-                    'id' => $criterion->getId(),
-                    'task_id' => $criterion->getTaskId(),
-                    'corrector_id' => $criterion->getCorrectorId(),
-                    'title' => $criterion->getTitle(),
-                    'description' => $criterion->getDescription(),
-                    'points' => $criterion->getPoints(),
-                    'is_general' => $criterion->getGeneral(),
                 ]);
             }
         }
@@ -176,8 +171,9 @@ class CorrectorBridge implements AppCorrectorBridge
     public function getItem(int $task_id, int $writer_id): ?array
     {
         $data = [
-            'item' => [],
+            'Item' => [],
             'Correctors' => [],
+            'Criteria' => [],
             'Summaries' => [],
             'Comments' => [],
             'Points' => []
@@ -190,18 +186,19 @@ class CorrectorBridge implements AppCorrectorBridge
             $data['Item'] = $this->entity->arrayToPrimitives([
                 'task_id' => $task_id,
                 'writer_id' => $writer_id,
-                'position' => $assignment?->getPosition(),
-                'title' => $writer->getPseudonym() . ' | ' . $this->tasks[$task_id]->getTitle(),
+                'position' => $assignment?->getPosition()?->value,
+                'title' => $writer->getPseudonym(),
                 'correction_status' => $writer->getCorrectionStatus()->value,
-                'can_correct' => false,
-                'can_authorize' => false,
-                'can_review' => false,
+                'correction_allowed' => isset($assignment) && $this->process_service->canCorrect($assignment),
+                'authorization_allowed' => isset($assignment) && $this->process_service->canAuthorize($assignment),
+                'revision_allowed' => isset($assignment) && $this->process_service->canRevise($assignment),
             ]);
         } else {
             return [];
         }
 
         $settings = $this->assesment_settings->get();
+        $task_criteria_loaded = [];
         foreach ($this->assignment_service->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
             if ($this->corrector === null || $this->corrector->getId() === $assignment->getCorrectorId() || $settings->getMutualVisibility()) {
                 $corrector = $this->corrector_service->oneById($assignment->getCorrectorId());
@@ -212,8 +209,9 @@ class CorrectorBridge implements AppCorrectorBridge
                        'id' => $corrector->getId(),
                        'corrector_id' => $corrector->getId(),
                        'title' => $user?->getFullname(false)
-                           ?? sprintf($this->language->txt('corrector_x'), $assignment->getPosition()),
-                       'initials' => $user->getInitials() ?? sprintf($this->language->txt('corr_x'), $assignment->getPosition()),
+                           ?? $this->language->txt($assignment->getPosition()->languageVariable()),
+                       'initials' => $user->getInitials() ?? $this->language->txt($assignment->getPosition()->initialsLanguageVariable()),
+                       'position' => $assignment->getPosition()->value,
                     ]);
 
                     $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
@@ -232,7 +230,6 @@ class CorrectorBridge implements AppCorrectorBridge
                         'task_id' => $assignment->getTaskId(),
                         'writer_id' => $assignment->getWriterId(),
                         'corrector_id' => $assignment->getCorrectorId(),
-                        'position' => $assignment->getPosition(),
 
                         'text' => $summary->getSummaryText(),
                         'points' => $summary->getPoints(),
@@ -244,6 +241,35 @@ class CorrectorBridge implements AppCorrectorBridge
                     ]);
 
                     if ($add_details) {
+                        // criteria of the corrector
+                        $criteria = $this->repos->ratingCriterion()->allByTaskIdAndCorrectorId(
+                            $assignment->getTaskId(),
+                            $assignment->getCorrectorId()
+                        );
+                        // general criteria
+                        if (empty($task_criteria_loaded[$assignment->getTaskId()])) {
+                            $criteria = array_merge(
+                                $criteria,
+                                $this->repos->ratingCriterion()->allByTaskIdAndCorrectorId(
+                                    $assignment->getTaskId(),
+                                    null
+                                )
+                            );
+                            $task_criteria_loaded[$assignment->getTaskId()] = true;
+                        }
+
+                        foreach ($criteria as $criterion) {
+                            $data['Criteria'][] = $this->entity->arrayToPrimitives([
+                                'id' => $criterion->getId(),
+                                'task_id' => $criterion->getTaskId(),
+                                'corrector_id' => $criterion->getCorrectorId(),
+                                'title' => $criterion->getTitle(),
+                                'description' => $criterion->getDescription(),
+                                'points' => $criterion->getPoints(),
+                                'is_general' => $criterion->getGeneral(),
+                            ]);
+                        }
+
                         $comments = $this->repos->correctorComment()->allByTaskIdAndWriterIdAndCorrectorId(
                             $assignment->getTaskId(),
                             $assignment->getWriterId(),
@@ -293,6 +319,7 @@ class CorrectorBridge implements AppCorrectorBridge
         switch ($entity) {
             case 'image':
             case 'thumb':
+                // todo
                 return null;
 
             case 'resource':

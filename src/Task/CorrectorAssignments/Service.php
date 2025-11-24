@@ -104,7 +104,7 @@ readonly class Service implements FullService
 
         $filtered = [];
         foreach ($assignments as $assignment) {
-            if ($pos !== null && $assignment->getPosition() !== $pos) {
+            if ($pos !== null && $assignment->getPosition()->value !== $pos) {
                 continue;
             }
             if ($status !== null) {

@@ -5,13 +5,31 @@ namespace Edutiek\AssessmentService\Task\CorrectionProcess;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
+use ILIAS\Plugin\LongEssayAssessment\Task\Data\CorrectorAssignment;
 
 interface FullService
 {
     /**
-     * @param CorrectorSummary $summary
-     * @param int              $user_id User executing this operation
-     * @return void
+     * Check if the task of a writer can be corrected by the assigned corrector
+     * - Writing must be authorized
+     * - status must be stitch for stich decider (third corrector)
+     * - own status must be not started or open for normal corrector
+     * - check if second corrector has to wait for the first corrector
+     */
+    public function canCorrect(CorrectorAssignment $assignment): bool;
+
+    /**
+     * Check if the correction of an assigned task can be authorized
+     */
+    public function canAuthorize(CorrectorAssignment $assignment): bool;
+
+    /**
+     * Check if the correction of an assigned task can be revised
+     */
+    public function canRevise(CorrectorAssignment $assignment): bool;
+
+    /**
+     * Authorize the correction
      */
     public function authorizeCorrection(CorrectorSummary $summary, int $user_id): void;
 
@@ -29,8 +47,8 @@ interface FullService
      */
     public function removeCorrectorAuthorizations(Corrector $corrector, int $user_id): bool;
 
-    const BLANK_CORRECTOR_ASSIGNMENT = -1;
-    const UNCHANGED_CORRECTOR_ASSIGNMENT = -2;
+    public const BLANK_CORRECTOR_ASSIGNMENT = -1;
+    public const UNCHANGED_CORRECTOR_ASSIGNMENT = -2;
 
     /**
      * Reassigns a couple of correctors to multiple writer

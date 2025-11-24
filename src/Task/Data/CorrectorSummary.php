@@ -28,14 +28,14 @@ abstract class CorrectorSummary implements TaskEntity
     abstract public function setCorrectionAuthorized(?DateTimeImmutable $corection_authorized): self;
     abstract public function getCorrectionAuthorizedBy(): ?int;
     abstract public function setCorrectionAuthorizedBy(?int $correction_authorized_by): self;
-    abstract public function getPreGraded() : ?DateTimeImmutable;
-    abstract public function setPreGraded(?DateTimeImmutable $pre_graded) : self;
-    abstract public function getRevised() : ?DateTimeImmutable;
-    abstract public function setRevised(?DateTimeImmutable $revised) : self;
-    abstract public function getRevisionText() : ?string;
-    abstract public function setRevisionText(?string $revision_text) : self;
-    abstract public function getRevisionPoints() : ?float;
-    abstract public function setRevisionPoints(?float $revision_points) : self;
+    abstract public function getPreGraded(): ?DateTimeImmutable;
+    abstract public function setPreGraded(?DateTimeImmutable $pre_graded): self;
+    abstract public function getRevised(): ?DateTimeImmutable;
+    abstract public function setRevised(?DateTimeImmutable $revised): self;
+    abstract public function getRevisionText(): ?string;
+    abstract public function setRevisionText(?string $revision_text): self;
+    abstract public function getRevisionPoints(): ?float;
+    abstract public function setRevisionPoints(?float $revision_points): self;
 
     public function getGradingStatus(): GradingStatus
     {
@@ -61,5 +61,10 @@ abstract class CorrectorSummary implements TaskEntity
     public function isAuthorized(): bool
     {
         return $this->getCorrectionAuthorized() !== null;
+    }
+
+    public function isRevised(): bool
+    {
+        return $this->getRevised() !== null;
     }
 }
