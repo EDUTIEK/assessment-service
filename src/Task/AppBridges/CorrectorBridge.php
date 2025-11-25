@@ -157,7 +157,6 @@ class CorrectorBridge implements AppCorrectorBridge
             $this->corrector?->getId() ?? 0
         ) as $snippet) {
             $data['Snippets'][] = $this->entity->arrayToPrimitives([
-                'id' => $snippet->getId(),
                 'key' => $snippet->getKey(),
                 'purpose' => $snippet->getPurpose(),
                 'title' => $snippet->getTitle(),
@@ -240,6 +239,7 @@ class CorrectorBridge implements AppCorrectorBridge
                         'status' => $summary->getGradingStatus(),
                         'revision_text' => $summary->getRevisionText(),
                         'revision_points' => $summary->getRevisionPoints(),
+                        'require_other_revision' => $summary->getRequireOtherRevision(),
                         'last_change' => $summary->getLastChange(),
                     ]);
 
@@ -280,7 +280,7 @@ class CorrectorBridge implements AppCorrectorBridge
                         );
                         foreach ($comments as $comment) {
                             $data['Comments'][] = $this->entity->arrayToPrimitives([
-                                'id' => $comment->getId(),
+                                'key' => (string) $comment->getId(),
                                 'task_id' => $assignment->getTaskId(),
                                 'writer_id' => $assignment->getWriterId(),
                                 'corrector_id' => $comment->getCorrectorId(),
@@ -300,11 +300,11 @@ class CorrectorBridge implements AppCorrectorBridge
                         );
                         foreach ($points as $point) {
                             $data['Points'][] = $this->entity->arrayToPrimitives([
-                                'id' => $point->getId(),
+                                'key' => (string) $point->getId(),
+                                'comment_key' => (string) $point->getCommentId(),
                                 'task_id' => $assignment->getTaskId(),
                                 'writer_id' => $assignment->getWriterId(),
                                 'corrector_id' => $point->getCorrectorId(),
-                                'comment_id' => $point->getCommentId(),
                                 'criterion_id' => $point->getCriterionId(),
                                 'points' => $point->getPoints(),
                             ]);
@@ -320,11 +320,6 @@ class CorrectorBridge implements AppCorrectorBridge
     public function getFileId(string $entity, int $entity_id): ?string
     {
         switch ($entity) {
-            case 'image':
-            case 'thumb':
-                // todo
-                return null;
-
             case 'resource':
                 $resource = $this->resources[$entity_id] ?? null;
                 return $resource?->getFileId();

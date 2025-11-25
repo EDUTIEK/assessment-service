@@ -36,6 +36,8 @@ abstract class CorrectorSummary implements TaskEntity
     abstract public function setRevisionText(?string $revision_text): self;
     abstract public function getRevisionPoints(): ?float;
     abstract public function setRevisionPoints(?float $revision_points): self;
+    abstract public function getRequireOtherRevision() : bool;
+    abstract public function setRequireOtherRevision(bool $require_other_revision) : self;
 
     public function getGradingStatus(): GradingStatus
     {

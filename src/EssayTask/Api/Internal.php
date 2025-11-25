@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\EssayTask\Api;
 
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\EssayTask\AppBridges\WriterBridge as WriterBridgeService;
+use Edutiek\AssessmentService\EssayTask\AppBridges\CorrectorBridge as CorrectorBridgeService;
 use Edutiek\AssessmentService\EssayTask\AssessmentStatus\Service as StatusService;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\Service as BackgroundTaskService;
@@ -59,6 +60,25 @@ class Internal
     {
         return $this->instances[CommentsService::class] ??= new CommentsService(
             $this->dependencies->systemApi()->imageSketch()
+        );
+    }
+
+    public function correctorBridge(int $ass_id, int $user_id): CorrectorBridgeService
+    {
+        return $this->instances[CorrectorBridgeService::class][$ass_id][$user_id] ??= new CorrectorBridgeService(
+            $ass_id,
+            $user_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->systemApi()->entity(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings(),
+            $this->dependencies->taskApi($ass_id, $user_id)->correctorAssignments(),
+            $this->dependencies->taskApi($ass_id, $user_id)->tasks(),
+            $this->language($user_id),
+            $this->dependencies->systemApi()->user(),
+            $this->dependencies->systemApi()->htmlProcessing()
         );
     }
 

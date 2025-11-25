@@ -18,6 +18,7 @@ use Edutiek\AssessmentService\System\HtmlProcessing\FullService as HtmlProcessin
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as AssignmentService;
+use Edutiek\AssessmentService\Task\Manager\ReadService as TaskService;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -33,6 +34,7 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly WriterReadService $writer_service,
         private readonly AssessmentSettingsService $assesment_settings,
         private readonly AssignmentService $assignment_service,
+        private readonly TaskService $task_service,
         private readonly Language $language,
         private readonly UserReadService $user_service,
         private readonly HtmlProcessing $html_processing,
@@ -68,17 +70,15 @@ class CorrectorBridge implements AppCorrectorBridge
         }
 
         $data['Essay'] = $this->entity->arrayToPrimitives([
-            'id' => $essay->getId(),
             'text' => $this->html_processing->processHtmlForMarking($essay->getWrittenText()),
-            'started' => $essay->getFirstChange(),
-            'ended' => $essay->getLastChange()
         ]);
 
         $pages = $this->repos->essayImage()->allByEssayId($essay->getId());
         foreach ($pages as $page) {
             $data['Pages'][] = $this->entity->arrayToPrimitives([
-               'id' => $page->getId(),
-                'essay_id' => $essay->getId(),
+                'id' => $page->getId(),
+                'task_id' => $essay->getTaskId(),
+                'writer_id' => $essay->getWriterId(),
                 'page_no' => $page->getPageNo(),
                 'width' => $page->getWidth(),
                 'height' => $page->getHeight(),
@@ -92,6 +92,23 @@ class CorrectorBridge implements AppCorrectorBridge
 
     public function getFileId(string $entity, int $entity_id): ?string
     {
+        switch ($entity) {
+            case 'image':
+            case 'thumb':
+                $page = $this->repos->essayImage()->one($entity_id);
+                $essay = $this->repos->essay()->one($page?->getId());
+                if (!$this->task_service->has($essay?->getTaskId())) {
+                    return null;
+                }
+                if ($this->corrector) {
+                    $assignment = $this->assignment_service->oneByIds(
+                        $essay->getWriterId(), $this->corrector->getId(), $essay->getTaskId());
+                    if ($assignment === null) {
+                        return null;
+                    }
+                }
+                return $entity == 'image' ? $page->getFileId() : $page->getThumbId();
+        }
         return null;
     }
 
