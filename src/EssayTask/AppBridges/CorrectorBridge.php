@@ -42,7 +42,16 @@ class CorrectorBridge implements AppCorrectorBridge
 
     public function getData(bool $for_update): array
     {
-        return [];
+        $data = [];
+
+        $settings = $this->repos->writingSettings()->one($this->ass_id) ??
+            $this->repos->writingSettings()->new();
+
+        $data['Settings'] = $this->entity->arrayToPrimitives([
+            'headline_scheme' => $settings->getHeadlineScheme(),
+        ]);
+
+        return $data;
     }
 
     public function getItem(int $task_id, int $writer_id): ?array

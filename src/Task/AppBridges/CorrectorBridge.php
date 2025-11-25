@@ -172,7 +172,7 @@ class CorrectorBridge implements AppCorrectorBridge
     {
         $data = [
             'Item' => [],
-            'Correctors' => [],
+            'Corrections' => [],
             'Criteria' => [],
             'Summaries' => [],
             'Comments' => [],
@@ -191,7 +191,7 @@ class CorrectorBridge implements AppCorrectorBridge
                 'correction_status' => $writer->getCorrectionStatus()->value,
                 'can_correct' => isset($assignment) && $this->process_service->canCorrect($assignment),
                 'can_authorize' => isset($assignment) && $this->process_service->canAuthorize($assignment),
-                'can_revide' => isset($assignment) && $this->process_service->canRevise($assignment),
+                'can_revise' => isset($assignment) && $this->process_service->canRevise($assignment),
             ]);
         } else {
             return [];
@@ -206,9 +206,12 @@ class CorrectorBridge implements AppCorrectorBridge
                     $user = $this->user_service->getUser($corrector->getUserId());
 
                     // correctors are loaded per item, so we can add the position here
-                    $data['Correctors'][] = $this->entity->arrayToPrimitives([
-                       'id' => $corrector->getId(),
-                       'corrector_id' => $corrector->getId(),
+                    // a corrector with the same corrector id may be sent
+                    $data['Corrections'][] = $this->entity->arrayToPrimitives([
+                       'task_id' => $assignment->getCorrectorId(),
+                       'writer_id' => $assignment->getWriterId(),
+                       'corrector_id' => $assignment->getCorrectorId(),
+                       'user_id' => $corrector->getUserId(),
                        'title' => $user?->getFullname(false)
                            ?? $this->language->txt($assignment->getPosition()->languageVariable()),
                        'initials' => $user->getInitials() ?? $this->language->txt($assignment->getPosition()->initialsLanguageVariable()),
@@ -231,7 +234,6 @@ class CorrectorBridge implements AppCorrectorBridge
                         'task_id' => $assignment->getTaskId(),
                         'writer_id' => $assignment->getWriterId(),
                         'corrector_id' => $assignment->getCorrectorId(),
-
                         'text' => $summary->getSummaryText(),
                         'points' => $summary->getPoints(),
                         'pdf' => $summary->getSummaryPdf(),

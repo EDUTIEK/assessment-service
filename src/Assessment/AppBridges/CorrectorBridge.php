@@ -41,10 +41,6 @@ class CorrectorBridge implements AppCorrectorBridge
     {
         $config = $this->config->getConfig();
 
-        $data['Corrector'] = $this->entity->arrayToPrimitives([
-           'id' => $this->corrector?->getId(),
-        ]);
-
         $data['Config'] = $this->entity->arrayToPrimitives([
             'primary_color' => $config->getPrimaryColor(),
             'primary_text_color' => $config->getPrimaryTextColor(),
