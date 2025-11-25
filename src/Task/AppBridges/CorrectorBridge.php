@@ -97,9 +97,9 @@ class CorrectorBridge implements AppCorrectorBridge
                     'position' => $assignment->getPosition()->value,
                     'title' => $writer->getPseudonym(),
                     'correction_status' => $writer->getCorrectionStatus()->value,
-                    'correction_allowed' => $this->process_service->canCorrect($assignment),
-                    'authorization_allowed' => $this->process_service->canAuthorize($assignment),
-                    'revision_allowed' => $this->process_service->canRevise($assignment),
+                    'can_correct' => $this->process_service->canCorrect($assignment),
+                    'can_authorize' => $this->process_service->canAuthorize($assignment),
+                    'can_revise' => $this->process_service->canRevise($assignment),
                 ]);
             }
             $task_ids[] = $assignment->getTaskId();
@@ -189,9 +189,9 @@ class CorrectorBridge implements AppCorrectorBridge
                 'position' => $assignment?->getPosition()?->value,
                 'title' => $writer->getPseudonym(),
                 'correction_status' => $writer->getCorrectionStatus()->value,
-                'correction_allowed' => isset($assignment) && $this->process_service->canCorrect($assignment),
-                'authorization_allowed' => isset($assignment) && $this->process_service->canAuthorize($assignment),
-                'revision_allowed' => isset($assignment) && $this->process_service->canRevise($assignment),
+                'can_correct' => isset($assignment) && $this->process_service->canCorrect($assignment),
+                'can_authorize' => isset($assignment) && $this->process_service->canAuthorize($assignment),
+                'can_revide' => isset($assignment) && $this->process_service->canRevise($assignment),
             ]);
         } else {
             return [];
@@ -205,6 +205,7 @@ class CorrectorBridge implements AppCorrectorBridge
                 if ($corrector) {
                     $user = $this->user_service->getUser($corrector->getUserId());
 
+                    // correctors are loaded per item, so we can add the position here
                     $data['Correctors'][] = $this->entity->arrayToPrimitives([
                        'id' => $corrector->getId(),
                        'corrector_id' => $corrector->getId(),
