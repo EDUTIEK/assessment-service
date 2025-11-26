@@ -170,6 +170,7 @@ class CorrectorBridge implements AppCorrectorBridge
     public function getItem(int $task_id, int $writer_id): ?array
     {
         $data = [
+            'Corrector' => $this->entity->toPrimitives($this->corrector, Corrector::class),
             'Item' => [],
             'Corrections' => [],
             'Criteria' => [],
@@ -221,19 +222,23 @@ class CorrectorBridge implements AppCorrectorBridge
                         $assignment->getTaskId(),
                         $assignment->getWriterId(),
                         $assignment->getCorrectorId()
-                    );
-                    if ($summary?->getCorrectorId() === $this->corrector?->getId() || $summary?->isAuthorized()) {
+                    ) ?? $this->repos->correctorSummary()->new(
+                    )->setTaskId($assignment->getTaskId())
+                        ->setWriterId($assignment->getWriterId())
+                        ->setCorrectorId($assignment->getCorrectorId());
+
+                    if ($summary->getCorrectorId() == $this->corrector?->getId() || $summary->isAuthorized()) {
                         $add_details = true;
+                        $summary->setSummaryText('details for' . $this->corrector?->getId());
                     } else {
                         $add_details = false;
-                        $summary = $this->repos->correctorSummary()->new()->setCorrectorId($corrector->getId());
+                        $summary->setSummaryText(' no details for ' . $this->corrector?->getId());
                     }
-                    $add_details = true;
 
                     $data['Summaries'][] = $this->entity->arrayToPrimitives([
-                        'task_id' => $assignment->getTaskId(),
-                        'writer_id' => $assignment->getWriterId(),
-                        'corrector_id' => $assignment->getCorrectorId(),
+                        'task_id' => $summary->getTaskId(),
+                        'writer_id' => $summary->getWriterId(),
+                        'corrector_id' => $summary->getCorrectorId(),
                         'text' => $summary->getSummaryText(),
                         'points' => $summary->getPoints(),
                         'pdf' => $summary->getSummaryPdf(),
