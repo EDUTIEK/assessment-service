@@ -73,7 +73,7 @@ class CorrectorBridge implements AppCorrectorBridge
         }
 
         $data['Essay'] = $this->entity->arrayToPrimitives([
-            'text' => $this->html_processing->processHtmlForMarking($essay->getWrittenText()),
+            'text' => $this->html_processing->processHtmlForMarking($essay->getWrittenText() ?? ''),
         ]);
 
         $pages = $this->repos->essayImage()->allByEssayId($essay->getId());
@@ -99,8 +99,8 @@ class CorrectorBridge implements AppCorrectorBridge
             case 'image':
             case 'thumb':
                 $page = $this->repos->essayImage()->one($entity_id);
-                $essay = $this->repos->essay()->one($page?->getId());
-                if (!$this->task_service->has($essay?->getTaskId())) {
+                $essay = $this->repos->essay()->one($page?->getEssayId());
+                if (!$this->task_service->has($essay?->getTaskId() ?? 0)) {
                     return null;
                 }
                 if ($this->corrector) {
@@ -113,7 +113,7 @@ class CorrectorBridge implements AppCorrectorBridge
                         return null;
                     }
                 }
-                return $entity == 'image' ? $page->getFileId() : $page->getThumbId();
+                return ($entity == 'image' ? $page->getFileId() : $page->getThumbId());
         }
         return null;
     }

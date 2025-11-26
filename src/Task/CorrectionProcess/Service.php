@@ -357,7 +357,7 @@ readonly class Service implements FullService
                                           ->setTaskId($task_id)
                                           ->setWriterId($writer_id)
                                           ->setCorrectorId($corrector)
-                                          ->setPosition($position);
+                                          ->setPosition(AssignmentPosition::from($position));
 
                 $unchanged = false;
             } elseif ($assignment->getCorrectorId() != $corrector && !$authorized) { // if corrector is changed assign new

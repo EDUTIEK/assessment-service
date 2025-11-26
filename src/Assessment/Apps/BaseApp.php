@@ -110,12 +110,12 @@ abstract class BaseApp implements RestService
 
         $bridge = $this->getBridge((string) $component);
         if ($bridge === null) {
-            throw new RestException('Component not found', RestException::NOT_FOUND);
+            throw new RestException("Component $component not found", RestException::NOT_FOUND);
         }
 
         $file_id = $bridge->getFileId((string) $entity, (int) $id);
         if ($file_id === null) {
-            throw new RestException('Resource file not found', RestException::NOT_FOUND);
+            throw new RestException("File for entity $entity with id $id not found", RestException::NOT_FOUND);
         }
 
         $this->delivery->sendFile($file_id, Disposition::INLINE);

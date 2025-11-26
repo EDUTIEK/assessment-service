@@ -22,7 +22,7 @@ interface ReadService
     /**
      * Check if a task exists in the assessment
      */
-    public function has($task_id): bool;
+    public function has(int $task_id): bool;
 
     /**
      * Get a task info by id

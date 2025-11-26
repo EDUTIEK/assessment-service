@@ -207,7 +207,7 @@ class CorrectorBridge implements AppCorrectorBridge
                     // correctors are loaded per item, so we can add the position here
                     // a corrector with the same corrector id may be sent
                     $data['Corrections'][] = $this->entity->arrayToPrimitives([
-                       'task_id' => $assignment->getCorrectorId(),
+                       'task_id' => $assignment->getTaskId(),
                        'writer_id' => $assignment->getWriterId(),
                        'corrector_id' => $assignment->getCorrectorId(),
                        'user_id' => $corrector->getUserId(),
@@ -228,6 +228,7 @@ class CorrectorBridge implements AppCorrectorBridge
                         $add_details = false;
                         $summary = $this->repos->correctorSummary()->new()->setCorrectorId($corrector->getId());
                     }
+                    $add_details = true;
 
                     $data['Summaries'][] = $this->entity->arrayToPrimitives([
                         'task_id' => $assignment->getTaskId(),

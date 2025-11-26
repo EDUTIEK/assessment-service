@@ -40,7 +40,7 @@ readonly class Service implements TaskManager, ReadService
         return $infos;
     }
 
-    public function has($task_id): bool
+    public function has(int $task_id): bool
     {
         return $this->repos->settings()->has($this->ass_id, $task_id);
     }
