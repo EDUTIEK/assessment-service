@@ -18,6 +18,8 @@ use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentService;
 use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
+use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
+use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\Resource;
 use Edutiek\AssessmentService\Task\Data\ResourceAvailability;
@@ -91,12 +93,14 @@ class CorrectorBridge implements AppCorrectorBridge
         foreach ($assignments as $assignment) {
             $writer = $writers[$assignment->getWriterId()] ?? null;
             if ($writer?->isAuthorized()) {
+                $summary = $this->getSummaryForAssignment($assignment);
                 $data['Items'][] = $this->entity->arrayToPrimitives([
                     'task_id' => $assignment->getTaskId(),
-                    'writer_id' => $writer->getId(),
+                    'writer_id' => $assignment->getWriterId(),
                     'position' => $assignment->getPosition()->value,
-                    'title' => $writer->getPseudonym(),
+                    'pseudonym' => $writer->getPseudonym(),
                     'correction_status' => $writer->getCorrectionStatus()->value,
+                    'grading_status' => $summary->getGradingStatus(),
                     'can_correct' => $this->process_service->canCorrect($assignment),
                     'can_authorize' => $this->process_service->canAuthorize($assignment),
                     'can_revise' => $this->process_service->canRevise($assignment),
@@ -180,18 +184,19 @@ class CorrectorBridge implements AppCorrectorBridge
         ];
 
         $assignment = $this->assignment_service->oneByIds($writer_id, (int) $this->corrector?->getId(), $task_id);
-
         $writer = $this->writer_service->oneByWriterId($writer_id);
         if ($writer?->isAuthorized()) {
+            $summary = $this->getSummaryForAssignment($assignment);
             $data['Item'] = $this->entity->arrayToPrimitives([
-                'task_id' => $task_id,
-                'writer_id' => $writer_id,
-                'position' => $assignment?->getPosition()?->value,
-                'title' => $writer->getPseudonym(),
+                'task_id' => $assignment->getTaskId(),
+                'writer_id' => $assignment->getWriterId(),
+                'position' => $assignment->getPosition()->value,
+                'pseudonym' => $writer->getPseudonym(),
                 'correction_status' => $writer->getCorrectionStatus()->value,
-                'can_correct' => isset($assignment) && $this->process_service->canCorrect($assignment),
-                'can_authorize' => isset($assignment) && $this->process_service->canAuthorize($assignment),
-                'can_revise' => isset($assignment) && $this->process_service->canRevise($assignment),
+                'grading_status' => $summary->getGradingStatus(),
+                'can_correct' => $this->process_service->canCorrect($assignment),
+                'can_authorize' => $this->process_service->canAuthorize($assignment),
+                'can_revise' => $this->process_service->canRevise($assignment),
             ]);
         } else {
             return [];
@@ -218,15 +223,7 @@ class CorrectorBridge implements AppCorrectorBridge
                        'position' => $assignment->getPosition()->value,
                     ]);
 
-                    $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
-                        $assignment->getTaskId(),
-                        $assignment->getWriterId(),
-                        $assignment->getCorrectorId()
-                    ) ?? $this->repos->correctorSummary()->new(
-                    )->setTaskId($assignment->getTaskId())
-                        ->setWriterId($assignment->getWriterId())
-                        ->setCorrectorId($assignment->getCorrectorId());
-
+                    $summary = $this->getSummaryForAssignment($assignment);
                     if ($summary->getCorrectorId() == $this->corrector?->getId() || $summary->isAuthorized()) {
                         $add_details = true;
                         $summary->setSummaryText('details for' . $this->corrector?->getId());
@@ -342,4 +339,16 @@ class CorrectorBridge implements AppCorrectorBridge
         return $change->toResponse(false, 'change type not found');
     }
 
+
+    private function getSummaryForAssignment(CorrectorAssignment $assignment): CorrectorSummary
+    {
+        return  $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+            $assignment->getTaskId(),
+            $assignment->getWriterId(),
+            $assignment->getCorrectorId()
+        ) ?? $this->repos->correctorSummary()->new(
+        )->setTaskId($assignment->getTaskId())
+            ->setWriterId($assignment->getWriterId())
+            ->setCorrectorId($assignment->getCorrectorId());
+    }
 }
