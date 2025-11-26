@@ -63,7 +63,7 @@ class CorrectorBridge implements AppCorrectorBridge
             'procedure_when_distance' => $settings->getProcedureWhenDistance(),
             'procedure' => $settings->getProcedure(),
             'max_auto_distance' => $settings->getMaxAutoDistance(),
-            'revision_between' > $settings->getRevisionBetween(),
+            'revision_between' => $settings->getRevisionBetween(),
             'stitch_after_procedure' => $settings->getStitchAfterProcedure(),
             'max_points' => $settings->getMaxPoints(),
             'no_manual_decimals' => $settings->getNoManualDecimals(),

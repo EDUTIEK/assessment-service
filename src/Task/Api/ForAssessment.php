@@ -27,7 +27,7 @@ readonly class ForAssessment implements TasksApi
     }
     public function correctorBridge(int $ass_id, int $user_id): ?AppBridge
     {
-        return null;
+        return $this->internal->correctorBridge($ass_id, $user_id);
     }
 
     public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider

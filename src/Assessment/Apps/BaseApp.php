@@ -59,6 +59,9 @@ abstract class BaseApp implements RestService
         $data = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
             $bridge = $this->getBridge($component);
+            if ($bridge === null) {
+                continue;
+            }
             $data[$component] = $bridge->getData(false);
         }
         // create new tokens - these will be replaced in the app
@@ -77,6 +80,9 @@ abstract class BaseApp implements RestService
         $data = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
             $bridge = $this->getBridge($component);
+            if ($bridge === null) {
+                continue;
+            }
             $data[$component] = $bridge->getData(true);
         }
 

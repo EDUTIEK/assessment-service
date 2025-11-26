@@ -58,7 +58,10 @@ class CorrectorBridge implements AppCorrectorBridge
 
     public function getItem(int $task_id, int $writer_id): ?array
     {
-        $data = [];
+        $data = [
+            'Essay' => [],
+            'Pages' => []
+        ];
 
         $essay = $this->repos->essay()->oneByWriterIdAndTaskId(
             $writer_id,
@@ -102,7 +105,10 @@ class CorrectorBridge implements AppCorrectorBridge
                 }
                 if ($this->corrector) {
                     $assignment = $this->assignment_service->oneByIds(
-                        $essay->getWriterId(), $this->corrector->getId(), $essay->getTaskId());
+                        $essay->getWriterId(),
+                        $this->corrector->getId(),
+                        $essay->getTaskId()
+                    );
                     if ($assignment === null) {
                         return null;
                     }
