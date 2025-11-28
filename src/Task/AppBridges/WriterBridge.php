@@ -161,8 +161,11 @@ class WriterBridge implements AppBridge
 
         switch ($change->getAction()) {
             case ChangeAction::SAVE:
-                if ($found !== null && $found->getTaskId() !== $annotation->getTaskId()) {
-                    return $change->toResponse(false, 'task reference changed');
+                if ($found !== null) {
+                    if ( $found->getTaskId() !== $annotation->getTaskId()) {
+                        return $change->toResponse(false, 'task reference changed');
+                    }
+                    $annotation->setId($found->getId());
                 }
                 $repo->save($annotation);
                 return $change->toResponse(true);
