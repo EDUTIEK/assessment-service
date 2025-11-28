@@ -16,10 +16,12 @@ use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\HtmlProcessing\FullService as HtmlProcessing;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
+use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentService;
 use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
+use Edutiek\AssessmentService\Task\Data\CriteriaMode;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\Resource;
 use Edutiek\AssessmentService\Task\Data\ResourceAvailability;
@@ -45,6 +47,7 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly CorrectorReadService $corrector_service,
         private readonly WriterReadService $writer_service,
         private readonly AssessmentSettingsService $assesment_settings,
+        private readonly CorrectionSettingsService $correction_settings,
         private readonly AssignmentService $assignment_service,
         private readonly CorrectionProcessService $process_service,
         private readonly Language $language,
@@ -202,10 +205,12 @@ class CorrectorBridge implements AppCorrectorBridge
             return [];
         }
 
-        $settings = $this->assesment_settings->get();
-        $task_criteria_loaded = [];
+        $assessment_settings = $this->assesment_settings->get();
+        $correction_settings = $this->correction_settings->get();
+
+        $task_criteria = [];
         foreach ($this->assignment_service->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
-            if ($this->corrector === null || $this->corrector->getId() === $assignment->getCorrectorId() || $settings->getMutualVisibility()) {
+            if ($this->corrector === null || $this->corrector->getId() === $assignment->getCorrectorId() || $assessment_settings->getMutualVisibility()) {
                 $corrector = $this->corrector_service->oneById($assignment->getCorrectorId());
                 if ($corrector) {
                     $user = $this->user_service->getUser($corrector->getUserId());
@@ -247,21 +252,22 @@ class CorrectorBridge implements AppCorrectorBridge
                     ]);
 
                     if ($add_details) {
-                        // criteria of the corrector
-                        $criteria = $this->repos->ratingCriterion()->allByTaskIdAndCorrectorId(
-                            $assignment->getTaskId(),
-                            $assignment->getCorrectorId()
-                        );
-                        // global criteria
-                        if (empty($task_criteria_loaded[$assignment->getTaskId()])) {
-                            $criteria = array_merge(
-                                $criteria,
-                                $this->repos->ratingCriterion()->allByTaskIdAndCorrectorId(
+
+                        switch ($correction_settings->getCriteriaMode()) {
+                            case  CriteriaMode::FIXED:
+                                $criteria = $task_criteria[$assignment->getTaskId()] ??=
+                                    $this->repos->ratingCriterion()->allByTaskIdAndCorrectorId(
                                     $assignment->getTaskId(),
-                                    null
-                                )
-                            );
-                            $task_criteria_loaded[$assignment->getTaskId()] = true;
+                                    null);
+                                break;
+                            case CriteriaMode::CORRECTOR:
+                                $criteria = $this->repos->ratingCriterion()->allByTaskIdAndCorrectorId(
+                                    $assignment->getTaskId(),
+                                    $assignment->getCorrectorId()
+                                );
+                                break;
+                            default:
+                                $criteria = [];
                         }
 
                         foreach ($criteria as $criterion) {
