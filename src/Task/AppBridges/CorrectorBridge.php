@@ -252,7 +252,7 @@ class CorrectorBridge implements AppCorrectorBridge
                             $assignment->getTaskId(),
                             $assignment->getCorrectorId()
                         );
-                        // general criteria
+                        // global criteria
                         if (empty($task_criteria_loaded[$assignment->getTaskId()])) {
                             $criteria = array_merge(
                                 $criteria,
@@ -339,6 +339,16 @@ class CorrectorBridge implements AppCorrectorBridge
         return $change->toResponse(false, 'change type not found');
     }
 
+    public function applyChanges(string $type, array $changes): array
+    {
+        if ($this->corrector !== null) {
+            switch ($type) {
+                default:
+                    return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'wrong type'), $changes);
+            }
+        }
+        return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'corrector not found'), $changes);
+    }
 
     private function getSummaryForAssignment(CorrectorAssignment $assignment): CorrectorSummary
     {

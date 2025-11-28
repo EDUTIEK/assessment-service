@@ -17,6 +17,8 @@ use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
 
 class WriterBridge implements AppBridge
 {
+    private const CHANGE_TYPE_WRITER = 'writer';
+
     private ?\Edutiek\AssessmentService\Assessment\Data\Writer $writer;
 
     public function __construct(
@@ -78,12 +80,12 @@ class WriterBridge implements AppBridge
         return null;
     }
 
-    public function applyChange(ChangeRequest $change): ChangeResponse
+    public function applyChanges(string $type, array $changes): array
     {
-        if ($this->writer !== null && $change->getType() == 'writer') {
-            return $this->applyWriter($change);
+        if ($type = self::CHANGE_TYPE_WRITER) {
+            return array_map(fn(ChangeRequest $change) => $this->applyWriter($change), $changes);
         }
-        return $change->toResponse(false, 'writer or type not found');
+        return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'wrong type'), $changes);
     }
 
     public function applyWriter(ChangeRequest $change): ChangeResponse

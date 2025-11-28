@@ -78,11 +78,16 @@ class CorrectorBridge implements AppCorrectorBridge
         return null;
     }
 
-    public function applyChange(ChangeRequest $change): ChangeResponse
+    public function applyChanges(string $type, array $changes): array
     {
-        return $change->toResponse(false, 'no changes for assessment');
+        if ($this->corrector !== null) {
+            switch ($type) {
+                default:
+                    return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'wrong type'), $changes);
+            }
+        }
+        return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'corrector not found'), $changes);
     }
-
 
     public function getItem(int $task_id, int $writer_id): ?array
     {

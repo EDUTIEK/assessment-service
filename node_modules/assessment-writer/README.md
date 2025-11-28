@@ -11,7 +11,7 @@ outside the project. The REST API may change at any time if neded by the project
 ## Project Setup
 
 ```sh
-npm install
+npm clean-install --ignore-scripts
 ```
 
 ### Compile and Hot-Reload for Development

@@ -23,6 +23,11 @@ use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
 
 class WriterBridge implements AppBridge
 {
+    private const CHANGE_TYPE_PREFERECNCES = 'pref';
+    private const CHANGE_TYPE_NOTES = 'note';
+    private const CHANGE_TYPE_STEP = 'step';
+    private const CHANGE_TYPE_ESSAY = 'essay';
+
     private ?Writer $writer;
     private $tasks = [];
 
@@ -103,22 +108,24 @@ class WriterBridge implements AppBridge
         return null;
     }
 
-    public function applyChange(ChangeRequest $change): ChangeResponse
+    public function applyChanges(string $type, array $changes): array
     {
         if ($this->writer !== null) {
-            switch ($change->getType()) {
-                case 'pref':
-                    return $this->applyPreferences($change);
-                case 'essay':
-                    return $this->applyEssay($change);
-                case 'note':
-                    return $this->applyNote($change);
-                case 'step':
-                    return $this->applyStep($change);
-
+            switch ($type) {
+                case self::CHANGE_TYPE_PREFERECNCES:
+                    return array_map(fn(ChangeRequest $change) => $this->applyPreferences($change), $changes);
+                case self::CHANGE_TYPE_ESSAY:
+                    return array_map(fn(ChangeRequest $change) => $this->applyEssay($change), $changes);
+                case self::CHANGE_TYPE_NOTES:
+                    return array_map(fn(ChangeRequest $change) => $this->applyNote($change), $changes);
+                case self::CHANGE_TYPE_STEP:
+                    // todo optimize performance by applying steps in one function - essay should not be written multiple times
+                    return array_map(fn(ChangeRequest $change) => $this->applyStep($change), $changes);
+                default:
+                    return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'wrong type'), $changes);
             }
         }
-        return $change->toResponse(false, 'writer or type not found');
+        return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'writer not found'), $changes);
     }
 
     private function applyPreferences(ChangeRequest $change): ChangeResponse
@@ -206,7 +213,6 @@ class WriterBridge implements AppBridge
         return $change->toResponse(false, 'wrong action');
     }
 
-    // todo performance optimization needed - essay should not be saved multiple times
     private function applyStep(ChangeRequest $change): ChangeResponse
     {
         $data = $change->getPayload();

@@ -19,6 +19,8 @@ use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
 
 class WriterBridge implements AppBridge
 {
+    private const CHANGE_TYPE_ANNOTATION = 'anno';
+
     private ?Writer $writer;
     private $tasks = [];
     private $resources = [];
@@ -113,15 +115,17 @@ class WriterBridge implements AppBridge
         return null;
     }
 
-    public function applyChange(ChangeRequest $change): ChangeResponse
+    public function applyChanges(string $type, array $changes): array
     {
         if ($this->writer !== null) {
-            switch ($change->getType()) {
-                case 'anno':
-                    return $this->applyAnnotation($change);
+            switch ($type) {
+                case self::CHANGE_TYPE_ANNOTATION:
+                    return array_map(fn(ChangeRequest $change) => $this->applyAnnotation($change), $changes);
+                default:
+                    return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'wrong type'), $changes);
             }
         }
-        return $change->toResponse(false, 'type not found');
+        return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'writer not found'), $changes);
     }
 
 

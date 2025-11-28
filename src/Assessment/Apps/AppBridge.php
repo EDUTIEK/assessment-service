@@ -20,7 +20,9 @@ interface AppBridge
     public function getFileId(string $entity, int $entity_id): ?string;
 
     /**
-     * Apply a data change request
+     * Apply change requests
+     * @param ChangeRequest[] $changes
+     * @return ChangeResponse[]
      */
-    public function applyChange(ChangeRequest $change): ChangeResponse;
+    public function applyChanges(string $type, array $changes): array;
 }

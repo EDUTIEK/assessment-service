@@ -137,18 +137,19 @@ abstract class BaseApp implements RestService
                 continue;
             }
 
-            foreach ((array) $component_data as $list => $changes) {
-                foreach ((array) $changes as $change_data) {
-                    $change = new ChangeRequest(
-                        (string) $change_data['type'] ?? '',
-                        (string) $change_data['key'] ?? '',
-                        (int) $change_data['last_change'] ?? 0,
-                        ChangeAction::tryFrom($change_data['action'] ?? ''),
-                        $change_data['payload'] ?? null
-                    );
+            foreach ((array) $component_data as $type => $list) {
 
-                    $json[$component][$list][] = $bridge->applyChange($change)->toArray();
-                }
+                $changes = array_map(fn (array $data) => new ChangeRequest(
+                        (string) $data['type'] ?? '',
+                        (string) $data['key'] ?? '',
+                        (int) $data['last_change'] ?? 0,
+                        ChangeAction::tryFrom($data['action'] ?? ''),
+                        $data['payload'] ?? null
+                    ), $list);
+
+                $json[$component][$type] = array_map(fn(ChangeResponse $response) => $response->toArray(),
+                    $bridge->applyChanges($type, $changes)
+                );
             }
         }
 
