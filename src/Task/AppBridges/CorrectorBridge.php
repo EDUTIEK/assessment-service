@@ -425,7 +425,7 @@ class CorrectorBridge implements AppCorrectorBridge
             'task_id' => $data['task_id'] ?? null,
             'writer_id' => $data['writer_id'] ?? null,
             'corrector_id' => $data['corrector_id'] ?? null,
-            'criterion_id' => $data['criterion'] ?? null,
+            'criterion_id' => $data['criterion_id'] ?? null,
             'points' => $data['points'] ?? null,
         ], $points, CorrectorPoints::class);
 
@@ -451,11 +451,11 @@ class CorrectorBridge implements AppCorrectorBridge
 
                 // check and assign comment
                 $comment = null;
-                if ($data['comment_key'] !== null) {
+                if (!empty($data['comment_key'])) {
                     $comment = $this->repos->correctorComment()->oneByTaskIdAndWriterIdAndKey(
                         $points->getTaskId(),
                         $points->getWriterId(),
-                        $data['comment_key'] ?? null,
+                        $data['comment_key'],
                     );
                     if ($comment === null) {
                         return $change->toResponse(false, 'wrong comment');
@@ -478,6 +478,7 @@ class CorrectorBridge implements AppCorrectorBridge
                         return $change->toResponse(false, 'points assigned to non-general criterion without comment');
                     }
                 }
+
                 if ($points->getCommentId() === null && $points->getCriterionId() === null) {
                     return $change->toResponse(false, 'criterion or comment needed for points');
                 }
@@ -530,7 +531,6 @@ class CorrectorBridge implements AppCorrectorBridge
 
     private function getCriteriaForTaskAndCorrector(int $task_id, int $corrector_id)
     {
-
         switch ($this->correction_settings->getCriteriaMode()) {
             case CriteriaMode::CORRECTOR:
                 break;
