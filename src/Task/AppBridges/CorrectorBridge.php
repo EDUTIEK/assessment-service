@@ -29,7 +29,8 @@ use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\Resource;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Task\Data\Settings;
-use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Task\Data\CorrectorPrefs;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -503,6 +504,23 @@ class CorrectorBridge implements AppCorrectorBridge
 
     private function applyPreferences(ChangeRequest $change): ChangeResponse
     {
+        $repo = $this->repos->correctorPrefs();
+        $data = $change->getPayload();
+        $prefs = $repo->one($this->corrector->getId())
+            ?? $repo->new()->setCorrectorId($this->corrector->getId());
+
+        $this->entity->fromPrimitives([
+            'essay_page_zoom' => $data['essay_page_zoom'] ?? null,
+            'essay_text_zoom' => $data['essay_text_zoom'] ?? null,
+            'summary_text_zoom' => $data['summary_text_zoom'] ?? null,
+
+        ], $prefs, CorrectorPrefs::class);
+        $this->entity->secure($prefs, CorrectorPrefs::class);
+
+        if ($change->getAction() === ChangeAction::SAVE) {
+            $repo->save($prefs);
+            return $change->toResponse(true);
+        }
         return $change->toResponse(false, 'wrong action');
     }
 
