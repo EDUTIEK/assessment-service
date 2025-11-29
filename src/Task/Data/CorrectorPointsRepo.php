@@ -8,6 +8,7 @@ interface CorrectorPointsRepo
 {
     public function new(): CorrectorPoints;
     public function one(int $id): ?CorrectorPoints;
+    public function oneByTaskIdAndWriterIdAndKey(int $task_id, int $writer_id, string $key): ?CorrectorPoints;
     public function hasByTaskIdAndWriterId(int $task_id, int $writer_id): bool;
     /** @return CorrectorPoints[] */
     public function allByTaskIdAndWriterIdAndCorrectorId(int $task_id, int $writer_id, int $corrector_id): array;

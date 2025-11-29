@@ -36,9 +36,13 @@ abstract class CorrectorSummary implements TaskEntity
     abstract public function setRevisionText(?string $revision_text): self;
     abstract public function getRevisionPoints(): ?float;
     abstract public function setRevisionPoints(?float $revision_points): self;
-    abstract public function getRequireOtherRevision() : bool;
-    abstract public function setRequireOtherRevision(bool $require_other_revision) : self;
+    abstract public function getRequireOtherRevision(): bool;
+    abstract public function setRequireOtherRevision(bool $require_other_revision): self;
 
+    /**
+     * Get the full Grading Status
+     * @return GradingStatus
+     */
     public function getGradingStatus(): GradingStatus
     {
         if (!empty($this->getRevised())) {
@@ -58,6 +62,21 @@ abstract class CorrectorSummary implements TaskEntity
         if (empty($this->getLastChange())) {
             return GradingStatus::NOT_STARTED;
         }
+    }
+
+    /**
+     * Get a reduced stading status if everything before authorization should not be public
+     * @return GradingStatus
+     */
+    public function getGradingStatusLight(): GradingStatus
+    {
+        if (!empty($this->getRevised())) {
+            return GradingStatus::REVISED;
+        }
+        if (!empty($this->getCorrectionAuthorized())) {
+            return GradingStatus::AUTHORIZED;
+        }
+        return GradingStatus::NOT_STARTED;
     }
 
     public function isAuthorized(): bool

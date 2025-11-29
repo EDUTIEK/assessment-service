@@ -8,6 +8,7 @@ interface CorrectorCommentRepo
 {
     public function new(): CorrectorComment;
     public function one(int $id): ?CorrectorComment;
+    public function oneByTaskIdAndWriterIdAndKey(int $task_id, int $writer_id, string $key): ?CorrectorComment;
     public function hasByAssId(int $ass_id): bool;
     public function hasByTaskIdAndWriterId(int $task_id, int $writer_id): bool;
     /** @return CorrectorComment[] */
