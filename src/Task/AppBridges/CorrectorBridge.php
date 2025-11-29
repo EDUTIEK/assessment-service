@@ -22,6 +22,7 @@ use Edutiek\AssessmentService\Task\Data\CorrectionSettings as TaskCorrectionSett
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 use Edutiek\AssessmentService\Task\Data\CorrectorPoints;
+use Edutiek\AssessmentService\Task\Data\CorrectorSnippet;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 use Edutiek\AssessmentService\Task\Data\CriteriaMode;
 use Edutiek\AssessmentService\Task\Data\RatingCriterion;
@@ -526,6 +527,38 @@ class CorrectorBridge implements AppCorrectorBridge
 
     private function applySnippets(ChangeRequest $change): ChangeResponse
     {
+        $repo = $this->repos->correctorSnippets();
+
+        $snippet = $repo->new();
+        $data = $change->getPayload();
+
+        $this->entity->fromPrimitives([
+            'key' => $change->getKey(),
+            'ass_id' => $this->ass_id,
+            'corrector_id' => $this->corrector->getId(),
+            'purpose' => $data['purpose'] ?? null,
+            'text' => $data['text'] ?? null,
+            'title' => $data['title'] ?? null,
+        ], $snippet, CorrectorSnippet::class);
+
+        $this->entity->secure($snippet, CorrectorSnippet::class);
+
+        $found = $repo->oneByKey($this->ass_id, $this->corrector->getId(), $snippet->getKey());
+        switch ($change->getAction()) {
+            case ChangeAction::SAVE:
+                if ($found) {
+                    $snippet->setId($found->getId());
+                }
+                $repo->save($snippet);
+                return $change->toResponse(true);
+
+            case ChangeAction::DELETE:
+                if ($found) {
+                    $repo->deleteByKey($this->ass_id, $this->corrector->getId(), $snippet->getKey());
+                }
+                return $change->toResponse(true);
+        }
+
         return $change->toResponse(false, 'wrong action');
     }
 
