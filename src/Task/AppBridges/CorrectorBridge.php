@@ -8,6 +8,7 @@ use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as AssessmentSettingsService;
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorReadService;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings as AssesmentCorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
@@ -17,10 +18,13 @@ use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentService;
+use Edutiek\AssessmentService\Task\Data\CorrectionSettings as TaskCorrectionSettings;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\CorrectorComment;
+use Edutiek\AssessmentService\Task\Data\CorrectorPoints;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 use Edutiek\AssessmentService\Task\Data\CriteriaMode;
+use Edutiek\AssessmentService\Task\Data\RatingCriterion;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\Resource;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
@@ -40,6 +44,10 @@ class CorrectorBridge implements AppCorrectorBridge
     private array $tasks = [];
     /** @var Resource[] */
     private array $resources = [];
+    private AssesmentCorrectionSettings $assessment_settings;
+    private TaskCorrectionSettings $correction_settings;
+    /** @var RatingCriterion[][][] task_id => corrector_id => criterion_id => criterion */
+    private $criteria;
 
     public function __construct(
         private readonly int $ass_id,
@@ -49,8 +57,8 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly EntityFullService $entity,
         private readonly CorrectorReadService $corrector_service,
         private readonly WriterReadService $writer_service,
-        private readonly AssessmentSettingsService $assesment_settings,
-        private readonly CorrectionSettingsService $correction_settings,
+        private readonly AssessmentSettingsService $assesment_settings_service,
+        private readonly CorrectionSettingsService $correction_settings_service,
         private readonly AssignmentService $assignment_service,
         private readonly CorrectionProcessService $process_service,
         private readonly Language $language,
@@ -63,6 +71,9 @@ class CorrectorBridge implements AppCorrectorBridge
                 $this->resources[$resource->getId()] = $resource;
             }
         }
+
+        $this->assessment_settings = $this->assesment_settings_service->get();
+        $this->correction_settings = $this->correction_settings_service->get();
     }
 
     public function getData($for_update): array
@@ -208,12 +219,9 @@ class CorrectorBridge implements AppCorrectorBridge
             return [];
         }
 
-        $assessment_settings = $this->assesment_settings->get();
-        $correction_settings = $this->correction_settings->get();
-
-        $task_criteria = [];
         foreach ($this->assignment_service->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
-            if ($this->corrector === null || $this->corrector->getId() === $assignment->getCorrectorId() || $assessment_settings->getMutualVisibility()) {
+            if ($this->corrector === null || $this->corrector->getId() === $assignment->getCorrectorId()
+                || $this->assessment_settings->getMutualVisibility()) {
                 $corrector = $this->corrector_service->oneById($assignment->getCorrectorId());
                 if ($corrector) {
                     $user = $this->user_service->getUser($corrector->getUserId());
@@ -256,24 +264,10 @@ class CorrectorBridge implements AppCorrectorBridge
 
                     if ($add_details) {
 
-                        switch ($correction_settings->getCriteriaMode()) {
-                            case CriteriaMode::FIXED:
-                                $criteria = $task_criteria[$assignment->getTaskId()] ??=
-                                    $this->repos->ratingCriterion()->allByTaskIdAndCorrectorId(
-                                        $assignment->getTaskId(),
-                                        null
-                                    );
-                                break;
-                            case CriteriaMode::CORRECTOR:
-                                $criteria = $this->repos->ratingCriterion()->allByTaskIdAndCorrectorId(
-                                    $assignment->getTaskId(),
-                                    $assignment->getCorrectorId()
-                                );
-                                break;
-                            default:
-                                $criteria = [];
-                        }
-
+                        $criteria = $this->getCriteriaForTaskAndCorrector(
+                            $assignment->getTaskId(),
+                            $assignment->getCorrectorId()
+                        );
                         foreach ($criteria as $criterion) {
                             $data['Criteria'][] = $this->entity->arrayToPrimitives([
                                 'id' => $criterion->getId(),
@@ -376,7 +370,7 @@ class CorrectorBridge implements AppCorrectorBridge
         $data = $change->getPayload();
 
         $this->entity->fromPrimitives([
-            'key' => $data['key'],
+            'key' => $change->getKey(),
             'task_id' => $data['task_id'] ?? null,
             'writer_id' => $data['writer_id'] ?? null,
             'corrector_id' => $data['corrector_id'] ?? null,
@@ -385,11 +379,12 @@ class CorrectorBridge implements AppCorrectorBridge
             'parent_number' => $data['parent_number'] ?? null,
             'comment' => $data['comment'] ?? null,
             'rating' => $data['rating'] ?? null,
-            'marks' => $data['marks'] ? json_encode($data['marks']) : null,
+            'marks' => ($data['marks'] ?? null) ? json_encode($data['marks']) : null,
         ], $comment, CorrectorComment::class);
 
         $this->entity->secure($comment, CorrectorComment::class);
 
+        // check scope
         if ($comment->getCorrectorId() !== $this->corrector?->getId()
             || !$this->repos->correctorAssignment()->hasByIds(
                 $comment->getWriterId(),
@@ -420,6 +415,83 @@ class CorrectorBridge implements AppCorrectorBridge
 
     private function applyPoints(ChangeRequest $change): ChangeResponse
     {
+        $repo = $this->repos->correctorPoints();
+
+        $points = $repo->new();
+        $data = $change->getPayload();
+
+        $this->entity->fromPrimitives([
+            'key' => $change->getKey(),
+            'task_id' => $data['task_id'] ?? null,
+            'writer_id' => $data['writer_id'] ?? null,
+            'corrector_id' => $data['corrector_id'] ?? null,
+            'criterion_id' => $data['criterion'] ?? null,
+            'points' => $data['points'] ?? null,
+        ], $points, CorrectorPoints::class);
+
+        $this->entity->secure($points, CorrectorPoints::class);
+
+        // check scope
+        if ($points->getCorrectorId() !== $this->corrector?->getId()
+            || !$this->repos->correctorAssignment()->hasByIds(
+                $points->getWriterId(),
+                $points->getCorrectorId(),
+                $points->getTaskId()
+            )) {
+            return $change->toResponse(false, 'wrong scope');
+        }
+
+        $found = $repo->oneByTaskIdAndWriterIdAndKey($points->getTaskId(), $points->getWriterId(), $points->getKey());
+        switch ($change->getAction()) {
+
+            case ChangeAction::SAVE:
+                if ($found) {
+                    $points->setId($found->getId());
+                }
+
+                // check and assign comment
+                $comment = null;
+                if ($data['comment_key'] !== null) {
+                    $comment = $this->repos->correctorComment()->oneByTaskIdAndWriterIdAndKey(
+                        $points->getTaskId(),
+                        $points->getWriterId(),
+                        $data['comment_key'] ?? null,
+                    );
+                    if ($comment === null) {
+                        return $change->toResponse(false, 'wrong comment');
+                    }
+                    $points->setCommentId($comment->getId());
+                }
+
+                // check criterion
+                $criterion = null;
+                if ($points->getCriterionId() !== null) {
+                    $criteria = $this->getCriteriaForTaskAndCorrector($points->getTaskId(), $points->getCorrectorId());
+                    $criterion = $criteria[$points->getCriterionId()] ?? null;
+                    if ($criterion === null) {
+                        return $change->toResponse(false, 'wrong criterion');
+                    }
+                    if ($criterion->getGeneral() && $points->getCommentId() !== null) {
+                        return $change->toResponse(false, 'points assigned to comment and general criterion');
+                    }
+                    if (!$criterion->getGeneral() && $points->getCommentId() === null) {
+                        return $change->toResponse(false, 'points assigned to non-general criterion without comment');
+                    }
+                }
+                if ($points->getCommentId() === null && $points->getCriterionId() === null) {
+                    return $change->toResponse(false, 'criterion or comment needed for points');
+                }
+
+                $repo->save($points);
+                return $change->toResponse(true);
+
+            case ChangeAction::DELETE:
+                if ($found) {
+                    $repo->delete($found->getId());
+                }
+                return $change->toResponse(true);
+        }
+
         return $change->toResponse(false, 'wrong action');
     }
 
@@ -454,5 +526,27 @@ class CorrectorBridge implements AppCorrectorBridge
             ->setTaskId($assignment->getTaskId())
             ->setWriterId($assignment->getWriterId())
             ->setCorrectorId($assignment->getCorrectorId());
+    }
+
+    private function getCriteriaForTaskAndCorrector(int $task_id, int $corrector_id)
+    {
+
+        switch ($this->correction_settings->getCriteriaMode()) {
+            case CriteriaMode::CORRECTOR:
+                break;
+            case CriteriaMode::FIXED:
+                $corrector_id = null;
+                break;
+            case CriteriaMode::NONE:
+                return [];
+        }
+
+        if (!isset($this->criteria[$task_id][(int) $corrector_id])) {
+            $this->criteria[$task_id][(int) $corrector_id] = [];
+            foreach ($this->repos->ratingCriterion()->allByTaskIdAndCorrectorId($task_id, $corrector_id) as $criterion) {
+                $this->criteria[$task_id][(int) $corrector_id][$criterion->getId()] = $criterion;
+            }
+        }
+        return $this->criteria[$task_id][(int) $corrector_id];
     }
 }
