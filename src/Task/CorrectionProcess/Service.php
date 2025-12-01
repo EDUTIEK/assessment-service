@@ -136,7 +136,7 @@ readonly class Service implements FullService
         }
 
         switch ($writer->getCorrectionStatus()) {
-            case CorrectionProcedure::APPROXIMATION:
+            case CorrectionStatus::APPROXIMATION:
                 if ($assignment->getPosition() === GradingPosition::FIRST) {
                     return true;
                 }
@@ -157,12 +157,11 @@ readonly class Service implements FullService
                 // todo check if first corrector has set that second corrector must revise (field needed)
 
                 // no break
-            case CorrectionProcedure::CONSULTING:
+            case CorrectionStatus::CONSULTING:
                 // both correctors must change the points
                 // only second corrector should enter a revision text
                 return true;
 
-            case CorrectionProcedure::NONE:
             default:
                 return false;
         }
