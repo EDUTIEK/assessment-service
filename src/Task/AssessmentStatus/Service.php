@@ -2,7 +2,7 @@
 
 namespace Edutiek\AssessmentService\Task\AssessmentStatus;
 
-use Edutiek\AssessmentService\Task\Data\AssignmentPosition;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
@@ -128,8 +128,8 @@ readonly class Service implements FullService
     {
         return new CorrectorCorrectionSummary(
             $corrector_id,
-            count(array_filter($corrector_assignments, fn(CorrectorAssignment $ass) => $ass->getPosition() === AssignmentPosition::FIRST)),
-            count(array_filter($corrector_assignments, fn(CorrectorAssignment $ass) => $ass->getPosition() === AssignmentPosition::SECOND)),
+            count(array_filter($corrector_assignments, fn(CorrectorAssignment $ass) => $ass->getPosition() === GradingPosition::FIRST)),
+            count(array_filter($corrector_assignments, fn(CorrectorAssignment $ass) => $ass->getPosition() === GradingPosition::SECOND)),
             count($corrector_assignments) - count($corrector_summaries),
             $authorized = count(array_filter($corrector_summaries, fn(CorrectorSummary $sum) => $sum->getCorrectionAuthorized() !== null)),
             count($corrector_summaries) - $authorized

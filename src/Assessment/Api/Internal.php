@@ -288,7 +288,11 @@ class Internal implements ComponentApi, ComponentApiFactory
         return $this->instances[CorrectionProcessService::class][$ass_id][$user_id] ??= new CorrectionProcessService(
             $ass_id,
             $user_id,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->correctionSettings($ass_id),
+            $this->writer($ass_id, $user_id),
+            $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
+            $this->dependencies->taskApi()->gradingProvider($ass_id, $user_id)
         );
     }
 

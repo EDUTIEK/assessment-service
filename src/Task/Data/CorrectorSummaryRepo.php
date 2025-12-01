@@ -16,8 +16,10 @@ interface CorrectorSummaryRepo
     public function allByWriterId(int $writer_id): array;
     /** @return CorrectorSummary[] */
     public function allByTaskId(int $task_id): array;
-    /** @return CorrectorSummary[] */
+    /** @return CorrectorSummary[][] */
     public function allByTaskIdAndWriterIds(int $task_id, array $writer_ids): array;
+    /** @return CorrectorSummary[] */
+    public function allByTaskIdAndWriterId(int $task_id, int $writer_id): array;
     /** @return CorrectorSummary[] */
     public function allByTaskIdAndCorrectorId(int $task_id, int $corrector_id): array;
     public function allByCorrectorId(int $corrector_id): array;

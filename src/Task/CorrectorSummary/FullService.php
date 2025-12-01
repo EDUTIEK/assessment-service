@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Task\CorrectorSummary;
 
+use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 
 interface FullService
@@ -14,4 +15,7 @@ interface FullService
     public function allByTaskIdAndWriterId(int $task_id, int $writer_id): array;
     /** @return CorrectorSummary[] */
     public function allByTaskIdAndCorrectorId(int $task_id, int $corrector_id): array;
+
+    public function getForAssignment(CorrectorAssignment $assignment): CorrectorSummary;
+    public function newForAssignment(CorrectorAssignment $assignment): CorrectorSummary;
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Api\Internal;
-use Edutiek\AssessmentService\Task\Data\GradingStatus;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Throwable;
 use Edutiek\AssessmentService\System\Config\Frontend;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;

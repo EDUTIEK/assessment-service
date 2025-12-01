@@ -19,7 +19,7 @@ class Service implements FullService
      * Align with $grade_levels for a binary search for the fitting grade level
      * @var float[]
      */
-     private array $min_points;
+     private ?array $min_points = null;
 
     public function __construct(
         private int $ass_id,
@@ -55,7 +55,7 @@ class Service implements FullService
             return null;
         }
         $low = 0;
-        $high = count($this->min_points) - 1;
+        $high = count($this->getMinPoints()) - 1;
         $best = null;
 
         while ($low <= $high) {

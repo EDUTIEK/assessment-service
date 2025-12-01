@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
 
@@ -11,35 +11,41 @@ readonly class TaskInfo
         private TaskType $task_type,
         private ?int $position = null,
         private ?int $id = null,
+        private float $weight = 1,
+    ) {
+    }
 
-    ) {}
-
-    public function getTitle() : string
+    public function getTitle(): string
     {
         return $this->title;
     }
 
-    public function getId() : ?int
-    {
-        return $this->id;
-    }
-
-    public function getTaskType() : TaskType
+    public function getTaskType(): TaskType
     {
         return $this->task_type;
     }
 
-    public function getPosition() : ?int
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getWeight(): float
+    {
+        return $this->weight;
+    }
+
+    public function getPosition(): ?int
     {
         return $this->position;
     }
 
-    public function withId(int $id) : self
+    public function withId(int $id): self
     {
         return new self($this->title, $this->task_type, $this->position, $id);
     }
 
-    public function withPosition(int $position) : self
+    public function withPosition(int $position): self
     {
         return new self($this->title, $this->task_type, $position, $this->id);
     }

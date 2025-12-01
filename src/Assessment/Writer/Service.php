@@ -117,22 +117,25 @@ readonly class Service implements ReadService, FullService
         }
     }
 
-    // todo: handle in CorrectionProcess
     public function removeCorrectionFinalisation(Writer $writer, int $by_user_id): void
     {
-        $was_finalized = ($writer->getCorrectionStatus() !== CorrectionStatus::FINALIZED);
-        $writer->setCorrectionStatus(CorrectionStatus::OPEN);
+        $this->changeCorrectionStatus($writer, CorrectionStatus::OPEN, $by_user_id);
+    }
+
+    public function changeCorrectionStatus(Writer $writer, CorrectionStatus $status, int $by_user_id): void
+    {
+        $old_status = $writer->getCorrectionStatus();
+        $writer->setCorrectionStatus($status);
         $writer->setCorrectionStatusChanged(new \DateTimeImmutable("now"));
         $writer->setCorrectionStatusChangedBy($by_user_id);
-        if ($this->validate($writer)) {
-            $this->save($writer);
-            if ($was_finalized) {
-                $this->log_entry_service->addEntry(
-                    LogEntryType::CORRECTION_REMOVE_AUTHORIZATION,
-                    LogEntryMention::fromSystem($by_user_id),
-                    LogEntryMention::fromWriter($writer)
-                );
-            }
+        $this->save($writer);
+        if ($old_status === CorrectionStatus::FINALIZED
+            && $writer->getCorrectionStatus() !== CorrectionStatus::FINALIZED) {
+            $this->log_entry_service->addEntry(
+                LogEntryType::CORRECTION_REMOVE_AUTHORIZATION,
+                LogEntryMention::fromSystem($by_user_id),
+                LogEntryMention::fromWriter($writer)
+            );
         }
     }
 

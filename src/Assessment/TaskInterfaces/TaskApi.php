@@ -13,4 +13,5 @@ use Edutiek\AssessmentService\Assessment\Api\ComponentApi;
 interface TaskApi extends ComponentApi
 {
     public function taskManager(int $ass_id, int $user_id): TaskManager;
+    public function gradingProvider(int $ass_id, int $user_id): GradingProvider;
 }

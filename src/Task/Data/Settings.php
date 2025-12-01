@@ -35,7 +35,8 @@ abstract class Settings implements TaskEntity
             $this->getTitle(),
             $this->getTaskType(),
             $this->getPosition(),
-            $this->getTaskId()
+            $this->getTaskId(),
+            $this->getWeight()
         );
     }
 }

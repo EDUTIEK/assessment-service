@@ -76,6 +76,7 @@ class Internal
         return $this->instances[CorrectorAssignmentsService::class][$ass_id][$user_id] ??= new CorrectorAssignmentsService(
             $ass_id,
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->dependencies->repositories(),
             $this->dependencies->eventDispatcher($ass_id, $user_id)
@@ -85,13 +86,13 @@ class Internal
     public function correctionProcess(int $ass_id, int $user_id): CorrectionProcessService
     {
         return $this->instances[CorrectionProcessService::class][$ass_id][$user_id] ??= new CorrectionProcessService(
-            $ass_id,
+            $user_id,
             $this->dependencies->repositories(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionProcess(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->logEntry(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
-            $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
+            $this->correctorSummary($ass_id, $user_id)
         );
     }
 
@@ -108,6 +109,7 @@ class Internal
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings(),
             $this->correctionSettings($ass_id, $user_id),
             $this->correctorAssignments($ass_id, $user_id),
+            $this->correctorSummary($ass_id, $user_id),
             $this->correctionProcess($ass_id, $user_id),
             $this->language($user_id),
             $this->dependencies->systemApi()->user()

@@ -1,6 +1,8 @@
 <?php
 
-namespace Edutiek\AssessmentService\Task\Data;
+declare(strict_types=1);
+
+namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
 
 enum GradingStatus: string
 {

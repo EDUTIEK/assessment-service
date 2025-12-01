@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Task\Data;
 
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
+
 abstract class CorrectorAssignment implements TaskEntity
 {
     abstract public function getId(): int;
@@ -14,6 +16,6 @@ abstract class CorrectorAssignment implements TaskEntity
     abstract public function setWriterId(int $writer_id): self;
     abstract public function getCorrectorId(): int;
     abstract public function setCorrectorId(int $corrector_id): self;
-    abstract public function getPosition(): AssignmentPosition;
-    abstract public function setPosition(AssignmentPosition $position): self;
+    abstract public function getPosition(): GradingPosition;
+    abstract public function setPosition(GradingPosition $position): self;
 }

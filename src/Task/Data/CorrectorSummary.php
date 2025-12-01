@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Task\Data;
 
 use DateTimeImmutable;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 
 abstract class CorrectorSummary implements TaskEntity
 {
@@ -77,6 +78,25 @@ abstract class CorrectorSummary implements TaskEntity
             return GradingStatus::AUTHORIZED;
         }
         return GradingStatus::NOT_STARTED;
+    }
+
+
+    public function setGradingStatus(GradingStatus $status, int $user_id): self
+    {
+        switch ($status) {
+            case GradingStatus::AUTHORIZED:
+                $this->setCorrectionAuthorized(new DateTimeImmutable());
+                $this->setCorrectionAuthorizedBy($user_id);
+                break;
+            case GradingStatus::REVISED:
+                $this->setRevised(new DateTimeImmutable());
+                break;
+            default:
+                $this->setCorrectionAuthorized(null);
+                $this->setCorrectionAuthorizedBy(null);
+                $this->setRevised(null);
+        }
+        return $this;
     }
 
     public function isAuthorized(): bool

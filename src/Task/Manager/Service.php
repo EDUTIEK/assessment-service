@@ -74,7 +74,8 @@ readonly class Service implements TaskManager, ReadService
             ->setAssId($this->ass_id)
             ->setTitle($info->getTitle())
             ->setTaskType($info->getTaskType())
-            ->setPosition($max_pos ? $max_pos + 1 : 0);
+            ->setPosition($max_pos ? $max_pos + 1 : 0)
+            ->setWeight($info->getWeight());
 
         $this->repos->settings()->save($settings);
 

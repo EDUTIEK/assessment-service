@@ -1,8 +1,10 @@
 <?php
 
-namespace Edutiek\AssessmentService\Task\Data;
+declare(strict_types=1);
 
-enum AssignmentPosition: int
+namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
+
+enum GradingPosition: int
 {
     /**
      * First corrector
@@ -22,18 +24,18 @@ enum AssignmentPosition: int
     public function languageVariable(): string
     {
         return match ($this) {
-            self::FIRST => 'assignment_pos_first',
-            self::SECOND => 'assignment_pos_second',
-            self::STITCH => 'assignment_pos_stitch',
+            self::FIRST => 'grading_pos_first',
+            self::SECOND => 'grading_pos_second',
+            self::STITCH => 'grading_pos_stitch',
         };
     }
 
     public function initialsLanguageVariable(): string
     {
         return match ($this) {
-            self::FIRST => 'assignment_pos_first_short',
-            self::SECOND => 'assignment_pos_second_short',
-            self::STITCH => 'assignment_pos_stitch_short',
+            self::FIRST => 'grading_pos_first_short',
+            self::SECOND => 'grading_pos_second_short',
+            self::STITCH => 'grading_pos_stitch_short',
         };
     }
 

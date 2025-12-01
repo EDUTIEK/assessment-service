@@ -1,12 +1,12 @@
 <?php
 
 return [
-    'assignment_pos_first' => 'Erstkorrektor',
-    'assignment_pos_second' => 'Zweitkorrektor',
-    'assignment_pos_stitch' => 'Stichentscheider',
-    'assignment_pos_first_short' => 'EK',
-    'assignment_pos_second_short' => 'ZK',
-    'assignment_pos_stitch_short' => 'ST',
+    'grading_pos_first' => 'Erstkorrektor',
+    'grading_pos_second' => 'Zweitkorrektor',
+    'grading_pos_stitch' => 'Stichentscheider',
+    'grading_pos_first_short' => 'EK',
+    'grading_pos_second_short' => 'ZK',
+    'grading_pos_stitch_short' => 'ST',
     'comment_rating_negative_default' => 'unzutreffend',
     'comment_rating_positive_default' => 'gelungen',
     'pdf_part_criteria' => 'Übersicht zum Bewertungsschema',
