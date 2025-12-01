@@ -21,6 +21,10 @@ class Service implements FullService
         if (empty($summary) || empty($summary->getLastChange())) {
             return $this->language->txt('grading_not_started');
         }
+        // todo: improve
+        if (!$summary->isAuthorized()) {
+            $onlyStatus = true;
+        }
 
         $grade = function ($text) use ($summary) {
             $grade = null;
