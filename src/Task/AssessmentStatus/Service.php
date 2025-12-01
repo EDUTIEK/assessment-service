@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Assessment\Data\WritingStatus;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentsService;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
 
 readonly class Service implements FullService
 {
@@ -62,19 +63,13 @@ readonly class Service implements FullService
             return CombinedStatus::from($writing_status->value);
         }
 
-        if ($writer->getCorrectionFinalized() !== null) {
-            return CombinedStatus::FINALIZED;
-        }
-
-        if ($writer->getStitchNeeded()) {
-            return CombinedStatus::STITCH_NEEDED;
-        }
-
-        if (count($summaries) > 0 && max(array_map(fn(CorrectorSummary $s) => $s->getLastChange(), $summaries)) !== null) {
-            return CombinedStatus::STARTED;
-        }
-
-        return CombinedStatus::WRITING_AUTHORIZED;
+        return match ($writer->getCorrectionStatus()) {
+            CorrectionStatus::OPEN => CombinedStatus::OPEN,
+            CorrectionStatus::APPROXIMATION => CombinedStatus::APPROXIMATION,
+            CorrectionStatus::CONSULTING => CombinedStatus::CONSULTING,
+            CorrectionStatus::STITCH => CombinedStatus::STITCH_NEEDED,
+            CorrectionStatus::FINALIZED => CombinedStatus::FINALIZED,
+        };
     }
 
 
