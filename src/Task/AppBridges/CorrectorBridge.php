@@ -508,6 +508,19 @@ class CorrectorBridge implements AppCorrectorBridge
         $data = $change->getPayload();
         $summary = $repo->new();
 
+        $assignment = $this->repos->correctorAssignment()->oneByIds(
+            (int) $data['writer_id'] ?? 0,
+                (int) $data['corrector_id'] ?? 0,
+                (int) $data['task_id'] ?? 0,
+        );
+
+        // check scope
+        if ($assignment === null || $assignment->getCorrectorId() !== $this->corrector?->getId()) {
+            return $change->toResponse(false, 'wrong scope');
+        }
+
+        $summary = $this->summary_service->getForAssignment($assignment);
+
         $this->entity->fromPrimitives([
             'task_id' => $data['task_id'] ?? null,
             'writer_id' => $data['writer_id'] ?? null,
@@ -526,21 +539,7 @@ class CorrectorBridge implements AppCorrectorBridge
             $summary->setGradingStatus($status, $this->user_id);
         }
 
-        $assignment = $this->repos->correctorAssignment()->oneByIds(
-            $summary->getWriterId(),
-            $summary->getCorrectorId(),
-            $summary->getTaskId()
-        );
-
-        // check scope
-        if ($summary->getCorrectorId() !== $this->corrector?->getId()
-            || $assignment === null) {
-            return $change->toResponse(false, 'wrong scope');
-        }
-
         if ($change->getAction() === ChangeAction::SAVE) {
-            $found = $this->summary_service->getForAssignment($assignment);
-            $summary->setId($found->getId());
 
             $result = $this->process_service->checkAndSaveSummary($summary);
             if ($result->status() === ResultStatus::OK) {
