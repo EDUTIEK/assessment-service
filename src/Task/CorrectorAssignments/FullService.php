@@ -44,8 +44,9 @@ interface FullService extends ReadService
      */
     public function assignMultiple(
         int $task_id,
-        int $first_corrector,
-        int $second_corrector,
+        int $first_corrector_id,
+        int $second_corrector_id,
+        int $stitch_corrector_id,
         array $writer_ids,
         $dry_run = false
     ): array;
