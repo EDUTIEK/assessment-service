@@ -19,6 +19,7 @@ use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as AssignmentService;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TaskService;
+use Psr\Http\Message\UploadedFileInterface;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -127,5 +128,10 @@ class CorrectorBridge implements AppCorrectorBridge
             }
         }
         return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'corrector not found'), $changes);
+    }
+
+    public function processUploadedFile(UploadedFileInterface $file, int $task_id, int $writer_id): ?string
+    {
+        return null;
     }
 }

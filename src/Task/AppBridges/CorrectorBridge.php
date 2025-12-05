@@ -12,6 +12,7 @@ use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings as AssesmentCor
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
 use Edutiek\AssessmentService\System\ConstraintHandling\ResultStatus;
+use Edutiek\AssessmentService\System\Data\FileInfo;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
@@ -35,6 +36,7 @@ use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Task\Data\Settings;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Task\Data\CorrectorPrefs;
+use Psr\Http\Message\UploadedFileInterface;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -510,8 +512,8 @@ class CorrectorBridge implements AppCorrectorBridge
 
         $assignment = $this->repos->correctorAssignment()->oneByIds(
             (int) $data['writer_id'] ?? 0,
-                (int) $data['corrector_id'] ?? 0,
-                (int) $data['task_id'] ?? 0,
+            (int) $data['corrector_id'] ?? 0,
+            (int) $data['task_id'] ?? 0,
         );
 
         // check scope
@@ -629,5 +631,27 @@ class CorrectorBridge implements AppCorrectorBridge
             }
         }
         return $this->criteria[$task_id][(int) $corrector_id];
+    }
+
+    public function processUploadedFile(UploadedFileInterface $file, int $task_id, int $writer_id): ?string
+    {
+        if ($this->corrector != null) {
+            $ssignment = $this->assignment_service->oneByIds($writer_id, $task_id, $this->corrector->getId());
+            if (!$ssignment) {
+                return null;
+            }
+            $summary = $this->summary_service->getForAssignment($ssignment);
+            $info = $this->storage->saveFile($file->getStream(), null);
+
+            if ($info) {
+                $this->storage->deleteFile($summary->getSummaryPdf());
+                $summary->setSummaryPdf(($info->getId()));
+                $this->repos->correctorSummary()->save($summary);
+                return $info->getId();
+            }
+            return $summary->getSummaryPdf();
+        }
+
+        return null;
     }
 }

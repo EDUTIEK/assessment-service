@@ -19,6 +19,7 @@ use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
 use Edutiek\AssessmentService\Task\Data\ResourceAvailability;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Task\Data\Settings;
+use Psr\Http\Message\UploadedFileInterface;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -92,6 +93,11 @@ class CorrectorBridge implements AppCorrectorBridge
     public function getItem(int $task_id, int $writer_id): ?array
     {
         // no items handled in assessment component
+        return null;
+    }
+
+    public function processUploadedFile(UploadedFileInterface $file, int $task_id, int $writer_id): ?string
+    {
         return null;
     }
 }
