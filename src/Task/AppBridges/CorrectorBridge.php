@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorReadS
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings as AssesmentCorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
+use Edutiek\AssessmentService\System\ConstraintHandling\Result;
 use Edutiek\AssessmentService\System\ConstraintHandling\ResultStatus;
 use Edutiek\AssessmentService\System\Data\FileInfo;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
@@ -257,6 +258,7 @@ class CorrectorBridge implements AppCorrectorBridge
                     }
 
                     $data['Summaries'][] = $this->entity->arrayToPrimitives([
+                        'id' => $summary->getId(),
                         'task_id' => $summary->getTaskId(),
                         'writer_id' => $summary->getWriterId(),
                         'corrector_id' => $summary->getCorrectorId(),
@@ -637,7 +639,7 @@ class CorrectorBridge implements AppCorrectorBridge
     {
         if ($this->corrector != null) {
             $ssignment = $this->assignment_service->oneByIds($writer_id, $task_id, $this->corrector->getId());
-            if (!$ssignment) {
+            if (!$ssignment || !$this->process_service->canCorrect($ssignment)) {
                 return null;
             }
             $summary = $this->summary_service->getForAssignment($ssignment);
