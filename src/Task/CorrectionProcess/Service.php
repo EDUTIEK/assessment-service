@@ -34,6 +34,11 @@ readonly class Service implements FullService
     ) {
     }
 
+    /**
+     * Check if the process allows a correction
+     * Authorization is taken into account here, but not the pre-graded status
+     * The pre-graded status is handled in the corrector app
+     */
     public function canCorrect(CorrectorAssignment $assignment): bool
     {
         $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
@@ -59,7 +64,7 @@ readonly class Service implements FullService
                 $first?->getWriterId(),
                 $first?->getCorrectorId()
             );
-            if (!($first_summary?->isAuthorized() ?? false)) {
+            if ($first_summary === null || !$first_summary->isAuthorized()) {
                 return false;
             }
         }
@@ -69,7 +74,8 @@ readonly class Service implements FullService
             $assignment->getWriterId(),
             $assignment->getCorrectorId()
         );
-        if ($summary !== null && !$summary->getGradingStatus()?->isToCorrect()) {
+
+        if ($summary?->isAuthorized()) {
             return false;
         }
 
@@ -110,7 +116,8 @@ readonly class Service implements FullService
             $assignment->getWriterId(),
             $assignment->getCorrectorId()
         );
-        if ($summary === null || !$summary->getGradingStatus()?->isToAuthorize()) {
+
+        if ($summary?->isAuthorized()) {
             return false;
         }
 
@@ -153,8 +160,6 @@ readonly class Service implements FullService
                 if ($first_summary === null || !$first_summary->isRevised()) {
                     return false;
                 }
-
-                // todo check if first corrector has set that second corrector must revise (field needed)
 
                 // no break
             case CorrectionStatus::CONSULTING:

@@ -41,6 +41,14 @@ abstract class CorrectorSummary implements TaskEntity
     abstract public function setRequireOtherRevision(bool $require_other_revision): self;
 
     /**
+     * Get the effective points from a revision or correction
+     */
+    public function getEffectivePoints(): ?float
+    {
+        return $this->isRevised() ? $this->getRevisionPoints() : $this->getPoints();
+    }
+
+    /**
      * Get the full Grading Status
      * @return GradingStatus
      */
@@ -84,6 +92,9 @@ abstract class CorrectorSummary implements TaskEntity
     public function setGradingStatus(GradingStatus $status, int $user_id): self
     {
         switch ($status) {
+            case GradingStatus::PRE_GRADED:
+                $this->setPreGraded(new DateTimeImmutable());
+                break;
             case GradingStatus::AUTHORIZED:
                 $this->setCorrectionAuthorized(new DateTimeImmutable());
                 $this->setCorrectionAuthorizedBy($user_id);
@@ -92,13 +103,19 @@ abstract class CorrectorSummary implements TaskEntity
                 $this->setRevised(new DateTimeImmutable());
                 break;
             default:
+                $this->setPreGraded(null);
                 $this->setCorrectionAuthorized(null);
                 $this->setCorrectionAuthorizedBy(null);
                 $this->setRevised(null);
+                $this->setPreGraded(null);
         }
         return $this;
     }
 
+    /**
+     * The summary has been authorized
+     * @return bool
+     */
     public function isAuthorized(): bool
     {
         return $this->getCorrectionAuthorized() !== null;

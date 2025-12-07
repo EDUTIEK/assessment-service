@@ -11,14 +11,4 @@ enum GradingStatus: string
     case PRE_GRADED = "pre_graded";
     case AUTHORIZED = "authorized";
     case REVISED = "revised";
-
-    public function isToCorrect(): bool
-    {
-        return $this === self::NOT_STARTED || $this === self::OPEN;
-    }
-
-    public function isToAuthorize(): bool
-    {
-        return $this === self::OPEN || $this === self::PRE_GRADED;
-    }
 }

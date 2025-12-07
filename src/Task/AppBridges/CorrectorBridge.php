@@ -554,7 +554,7 @@ class CorrectorBridge implements AppCorrectorBridge
         ], $summary, CorrectorSummary::class);
         $this->entity->secure($summary, CorrectorSummary::class);
 
-        if ($status = GradingStatus::tryFrom($data['status'] ?? null)) {
+        if ($status = GradingStatus::tryFrom($data['status'] ?? '')) {
             $summary->setGradingStatus($status, $this->user_id);
         }
 

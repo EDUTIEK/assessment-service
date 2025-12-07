@@ -11,7 +11,8 @@ class Service implements FullService
     public function __construct(
         private LanguageService $language,
         private GradingService $grade_level_service
-    ){}
+    ) {
+    }
 
     public function correctionResult(
         ?CorrectorSummary $summary,
@@ -30,19 +31,19 @@ class Service implements FullService
             $grade = null;
             $points = null;
 
-            if ($level = $this->grade_level_service->getGradLevelForPoints($summary->getPoints())) {
+            if ($level = $this->grade_level_service->getGradLevelForPoints($summary->getEffectivePoints())) {
                 $grade = $level->getGrade();
             }
-            if (!empty($summary->getPoints())) {
-                $points = ($grade ? " (": "(") . $summary->getPoints() . ' ' . $this->language->txt('points') . ')';
+            if ($summary->getEffectivePoints() !== null) {
+                $points = ($grade ? " (" : "(") . $summary->getEffectivePoints() . ' ' . $this->language->txt('points') . ')';
             }
-            return ($grade||$points) ? "$text - $grade$points" :  $text;
+            return ($grade || $points) ? "$text - $grade$points" : $text;
         };
 
         if (empty($summary->getCorrectionAuthorized())) {
             $text = $this->language->txt('grading_open');
 
-            if($onlyStatus || $onlyAuthorizedGrades) {
+            if ($onlyStatus || $onlyAuthorizedGrades) {
                 return  $text;
             }
 

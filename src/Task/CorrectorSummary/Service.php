@@ -84,7 +84,7 @@ readonly class Service implements FullService, GradingProvider
                     $summary->getCorrectorId(),
                     $assignment->getPosition(),
                     $summary->getGradingStatus(),
-                    $summary->isRevised() ? $summary->getRevisionPoints() : $summary->getPoints(),
+                    $summary->getEffectivePoints(),
                     $summary->getRequireOtherRevision()
                 );
             }
