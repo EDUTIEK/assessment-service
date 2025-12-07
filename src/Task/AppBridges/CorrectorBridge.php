@@ -347,6 +347,21 @@ class CorrectorBridge implements AppCorrectorBridge
             case 'resource':
                 $resource = $this->resources[$entity_id] ?? null;
                 return $resource?->getFileId();
+            case 'summary':
+                $summary = $this->repos->correctorSummary()->one($entity_id);
+                if (!in_array($summary?->getTaskId(), array_keys($this->tasks))) {
+                    return null;
+                }
+                $assignment = $this->repos->correctorAssignment()->oneByIds(
+                    (int) $summary?->getWriterId(),
+                    (int) $summary?->getCorrectorId(),
+                    (int) $summary?->getTaskId(),
+                );
+                if ($assignment === null ||
+                    ($this->corrector !== null && $this->corrector->getId() !== $assignment->getCorrectorId())) {
+                    return null;
+                }
+                return $summary?->getSummaryPdf();
         }
         return null;
     }
@@ -530,7 +545,7 @@ class CorrectorBridge implements AppCorrectorBridge
             'writer_id' => $data['writer_id'] ?? null,
             'corrector_id' => $data['corrector_id'] ?? null,
             'summary_text' => $data['text'] ?? null,
-            'summary_pdf' => $data['summary_pdf'] ?? null,
+            'summary_pdf' => $data['pdf'] ?? null,
             'points' => $data['points'] ?? null,
             'revision_text' => $data['revision_text'] ?? null,
             'revision_points' => $data['revision_points'] ?? null,
