@@ -361,10 +361,9 @@ class CorrectorBridge implements AppCorrectorBridge
                     (int) $summary?->getCorrectorId(),
                     (int) $summary?->getTaskId(),
                 );
-                if ($assignment === null || !$summary->isAuthorized()) {
-                    return null;
+                if ($assignment !== null || $summary->isAuthorized()) {
+                    return $summary?->getSummaryPdf();
                 }
-                return $summary?->getSummaryPdf();
         }
         return null;
     }
