@@ -178,11 +178,11 @@ class Service implements ReadService
         }
 
         if ($this->orga_settings->getCorrectionStart() !== null &&
-            $this->orga_settings->getCorrectionStart()->getTimestamp() < time()) {
+            $this->orga_settings->getCorrectionStart()->getTimestamp() > time()) {
             return false;
         }
         if ($this->orga_settings->getCorrectionEnd() !== null &&
-            $this->orga_settings->getCorrectionEnd()->getTimestamp() > time()) {
+            $this->orga_settings->getCorrectionEnd()->getTimestamp() < time()) {
             return false;
         }
 
@@ -197,11 +197,11 @@ class Service implements ReadService
         }
 
         if ($this->orga_settings->getCorrectionStart() !== null &&
-            $this->orga_settings->getCorrectionStart()->getTimestamp() < time()) {
+            $this->orga_settings->getCorrectionStart()->getTimestamp() > time()) {
             return false;
         }
         if ($this->orga_settings->getCorrectionEnd() !== null &&
-            $this->orga_settings->getCorrectionEnd()->getTimestamp() > time()) {
+            $this->orga_settings->getCorrectionEnd()->getTimestamp() < time()) {
             return false;
         }
 
