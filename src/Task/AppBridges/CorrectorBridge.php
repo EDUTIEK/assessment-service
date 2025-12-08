@@ -301,37 +301,41 @@ class CorrectorBridge implements AppCorrectorBridge
                         // this avoids an update of keys in the app when saving changes
 
                         $comment_keys = [];
-                        foreach ($comments as $comment) {
-                            $comment_keys[$comment->getId()] = $comment->getKey();
-                            $data['Comments'][] = $this->entity->arrayToPrimitives([
-                                'key' => $comment->getKey(),
-                                'task_id' => $assignment->getTaskId(),
-                                'writer_id' => $assignment->getWriterId(),
-                                'corrector_id' => $comment->getCorrectorId(),
-                                'start_position' => $comment->getStartPosition(),
-                                'end_position' => $comment->getEndPosition(),
-                                'parent_number' => $comment->getParentNumber(),
-                                'comment' => $comment->getComment(),
-                                'rating' => $comment->getRating(),
-                                'marks' => $comment->getMarks() ? json_decode($comment->getMarks(), true) : null,
-                            ]);
+                        if ($this->correction_settings->getEnableComments()) {
+                            foreach ($comments as $comment) {
+                                $comment_keys[$comment->getId()] = $comment->getKey();
+                                $data['Comments'][] = $this->entity->arrayToPrimitives([
+                                    'key' => $comment->getKey(),
+                                    'task_id' => $assignment->getTaskId(),
+                                    'writer_id' => $assignment->getWriterId(),
+                                    'corrector_id' => $comment->getCorrectorId(),
+                                    'start_position' => $comment->getStartPosition(),
+                                    'end_position' => $comment->getEndPosition(),
+                                    'parent_number' => $comment->getParentNumber(),
+                                    'comment' => $comment->getComment(),
+                                    'rating' => $this->correction_settings->getEnableCommentRatings() ? $comment->getRating() : null,
+                                    'marks' => $comment->getMarks() ? json_decode($comment->getMarks(), true) : null,
+                                ]);
+                            }
                         }
 
-                        $points = $this->repos->correctorPoints()->allByTaskIdAndWriterIdAndCorrectorId(
-                            $assignment->getTaskId(),
-                            $assignment->getWriterId(),
-                            $assignment->getCorrectorId()
-                        );
-                        foreach ($points as $point) {
-                            $data['Points'][] = $this->entity->arrayToPrimitives([
-                                'key' => $point->getKey(),
-                                'comment_key' => $comment_keys[$point->getCommentId()] ?? '',
-                                'task_id' => $assignment->getTaskId(),
-                                'writer_id' => $assignment->getWriterId(),
-                                'corrector_id' => $point->getCorrectorId(),
-                                'criterion_id' => $point->getCriterionId(),
-                                'points' => $point->getPoints(),
-                            ]);
+                        if ($this->correction_settings->getEnableComments()) {
+                            $points = $this->repos->correctorPoints()->allByTaskIdAndWriterIdAndCorrectorId(
+                                $assignment->getTaskId(),
+                                $assignment->getWriterId(),
+                                $assignment->getCorrectorId()
+                            );
+                            foreach ($points as $point) {
+                                $data['Points'][] = $this->entity->arrayToPrimitives([
+                                    'key' => $point->getKey(),
+                                    'comment_key' => $comment_keys[$point->getCommentId()] ?? '',
+                                    'task_id' => $assignment->getTaskId(),
+                                    'writer_id' => $assignment->getWriterId(),
+                                    'corrector_id' => $point->getCorrectorId(),
+                                    'criterion_id' => $point->getCriterionId(),
+                                    'points' => $point->getPoints(),
+                                ]);
+                            }
                         }
                     }
                 }
@@ -390,9 +394,17 @@ class CorrectorBridge implements AppCorrectorBridge
     private function applyComment(ChangeRequest $change): ChangeResponse
     {
         $repo = $this->repos->correctorComment();
-
         $comment = $repo->new();
+
         $data = $change->getPayload();
+
+        if (!$this->correction_settings->getEnableComments()) {
+            return $change->toResponse(true, 'comments are ignored');
+        }
+
+        if (!$this->correction_settings->getEnableCommentRatings()) {
+            $data['rating'] = null;
+        }
 
         $this->entity->fromPrimitives([
             'key' => $change->getKey(),
@@ -444,6 +456,10 @@ class CorrectorBridge implements AppCorrectorBridge
 
         $points = $repo->new();
         $data = $change->getPayload();
+
+        if (!$this->correction_settings->getEnablePartialPoints()) {
+            return $change->toResponse(true, 'partial points are ignored');
+        }
 
         $this->entity->fromPrimitives([
             'key' => $change->getKey(),
@@ -653,11 +669,11 @@ class CorrectorBridge implements AppCorrectorBridge
     public function processUploadedFile(UploadedFileInterface $file, int $task_id, int $writer_id): ?string
     {
         if ($this->corrector != null) {
-            $ssignment = $this->assignment_service->oneByIds($writer_id, $task_id, $this->corrector->getId());
-            if (!$ssignment || !$this->process_service->canCorrect($ssignment)) {
+            $assignment = $this->assignment_service->oneByIds($writer_id,  $this->corrector->getId(), $task_id);
+            if (!$assignment || !$this->process_service->canCorrect($assignment)) {
                 return null;
             }
-            $summary = $this->summary_service->getForAssignment($ssignment);
+            $summary = $this->summary_service->getForAssignment($assignment);
             $info = $this->storage->saveFile($file->getStream(), null);
 
             if ($info) {
