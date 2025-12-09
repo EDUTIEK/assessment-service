@@ -249,11 +249,13 @@ class CorrectorBridge implements AppCorrectorBridge
                     ]);
 
                     $summary = $this->summary_service->getForAssignment($assignment);
+                    if ($summary->getCorrectorId() == $this->corrector?->getId() && !$summary->getId()) {
+                        $this->repos->correctorSummary()->save($summary);
+                    }
                     if ($summary->getCorrectorId() == $this->corrector?->getId() || $summary->isAuthorized()) {
                         $add_details = true;
                     } else {
                         $add_details = false;
-                        // this has only the ids set
                         $summary = $this->summary_service->newForAssignment($assignment);
                     }
 
