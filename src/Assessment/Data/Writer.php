@@ -31,7 +31,9 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
     abstract public function setWorkingStart(?DateTimeImmutable $working_start): self;
     abstract public function getFinalPoints(): ?float;
     abstract public function setFinalPoints(?float $final_points): self;
+    /** @depracated  */
     abstract public function getFinalGradeLevelId(): ?int;
+    /** @depracated  */
     abstract public function setFinalGradeLevelId(?int $final_grade_level_id): self;
     abstract public function getWritingAuthorized(): ?DateTimeImmutable;
     abstract public function setWritingAuthorized(?DateTimeImmutable $writing_authorized): self;
