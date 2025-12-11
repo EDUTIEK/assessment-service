@@ -33,7 +33,8 @@ readonly class OpenHelper
         $this->setFrontendParam('AssId', (string) $this->ass_id);
         $this->setFrontendParam('ContextId', (string) $this->context_id);
         $this->setFrontendParam('UserId', (string) $this->user_id);
-        $this->setFrontendParam('Token', $this->createDataToken()->getToken());
+        $this->setFrontendParam('DataToken', $this->createToken(TokenPurpose::DATA)->getToken());
+        $this->setFrontendParam('FileToken', $this->createToken(TokenPurpose::FILE)->getToken());
     }
 
     /**
@@ -74,9 +75,9 @@ readonly class OpenHelper
     /**
      * Generate a new data token and save it
      */
-    private function createDataToken(): Token
+    private function createToken(TokenPurpose $purpose): Token
     {
-        $token = $this->auth->newToken($this->user_id, TokenPurpose::DATA);
+        $token = $this->auth->newToken($this->user_id, $purpose);
         $this->auth->saveToken($token);
         return $token;
     }

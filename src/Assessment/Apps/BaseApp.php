@@ -64,9 +64,8 @@ abstract class BaseApp implements RestService
             }
             $data[$component] = $bridge->getData(false);
         }
-        // create new tokens - these will be replaced in the app
-        $response = $this->rest_helper->setNewDataToken($response);
-        $response = $this->rest_helper->setNewFileToken($response);
+
+        $this->rest_helper->extendDataToken($response);
         return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
     }
 
@@ -139,15 +138,16 @@ abstract class BaseApp implements RestService
 
             foreach ((array) $component_data as $type => $list) {
 
-                $changes = array_map(fn (array $data) => new ChangeRequest(
-                        (string) $data['type'] ?? '',
-                        (string) $data['key'] ?? '',
-                        (int) $data['last_change'] ?? 0,
-                        ChangeAction::tryFrom($data['action'] ?? ''),
-                        $data['payload'] ?? null
-                    ), $list);
+                $changes = array_map(fn(array $data) => new ChangeRequest(
+                    (string) $data['type'] ?? '',
+                    (string) $data['key'] ?? '',
+                    (int) $data['last_change'] ?? 0,
+                    ChangeAction::tryFrom($data['action'] ?? ''),
+                    $data['payload'] ?? null
+                ), $list);
 
-                $json[$component][$type] = array_map(fn(ChangeResponse $response) => $response->toArray(),
+                $json[$component][$type] = array_map(
+                    fn(ChangeResponse $response) => $response->toArray(),
                     $bridge->applyChanges($type, $changes)
                 );
             }
