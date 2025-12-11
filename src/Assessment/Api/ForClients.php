@@ -97,7 +97,7 @@ readonly class ForClients
 
     public function format(OrgaSettings $orga): FormatInterface
     {
-        return $this->internal->format($orga, $this->user_id);
+        return $this->internal->format($orga, $this->ass_id, $this->user_id);
     }
 
     public function workingTime(OrgaSettings $orga, Writer|IndividualWorkingTime|null $writer = null): FullWorkingTime

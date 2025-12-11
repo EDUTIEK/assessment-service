@@ -386,12 +386,12 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    public function format(OrgaSettings $orga, int $user_id): FormatInterface
+    public function format(OrgaSettings $orga, int $ass_id, int $user_id): FormatInterface
     {
         return new Format(
             $this->language($user_id),
             $this->dependencies->systemApi()->format($user_id),
-            $this->gradeLevel($user_id),
+            $this->assessmentGrading($ass_id),
             $orga
         );
     }

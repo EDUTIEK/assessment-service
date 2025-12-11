@@ -11,6 +11,12 @@ interface FullService extends ReadService
     public const UNCHANGED_CORRECTOR_ASSIGNMENT = -2;
 
     /**
+     * Get the current correction filter set by a corrector
+     * @return array [?array $grading_status, ?int $position]
+     */
+    public function getCorrectionFilter(int $corrector_id): array;
+
+    /**
      * Save a filter for showing assignments to a corrector
      * This is set on the start page of a corrector
      * This is used to filter the assigned items in the corrector app

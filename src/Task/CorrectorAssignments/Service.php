@@ -94,10 +94,8 @@ readonly class Service implements FullService
         $this->repos->correctorPrefs()->save($prefs);
     }
 
-    public function allByCorrectorIdFiltered(int $corrector_id): array
+    public function getCorrectionFilter(int $corrector_id): array
     {
-        $assignments = $this->repos->correctorAssignment()->allByCorrectorId($corrector_id);
-
         $prefs = $this->repos->correctorPrefs()->one($corrector_id) ??
             $this->repos->correctorPrefs()->new()->setCorrectorId($corrector_id);
 
@@ -106,6 +104,15 @@ readonly class Service implements FullService
         if ($prefs->getFilterGradingStatus() !== null) {
             $status = explode(',', $prefs->getFilterGradingStatus());
         }
+        return [$status, $pos];
+    }
+
+
+    public function allByCorrectorIdFiltered(int $corrector_id): array
+    {
+        $assignments = $this->repos->correctorAssignment()->allByCorrectorId($corrector_id);
+
+        [$status, $pos] = $this->getCorrectionFilter($corrector_id);
 
         $filtered = [];
         foreach ($assignments as $assignment) {
