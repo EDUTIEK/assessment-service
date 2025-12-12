@@ -118,4 +118,6 @@ interface ReadService
     public function canEditTemplates(): bool;
 
     public function canEditDocumentationSettings();
+
+    public function canViewDashboard(): bool;
 }
