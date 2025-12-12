@@ -1,6 +1,6 @@
 <?php
 
-namespace Edutiek\AssessmentService\Task\AssessmentStatus;
+namespace Edutiek\AssessmentService\Assessment\Data;
 
 enum CombinedStatus: int
 {
