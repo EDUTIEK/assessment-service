@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Data;
 
-abstract readonly class UserDisplay implements SystemEntity
+abstract class UserDisplay implements SystemEntity
 {
     /**
      * Unique ID with which the user is stored and can be found

@@ -260,4 +260,9 @@ class Service implements ReadService
         return $this->permissions->getMaintainSettings();
     }
 
+    public function canViewDashboard(): bool
+    {
+        return $this->permissions->getProctorWriting();
+    }
+
 }

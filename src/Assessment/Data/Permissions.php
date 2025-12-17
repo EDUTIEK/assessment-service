@@ -33,10 +33,12 @@ abstract readonly class Permissions implements AssessmentEntity
 
     /**
      * Writing of the assessment can be maintained
+     * - add writers
      * - list of writers
      * - individual time settings
-     * - remove authorizations
+     * - remove and add authorizations
      * - add log entries and send messages
+     * - remove writer data
      */
     abstract public function getMaintainWriting(): bool;
 
@@ -50,4 +52,13 @@ abstract readonly class Permissions implements AssessmentEntity
      * - export results and documentation
      */
     abstract public function getMaintainCorrection(): bool;
+
+    /**
+     * Writing of the assessment can be proctored
+     * - list of writers
+     * - individual time settings
+     * - remove authorizations
+     * - add log entries and send messages
+ */
+    abstract public function getProctorWriting(): bool;
 }

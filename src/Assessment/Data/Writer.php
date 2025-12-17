@@ -13,6 +13,9 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
 {
     /** @var ValidationError[] */
     private $validation_errors = [];
+    private ?WritingStatus $writing_status = null;
+    private ?CombinedStatus $combined_status = null;
+
     abstract public function getId(): int;
     abstract public function setId(int $id): self;
     abstract public function getUserId(): int;
@@ -58,16 +61,42 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
 
     public function getWritingStatus(): WritingStatus
     {
+        if ($this->writing_status !== null) {
+            return $this->writing_status;
+        }
+
+        $status = WritingStatus::NOT_STARTED;
         if ($this->getWritingExcluded() !== null) {
-            return WritingStatus::EXCLUDED;
+            $status =  WritingStatus::EXCLUDED;
+        } elseif ($this->getWritingAuthorized() !== null) {
+            $status =  WritingStatus::AUTHORIZED;
+        } elseif ($this->getWorkingStart() !== null) {
+            $status =  WritingStatus::STARTED;
         }
-        if ($this->getWritingAuthorized() !== null) {
-            return WritingStatus::AUTHORIZED;
+        return $this->writing_status ??= $status;
+    }
+
+    /**
+     * @return CombinedStatus
+     */
+    public function getCombinedStatus(): CombinedStatus
+    {
+        if ($this->combined_status !== null) {
+            return $this->combined_status;
         }
-        if ($this->getWorkingStart() !== null) {
-            return WritingStatus::STARTED;
+
+        $writing_status = $this->getWritingStatus();
+        if ($writing_status !== WritingStatus::AUTHORIZED) {
+            return $this->combined_status ??= CombinedStatus::from($writing_status->value);
         }
-        return WritingStatus::NOT_STARTED;
+
+        return $this->combined_status ??= match ($this->getCorrectionStatus()) {
+            CorrectionStatus::OPEN => CombinedStatus::OPEN,
+            CorrectionStatus::APPROXIMATION => CombinedStatus::APPROXIMATION,
+            CorrectionStatus::CONSULTING => CombinedStatus::CONSULTING,
+            CorrectionStatus::STITCH => CombinedStatus::STITCH_NEEDED,
+            CorrectionStatus::FINALIZED => CombinedStatus::FINALIZED,
+        };
     }
 
     public function isAuthorized(): bool

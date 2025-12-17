@@ -10,7 +10,7 @@ use DateTimeZone;
  * Data of a system user that is used by the assessment-service
  * This is only read. The service does not create users or change their data
  */
-abstract readonly class UserData implements SystemEntity
+abstract class UserData implements SystemEntity
 {
     /**
      * Unique ID with which the user is stored and can be found
