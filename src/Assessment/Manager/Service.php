@@ -55,6 +55,10 @@ readonly class Service implements FullService
      */
     public function delete(): void
     {
+        foreach ($this->tasks->all() as $task) {
+            $this->tasks->delete($task->getId());
+        }
+
         $this->repos->orgaSettings()->delete($this->ass_id);
         $this->repos->correctionSettings()->delete($this->ass_id);
         $this->repos->pdfSettings()->delete($this->ass_id);
@@ -66,10 +70,6 @@ readonly class Service implements FullService
         $this->repos->logEntry()->deleteByAssId($this->ass_id);
         $this->repos->token()->deleteByAssId($this->ass_id);
         $this->repos->writer()->deleteByAssId($this->ass_id);
-
-        foreach ($this->tasks->all() as $task) {
-            $this->tasks->delete($task->getId());
-        }
     }
 
     /**
