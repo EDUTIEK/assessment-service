@@ -38,12 +38,15 @@ readonly class Service implements FullService
         if ($settings->getCorrectionStart() !== null && $settings->getCorrectionEnd() !== null
             && $settings->getCorrectionStart() > $settings->getCorrectionEnd()) {
             $settings->addValidationError(ValidationError::CORRECTION_END_BEFORE_CORRECTION_START);
+            $valid = false;
         }
 
         if ($settings->getReviewStart() !== null && $settings->getReviewEnd() !== null
             && $settings->getReviewStart() > $settings->getReviewEnd()) {
             $settings->addValidationError(ValidationError::REVIEW_END_BEFORE_REVIEW_START);
+            $valid = false;
         }
+
         return $valid;
     }
 
