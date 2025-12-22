@@ -2,11 +2,14 @@
 
 declare(strict_types = 1);
 
-namespace Edutiek\AssessmentService\Assessment\WorkingTime;
+namespace Edutiek\AssessmentService\Assessment\Data;
 
 enum ValidationError: string
 {
     case LATEST_END_BEFORE_EARLIEST_START = 'latest_end_before_earliest_start';
     case TIME_LIMIT_TOO_LONG = 'time_limit_too_long';
     case TIME_EXCEEDS_SOLUTION_AVAILABILITY = 'time_exceeds_solution_availability';
+    case CORRECTION_END_BEFORE_CORRECTION_START = 'correction_end_before_correction_start';
+    case REVIEW_END_BEFORE_REVIEW_START = 'review_end_before_review_start';
+
 }

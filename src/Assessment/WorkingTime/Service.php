@@ -7,6 +7,8 @@ namespace Edutiek\AssessmentService\Assessment\WorkingTime;
 use DateTimeZone;
 use DateTimeImmutable;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
+use Edutiek\AssessmentService\Assessment\Data\ValidationError;
+use Edutiek\AssessmentService\Assessment\Data\ValidationErrorStore;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\System\Format\FullService as SystemFormat;

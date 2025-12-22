@@ -7,6 +7,7 @@ namespace Edutiek\AssessmentService\Assessment\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Data\ValidationError;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 
 readonly class Service implements FullService
@@ -27,8 +28,23 @@ readonly class Service implements FullService
     public function validate(OrgaSettings $settings) : bool
     {
         $this->checkScope($settings);
+
+        $valid = true;
         $working_time = $this->working_time_factory->workingTime($settings);
-        return $working_time->validate($settings);
+        if (!$working_time->validate($settings)) {
+            $valid = false;
+        }
+
+        if ($settings->getCorrectionStart() !== null && $settings->getCorrectionEnd() !== null
+            && $settings->getCorrectionStart() > $settings->getCorrectionEnd()) {
+            $settings->addValidationError(ValidationError::CORRECTION_END_BEFORE_CORRECTION_START);
+        }
+
+        if ($settings->getReviewStart() !== null && $settings->getReviewEnd() !== null
+            && $settings->getReviewStart() > $settings->getReviewEnd()) {
+            $settings->addValidationError(ValidationError::REVIEW_END_BEFORE_REVIEW_START);
+        }
+        return $valid;
     }
 
     public function save(OrgaSettings $settings): void

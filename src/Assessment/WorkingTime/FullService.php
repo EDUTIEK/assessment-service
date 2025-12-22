@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\WorkingTime;
 
 use DateTimeImmutable;
+use Edutiek\AssessmentService\Assessment\Data\ValidationErrorStore;
 use Edutiek\AssessmentService\System\Format\FullService as SystemFormat;
 
 interface FullService

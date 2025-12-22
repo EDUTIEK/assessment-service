@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Data;
 
 use DateTimeImmutable;
-use Edutiek\AssessmentService\Assessment\WorkingTime\ValidationErrorStore;
-use Edutiek\AssessmentService\Assessment\WorkingTime\ValidationError;
+use Edutiek\AssessmentService\Assessment\Data\ValidationErrorStore;
+use Edutiek\AssessmentService\Assessment\Data\ValidationError;
 use Edutiek\AssessmentService\Assessment\WorkingTime\IndividualWorkingTime;
 
 abstract class Writer implements AssessmentEntity, ValidationErrorStore, IndividualWorkingTime

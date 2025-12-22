@@ -1,6 +1,6 @@
 <?php
 
-namespace Edutiek\AssessmentService\Assessment\WorkingTime;
+namespace Edutiek\AssessmentService\Assessment\Data;
 
 interface ValidationErrorStore
 {
