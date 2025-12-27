@@ -41,9 +41,9 @@ readonly class ForClients
         return $this->internal->backgroundTask($this->ass_id, $class);
     }
 
-    public function import(Import $import): FullImportService
+    public function import(int $task_id): FullImportService
     {
-        return $this->internal->import($this->ass_id, $this->user_id, $import);
+        return $this->internal->import($this->ass_id, $task_id, $this->user_id);
     }
 
     public function pdfOutput(): FullPdfOutput

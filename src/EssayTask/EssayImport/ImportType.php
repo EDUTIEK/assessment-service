@@ -22,32 +22,31 @@ namespace Edutiek\AssessmentService\EssayTask\EssayImport;
 
 use ILIAS\UI\Component\Symbol\Icon\Icon;
 
-interface Type
+interface ImportType
 {
     /**
-     * @param string[] $files
-     * @param array<string, string> $hashes Hash values for $files: isset($hashes[$files[0]]) === true
-     *
-     * @return Row[]
+     * Detect the type by the filenames given in the ZIP content
+     * @param string $filenames
      */
-    public function rows(array $files, array $hashes): array;
+    public function detectByFilenames(array $filenames): bool;
 
     /**
-     * @param string[] $files
-     * @return array<string, string>
+     * Assign the imported files to login names
+     * Do import type specific checks
+     * @param ImportFile[] $files
      */
-    public function validFilesByLogin(array $files): array;
+    public function assignFiles(array $files): ImportResult;
 
     /**
+     * Get the table columns for listing the import files
      * @return array<string, Column>
      */
     public function columns(): array;
 
     /**
-     * Returns a subset of $files, which should be all files that may be relevant for this import type.
-     *
-     * @param string[] $files
-     * @return string[]
+     * Get the table rows for listing the import files
+     * @param ImportFile[] $files
+     * @return Row[]
      */
-    public function relevantFiles(array $files): array;
+    public function rows(array $files): array;
 }

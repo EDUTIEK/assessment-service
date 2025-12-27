@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\EssayTask\Api;
 
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
-use Edutiek\AssessmentService\EssayTask\AppBridges\WriterBridge as WriterBridgeService;
 use Edutiek\AssessmentService\EssayTask\AppBridges\CorrectorBridge as CorrectorBridgeService;
+use Edutiek\AssessmentService\EssayTask\AppBridges\WriterBridge as WriterBridgeService;
 use Edutiek\AssessmentService\EssayTask\AssessmentStatus\Service as StatusService;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\Service as BackgroundTaskService;
@@ -15,9 +15,8 @@ use Edutiek\AssessmentService\EssayTask\ConstraintHandling\Provider as Constrain
 use Edutiek\AssessmentService\EssayTask\Essay\Service as EssayService;
 use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImageFullService;
 use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImageService;
-use Edutiek\AssessmentService\EssayTask\EssayImport\Bavaria;
-use Edutiek\AssessmentService\EssayTask\EssayImport\Import;
-use Edutiek\AssessmentService\EssayTask\EssayImport\Nrw;
+use Edutiek\AssessmentService\EssayTask\EssayImport\ImportTypeBavaria;
+use Edutiek\AssessmentService\EssayTask\EssayImport\ImportTypeNrw;
 use Edutiek\AssessmentService\EssayTask\EssayImport\Service as ImportService;
 use Edutiek\AssessmentService\EssayTask\EventHandling\Observer as EventObserver;
 use Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service as HtmlService;
@@ -27,7 +26,6 @@ use Edutiek\AssessmentService\EssayTask\PdfCreation\WritingProvider;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
 use Edutiek\AssessmentService\System\BackgroundTask\Job;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class Internal
 {
@@ -167,24 +165,30 @@ class Internal
         );
     }
 
-    public function import(int $ass_id, int $user_id, Import $import): ImportService
+    public function import(int $ass_id, int $task_id, int $user_id): ImportService
     {
-        return $this->instances[ImportService::class] ??= new ImportService(
+        return $this->instances[ImportService::class][$ass_id][$task_id][$user_id] ??= new ImportService(
+            $task_id,
             $this->dependencies->systemApi()->fileStorage(),
-            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
-            $this->dependencies->taskApi($ass_id, $user_id)->tasks(),
-            $this->essay($ass_id, $user_id, true),
-            $this->dependencies->systemApi()->user(),
-            $this->language($user_id),
+            $this->dependencies->systemApi()->tempStorage(),
+            $this->dependencies->systemApi()->session(__class__),
             $this->dependencies->systemApi()->config(),
-            $user_id,
-            $import,
+            $this->dependencies->systemApi()->log(),
+            $this->dependencies->systemApi()->user(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
+            $this->essay($ass_id, $user_id, true),
+            $this->language($user_id),
             [
-                'by' => fn($p) => new Bavaria($p, $import, $this->loadExcelDataFromFile(...)),
-                'nrw' => fn($p) => new Nrw($p, $import),
+                // add bavaria first for detection order
+                ImportTypeBavaria::class => new ImportTypeBavaria(
+                    $this->dependencies->systemApi()->spreadsheet(true),
+                    $this->language($user_id)
+                ),
+                ImportTypeNrw::class => new ImportTypeNrw(
+                    $this->language($user_id)
+                )
             ]
         );
-
     }
 
     public function language(int $user_id): LanguageService
@@ -201,11 +205,6 @@ class Internal
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->taskApi($ass_id, $user_id)->tasks()
         );
-    }
-
-    private function loadExcelDataFromFile(string $filename): array
-    {
-        return IOFactory::load($filename)->getActiveSheet()->toArray();
     }
 
     public function pdfOutput(int $ass_id, int $user_id): PdfOutput

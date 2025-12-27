@@ -21,25 +21,22 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\System\Api;
 
 use DateTimeZone;
+use Dompdf\Dompdf;
 use Edutiek\AssessmentService\System\BackgroundTask\ClientManager as BackgroundTaskManager;
 use Edutiek\AssessmentService\System\BackgroundTask\Service as BackgroundTaskService;
 use Edutiek\AssessmentService\System\Config\Service as ConfigService;
-use Edutiek\AssessmentService\System\ConstraintHandling\Collector;
-use Edutiek\AssessmentService\System\ConstraintHandling\CommonCollector;
-use Edutiek\AssessmentService\System\ConstraintHandling\ProviderFactory;
 use Edutiek\AssessmentService\System\Entity\Service as EntityService;
 use Edutiek\AssessmentService\System\Format\Service as FormatService;
 use Edutiek\AssessmentService\System\Language\Service as LanguageService;
 use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverterFullService;
 use Edutiek\AssessmentService\System\PdfConverter\ServiceByGhostscript;
 use Edutiek\AssessmentService\System\PdfConverter\ServiceByImageMagick;
-use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreatorFullService;
 use Edutiek\AssessmentService\System\PdfCreator\Service as PdfCreatorService;
-use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingService;
 use Edutiek\AssessmentService\System\PdfProcessing\Service as PdfProcessing;
+use Edutiek\AssessmentService\System\Session\Service as SessionService;
+use Edutiek\AssessmentService\System\Spreadsheet\Service as SpreadsheetService;
 use Edutiek\AssessmentService\System\Transform\Service as TransformService;
 use Edutiek\AssessmentService\System\User\Service as UserService;
-use Dompdf\Dompdf;
 
 class Internal
 {
@@ -69,7 +66,8 @@ class Internal
         return $this->instances[FormatService::class][$user_id][$timezone->getName()] ??= new FormatService(
             $this->dependencies->formatDate(...),
             $timezone,
-            $this->language($user_id,  __DIR__ . '/../Languages/'));
+            $this->language($user_id, __DIR__ . '/../Languages/')
+        );
     }
 
     public function language(int $user_id, string $dir): LanguageService
@@ -98,7 +96,7 @@ class Internal
     public function pdfConverter(): PdfConverterFullService
     {
         return $this->instances[PdfConverterFullService::class] ??= (
-        $this->config()->getPathToGhostscript() === null ?
+            $this->config()->getPathToGhostscript() === null ?
             new ServiceByImageMagick() :
             new ServiceByGhostscript(
                 $this->config()->getPathToGhostscript(),
@@ -143,6 +141,21 @@ class Internal
         return $this->instances[UserService::class] ??= new UserService(
             $this->dependencies->userDataRepo(),
             $this->dependencies->userDisplayRepo()
+        );
+    }
+
+    public function session(string $section): SessionService
+    {
+        return $this->instances[SessionService::class][$section] ??= new SessionService(
+            $this->dependencies->sessionStorage(),
+            $section
+        );
+    }
+
+    public function spreadsheet(bool $temporary): SpreadsheetService
+    {
+        return $this->instances[SessionService::class][(string) $temporary] ??= new SpreadsheetService(
+            $temporary ? $this->dependencies->tempStorage() : $this->dependencies->fileStorage()
         );
     }
 }

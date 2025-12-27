@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Api;
 
-use Dompdf\Dompdf;
 use Edutiek\AssessmentService\System\BackgroundTask\ClientManager as BackgroundTaskManager;
 use Edutiek\AssessmentService\System\BackgroundTask\Service as BackgroundTaskService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigReadService;
@@ -18,9 +17,12 @@ use Edutiek\AssessmentService\System\HtmlProcessing\Service as HtmlProcessingSer
 use Edutiek\AssessmentService\System\ImageSketch\FullService as ImageSketchFullService;
 use Edutiek\AssessmentService\System\ImageSketch\ImageMagick\Sketch;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageFullService;
+use Edutiek\AssessmentService\System\Log\FullService as LogService;
 use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverterFullService;
 use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreatorFullService;
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingService;
+use Edutiek\AssessmentService\System\Session\Storage as SessionStorage;
+use Edutiek\AssessmentService\System\Spreadsheet\FullService as SpreadsheetService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 
 class ForServices
@@ -51,6 +53,16 @@ class ForServices
     public function fileDelivery(): Delivery
     {
         return $this->dependencies->fileDelivery();
+    }
+
+    public function tempStorage(): Storage
+    {
+        return $this->dependencies->tempStorage();
+    }
+
+    public function tempDelivery(): Delivery
+    {
+        return $this->dependencies->tempDelivery();
     }
 
     public function format(int $user_id, ?string $timezone = null): FormatFullService
@@ -89,6 +101,11 @@ class ForServices
         return $this->internal->language($user_id, $dir);
     }
 
+    public function log(): LogService
+    {
+        return $this->dependencies->log();
+    }
+
     public function pdfConverter(): PdfConverterFullService
     {
         return $this->internal->pdfConverter();
@@ -107,5 +124,15 @@ class ForServices
     public function pdfProcessing(): PdfProcessingService
     {
         return $this->internal->pdfProcessing();
+    }
+
+    public function session(string $section): SessionStorage
+    {
+        return $this->internal->session($section);
+    }
+
+    public function spreadsheet(bool $temporary): SpreadsheetService
+    {
+        return $this->internal->spreadsheet($temporary);
     }
 }

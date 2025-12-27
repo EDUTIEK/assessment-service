@@ -22,6 +22,9 @@ namespace Edutiek\AssessmentService\EssayTask\EssayImport;
 
 final readonly class Column
 {
+    public const BOOLEAN = 'boolean';
+    public const TEXT = 'text';
+
     public function __construct(
         private string $type,
         private string $title

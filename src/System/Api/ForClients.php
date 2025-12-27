@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
 use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Format\FullService as FormatFullService;
+use Edutiek\AssessmentService\System\Spreadsheet\FullService as SpreadsheetService;
 use Edutiek\AssessmentService\System\Transform\FullService as TransformFullService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 
@@ -41,6 +42,16 @@ readonly class ForClients
         return $this->dependencies->fileDelivery();
     }
 
+    public function tempStorage(): Storage
+    {
+        return $this->dependencies->tempStorage();
+    }
+
+    public function tempDelivery(): Delivery
+    {
+        return $this->dependencies->tempDelivery();
+    }
+
     public function format(int $user_id, ?DateTimeZone $timezone = null): FormatFullService
     {
         return $this->internal->format($user_id, $timezone);
@@ -54,5 +65,10 @@ readonly class ForClients
     public function user(): UserReadService
     {
         return $this->internal->user();
+    }
+
+    public function spreadsheet(bool $temporary): SpreadsheetService
+    {
+        return $this->internal->spreadsheet($temporary);
     }
 }

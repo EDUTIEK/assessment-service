@@ -9,8 +9,6 @@ final readonly class Row
     public function __construct(
         private string $id,
         private array $fields,
-        private array $overwrites,
-        private bool $importPossible
     ) {
     }
 
@@ -23,15 +21,4 @@ final readonly class Row
     {
         return $this->fields;
     }
-
-    public function getOverwrites(): array
-    {
-        return $this->overwrites;
-    }
-
-    public function getImportPossible(): bool
-    {
-        return $this->importPossible;
-    }
-
 }

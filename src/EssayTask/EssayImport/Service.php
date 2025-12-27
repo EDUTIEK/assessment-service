@@ -4,145 +4,215 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\EssayImport;
 
-use Edutiek\AssessmentService\System\File\ReadOnlyStorage;
-use Edutiek\AssessmentService\Task\Manager\ReadService as TaskReadService;
-use Edutiek\AssessmentService\EssayTask\Essay\ClientService as EssayService;
-use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
-use Edutiek\AssessmentService\System\User\ReadService as UserService;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo as Task;
+use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
-use DateTimeImmutable;
-use Edutiek\AssessmentService\System\Language\FullService as Language;
+use Edutiek\AssessmentService\EssayTask\Essay\ClientService as EssayService;
 use Edutiek\AssessmentService\System\Config\ReadService as SystemConfig;
+use Edutiek\AssessmentService\System\File\Storage;
+use Edutiek\AssessmentService\System\Language\FullService as Language;
+use Edutiek\AssessmentService\System\Log\FullService as SystemLog;
+use Edutiek\AssessmentService\System\Session\Storage as SessionStorage;
+use Edutiek\AssessmentService\System\User\ReadService as UserService;
+use ZipArchive;
 
-class Service implements Info, FullService
+class Service implements FullService
 {
     private array $cache = [];
 
     /**
-     * @param array<string, Type> $available_types
+     * @param ImportType[] $types indexed by class name
      */
     public function __construct(
-        private readonly ReadOnlyStorage $storage,
-        private readonly WriterService $writer_service,
-        private readonly TaskReadService $task_service,
-        private readonly EssayService $essay_service,
-        private readonly UserService $user_service,
-        private readonly Language $lng,
+        private readonly int $task_id,
+        private readonly Storage $perm_store,
+        private readonly Storage $temp_store,
+        private readonly SessionStorage $session,
         private readonly SystemConfig $sys_config,
-        private readonly int $user_id,
-        private readonly Import $import,
-        private readonly array $available_types,
-    ){}
-
-    public function type(string $type): Type
-    {
-        return $this->available_types[$type]($this);
-    }
-
-    public function import(Type $type, array $file_map, bool $overwrite_existing = false): int
-    {
-        $pdfs = $type->validFilesByLogin(array_keys($file_map));
-        $users = $this->loginsByUserId(array_keys($pdfs));
-        $now = new DateTimeImmutable();
-        $imported = 0;
-
-        foreach ($users as $user_id => $login) {
-            $zip_pdf = $file_map[$pdfs[$login] ?? null] ?? null;
-            if (!$zip_pdf) {
-                continue;
-            }
-
-            $writer = $this->writer_service->getByUserId($user_id);
-            $task = $this->task();
-            $essay = $this->essayByWriter($writer->getId()) ??
-                $this->essay_service->new($writer->getId(), $task->getId())->setFirstChange($now);
-            $essay = $essay->setLastChange($now);
-            $pdf = $essay->getPdfVersion();
-            $file_exists = false;
-            if ($pdf) {
-                $file_exists = $this->storage->getFileStream($pdf);
-                $file_exists && fclose($file_exists);
-                $file_exists = (bool) $file_exists;
-            }
-            if ($file_exists && !$overwrite_existing) {
-                continue;
-            }
-            $zip_pdf = $this->import->permanentId($zip_pdf);
-            $essay->setPdfVersion($zip_pdf);
-            $this->essay_service->replacePdf($essay, $zip_pdf);
-            $this->writer_service->authorizeWriting($writer, $this->user_id, true);
-            $imported++;
-        }
-
-        return $imported;
-    }
-
-    public function isRelevantFile(string $name): bool
-    {
-        return [] !== array_filter($this->available_types, fn($create) => [] !== $create($this)->relevantFiles([$name]));
-    }
-
-    public function typeByFiles(array $files): ?string
-    {
-        foreach ($this->available_types as $key => $create) {
-            if ([] !== $create($this)->relevantFiles($files)) {
-                return $key;
-            }
-        }
-
-        return null;
-    }
-
-    public function problems(string $login, array $pdfs, array $hashes): array
-    {
-        $ret = ['errors' => [], 'overwrites' => []];
-        if (!isset($pdfs[$login])) {
-            $ret['errors'][] = $this->txt('import_file_missing');
-        }
-
-        $user_id = $this->user_service->getUserIdByLogin($login);
-        if (!$user_id) {
-            $ret['errors'][] = $this->txt('import_user_not_existing');
-            return $ret;
-        }
-
-        $writer = $this->writerByUser($user_id);
-        if (!$writer) {
-            return $ret;
-        }
-        $task = $this->task();
-        $essay = $this->essayByWriter($writer->getId());
-        if (!$essay) {
-            return $ret;
-        }
-        $pdf = $essay->getPdfVersion();
-        if (!$pdf) {
-            return $ret;
-        }
-        $stream = $this->storage->getFileStream($pdf);
-        if (!$stream) {
-            return $ret;
-        }
-
-        $same = $hashes[$pdfs[$login]] === $this->hash(stream_get_contents($stream));
-        fclose($stream);
-        $ret['overwrites'][] = $same ?
-            $this->txt('import_same_file_exists') :
-            $this->txt('import_another_file_exists');
-
-        return $ret;
-    }
-
-    public function extract(string $pattern, string $subject, int $index): ?string
-    {
-        return preg_match($pattern, $subject, $matches) ?
-            $matches[$index] :
-            null;
+        private readonly SystemLog $sys_log,
+        private readonly UserService $user_service,
+        private readonly WriterService $writer_service,
+        private readonly EssayService $essay_service,
+        private readonly Language $lng,
+        private readonly array $types,
+    ) {
     }
 
     /**
+     * Process an uploaded zip file
+     */
+    public function processZipFile(string $temp_file_id, ?string $password, ?string $required_hash): ImportResult
+    {
+        $this->session->set('type', null);
+        $this->session->set('files', null);
+
+        $result = new ImportResult();
+        $zip = new ZipArchive();
+
+        $stream = $this->temp_store->getFileStream($temp_file_id);
+        if (!$stream) {
+            return $result->add(false, $this->lng->txt('import_file_missing'));
+        }
+
+        $content = stream_get_contents($stream);
+        $path = stream_get_meta_data($stream)['uri'];
+
+        if ($required_hash && $required_hash !== $this->hash($content)) {
+            return $result->add(false, $this->lng->txt('import_hash_mismatch'));
+        }
+
+        $code = $zip->open($path, ZipArchive::RDONLY);
+        switch ($code) {
+            case true:
+                break;
+            case ZipArchive::ER_NOZIP:
+                return $result->add(false, $this->lng->txt('import_not_a_zip'));
+            case ZipArchive::ER_INCONS:
+                return $result->add(false, $this->lng->txt('import_zip_inconsistent'));
+            default:
+                $this->sys_log->error('Opening the ZIP file failed with code ' . $code);
+                return $result->add(false, $this->lng->txt('import_unknown_error'));
+        }
+
+        if ($password !== null) {
+            $zip->setPassword($password);
+        }
+
+        if ($zip->numFiles == 0) {
+            return $result->add(false, $this->lng->txt('import_zip_empty'));
+        }
+
+        $filenames = [];
+        for ($i = 0; $i < $zip->numFiles - 1; $i++) {
+            $stat = $zip->statIndex($i);
+            if (($stat['encryption_method'] ?? false) && $password === null) {
+                return $result->add(false, $this->lng->txt('import_no_passwort_given'));
+            }
+            $filenames[] = $stat['name'];
+        }
+
+        $import_type = null;
+        foreach ($this->types as $type) {
+            if ($type->detectByFilenames($filenames)) {
+                $import_type = $type;
+            }
+        }
+
+        if ($import_type === null) {
+            return $result->add(false, $this->lng->txt('import_invalid_zip_format'));
+        }
+
+        $files = [];
+        foreach ($filenames as $name) {
+            $stream = $zip->getStream($name);
+            $content = stream_get_contents($stream);
+            $info = $this->temp_store->saveFile($stream, null);
+            fclose($stream);
+
+            $files[] = (new ImportFile())
+                ->setTempId($info->getId())
+                ->setFileName(($name))
+                ->setMimeType($info->getMimeType())
+                ->setHash($this->hash($content));
+        }
+
+        $result = $import_type->assignFiles($files);
+        if ($result->isOk()) {
+            $this->checkFiles($files);
+            $this->session->set('type', $import_type::class);
+            $this->session->set('files', $files);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Check the relevant files
+     * - assign the user id
+     * - check of a pdf file already exists for the essay
+     * @param ImportFile[] $files
+     */
+    private function checkFiles(array $files): void
+    {
+        foreach ($files as $file) {
+            if (!$file->isRelevant()) {
+                break;
+            }
+
+            $user_id = $this->user_service->getUserIdByLogin($file->getLogin());
+            if ($user_id) {
+                $file->setUserId($user_id);
+            } else {
+                $file->addError($this->lng->txt('import_user_not_existing'));
+                break;
+            }
+
+            $pdf = $this->essayByWriter($this->writerByUser($user_id)?->getId())?->getPdfVersion();
+            if ($pdf) {
+                $stream = $this->perm_store->getFileStream($pdf);
+                $same = $this->hash(stream_get_contents($stream)) === $file->getHash();
+                $file->setExisting(true)
+                    ->addComment($same ?
+                        $this->lng->txt('import_same_file_exists') :
+                        $this->lng->txt('import_another_file_exists'));
+            }
+        }
+    }
+
+    public function relevantFiles(): array
+    {
+        $files = $this->session->get('files') ?? [];
+        return array_filter($files, fn($file) => $file->isRelevant());
+    }
+
+    public function tableColumns(): array
+    {
+        $type = $this->types[$this->session->get('type') ?? ''] ?? null;
+        return $type?->columns() ?? [];
+    }
+
+    public function tableRows(): array
+    {
+        $type = $this->types[$this->session->get('type') ?? ''] ?? null;
+        $files = $this->session->get('files') ?? [];
+        return $type?->rows($files) ?? [];
+    }
+
+    public function importFiles($overwrite_existing = false): int
+    {
+        /** @var ImportFile[] $files */
+        $files = $this->session->get('files') ?? [];
+
+        $imported = 0;
+        foreach ($files as $file) {
+            if ($file->isImportPossible()) {
+                $writer = $this->writer_service->getByUserId($file->getUserId());
+                $essay = $this->essay_service->getByWriterIdAndTaskId($writer->getId(), $this->task_id);
+                if ($essay->getPdfVersion() === null || $overwrite_existing) {
+                    $info = $this->perm_store->saveFile($this->temp_store->getFileStream($file->getTempId()));
+                    $this->essay_service->replacePdf($essay, $info->getId());
+                    $imported++;
+                }
+            }
+        }
+
+        $this->cleanup();
+        return $imported;
+    }
+
+
+    public function cleanup(): void
+    {
+        $files = $this->session->get('files') ?? [];
+        foreach ($files as $file) {
+            $this->temp_store->deleteFile($file->getTempId());
+        }
+        $this->session->set('type', null);
+        $this->session->set('files', null);
+    }
+
+    /**
+     * Index an array with keys generated from a callable procedure on the array elements
      * @template A
      * @template B
      *
@@ -150,7 +220,7 @@ class Service implements Info, FullService
      * @param A[] $array
      * @return array<B, A>
      */
-    public function keysBy(callable $proc, array $array): array
+    private function keysBy(callable $proc, array $array): array
     {
         return array_column(array_map(
             fn($x) => ['value' => $x, 'key' => $proc($x)],
@@ -158,16 +228,10 @@ class Service implements Info, FullService
         ), 'value', 'key');
     }
 
-    public function txt(string $lang_var): string
-    {
-        return $this->lng->txt($lang_var);
-    }
-
     private function hash(string $value): string
     {
         return hash($this->sys_config->getConfig()->getHashAlgo(), $value);
     }
-
 
     private function writerByUser(int $user_id): ?Writer
     {
@@ -179,16 +243,11 @@ class Service implements Info, FullService
         return $this->cache['writers'][$user_id] ?? null;
     }
 
-    private function task(): Task
-    {
-        return $this->cache['task'] ??= $this->task_service->first();
-    }
-
     private function essayByWriter(int $writer_id): ?Essay
     {
         $this->cache['essays'] ??= $this->keysBy(
             fn(Essay $essay) => $essay->getWriterId(),
-            $this->essay_service->allByTaskId($this->task()->getId())
+            $this->essay_service->allByTaskId($this->task_id)
         );
 
         return $this->cache['essays'][$writer_id] ?? null;
@@ -201,7 +260,6 @@ class Service implements Info, FullService
     {
         $users = $this->keysBy($this->user_service->getUserIdByLogin(...), $logins);
         unset($users[0]); // Remove not found users.
-
         return $users;
     }
 }
