@@ -14,6 +14,7 @@ class ImportFile
     private string $temp_id = '';
 
     // assignment and check results
+    private string $id = '';
     private string $login = '';
     private bool $hash_ok = false;
     private bool $relevant = false;
@@ -25,100 +26,111 @@ class ImportFile
     private array $comments = [];
 
 
-    public function getFileName() : string
+    public function getFileName(): string
     {
         return $this->file_name;
     }
 
-    public function setFileName(string $file_name) : ImportFile
+    public function setFileName(string $file_name): ImportFile
     {
         $this->file_name = $file_name;
         return $this;
     }
 
-    public function getMimeType() : string
+    public function getMimeType(): string
     {
         return $this->mime_type;
     }
 
-    public function setMimeType(string $mime_type) : ImportFile
+    public function setMimeType(string $mime_type): ImportFile
     {
         $this->mime_type = $mime_type;
         return $this;
     }
 
-    public function getHash() : string
+    public function getHash(): string
     {
         return $this->hash;
     }
 
-    public function setHash(string $hash) : ImportFile
+    public function setHash(string $hash): ImportFile
     {
         $this->hash = $hash;
         return $this;
     }
 
-    public function getTempId() : string
+    public function getTempId(): string
     {
         return $this->temp_id;
     }
 
-    public function setTempId(string $temp_id) : ImportFile
+    public function setTempId(string $temp_id): ImportFile
     {
         $this->temp_id = $temp_id;
         return $this;
     }
 
-    public function getLogin() : string
+    public function getId(): string
+    {
+        return $this->id;
+    }
+
+    public function setId(string $id): ImportFile
+    {
+        $this->id = $id;
+        return $this;
+    }
+
+    public function getLogin(): string
     {
         return $this->login;
     }
 
-    public function setLogin(string $login) : ImportFile
+    public function setLogin(string $login): ImportFile
     {
         $this->login = $login;
         return $this;
     }
 
-    public function isHashOk() : bool
+    public function isHashOk(): bool
     {
         return $this->hash_ok;
     }
 
-    public function setHashOk(bool $hash_ok) : ImportFile
+    public function setHashOk(bool $hash_ok): ImportFile
     {
         $this->hash_ok = $hash_ok;
         return $this;
     }
 
-    public function isRelevant() : bool
+    public function isRelevant(): bool
     {
         return $this->relevant;
     }
 
-    public function setRelevant(bool $relevant) : ImportFile
+    public function setRelevant(bool $relevant): ImportFile
     {
         $this->relevant = $relevant;
         return $this;
     }
 
-    public function isExisting() : bool
+    public function isExisting(): bool
     {
         return $this->existing;
     }
 
-    public function setExisting(bool $existing) : ImportFile
+    public function setExisting(bool $existing): ImportFile
     {
         $this->existing = $existing;
         return $this;
     }
 
-    public function getUserId() : ?int
+    public function getUserId(): ?int
     {
         return $this->user_id;
     }
 
-    public function setUserId(?int $user_id) : ImportFile
+    public function setUserId(?int $user_id): ImportFile
     {
         $this->user_id = $user_id;
         return $this;
@@ -127,12 +139,12 @@ class ImportFile
     /**
      * @return string[]
      */
-    public function getErrors() : array
+    public function getErrors(): array
     {
         return $this->errors;
     }
 
-    public function addError(string $error) : ImportFile
+    public function addError(string $error): ImportFile
     {
         $this->errors[] = $error;
         return $this;
@@ -141,18 +153,18 @@ class ImportFile
     /**
      * @return string[]
      */
-    public function getComments() : array
+    public function getComments(): array
     {
         return $this->comments;
     }
 
-    public function addComment(string $comment) : ImportFile
+    public function addComment(string $comment): ImportFile
     {
         $this->comments[] = $comment;
         return $this;
     }
 
-    public function isImportPossible() : bool
+    public function isImportPossible(): bool
     {
         return $this->isRelevant() && empty($this->errors);
     }

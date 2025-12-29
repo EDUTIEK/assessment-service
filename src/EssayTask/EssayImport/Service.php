@@ -20,6 +20,11 @@ class Service implements FullService
 {
     private array $cache = [];
 
+    private ?ImportType $type = null;
+
+    /** @var ImportFile[] $files */
+    private array $files = [];
+
     /**
      * @param ImportType[] $types indexed by class name
      */
@@ -36,6 +41,15 @@ class Service implements FullService
         private readonly Language $lng,
         private readonly array $types,
     ) {
+        if (!empty($this->session->get('type'))) {
+            $this->type = $this->types[$this->session->get('type')] ?? null;
+        }
+
+        if (!empty($this->session->get('files'))) {
+            // fore autoloading before unserilizing of session values
+            $dummy = new ImportFile();
+            $this->files = unserialize($this->session->get('files')) ?? [];
+        }
     }
 
     /**
@@ -106,8 +120,7 @@ class Service implements FullService
         foreach ($filenames as $name) {
             $stream = $zip->getStream($name);
             $content = stream_get_contents($stream);
-            $info = $this->temp_store->saveFile($stream, null);
-            fclose($stream);
+            $info = $this->temp_store->saveFile($content, null);
 
             $files[] = (new ImportFile())
                 ->setTempId($info->getId())
@@ -119,8 +132,9 @@ class Service implements FullService
         $result = $import_type->assignFiles($files);
         if ($result->isOk()) {
             $this->checkFiles($files);
+
             $this->session->set('type', $import_type::class);
-            $this->session->set('files', $files);
+            $this->session->set('files', serialize($files));
         }
 
         return $result;
@@ -136,18 +150,19 @@ class Service implements FullService
     {
         foreach ($files as $file) {
             if (!$file->isRelevant()) {
-                break;
+                continue;
             }
 
             $user_id = $this->user_service->getUserIdByLogin($file->getLogin());
             if ($user_id) {
                 $file->setUserId($user_id);
             } else {
+                $file->setLogin('');
                 $file->addError($this->lng->txt('import_user_not_existing'));
-                break;
+                continue;
             }
 
-            $pdf = $this->essayByWriter($this->writerByUser($user_id)?->getId())?->getPdfVersion();
+            $pdf = $this->essayByWriter($this->writerByUser($user_id)?->getId() ?? 0)?->getPdfVersion();
             if ($pdf) {
                 $stream = $this->perm_store->getFileStream($pdf);
                 $same = $this->hash(stream_get_contents($stream)) === $file->getHash();
@@ -161,30 +176,23 @@ class Service implements FullService
 
     public function relevantFiles(): array
     {
-        $files = $this->session->get('files') ?? [];
-        return array_filter($files, fn($file) => $file->isRelevant());
+        return array_filter($this->files, fn($file) => $file->isRelevant());
     }
 
     public function tableColumns(): array
     {
-        $type = $this->types[$this->session->get('type') ?? ''] ?? null;
-        return $type?->columns() ?? [];
+        return $this->type?->columns() ?? [];
     }
 
     public function tableRows(): array
     {
-        $type = $this->types[$this->session->get('type') ?? ''] ?? null;
-        $files = $this->session->get('files') ?? [];
-        return $type?->rows($files) ?? [];
+        return $this->type?->rows($this->files) ?? [];
     }
 
     public function importFiles($overwrite_existing = false): int
     {
-        /** @var ImportFile[] $files */
-        $files = $this->session->get('files') ?? [];
-
         $imported = 0;
-        foreach ($files as $file) {
+        foreach ($this->files as $file) {
             if ($file->isImportPossible()) {
                 $writer = $this->writer_service->getByUserId($file->getUserId());
                 $essay = $this->essay_service->getByWriterIdAndTaskId($writer->getId(), $this->task_id);
@@ -200,11 +208,9 @@ class Service implements FullService
         return $imported;
     }
 
-
     public function cleanup(): void
     {
-        $files = $this->session->get('files') ?? [];
-        foreach ($files as $file) {
+        foreach ($this->files as $file) {
             $this->temp_store->deleteFile($file->getTempId());
         }
         $this->session->set('type', null);

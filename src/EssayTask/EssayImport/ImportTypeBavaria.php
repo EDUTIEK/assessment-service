@@ -25,8 +25,8 @@ use Edutiek\AssessmentService\System\Spreadsheet\FullService as Spreadsheet;
 
 readonly class ImportTypeBavaria implements ImportType
 {
-    private const FILE_PATTERN = '/^[[:alnum:]]+-\d+_([[:alpha:]]-\d+)_.*.pdf$/';
-    private const PROTOCOL_FILE_NAME = 'Abgabe-Protokoll.xlsx';
+    private const FILE_PATTERN = '/^(draft-)?([[:alnum:]]+-\d+_\d+)_.*.pdf$/';
+    private const PROTOCOL_FILE_NAME = 'Abgabe-Protokoll_München.xlsx';
 
     /**
      * column key => header langguage variable
@@ -62,7 +62,13 @@ readonly class ImportTypeBavaria implements ImportType
 
         $assigned_ids = [];
         foreach ($files as $file) {
-            $id = preg_match(self::FILE_PATTERN, $file->getFileName(), $matches) ? $matches[1] : null;
+            $login = preg_match(self::FILE_PATTERN, $file->getFileName(), $matches) ? $matches[2] : null;
+            if (empty($login)) {
+                continue;
+            }
+            $num = (int) substr($login, strpos($login, '_') + 1);
+            $id = "Z " . $num;
+
             $data = $protocol[$id] ?? null;
             if ($data) {
                 if (in_array($id, $assigned_ids)) {
@@ -71,7 +77,8 @@ readonly class ImportTypeBavaria implements ImportType
                 }
                 $assigned_ids[] = $id;
                 $file->setRelevant(true)
-                    ->setLogin($this->loginName($id))
+                    ->setId($id)
+                    ->setLogin($login)
                     ->setHashOk($file->getHash() === ($data['pdf_hash'] ?? ''));
 
                 if (!$file->isHashOk()) {
@@ -83,7 +90,7 @@ readonly class ImportTypeBavaria implements ImportType
         $missing_ids = array_diff(array_keys($protocol), $assigned_ids);
         if (!empty($missing_ids)) {
             return (new ImportResult())
-                ->add(false, sprintf(
+                ->add(true, sprintf(
                     $this->lng->txt('import_missing_files_for'),
                     implode(', ', $missing_ids)
                 ));
@@ -95,12 +102,12 @@ readonly class ImportTypeBavaria implements ImportType
     public function columns(): array
     {
         return [
-            'file' => new Column(Column::BOOLEAN, $this->lng->txt('essay_import_column_file')),
+            'file' => new Column(Column::TEXT, $this->lng->txt('essay_import_column_file')),
             'user' => new Column(Column::TEXT, $this->lng->txt('essay_import_column_user')),
             'id' => new Column(Column::TEXT, $this->lng->txt('essay_import_column_id')),
             'hash_ok' => new Column(Column::BOOLEAN, $this->lng->txt('essay_import_column_hash_ok')),
             'import_possible' => new Column(Column::BOOLEAN, $this->lng->txt('essay_import_column_import_possible')),
-            'comment' => new Column(Column::TEXT, $this->lng->txt('essay_import_column_comment')),
+            'comments' => new Column(Column::TEXT, $this->lng->txt('essay_import_column_comments')),
         ];
     }
 
@@ -108,14 +115,16 @@ readonly class ImportTypeBavaria implements ImportType
     {
         $rows = [];
         foreach ($files as $file) {
-            $rows[] = new Row($file->getTempId(), [
-                'file' => $file->getFileName(),
-                'user' => $file->getLogin(),
-                'id' => $file->getId(),
-                'hash_ok' => $file->isHashOk(),
-                'import_possible' => $file->getImportPossible(),
-                'comment' => implode(', ', $file->getComments())
-            ]);
+            if ($file->isRelevant()) {
+                $rows[] = new Row($file->getTempId(), [
+                    'file' => $file->getFileName(),
+                    'user' => $file->getLogin(),
+                    'id' => $file->getId(),
+                    'hash_ok' => $file->isHashOk(),
+                    'import_possible' => $file->isImportPossible(),
+                    'comments' => implode(', ', $file->getComments())
+                ]);
+            }
         };
         return $rows;
     }
@@ -151,10 +160,5 @@ readonly class ImportTypeBavaria implements ImportType
         }
 
         return $protocol;
-    }
-
-    private function loginName(string $string): string
-    {
-        return str_replace(' ', '-', $string);
     }
 }

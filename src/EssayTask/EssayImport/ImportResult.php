@@ -29,6 +29,11 @@ class ImportResult
         return $this->ok;
     }
 
+    public function hasMessages(): bool
+    {
+        return !empty($this->messages);
+    }
+
     public function getMessages(): array
     {
         return $this->messages;
