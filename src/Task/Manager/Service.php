@@ -12,6 +12,7 @@ use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Task\Api\ApiException;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\Settings;
+use Edutiek\AssessmentService\Task\CorrectionSettings\Service as CorrectionSettingsService;
 
 readonly class Service implements TaskManager, ReadService
 {
@@ -19,6 +20,7 @@ readonly class Service implements TaskManager, ReadService
         private int $ass_id,
         private int $user_id,
         private Repositories $repos,
+        private CorrectionSettingsService $correction_settings_service,
         private Storage $storage,
         private TypeApiFactory $types,
         private Language $language
@@ -83,14 +85,8 @@ readonly class Service implements TaskManager, ReadService
             ->manager($this->ass_id, $settings->getTaskId(), $this->user_id)
             ->create();
 
-        if ($this->repos->correctionSettings()->one($this->ass_id ?? 0) === null) {
-            $this->repos->correctionSettings()->save(
-                $this->repos->correctionSettings()->new()
-                            ->setAssId($this->ass_id)
-                            ->setPositiveRating($this->language->txt('comment_rating_positive_default'))
-                            ->setNegativeRating($this->language->txt('comment_rating_negative_default'))
-            );
-        }
+        // ensure that initialized correction settings exist for the assessment
+        $this->correction_settings_service->save($this->correction_settings_service->get());
 
         return $settings->getTaskId();
     }
@@ -155,10 +151,8 @@ readonly class Service implements TaskManager, ReadService
                 ->setFileId($new_file_id));
         }
 
-        if ($this->repos->correctionSettings()->one($new_ass_id) === null) {
-            $this->repos->correctionSettings()->save($this->repos->correctionSettings()->one($this->ass_id)
-                                                                 ->setAssId($new_ass_id));
-        }
+        // ensure that initialized correction settings are cloned for the assessment
+        $this->correction_settings_service->save($this->correction_settings_service->get()->setAssId($new_ass_id));
 
         // clone the common rating criteria (not belonging to a corrector)
         foreach ($this->repos->ratingCriterion()->allByTaskIdAndCorrectorId($task_id, null) as $criterion) {

@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Task\Data\CriteriaMode;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Task\Data\Settings;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentService;
+use Edutiek\AssessmentService\System\Language\Service as LanguageService;
 
 class Service implements FullService
 {
@@ -21,13 +22,17 @@ class Service implements FullService
         private Repositories $repos,
         private CorrectorAssignmentService $corrector_assignment_service,
         private AssessmentStatus $assessment_status,
+        private LanguageService $language,
     ) {
     }
 
     public function get() : CorrectionSettings
     {
         return $this->repos->correctionSettings()->one($this->ass_id) ??
-            $this->repos->correctionSettings()->new()->setAssId($this->ass_id);
+            $this->repos->correctionSettings()->new()
+                ->setAssId($this->ass_id)
+                ->setPositiveRating($this->language->txt('comment_rating_positive_default'))
+                ->setNegativeRating($this->language->txt('comment_rating_negative_default'));
     }
 
     public function save(CorrectionSettings $settings) : void
@@ -37,6 +42,13 @@ class Service implements FullService
         $existing = $this->get();
         if ($existing->getCriteriaMode() !== $settings->getCriteriaMode() && $this->assessment_status->hasAuthorizedSummaries()) {
             throw new ApiException("changing criteria mode not allowed if corrections are authorized", ApiException::CORRECTION_STATUS);
+        }
+
+        if (empty($settings->getPositiveRating())) {
+            $settings->setPositiveRating($this->language->txt('comment_rating_positive_default'));
+        }
+        if (empty($settings->getNegativeRating())) {
+            $settings->setNegativeRating($this->language->txt('comment_rating_negative_default'));
         }
 
         $this->repos->correctionSettings()->save($settings);

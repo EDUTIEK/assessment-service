@@ -149,7 +149,8 @@ class Internal
             $ass_id,
             $this->dependencies->repositories(),
             $this->correctorAssignments($ass_id, $user_id),
-            $this->assessmentStatus($ass_id, $user_id)
+            $this->assessmentStatus($ass_id, $user_id),
+            $this->language($user_id),
         );
     }
 
@@ -170,18 +171,6 @@ class Internal
             $user_id,
             $this,
             $this->dependencies->repositories()
-        );
-    }
-
-    public function manager(int $ass_id, int $user_id): ManagerService
-    {
-        return $this->instances[ManagerService::class][$ass_id][$user_id] ??= new ManagerService(
-            $ass_id,
-            $user_id,
-            $this->dependencies->repositories(),
-            $this->dependencies->systemApi()->fileStorage(),
-            $this->dependencies->typeApis(),
-            $this->language($user_id)
         );
     }
 
@@ -211,14 +200,13 @@ class Internal
         );
     }
 
-
-
     public function taskManager(int $ass_id, int $user_id): ManagerService
     {
         return $this->instances[ManagerService::class][$ass_id][$user_id] ??= new ManagerService(
             $ass_id,
             $user_id,
             $this->dependencies->repositories(),
+            $this->correctionSettings($ass_id, $user_id),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->typeApis(),
             $this->language($user_id),

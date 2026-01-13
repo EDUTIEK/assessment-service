@@ -26,7 +26,7 @@ readonly class ForClients
 
     public function manager(): ManagerInterface
     {
-        return $this->internal->manager($this->ass_id, $this->user_id);
+        return $this->internal->taskManager($this->ass_id, $this->user_id);
     }
 
     public function resource(int $task_id): ResourceFullService

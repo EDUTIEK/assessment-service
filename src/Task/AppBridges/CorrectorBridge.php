@@ -10,10 +10,10 @@ use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as Asses
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorReadService;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings as AssesmentCorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
+use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
-use Edutiek\AssessmentService\System\ConstraintHandling\Result;
 use Edutiek\AssessmentService\System\ConstraintHandling\ResultStatus;
-use Edutiek\AssessmentService\System\Data\FileInfo;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
@@ -23,20 +23,17 @@ use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionS
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as SummaryService;
 use Edutiek\AssessmentService\Task\Data\CorrectionSettings as TaskCorrectionSettings;
-use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 use Edutiek\AssessmentService\Task\Data\CorrectorPoints;
+use Edutiek\AssessmentService\Task\Data\CorrectorPrefs;
 use Edutiek\AssessmentService\Task\Data\CorrectorSnippet;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 use Edutiek\AssessmentService\Task\Data\CriteriaMode;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Edutiek\AssessmentService\Task\Data\RatingCriterion;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\Resource;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Task\Data\Settings;
-use Edutiek\AssessmentService\Assessment\Data\Writer;
-use Edutiek\AssessmentService\Task\Data\CorrectorPrefs;
 use Psr\Http\Message\UploadedFileInterface;
 
 class CorrectorBridge implements AppCorrectorBridge
@@ -89,17 +86,14 @@ class CorrectorBridge implements AppCorrectorBridge
     {
         $data = [];
 
-        $settings = $this->repos->correctionSettings()->one($this->ass_id) ??
-            $this->repos->correctionSettings()->new()->setAssId($this->ass_id);
-
         $data['Settings'] = $this->entity->arrayToPrimitives([
-            'positive_rating' => $settings->getPositiveRating(),
-            'negative_rating' => $settings->getNegativeRating(),
-            'enable_comments' => $settings->getEnableComments(),
-            'enable_comment_ratings' => $settings->getEnableCommentRatings(),
-            'enable_partial_points' => $settings->getEnablePartialPoints(),
-            'enable_summary_pdf' => $settings->getEnableSummaryPdf(),
-            'summary_pdf_advice' => $settings->getSummaryPdfAdvice(),
+            'positive_rating' =>  $this->correction_settings->getPositiveRating(),
+            'negative_rating' =>  $this->correction_settings->getNegativeRating(),
+            'enable_comments' =>  $this->correction_settings->getEnableComments(),
+            'enable_comment_ratings' =>  $this->correction_settings->getEnableCommentRatings(),
+            'enable_partial_points' =>  $this->correction_settings->getEnablePartialPoints(),
+            'enable_summary_pdf' =>  $this->correction_settings->getEnableSummaryPdf(),
+            'summary_pdf_advice' =>  $this->correction_settings->getSummaryPdfAdvice(),
         ]);
 
         /** @var Writer[] $writers */
