@@ -16,7 +16,6 @@ class Factory
     /**
      * Get the API for client systems
      * @param int $ass_id  id of the assessment object
-     * @param int $context_id  id of the permission context in which the object is used
      * @param int $user_id id of the currently active user
      */
     public function forClients(int $ass_id, int $user_id): ForClients

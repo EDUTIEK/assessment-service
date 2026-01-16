@@ -152,7 +152,8 @@ readonly class Service implements TaskManager, ReadService
         }
 
         // ensure that initialized correction settings are cloned for the assessment
-        $this->correction_settings_service->save($this->correction_settings_service->get()->setAssId($new_ass_id));
+        // use repo because the settings service would throw an API exception for the new ass_id
+        $this->repos->correctionSettings()->save($this->correction_settings_service->get()->setAssId($new_ass_id));
 
         // clone the common rating criteria (not belonging to a corrector)
         foreach ($this->repos->ratingCriterion()->allByTaskIdAndCorrectorId($task_id, null) as $criterion) {
