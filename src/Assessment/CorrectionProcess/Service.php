@@ -138,39 +138,29 @@ class Service implements FullService
                 if (!$first?->isRevised()) {
                     return [CorrectionStatus::APPROXIMATION, null];
                 }
-                if (!$second?->isRevised()) {
-                    if ($first?->getRequireOtherRevision()) {
-                        return [CorrectionStatus::APPROXIMATION, null];
-                    } else {
-                        return [CorrectionStatus::FINALIZED, $first->getPoints()];
-                    }
+                if (!$second?->isRevised() && $first?->getRequireOtherRevision()) {
+                    return [CorrectionStatus::APPROXIMATION, null];
                 }
                 if ($distance > $settings->getMaxAutoDistance() && $settings->getStitchAfterProcedure()) {
                     return [CorrectionStatus::STITCH, null];
-                } else {
-                    return [CorrectionStatus::FINALIZED, $average];
                 }
+                return [CorrectionStatus::FINALIZED, $average];
 
-                // no break
             case CorrectionStatus::CONSULTING:
                 if (!$first?->isRevised() || !$second?->isRevised()) {
                     return [CorrectionStatus::CONSULTING, null];
                 }
                 if ($distance > $settings->getMaxAutoDistance() && $settings->getStitchAfterProcedure()) {
                     return [CorrectionStatus::STITCH, null];
-                } else {
-                    return [CorrectionStatus::FINALIZED, $average];
                 }
+                return [CorrectionStatus::FINALIZED, $average];
 
-                // no break
             case CorrectionStatus::STITCH:
                 if (!$stitch->isAuthorized()) {
                     return [CorrectionStatus::STITCH, null];
-                } else {
-                    return [CorrectionStatus::FINALIZED, $stitch->getPoints()];
                 }
+                return [CorrectionStatus::FINALIZED, $stitch->getPoints()];
 
-                // no break
             case CorrectionStatus::FINALIZED:
             default:
                 return [CorrectionStatus::FINALIZED, $writer->getFinalPoints()];
