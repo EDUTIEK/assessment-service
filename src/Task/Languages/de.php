@@ -22,5 +22,6 @@ return [
     'pdf_part_summary_corrector1' => 'Gutachten oder Begründungsbogen (Erstkorrektor)',
     'pdf_part_summary_corrector2' => 'Gutachten oder Begründungsbogen (Zweitkorrektor)',
     'pdf_part_summary_corrector3' => 'Gutachten oder Begründungsbogen (Stichentscheider)',
+    'points' => 'Punkte',
     'task_solution' => "Lösungshinweise"
 ];
