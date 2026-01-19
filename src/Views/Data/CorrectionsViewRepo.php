@@ -41,7 +41,13 @@ interface CorrectionsViewRepo
 
     /**
      * @param int[] $ass_ids
+     * @return bool
+     */
+    public function hasMultiTasks(array $ass_ids): bool;
+
+    /**
+     * @param int[] $ass_ids
      * @return int
      */
-    public function requiredCorrectors(array $ass_ids): int;
+    public function visibleCorrectors(array $ass_ids): int;
 }
