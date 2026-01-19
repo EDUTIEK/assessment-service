@@ -22,6 +22,7 @@ use Edutiek\AssessmentService\Assessment\PdfCreation\FullService as PdfCreationS
 use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
 use Edutiek\AssessmentService\Assessment\Properties\FullService as PropertiesFullSrvice;
+use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as FullWorkingTime;
 use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as IndividualWorkingTime;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterFullService;
@@ -88,6 +89,11 @@ readonly class ForClients
     public function properties(): PropertiesFullSrvice
     {
         return $this->internal->properties($this->ass_id);
+    }
+
+    public function pseudonym(): PseudonymService
+    {
+        return $this->internal->pseudonym($this->ass_id);
     }
 
     public function writer(): WriterFullService

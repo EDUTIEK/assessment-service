@@ -174,9 +174,11 @@ class Internal implements ComponentApi, ComponentApiFactory
     /**
      * Service for creating pseudonyms
      */
-    public function pseudonym(): PseudonymFullService
+    public function pseudonym(int $ass_id): PseudonymFullService
     {
-        return $this->instances[PseudonymService::class] ??= new PseudonymService(
+        return $this->instances[PseudonymService::class][$ass_id] ??= new PseudonymService(
+            $ass_id,
+            $this->dependencies->repositories(),
             // set user_id 0 to use the system default language
             $this->language(0),
             $this->dependencies->systemApi()->user()
@@ -190,7 +192,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->repositories(),
             $this->workingTimeFactory($user_id),
             $this->logEntry($ass_id),
-            $this->pseudonym(),
+            $this->pseudonym($ass_id),
             $this->dependencies->eventDispatcher($ass_id, $user_id),
         );
     }
@@ -300,7 +302,8 @@ class Internal implements ComponentApi, ComponentApiFactory
     {
         return $this->instances[CorrectionSettingsService::class][$ass_id] = new CorrectionSettingsService(
             $ass_id,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->pseudonym($ass_id)
         );
     }
 

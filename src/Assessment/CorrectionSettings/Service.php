@@ -8,19 +8,24 @@ use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettingsError;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymService;
 
 readonly class Service implements FullService
 {
     public function __construct(
         private int $ass_id,
-        private Repositories $repos
+        private Repositories $repos,
+        private PseudonymService $pseudonym_service
     ) {
     }
 
     public function get(): CorrectionSettings
     {
-        return $this->repos->correctionSettings()->one($this->ass_id) ??
+        $setting = $this->repos->correctionSettings()->one($this->ass_id) ??
             $this->repos->correctionSettings()->new()->setAssId($this->ass_id);
+
+        // return a clone to allow a comparison with previous values in save()
+        return clone $setting;
     }
 
     public function validate(CorrectionSettings $settings): bool
@@ -37,7 +42,12 @@ readonly class Service implements FullService
     public function save(CorrectionSettings $settings): void
     {
         $this->checkScope($settings);
+
+        $existing = $this->repos->correctionSettings()->one($this->ass_id);
         $this->repos->correctionSettings()->save($settings);
+        if ($settings->getPseudonymization() !== $existing?->getPseudonymization()) {
+            $this->pseudonym_service->changeForAll($settings->getPseudonymization());
+        }
     }
 
     private function checkScope(CorrectionSettings $settings)

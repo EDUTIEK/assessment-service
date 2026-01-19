@@ -24,5 +24,11 @@ return [
     'via_stitch_decision' => 'per Stichentscheid',
     'writing_is_already_authorized' => 'Die Abgabe ist bereits freigegeben.',
     'correction_is_already_finalized' => 'Die Korrektur ist bereits freigegeben.',
+    'user_x' => 'Benutzer {x}',
     'writer_x' => 'Teilnehmer {x}',
+    'pseudonymization_writer_id' => 'Teilnehmer-ID (eindeutig in der Aufgabe)',
+    'pseudonymization_user_id' => 'Benutzer-ID (eindeutig im System)',
+    'pseudonymization_login' => 'Anmeldename',
+    'pseudonymization_matriculation' => 'Matrikelnummer (falls belegt, sonst Anmeldename)',
+    'pseudonymization_name' => 'Vor- und Nachname',
 ];

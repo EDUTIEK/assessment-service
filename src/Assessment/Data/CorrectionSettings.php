@@ -41,6 +41,8 @@ abstract class CorrectionSettings implements AssessmentEntity
     abstract public function setUndoAuthorization(bool $undo_authorization): self;
     abstract public function getInstantStatus(): bool;
     abstract public function setInstantStatus(bool $instant_status): self;
+    abstract public function getPseudonymization(): Pseudonymization;
+    abstract public function setPseudonymization(Pseudonymization $pseudonymization): self;
     abstract public function getAnonymizeCorrectors(): bool;
     abstract public function setAnonymizeCorrectors(bool $anonymize_correctors): self;
     abstract public function getReportsEnabled(): bool;
