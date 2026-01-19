@@ -17,7 +17,7 @@ class Service implements FullService
 
     }
 
-    private function getFullnameFromMention(?MentionUser $mention) : string
+    private function getNameFromMention(?MentionUser $mention) : string
     {
         $user_data = null;
 
@@ -29,7 +29,7 @@ class Service implements FullService
         };
         $user_data = $id !== null ? $this->user_service->getUser($id) : null;
 
-        return $user_data?->getFullname(true) ?? $this->language_service->txt('unknown');
+        return $user_data?->getListname(true) ?? $this->language_service->txt('unknown');
     }
 
     public function addEntry(
@@ -41,8 +41,8 @@ class Service implements FullService
         $timestamp = new \DateTimeImmutable('now');
         $category = $type->getCategory();
 
-        $subject = $this->getFullnameFromMention($subject_mention);
-        $object = $this->getFullnameFromMention($object_mention);
+        $subject = $this->getNameFromMention($subject_mention);
+        $object = $this->getNameFromMention($object_mention);
 
         $entry = match($type){
             Type::WORKING_TIME_CHANGE => sprintf($this->language_service->txt('log_entry_working_time_changed'), $object, $subject),

@@ -38,6 +38,11 @@ abstract class UserData implements SystemEntity
     abstract public function getLastname(): string;
 
     /**
+     * Matriculation number, can be used as alternative identification, if set
+     */
+    abstract public function getMatriculation(): ?string;
+
+    /**
      * Get the language of the user as ISO 639-1 two-letter code, e.g. 'en'
      */
     abstract public function getLanguage(): string;
