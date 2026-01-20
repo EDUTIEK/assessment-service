@@ -69,6 +69,11 @@ readonly class Service implements ReadService, FullService
         return $this->repos->writer()->allByAssId($this->ass_id);
     }
 
+    public function authorizedIds(): array
+    {
+        return $this->repos->writer()->authorizedIds($this->ass_id);
+    }
+
     /**
      * @todo: replace usage by dedicated operations and make private or remove
      */

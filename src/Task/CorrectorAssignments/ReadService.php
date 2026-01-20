@@ -27,11 +27,12 @@ interface ReadService
     /**
      * @return CorrectorAssignment[]
      */
-    public function allByCorrectorId(int $corrector_id): array;
+    public function allByCorrectorId(int $corrector_id, bool $only_authorized_writings = false): array;
 
     /**
      * @return CorrectorAssignment[]
      */
-    public function allByCorrectorIdFiltered(int $corrector_id): array;
+    public function allByCorrectorIdFiltered(int $corrector_id, bool $only_authorized_writings = false): array;
+
     public function countMissingCorrectors();
 }

@@ -87,13 +87,13 @@ class CorrectorBridge implements AppCorrectorBridge
         $data = [];
 
         $data['Settings'] = $this->entity->arrayToPrimitives([
-            'positive_rating' =>  $this->correction_settings->getPositiveRating(),
-            'negative_rating' =>  $this->correction_settings->getNegativeRating(),
-            'enable_comments' =>  $this->correction_settings->getEnableComments(),
-            'enable_comment_ratings' =>  $this->correction_settings->getEnableCommentRatings(),
-            'enable_partial_points' =>  $this->correction_settings->getEnablePartialPoints(),
-            'enable_summary_pdf' =>  $this->correction_settings->getEnableSummaryPdf(),
-            'summary_pdf_advice' =>  $this->correction_settings->getSummaryPdfAdvice(),
+            'positive_rating' => $this->correction_settings->getPositiveRating(),
+            'negative_rating' => $this->correction_settings->getNegativeRating(),
+            'enable_comments' => $this->correction_settings->getEnableComments(),
+            'enable_comment_ratings' => $this->correction_settings->getEnableCommentRatings(),
+            'enable_partial_points' => $this->correction_settings->getEnablePartialPoints(),
+            'enable_summary_pdf' => $this->correction_settings->getEnableSummaryPdf(),
+            'summary_pdf_advice' => $this->correction_settings->getSummaryPdfAdvice(),
         ]);
 
         /** @var Writer[] $writers */
@@ -104,7 +104,7 @@ class CorrectorBridge implements AppCorrectorBridge
 
         $data['Items'] = [];
         if ($this->corrector !== null) {
-            $assignments = $this->assignment_service->allByCorrectorIdFiltered($this->corrector->getId());
+            $assignments = $this->assignment_service->allByCorrectorIdFiltered($this->corrector->getId(), true);
         } else {
             $assignments = $this->assignment_service->all();
         }
@@ -112,20 +112,18 @@ class CorrectorBridge implements AppCorrectorBridge
         $task_ids = [];
         foreach ($assignments as $assignment) {
             $writer = $writers[$assignment->getWriterId()] ?? null;
-            if ($writer?->isAuthorized()) {
-                $summary = $this->summary_service->getForAssignment($assignment);
-                $data['Items'][] = $this->entity->arrayToPrimitives([
-                    'task_id' => $assignment->getTaskId(),
-                    'writer_id' => $assignment->getWriterId(),
-                    'position' => $assignment->getPosition()->value,
-                    'pseudonym' => $writer->getPseudonym(),
-                    'correction_status' => $writer->getCorrectionStatus()->value,
-                    'grading_status' => $summary->getGradingStatus(),
-                    'can_correct' => $this->process_service->canCorrect($assignment),
-                    'can_authorize' => $this->process_service->canAuthorize($assignment),
-                    'can_revise' => $this->process_service->canRevise($assignment),
-                ]);
-            }
+            $summary = $this->summary_service->getForAssignment($assignment);
+            $data['Items'][] = $this->entity->arrayToPrimitives([
+                'task_id' => $assignment->getTaskId(),
+                'writer_id' => $assignment->getWriterId(),
+                'position' => $assignment->getPosition()->value,
+                'pseudonym' => $writer->getPseudonym(),
+                'correction_status' => $writer->getCorrectionStatus()->value,
+                'grading_status' => $summary->getGradingStatus(),
+                'can_correct' => $this->process_service->canCorrect($assignment),
+                'can_authorize' => $this->process_service->canAuthorize($assignment),
+                'can_revise' => $this->process_service->canRevise($assignment),
+            ]);
             $task_ids[] = $assignment->getTaskId();
         }
         $task_ids = array_unique($task_ids);
@@ -663,7 +661,7 @@ class CorrectorBridge implements AppCorrectorBridge
     public function processUploadedFile(UploadedFileInterface $file, int $task_id, int $writer_id): ?string
     {
         if ($this->corrector != null) {
-            $assignment = $this->assignment_service->oneByIds($writer_id,  $this->corrector->getId(), $task_id);
+            $assignment = $this->assignment_service->oneByIds($writer_id, $this->corrector->getId(), $task_id);
             if (!$assignment || !$this->process_service->canCorrect($assignment)) {
                 return null;
             }

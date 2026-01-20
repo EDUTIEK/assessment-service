@@ -62,9 +62,17 @@ readonly class Service implements FullService
         return $missing;
     }
 
-    public function allByCorrectorId(int $corrector_id): array
+    public function allByCorrectorId(int $corrector_id, $only_authorized_writings = false): array
     {
-        return $this->repos->correctorAssignment()->allByCorrectorId($corrector_id);
+        $assignments = $this->repos->correctorAssignment()->allByCorrectorId($corrector_id);
+        if ($only_authorized_writings) {
+            $writer_ids = $this->writer_service->authorizedIds();
+            return array_filter(
+                $assignments,
+                fn(CorrectorAssignment $assignment) => in_array($assignment->getWriterId(), $writer_ids)
+            );
+        }
+        return $assignments;
     }
 
     public function oneById(int $id): ?CorrectorAssignment
@@ -108,9 +116,9 @@ readonly class Service implements FullService
     }
 
 
-    public function allByCorrectorIdFiltered(int $corrector_id): array
+    public function allByCorrectorIdFiltered(int $corrector_id, bool $only_authorized_writings = false): array
     {
-        $assignments = $this->repos->correctorAssignment()->allByCorrectorId($corrector_id);
+        $assignments = $this->allByCorrectorId($corrector_id, $only_authorized_writings);
 
         [$status, $pos] = $this->getCorrectionFilter($corrector_id);
 

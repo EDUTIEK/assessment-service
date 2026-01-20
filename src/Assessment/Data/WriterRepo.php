@@ -16,6 +16,8 @@ interface WriterRepo
     public function allByWriterIdsAndAssId(array $writer_ids, int $ass_id): array;
     /** @return Writer[] */
     public function allByAssId(int $ass_id): array;
+    /** @return int[] */
+    public function authorizedIds(int $ass_id): array;
     public function save(Writer $entity): void;
     public function delete(int $id): void;
     public function deleteByAssId(int $ass_id): void;

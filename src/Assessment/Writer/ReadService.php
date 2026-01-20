@@ -11,6 +11,8 @@ interface ReadService
     public function oneByUserId(int $user_id): ?Writer;
     /** @return Writer[] */
     public function all(): array;
+    /** @return int[] */
+    public function authorizedIds(): array;
     public function oneByWriterId(int $writer_id): ?Writer;
     public function hasStitchDecisions(): bool;
 }
