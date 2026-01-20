@@ -15,6 +15,7 @@ return [
     'log_entry_note' => 'Notiz von %s:',
     'pdf_part_frontpage' => 'Deckblatt',
     'sub_task' => 'Teilaufgabe {number}',
+    'task' => 'Aufgabe',
     'result_available_finalised' => 'wenn die Abgabe korrigiert ist',
     'result_available_review' => 'zur Einsichtnahme',
     'result_not_available' => 'nicht verfügbar',

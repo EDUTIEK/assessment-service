@@ -9,7 +9,7 @@ interface FullService
     /**
      * Create a new assessment
      */
-    public function create(): void;
+    public function create(bool $multi_tasks): void;
 
     /**
      * Delete an assessment

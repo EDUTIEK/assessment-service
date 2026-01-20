@@ -23,7 +23,7 @@ readonly class Service implements FullService
     /**
      * Create a new assessment with the id given in the constructor of this service
      */
-    public function create(): void
+    public function create(bool $multi_tasks): void
     {
         // don't create an assessment twice
         if ($this->repos->orgaSettings()->one($this->ass_id) !== null) {
@@ -33,6 +33,7 @@ readonly class Service implements FullService
         $this->repos->orgaSettings()->save(
             $this->repos->orgaSettings()->new()
             ->setAssId($this->ass_id)
+            ->setMultiTasks($multi_tasks)
         );
         $this->repos->correctionSettings()->save(
             $this->repos->correctionSettings()->new()
@@ -45,7 +46,9 @@ readonly class Service implements FullService
 
         // create the first task of the assessment
         $this->tasks->create(new TaskInfo(
-            $this->language->txt('sub_task', ['number' => '1']),
+            $multi_tasks
+                ? $this->language->txt('sub_task', ['number' => '1'])
+                : $this->language->txt('task'),
             TaskType::ESSAY
         ));
     }
