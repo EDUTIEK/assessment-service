@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\Assessment\Data\ResultAvailableType;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as GradingService;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
 
 readonly class Service implements FullService
 {
@@ -57,5 +58,17 @@ readonly class Service implements FullService
         }
 
         return $text;
+    }
+
+    public function finalizedFromStatus(Writer $writer): ?string
+    {
+        $txt = $this->language->txt(...);
+
+        return match($writer->getFinalizedFromStatus()) {
+            CorrectionStatus::APPROXIMATION => $txt("via_approximation"),
+            CorrectionStatus::CONSULTING => $txt("via_consulting"),
+            CorrectionStatus::STITCH => $txt("via_stitch_decision"),
+            default => null
+        };
     }
 }

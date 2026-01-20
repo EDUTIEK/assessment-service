@@ -58,6 +58,8 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
     abstract public function setLocation(?int $location): self;
     abstract public function getReviewNotification(): int;
     abstract public function setReviewNotification(int $review_notification): self;
+    abstract public function getFinalizedFromStatus(): ?CorrectionStatus;
+    abstract public function setFinalizedFromStatus(?CorrectionStatus $finalized_from_status): self;
 
     public function getWritingStatus(): WritingStatus
     {
@@ -67,11 +69,11 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
 
         $status = WritingStatus::NOT_STARTED;
         if ($this->getWritingExcluded() !== null) {
-            $status =  WritingStatus::EXCLUDED;
+            $status = WritingStatus::EXCLUDED;
         } elseif ($this->getWritingAuthorized() !== null) {
-            $status =  WritingStatus::AUTHORIZED;
+            $status = WritingStatus::AUTHORIZED;
         } elseif ($this->getWorkingStart() !== null) {
-            $status =  WritingStatus::STARTED;
+            $status = WritingStatus::STARTED;
         }
         return $this->writing_status ??= $status;
     }

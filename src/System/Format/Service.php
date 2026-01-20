@@ -21,6 +21,11 @@ readonly class Service implements FullService
     ) {
     }
 
+    public function date(?DateTimeImmutable $date): string
+    {
+        return $date ? ($this->format_date)($date) : '';
+    }
+
     public function dateRange(?DateTimeImmutable $start, ?DateTimeImmutable $end): string
     {
         $txt = $this->language->txt(...);

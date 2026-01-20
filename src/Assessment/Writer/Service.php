@@ -125,6 +125,15 @@ readonly class Service implements ReadService, FullService
     public function changeCorrectionStatus(Writer $writer, CorrectionStatus $status, int $by_user_id): void
     {
         $old_status = $writer->getCorrectionStatus();
+        if ($status === CorrectionStatus::FINALIZED && in_array(
+            $old_status,
+            [CorrectionStatus::APPROXIMATION, CorrectionStatus::CONSULTING, CorrectionStatus::STITCH]
+        )
+        ) {
+            $writer->setFinalizedFromStatus($old_status);
+        } else {
+            $writer->setFinalizedFromStatus(null);
+        }
         $writer->setCorrectionStatus($status);
         $writer->setCorrectionStatusChanged(new \DateTimeImmutable("now"));
         $writer->setCorrectionStatusChangedBy($by_user_id);

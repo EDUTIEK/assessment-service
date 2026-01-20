@@ -21,6 +21,8 @@ return [
     'result_not_finalized' => 'nicht festgelegt',
     'result_not_graded' => 'ohne Note',
     'unknown' => 'unbekannt',
+    'via_approximation' => 'per Annäherung',
+    'via_consulting' => 'per Beratung',
     'via_stitch_decision' => 'per Stichentscheid',
     'writing_is_already_authorized' => 'Die Abgabe ist bereits freigegeben.',
     'correction_is_already_finalized' => 'Die Korrektur ist bereits freigegeben.',
