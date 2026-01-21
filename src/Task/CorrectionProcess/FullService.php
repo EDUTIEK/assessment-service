@@ -30,16 +30,16 @@ interface FullService
     public function canRevise(CorrectorAssignment $assignment): bool;
 
     /**
-     * Authorize the correction
+     * Authorize a correction
      */
-    public function authorizeCorrection(CorrectorSummary $summary, int $user_id): void;
+    public function authorizeCorrection(CorrectorAssignment $assignment, int $user_id): Result;
 
     /**
      * @param Writer $writer
      * @param int    $user_id User executing this operation
      * @return bool
      */
-    public function removeAuthorizations(int $task_id, Writer $writer, int $user_id): bool;
+    public function removeAuthorizations(int $task_id, Writer $writer, int $user_id): Result;
 
     /**
      * @param Writer $writer

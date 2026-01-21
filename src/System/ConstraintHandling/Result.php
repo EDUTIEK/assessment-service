@@ -19,6 +19,11 @@ readonly class Result
     ) {
     }
 
+    public function isOk(): bool
+    {
+        return $this->status === ResultStatus::OK;
+    }
+
     public function status(): ResultStatus
     {
         return $this->status;

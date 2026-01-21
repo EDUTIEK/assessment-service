@@ -117,7 +117,11 @@ readonly class Service implements FullService
             $assignment->getCorrectorId()
         );
 
-        if ($summary?->isAuthorized()) {
+        if ($summary === null
+            || $summary->isAuthorized()
+            || $summary->getPoints() === null
+            || (empty($summary->getSummaryText()) && empty($summary->getSummaryPdf()))
+        ) {
             return false;
         }
 
@@ -174,29 +178,35 @@ readonly class Service implements FullService
         return true;
     }
 
-    public function authorizeCorrection(CorrectorSummary $summary, int $user_id): void
+    public function authorizeCorrection(CorrectorAssignment $assignment, int $user_id): Result
     {
-        //$settings = $this->getSettings();
-        //$preferences = $this->correctorRepo->getCorrectorPreferences($summary->getCorrectorId());
-        //$summary->applySettingsOrPreferences($settings, $preferences); //TODO needs to be reattached after Settings are recomitted
-
-        if (empty($summary->getCorrectionAuthorized())) {
-            $summary->setCorrectionAuthorized($summary->getLastChange() ?? new \DateTimeImmutable("now"));
-            $summary->setCorrectionAuthorizedBy($user_id);
-        }
-        if (empty($summary->getCorrectionAuthorizedBy())) {
-            $summary->setCorrectionAuthorizedBy($user_id);
+        if (!$this->canAuthorize($assignment)) {
+            return new Result(ResultStatus::BLOCK, ['authorization is not allowed']);
         }
 
-        $this->repos->correctorSummary()->save($summary);
+        $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+            $assignment->getTaskId(),
+            $assignment->getWriterId(),
+            $assignment->getCorrectorId()
+        );
+        if ($summary === null) {
+            return new Result(ResultStatus::BLOCK, ['summary not found']);
+        }
+
+        // use clone to allow compare with a previous version
+        $summary = clone $summary;
+        $summary->setGradingStatus(GradingStatus::AUTHORIZED, $user_id);
+
+        return $this->checkAndSaveSummary($summary);
     }
 
-    public function removeAuthorizations(int $task_id, Writer $writer, int $user_id): bool
+    public function removeAuthorizations(int $task_id, Writer $writer, int $user_id): Result
     {
         $changed = false;
 
-        if ($writer->isCorrectionFinalized() && $writer->getFinalizedFromStatus() === CorrectionStatus::STITCH) {
-            return false;
+        if ($writer->getCorrectionStatus() === CorrectionStatus::STITCH ||
+            $writer->isCorrectionFinalized() && $writer->getFinalizedFromStatus() === CorrectionStatus::STITCH) {
+            return new Result(ResultStatus::BLOCK, ['not allowed for stitch decision']);
         }
 
         // remove authorizations
@@ -216,12 +226,15 @@ readonly class Service implements FullService
                 MentionUser::fromSystem($user_id),
                 MentionUser::fromWriter($writer)
             );
-            $changed = true;
+            return new Result(ResultStatus::OK, []);
         }
 
-        return $changed;
+        return new Result(ResultStatus::BLOCK, ['no authorizations found']);
     }
 
+    /**
+     * todo rewrite (currently unused)
+     */
     public function removeCorrectorAuthorizations(Corrector $corrector, int $user_id): bool
     {
         if (empty($summaries = $this->repos->correctorSummary()->allByCorrectorId($corrector->getId()))) {
