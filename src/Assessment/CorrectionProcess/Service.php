@@ -17,6 +17,11 @@ use Edutiek\AssessmentService\Assessment\TaskInterfaces\Grading;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingProvider;
 
+/**
+ * Service for managing the correction process of a writer.
+ * This is used by the CorrectionProcess service of a task
+ * It should not be offered to the client directly
+ */
 class Service implements FullService
 {
     public function __construct(
@@ -30,14 +35,15 @@ class Service implements FullService
     ) {
     }
 
-    public function removeFinalization(Writer $writer)
+    public function setCorrectionOpen(Writer $writer)
     {
-        // todo: determine the correct status (approcimation, stitch)
-        // todo: log the action
-        if ($writer->getCorrectionStatus() === CorrectionStatus::FINALIZED) {
+        if ($writer->getCorrectionStatus() !== CorrectionStatus::OPEN) {
             $writer->setCorrectionStatus(CorrectionStatus::OPEN);
-            $writer->setCorrectionStatusChanged(new \DateTimeImmutable("now"));
+            $writer->setCorrectionStatusChanged(new DateTimeImmutable());
             $writer->setCorrectionStatusChangedBy($this->user_id);
+            $writer->setFinalizedFromStatus(null);
+            $writer->setFinalPoints(null);
+            $writer->setFinalGradeLevelId(null);
             $this->repos->writer()->save($writer);
         }
     }

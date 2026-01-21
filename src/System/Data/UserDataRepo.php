@@ -16,7 +16,7 @@ interface UserDataRepo
     /**
      * Get the data of multiple users by their ids
      * @param int[] $ids
-     * @return UserData[]
+     * @return UserData[], indexed by user_id
      */
     public function some(array $ids): array;
 

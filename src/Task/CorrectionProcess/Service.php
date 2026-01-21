@@ -195,23 +195,28 @@ readonly class Service implements FullService
     {
         $changed = false;
 
-        // remove finalized status
-        $this->whole_process->removeFinalization($writer);
+        if ($writer->isCorrectionFinalized() && $writer->getFinalizedFromStatus() === CorrectionStatus::STITCH) {
+            return false;
+        }
 
         // remove authorizations
         foreach ($this->repos->correctorSummary()->allByTaskIdAndWriterId($task_id, $writer->getId()) as $summary) {
-            $summary->setCorrectionAuthorized(null);
-            $summary->setCorrectionAuthorizedBy(null);
-            $this->repos->correctorSummary()->save($summary);
-            $changed = true;
+            if ($summary->isAuthorized()) {
+                $summary->setGradingStatus(GradingStatus::OPEN, $user_id);
+                $this->repos->correctorSummary()->save($summary);
+                $changed = true;
+            }
         }
 
-        if ($changed) {
+        if ($changed || $writer->isCorrectionFinalized()) {
+            $this->whole_process->setCorrectionOpen($writer);
+
             $this->log_entry->addEntry(
                 LogEntryType::CORRECTION_REMOVE_AUTHORIZATION,
                 MentionUser::fromSystem($user_id),
                 MentionUser::fromWriter($writer)
             );
+            $changed = true;
         }
 
         return $changed;

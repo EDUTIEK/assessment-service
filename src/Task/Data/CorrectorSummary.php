@@ -74,7 +74,7 @@ abstract class CorrectorSummary implements TaskEntity
     }
 
     /**
-     * Get a reduced stading status if everything before authorization should not be public
+     * Get a reduced grading status if everything before authorization should not be public
      * @return GradingStatus
      */
     public function getGradingStatusLight(): GradingStatus
@@ -88,27 +88,46 @@ abstract class CorrectorSummary implements TaskEntity
         return GradingStatus::NOT_STARTED;
     }
 
-
+    /**
+     * Commonly set pre-grading, authorization, revision based on a grading status
+     * Note: NOT_STARTED will result in OPEN since the last change is set
+     */
     public function setGradingStatus(GradingStatus $status, int $user_id): self
     {
+        // don't set anything if status isn't changed
+        if ($this->getGradingStatus() === $status) {
+            return $this;
+        }
+
         switch ($status) {
-            case GradingStatus::PRE_GRADED:
-                $this->setPreGraded(new DateTimeImmutable());
-                break;
-            case GradingStatus::AUTHORIZED:
-                $this->setCorrectionAuthorized(new DateTimeImmutable());
-                $this->setCorrectionAuthorizedBy($user_id);
-                break;
-            case GradingStatus::REVISED:
-                $this->setRevised(new DateTimeImmutable());
-                break;
-            default:
+
+            // this handles a reset of the authorization
+            case GradingStatus::NOT_STARTED:
+            case GradingStatus::OPEN:
                 $this->setPreGraded(null);
                 $this->setCorrectionAuthorized(null);
                 $this->setCorrectionAuthorizedBy(null);
                 $this->setRevised(null);
-                $this->setPreGraded(null);
+                $this->setRevisionText(null);
+                $this->setRevisionPoints(null);
+                $this->setRequireOtherRevision(false);
+                break;
+
+            case GradingStatus::PRE_GRADED:
+                $this->setPreGraded(new DateTimeImmutable());
+                break;
+
+            case GradingStatus::AUTHORIZED:
+                $this->setCorrectionAuthorized(new DateTimeImmutable());
+                $this->setCorrectionAuthorizedBy($user_id);
+                break;
+
+            case GradingStatus::REVISED:
+                $this->setRevised(new DateTimeImmutable());
+                break;
         }
+
+        $this->setLastChange(new DateTimeImmutable());
         return $this;
     }
 
