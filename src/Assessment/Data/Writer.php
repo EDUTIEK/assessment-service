@@ -122,7 +122,7 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
     {
         return $this->getEarliestStart() !== null
             || $this->getLatestEnd() !== null
-            || !empty($this->getTimeLimitMinutes());
+            || $this->getTimeLimitMinutes() !== null;
     }
 
     public function canChangeWorkingTime(): bool

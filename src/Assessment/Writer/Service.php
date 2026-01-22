@@ -31,6 +31,11 @@ readonly class Service implements ReadService, FullService
     ) {
     }
 
+    public function new(): Writer
+    {
+        return $this->repos->writer()->new();
+    }
+
     public function has(int $writer_id): bool
     {
         return $this->repos->writer()->hasByWriterIdAndAssId($writer_id, $this->ass_id);
@@ -159,7 +164,6 @@ readonly class Service implements ReadService, FullService
         ?\DateTimeImmutable $earliest_start,
         ?\DateTimeImmutable $latest_end,
         ?int $time_limit_minutes,
-        int $by_user_id
     ): bool {
         $writer->setEarliestStart($earliest_start);
         $writer->setLatestEnd($latest_end);
@@ -168,7 +172,7 @@ readonly class Service implements ReadService, FullService
             $this->save($writer);
             $this->log_entry_service->addEntry(
                 LogEntryType::WORKING_TIME_CHANGE,
-                LogEntryMention::fromSystem($by_user_id),
+                LogEntryMention::fromSystem($this->user_id),
                 LogEntryMention::fromWriter($writer)
             );
             return true;
@@ -177,7 +181,7 @@ readonly class Service implements ReadService, FullService
         }
     }
 
-    public function removeWorkingTime(Writer $writer, int $by_user_id): void
+    public function removeWorkingTime(Writer $writer): void
     {
         $writer->setEarliestStart(null);
         $writer->setLatestEnd(null);
@@ -185,7 +189,7 @@ readonly class Service implements ReadService, FullService
         $this->save($writer);
         $this->log_entry_service->addEntry(
             LogEntryType::WORKING_TIME_DELETE,
-            LogEntryMention::fromSystem($by_user_id),
+            LogEntryMention::fromSystem($this->user_id),
             LogEntryMention::fromWriter($writer)
         );
     }

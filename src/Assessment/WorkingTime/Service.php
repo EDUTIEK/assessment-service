@@ -24,9 +24,12 @@ readonly class Service implements FullService
     private ?DateTimeImmutable $common_latest_end;
     private ?DateTimeImmutable $writer_earliest_start;
     private ?DateTimeImmutable $writer_latest_end;
+
     private ?int $common_time_limit_minutes;
     private ?int $writer_time_limit_minutes;
+
     private ?DateTimeImmutable $working_start;
+
     private bool $solution_available;
     private ?DateTimeImmutable $solution_available_date;
 
@@ -77,6 +80,10 @@ readonly class Service implements FullService
      */
     public function getTimeLimitMinutes(): ?int
     {
+        // special case: zero minutes from the writer reset the time limit of the task
+        if ($this->writer_time_limit_minutes === 0) {
+            return null;
+        }
         return $this->writer_time_limit_minutes ?? $this->common_time_limit_minutes;
     }
 
@@ -251,8 +258,7 @@ readonly class Service implements FullService
         if ($this->isEndBeforeStart()) {
             $store?->addValidationError(ValidationError::LATEST_END_BEFORE_EARLIEST_START);
             $valid = false;
-        }
-        if ($this->isTimeLimitTooLong()) {
+        } elseif ($this->isTimeLimitTooLong()) {
             $store?->addValidationError(ValidationError::TIME_LIMIT_TOO_LONG);
             $valid = false;
         }

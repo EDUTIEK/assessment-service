@@ -7,6 +7,8 @@ use Edutiek\AssessmentService\Assessment\Data\Writer;
 
 interface FullService extends ReadService
 {
+    public function new(): Writer;
+
     /**
      * Get or create a writer of the assessment by its user id
      */
@@ -25,9 +27,8 @@ interface FullService extends ReadService
         ?\DateTimeImmutable $earliest_start,
         ?\DateTimeImmutable $latest_end,
         ?int $time_limit_minutes,
-        int $by_user_id
     ): bool;
-    public function removeWorkingTime(Writer $writer, int $by_user_id): void;
+    public function removeWorkingTime(Writer $writer): void;
 
     /**
      * Remove all data of a writer from the assessment
