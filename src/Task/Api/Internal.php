@@ -92,7 +92,8 @@ class Internal
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionProcess(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->logEntry(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
-            $this->correctorSummary($ass_id, $user_id)
+            $this->correctorSummary($ass_id, $user_id),
+            $this->language($user_id),
         );
     }
 

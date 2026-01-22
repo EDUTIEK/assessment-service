@@ -5,22 +5,24 @@ namespace Edutiek\AssessmentService\Task\CorrectionProcess;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\System\ConstraintHandling\Result;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
-use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use ILIAS\Plugin\LongEssayAssessment\Task\Data\CorrectorAssignment;
 
 interface FullService
 {
     /**
-     * Check if the task of a writer can be corrected by the assigned corrector
+     * Check if an assigned writing can be corrected by the assigned corrector
      * - Writing must be authorized
-     * - status must be stitch for stich decider (third corrector)
-     * - own status must be not started or open for normal corrector
-     * - check if second corrector has to wait for the first corrector
+     * - Status must be stitch for stich decider (third corrector)
+     * - Own status must be not started or open for normal corrector
+     * - Check if second corrector has to wait for the first corrector
+     * - Authorization is taken into account here, but not the pre-graded status
+     * - The pre-graded status is handled in the corrector app
      */
     public function canCorrect(CorrectorAssignment $assignment): bool;
 
     /**
-     * Check if the correction of an assigned task can be authorized
+     * Check if an assigned correction can be authorized by the assigned corrector
+     * - Check the process conditions and status but not the summary content
      */
     public function canAuthorize(CorrectorAssignment $assignment): bool;
 
@@ -30,28 +32,20 @@ interface FullService
     public function canRevise(CorrectorAssignment $assignment): bool;
 
     /**
-     * Authorize a correction
+     * Authorize a correction as a corrector
      */
-    public function authorizeCorrection(CorrectorAssignment $assignment, int $user_id): Result;
+    public function authorizeCorrection(CorrectorAssignment $assignment): Result;
 
     /**
-     * @param Writer $writer
-     * @param int    $user_id User executing this operation
-     * @return bool
+     * Remove all correction authorizations of a writer
+     * - This must be called by an admin, not by a corrector
      */
-    public function removeAuthorizations(int $task_id, Writer $writer, int $user_id): Result;
+    public function removeAuthorizations(int $task_id, Writer $writer): Result;
 
     /**
-     * @param Writer $writer
-     * @param int    $user_id User executing this operation
-     * @return bool
-     */
-    public function removeCorrectorAuthorizations(Corrector $corrector, int $user_id): bool;
-
-    /**
-     * Check a summary and save it it possible
-     * Trigger further actions if status is changed
-     * @param int $user_id User executing this operation
+     * Check a summary and save it it possible as a corrector
+     * - Check the process conditions and if the summary content is able to be authorized
+     * - Trigger further actions if status is changed
      */
     public function checkAndSaveSummary(CorrectorSummary $summary): Result;
 }

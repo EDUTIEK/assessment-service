@@ -14,6 +14,7 @@ use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\System\ConstraintHandling\Result;
 use Edutiek\AssessmentService\System\ConstraintHandling\ResultStatus;
+use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as SummaryService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
@@ -31,14 +32,10 @@ readonly class Service implements FullService
         private LogEntryService $log_entry,
         private CorrectionSettings $correction_settings,
         private SummaryService $summary_service,
+        private LanguageService $language,
     ) {
     }
 
-    /**
-     * Check if the process allows a correction
-     * Authorization is taken into account here, but not the pre-graded status
-     * The pre-graded status is handled in the corrector app
-     */
     public function canCorrect(CorrectorAssignment $assignment): bool
     {
         $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
@@ -117,11 +114,7 @@ readonly class Service implements FullService
             $assignment->getCorrectorId()
         );
 
-        if ($summary === null
-            || $summary->isAuthorized()
-            || $summary->getPoints() === null
-            || (empty($summary->getSummaryText()) && empty($summary->getSummaryPdf()))
-        ) {
+        if ($summary === null || $summary->isAuthorized()) {
             return false;
         }
 
@@ -178,10 +171,12 @@ readonly class Service implements FullService
         return true;
     }
 
-    public function authorizeCorrection(CorrectorAssignment $assignment, int $user_id): Result
+    public function authorizeCorrection(CorrectorAssignment $assignment): Result
     {
         if (!$this->canAuthorize($assignment)) {
-            return new Result(ResultStatus::BLOCK, ['authorization is not allowed']);
+            return new Result(ResultStatus::BLOCK, [
+                $this->language->txt('authorization_not_allowed')
+            ]);
         }
 
         $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
@@ -190,29 +185,33 @@ readonly class Service implements FullService
             $assignment->getCorrectorId()
         );
         if ($summary === null) {
-            return new Result(ResultStatus::BLOCK, ['summary not found']);
+            return new Result(ResultStatus::BLOCK, [
+               $this->language->txt('summary_not_found')
+            ]);
         }
 
         // use clone to allow compare with a previous version
         $summary = clone $summary;
-        $summary->setGradingStatus(GradingStatus::AUTHORIZED, $user_id);
+        $summary->setGradingStatus(GradingStatus::AUTHORIZED, $this->user_id);
 
         return $this->checkAndSaveSummary($summary);
     }
 
-    public function removeAuthorizations(int $task_id, Writer $writer, int $user_id): Result
+    public function removeAuthorizations(int $task_id, Writer $writer): Result
     {
         $changed = false;
 
         if ($writer->getCorrectionStatus() === CorrectionStatus::STITCH ||
             $writer->isCorrectionFinalized() && $writer->getFinalizedFromStatus() === CorrectionStatus::STITCH) {
-            return new Result(ResultStatus::BLOCK, ['not allowed for stitch decision']);
+            return new Result(ResultStatus::BLOCK, [
+                $this->language->txt('authorization_not_removable')
+            ]);
         }
 
         // remove authorizations
         foreach ($this->repos->correctorSummary()->allByTaskIdAndWriterId($task_id, $writer->getId()) as $summary) {
             if ($summary->isAuthorized()) {
-                $summary->setGradingStatus(GradingStatus::OPEN, $user_id);
+                $summary->setGradingStatus(GradingStatus::OPEN, $this->user_id);
                 $this->repos->correctorSummary()->save($summary);
                 $changed = true;
             }
@@ -223,44 +222,17 @@ readonly class Service implements FullService
 
             $this->log_entry->addEntry(
                 LogEntryType::CORRECTION_REMOVE_AUTHORIZATION,
-                MentionUser::fromSystem($user_id),
+                MentionUser::fromSystem($this->user_id),
                 MentionUser::fromWriter($writer)
             );
             return new Result(ResultStatus::OK, []);
         }
 
-        return new Result(ResultStatus::BLOCK, ['no authorizations found']);
+        return new Result(ResultStatus::BLOCK, [
+            $this->language->txt('authorizations_not_found')
+        ]);
     }
 
-    /**
-     * todo rewrite (currently unused)
-     */
-    public function removeCorrectorAuthorizations(Corrector $corrector, int $user_id): bool
-    {
-        if (empty($summaries = $this->repos->correctorSummary()->allByCorrectorId($corrector->getId()))) {
-            return false;
-        }
-        $writers = [];
-
-        foreach ($this->writer_service->all() as $writer) {
-            $writers[$writer->getId()] = $writer;
-        }
-
-        foreach ($summaries as $summary) {
-            $writer = $writers[$summary->getWriterId()] ?? null;
-            // don't remove a singe authorization from a finalized correction
-            if (empty($writer) || !empty($writer->getCorrectionFinalized())) {
-                continue;
-            }
-
-            $summary->setCorrectionAuthorized(null);
-            $summary->setCorrectionAuthorizedBy(null);
-            $this->repos->correctorSummary()->save($summary);
-            $this->log_entry->addEntry(LogEntryType::CORRECTION_REMOVE_OWN_AUTHORIZATION, MentionUser::fromSystem($user_id), MentionUser::fromWriter($writer));
-        }
-
-        return true;
-    }
 
     public function checkAndSaveSummary(CorrectorSummary $summary): Result
     {
@@ -271,7 +243,7 @@ readonly class Service implements FullService
         );
         $writer = $this->writer_service->oneByWriterId($summary->getWriterId());
         if ($assignment === null || $writer === null) {
-            $failures[] = 'assignment or writer not found';
+            $failures[] = $this->language->txt('assignment_or_writer_not_found');
         }
 
         $old = $this->summary_service->getForAssignment($assignment);
@@ -283,42 +255,55 @@ readonly class Service implements FullService
                 case GradingStatus::OPEN:
                 case GradingStatus::PRE_GRADED:
                     if ($old->isAuthorized() || $old->isRevised()) {
-                        $failures[] = 'changing to this status is not allowed';
+                        $failures[] = $this->language->txt('authorization_not_removable');
                     }
                     break;
                 case gradingStatus::AUTHORIZED:
                     if (!$this->canAuthorize($assignment)) {
-                        $failures[] = 'authorization is not allowed';
+                        $failures[] = $this->language->txt('authorization_not_allowed');
+                    }
+                    if ($summary->getPoints() === null) {
+                        $failures[] = $this->language->txt('points_missing');
+                    }
+                    if (empty($summary->getSummaryText()) && empty($summary->getSummaryPdf())) {
+                        $failures[] = $this->language->txt('authorization_text_missing');
                     }
                     break;
                 case GradingStatus::REVISED:
                     if (!$this->canRevise($assignment)) {
-                        $failures[] = 'revision is not allowed';
+                        $failures[] = $this->language->txt('revision_not_allowed');
                     }
+                    if ($summary->getRevisionPoints() === null) {
+                        $failures[] = $this->language->txt('points_missing');
+                    }
+                    if (empty($summary->getRevisionText())) {
+                        $failures[] = $this->language->txt('revision_text_missing');
+                    }
+                    break;
             }
         }
 
         if (($summary->getSummaryText() != $old->getSummaryText() || $summary->getPoints() != $old->getPoints()
             || $summary->getSummaryPdf() != $old->getSummaryPdf())
             && ($old->isAuthorized() || $old->isRevised())) {
-            $failures[] = 'changing correction is not allowed';
+            $failures[] = $this->language->txt('changing_correction_not_allowed');
         }
 
         if (($summary->getRevisionText() != $old->getRevisionText() || $summary->getRevisionPoints() != $old->getRevisionPoints()
             || $summary->getRequireOtherRevision() != $old->getRequireOtherRevision())
             && (!$old->isAuthorized() || $old->isRevised())) {
-            $failures[] = 'changing revision is not allowed';
+            $failures[] = $this->language->txt('revision_not_allowed');
         }
 
         if ($summary->getPoints() > $this->correction_settings->getMaxPoints()
             || $summary->getRevisionPoints() > $this->correction_settings->getMaxPoints()) {
-            $failures[] = 'points exceed the maximum';
+            $failures[] = $this->language->txt('points_exceed_maximum');
         }
 
         if ($this->correction_settings->getNoManualDecimals()
             && (floor($summary->getPoints() ?? 0) < $summary->getPoints() ?? 0)
                 || floor($summary->getRevisionPoints() ?? 0) < $summary->getRevisionPoints() ?? 0) {
-            $failures[] = 'points must not have decimals';
+            $failures[] = $this->language->txt('points_must_not_have_decimals');
         }
 
         if (!empty($failures)) {

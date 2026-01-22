@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'authorization_not_removable' => 'Freigabe kann nicht zurückgenommen werden',
+    'authorization_not_allowed' => 'Status erlaubt keine Freigabe',
+    'authorization_text_missing' => 'Gutachten fehlt',
+    'authorizations_not_found' => 'Keine Freigabe gefunden',
+    'assignment_or_writer_not_found' => 'Zuweisung oder Teilnehmer nicht gefunden',
     'grading_pos_first' => 'Erstkorrektor',
     'grading_pos_second' => 'Zweitkorrektor',
     'grading_pos_stitch' => 'Stichentscheider',
@@ -10,6 +15,7 @@ return [
     'grading_not_started' => 'nicht gestartet',
     'grading_open' => 'offen',
     'grading_authorized' => 'freigegeben',
+    'changing_correction_not_allowed' => 'Status erlaubt keine Änderung',
     'comment_rating_negative_default' => 'unzutreffend',
     'comment_rating_positive_default' => 'gelungen',
     'pdf_part_criteria' => 'Übersicht zum Bewertungsschema',
@@ -23,5 +29,11 @@ return [
     'pdf_part_summary_corrector2' => 'Gutachten oder Begründungsbogen (Zweitkorrektor)',
     'pdf_part_summary_corrector3' => 'Gutachten oder Begründungsbogen (Stichentscheider)',
     'points' => 'Punkte',
+    'points_exceed_maximum' => 'Mximale Punktzahl überschritten',
+    'points_missing' => 'Punkte fehlen',
+    'points_must_not_have_decimals' => 'Punkte nicht ganzzahlig',
+    'revision_not_allowed' => 'Status erlaubt keine Überarbeitung',
+    'revision_text_missing' => 'Begründungstext fehlt',
+    'summary_not_found' => 'Korrektur nicht gefunden',
     'task_solution' => "Lösungshinweise"
 ];
