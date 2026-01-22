@@ -11,8 +11,13 @@ interface ReadService
     public function oneByUserId(int $user_id): ?Writer;
     /** @return Writer[] */
     public function all(): array;
-    /** @return int[] */
-    public function authorizedIds(): array;
+
+    /**
+     * Get the ids of writers that can be corrected
+     * - They must be authorized and not excluded
+     * @return int[]
+     */
+    public function correctableIds(): array;
     public function oneByWriterId(int $writer_id): ?Writer;
     public function hasStitchDecisions(): bool;
 }

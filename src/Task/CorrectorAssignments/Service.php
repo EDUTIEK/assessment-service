@@ -66,7 +66,7 @@ readonly class Service implements FullService
     {
         $assignments = $this->repos->correctorAssignment()->allByCorrectorId($corrector_id);
         if ($only_authorized_writings) {
-            $writer_ids = $this->writer_service->authorizedIds();
+            $writer_ids = $this->writer_service->correctableIds();
             return array_filter(
                 $assignments,
                 fn(CorrectorAssignment $assignment) => in_array($assignment->getWriterId(), $writer_ids)

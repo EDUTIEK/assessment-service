@@ -28,7 +28,22 @@ interface FullService extends ReadService
         int $by_user_id
     ): bool;
     public function removeWorkingTime(Writer $writer, int $by_user_id): void;
-    public function remove(Writer $writer, ?int $by_user_id = null): void;
-    public function exclude(Writer $writer, int $by_user_id): void;
-    public function repealExclusion(Writer $writer, int $by_user_id): void;
+
+    /**
+     * Remove all data of a writer from the assessment
+     * This action is logged with a reason note
+     */
+    public function remove(Writer $writer, ?string $reason = null): void;
+
+    /**
+     * Exclude a writer from the assessment
+     * This action is logged with a reason note
+     */
+    public function exclude(Writer $writer, ?string $reason = null): void;
+
+    /**
+     * Repeal the exclusion a writer from the assessment
+     * This action is logged with a reason note
+     */
+    public function repealExclusion(Writer $writer, ?string $reason = null): void;
 }

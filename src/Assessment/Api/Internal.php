@@ -189,6 +189,7 @@ class Internal implements ComponentApi, ComponentApiFactory
     {
         return $this->instances[WriterService::class][$ass_id] ??= new WriterService(
             $ass_id,
+            $user_id,
             $this->dependencies->repositories(),
             $this->workingTimeFactory($user_id),
             $this->logEntry($ass_id),

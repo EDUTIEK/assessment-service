@@ -22,6 +22,7 @@ readonly class Service implements ReadService, FullService
 {
     public function __construct(
         private int $ass_id,
+        private int $user_id,
         private Repositories $repos,
         private WorkingTimeFactory $working_time_factory,
         private LogEntryService $log_entry_service,
@@ -69,9 +70,9 @@ readonly class Service implements ReadService, FullService
         return $this->repos->writer()->allByAssId($this->ass_id);
     }
 
-    public function authorizedIds(): array
+    public function correctableIds(): array
     {
-        return $this->repos->writer()->authorizedIds($this->ass_id);
+        return $this->repos->writer()->correctableIds($this->ass_id);
     }
 
     /**
@@ -189,44 +190,44 @@ readonly class Service implements ReadService, FullService
         );
     }
 
-    public function repealExclusion(Writer $writer, int $by_user_id): void
+    public function repealExclusion(Writer $writer, ?string $reason = null): void
     {
         $writer->setWritingExcluded(null);
         $writer->setWritingExcludedBy(null);
         $this->save($writer);
         $this->log_entry_service->addEntry(
             LogEntryType::WRITER_REPEAL_EXCLUSION,
-            LogEntryMention::fromSystem($by_user_id),
-            LogEntryMention::fromWriter($writer)
+            LogEntryMention::fromSystem($this->user_id),
+            LogEntryMention::fromWriter($writer),
+            $reason
         );
     }
 
-    public function exclude(Writer $writer, int $by_user_id): void
+    public function exclude(Writer $writer, ?string $reason = null): void
     {
-        $writer->setWritingExcluded(new \DateTimeImmutable('now'));
-        $writer->setWritingExcludedBy($by_user_id);
+        $writer->setWritingExcluded(new \DateTimeImmutable());
+        $writer->setWritingExcludedBy($this->user_id);
         $this->save($writer);
         $this->log_entry_service->addEntry(
             LogEntryType::WRITER_EXCLUSION,
-            LogEntryMention::fromSystem($by_user_id),
-            LogEntryMention::fromWriter($writer)
+            LogEntryMention::fromSystem($this->user_id),
+            LogEntryMention::fromWriter($writer),
+            $reason
         );
     }
 
-    public function remove(Writer $writer, ?int $by_user_id = null): void
+    public function remove(Writer $writer, ?string $reason = null): void
     {
         $this->checkScope($writer);
-        // TODO: Trigger removal of user data
-        if ($by_user_id !== null) {
-            $this->log_entry_service->addEntry(
-                LogEntryType::WRITER_REMOVAL,
-                LogEntryMention::fromSystem($by_user_id),
-                LogEntryMention::fromWriter($writer)
-            );
-        }
-
         $this->repos->writer()->delete($writer->getId());
         $this->events->dispatchEvent(new WriterRemoved($writer->getId(), $this->ass_id));
+
+        $this->log_entry_service->addEntry(
+            LogEntryType::WRITER_REMOVAL,
+            LogEntryMention::fromSystem($this->user_id),
+            LogEntryMention::fromWriter($writer),
+            $reason
+        );
     }
 
     private function checkScope(Writer $writer)

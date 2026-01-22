@@ -39,7 +39,7 @@ readonly class Service implements FullService
     public function canCorrect(CorrectorAssignment $assignment): bool
     {
         $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
-        if (!$writer->getWritingAuthorized()) {
+        if (!$writer->canBeCorrected()) {
             return false;
         }
         if ($assignment->getPosition()->isCorrector() && $writer->getCorrectionStatus() !== CorrectionStatus::OPEN) {
@@ -82,7 +82,7 @@ readonly class Service implements FullService
     public function canAuthorize(CorrectorAssignment $assignment): bool
     {
         $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
-        if (!$writer->getWritingAuthorized()) {
+        if (!$writer->canBeCorrected()) {
             return false;
         }
         if ($assignment->getPosition()->isCorrector() && $writer->getCorrectionStatus() !== CorrectionStatus::OPEN) {

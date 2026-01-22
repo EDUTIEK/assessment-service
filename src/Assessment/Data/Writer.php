@@ -135,6 +135,14 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
         return $this->getWritingExcluded() !== null;
     }
 
+    /**
+     * @see WriterRepo::correctableIds
+     */
+    public function canBeCorrected(): bool
+    {
+        return $this->isAuthorized() && !$this->isExcluded();
+    }
+
     public function canGetExcluded(): bool
     {
         return $this->getWritingExcluded() === null;
