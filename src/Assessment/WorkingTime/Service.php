@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\WorkingTime;
 
-use DateTimeZone;
 use DateTimeImmutable;
+use DateTimeZone;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Data\ValidationError;
 use Edutiek\AssessmentService\Assessment\Data\ValidationErrorStore;
-use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\System\Format\FullService as SystemFormat;
-use Edutiek\AssessmentService\Assessment\WorkingTime\Service as WorkingTimeService;
+use Edutiek\AssessmentService\System\Language\FullService as Language;
 
 /**
  * Calculation of the common or individual working time
@@ -36,7 +35,7 @@ readonly class Service implements FullService
     public function __construct(
         private Language $language,
         OrgaSettings $settings,
-        Writer|IndividualWorkingTime|null $writer = null
+        ?IndividualWorkingTime $writer = null
     ) {
         $this->time_zone = new DateTimeZone(date_default_timezone_get());
 

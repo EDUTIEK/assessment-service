@@ -4,8 +4,6 @@ namespace Edutiek\AssessmentService\Assessment\WorkingTime;
 
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
-use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as FullWorkingTime;
-use Edutiek\AssessmentService\Assessment\WorkingTime\Service as WorkingTime;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 
 readonly class Factory
@@ -15,9 +13,9 @@ readonly class Factory
     ) {
     }
 
-    public function workingTime(OrgaSettings $orga, Writer|IndividualWorkingTime|null $writer = null): FullWorkingTime
+    public function workingTime(OrgaSettings $orga, ?IndividualWorkingTime $writer = null): FullService
     {
-        return new WorkingTime(
+        return new Service(
             $this->language,
             $orga,
             $writer

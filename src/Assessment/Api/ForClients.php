@@ -23,8 +23,8 @@ use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsF
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
 use Edutiek\AssessmentService\Assessment\Properties\FullService as PropertiesFullSrvice;
 use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymService;
-use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as FullWorkingTime;
-use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as IndividualWorkingTime;
+use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as WorkingTimeService;
+use Edutiek\AssessmentService\Assessment\WorkingTime\IndividualWorkingTime;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterFullService;
 
 readonly class ForClients
@@ -106,9 +106,12 @@ readonly class ForClients
         return $this->internal->format($orga, $this->ass_id, $this->user_id);
     }
 
-    public function workingTime(OrgaSettings $orga, Writer|IndividualWorkingTime|null $writer = null): FullWorkingTime
+    public function workingTime(?IndividualWorkingTime $writer = null): WorkingTimeService
     {
-        return $this->internal->workingTimeFactory($this->user_id)->workingTime($orga, $writer);
+        return $this->internal->workingTimeFactory($this->user_id)->workingTime(
+            $this->internal->orgaSettings($this->ass_id, $this->user_id)->get(),
+            $writer
+        );
     }
 
     public function logEntry(): FullLogEntryService
