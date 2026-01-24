@@ -11,7 +11,7 @@ use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImage;
 use Edutiek\AssessmentService\System\BackgroundTask\Manager as BackgroundTaskManager;
 use Edutiek\AssessmentService\System\ConstraintHandling\Actions\ChangeWritingContent;
 use Edutiek\AssessmentService\System\ConstraintHandling\Collector;
-use Edutiek\AssessmentService\System\ConstraintHandling\Result;
+use Edutiek\AssessmentService\System\ConstraintHandling\ConstraintResult;
 use Edutiek\AssessmentService\System\ConstraintHandling\ResultStatus;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
@@ -116,7 +116,7 @@ readonly class Service implements ClientService, EventService
     /**
      * Check if the content of an essay can be replaced
      */
-    public function canChange(Essay $essay): Result
+    public function canChange(Essay $essay): ConstraintResult
     {
         $this->checkWriterScope($essay->getWriterId());
         $this->checkTaskScope($essay->getTaskId());

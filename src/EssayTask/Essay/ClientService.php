@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\EssayTask\Essay;
 
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
-use Edutiek\AssessmentService\System\ConstraintHandling\Result;
+use Edutiek\AssessmentService\System\ConstraintHandling\ConstraintResult;
 
 interface ClientService
 {
@@ -32,7 +32,7 @@ interface ClientService
     /**
      * Check if the content of an essay can be replaced
      */
-    public function canChange(Essay $essay): Result;
+    public function canChange(Essay $essay): ConstraintResult;
 
     public function replacePdf(Essay $essay, string $file_id): void;
     public function deletePdf(Essay $essay): void;

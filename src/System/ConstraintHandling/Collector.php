@@ -12,7 +12,7 @@ interface Collector
     /**
      * Call all providers to check if an action can be executed
      */
-    public function check(Action $action): Result;
+    public function check(Action $action): ConstraintResult;
 
     /**
      * Add a provider for constraint checks

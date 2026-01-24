@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\ConstraintHandling;
 
-readonly class Result
+readonly class ConstraintResult
 {
     /**
      * Result of a contraint check

@@ -12,7 +12,7 @@ use Edutiek\AssessmentService\Assessment\LogEntry\MentionUser;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
-use Edutiek\AssessmentService\System\ConstraintHandling\Result;
+use Edutiek\AssessmentService\System\ConstraintHandling\ConstraintResult;
 use Edutiek\AssessmentService\System\ConstraintHandling\ResultStatus;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as SummaryService;
@@ -171,10 +171,10 @@ readonly class Service implements FullService
         return true;
     }
 
-    public function authorizeCorrection(CorrectorAssignment $assignment): Result
+    public function authorizeCorrection(CorrectorAssignment $assignment): ConstraintResult
     {
         if (!$this->canAuthorize($assignment)) {
-            return new Result(ResultStatus::BLOCK, [
+            return new ConstraintResult(ResultStatus::BLOCK, [
                 $this->language->txt('authorization_not_allowed')
             ]);
         }
@@ -185,7 +185,7 @@ readonly class Service implements FullService
             $assignment->getCorrectorId()
         );
         if ($summary === null) {
-            return new Result(ResultStatus::BLOCK, [
+            return new ConstraintResult(ResultStatus::BLOCK, [
                $this->language->txt('summary_not_found')
             ]);
         }
@@ -197,13 +197,13 @@ readonly class Service implements FullService
         return $this->checkAndSaveSummary($summary);
     }
 
-    public function removeAuthorizations(int $task_id, Writer $writer): Result
+    public function removeAuthorizations(int $task_id, Writer $writer): ConstraintResult
     {
         $changed = false;
 
         if ($writer->getCorrectionStatus() === CorrectionStatus::STITCH ||
             $writer->isCorrectionFinalized() && $writer->getFinalizedFromStatus() === CorrectionStatus::STITCH) {
-            return new Result(ResultStatus::BLOCK, [
+            return new ConstraintResult(ResultStatus::BLOCK, [
                 $this->language->txt('authorization_not_removable')
             ]);
         }
@@ -225,16 +225,16 @@ readonly class Service implements FullService
                 MentionUser::fromSystem($this->user_id),
                 MentionUser::fromWriter($writer)
             );
-            return new Result(ResultStatus::OK, []);
+            return new ConstraintResult(ResultStatus::OK, []);
         }
 
-        return new Result(ResultStatus::BLOCK, [
+        return new ConstraintResult(ResultStatus::BLOCK, [
             $this->language->txt('authorizations_not_found')
         ]);
     }
 
 
-    public function checkAndSaveSummary(CorrectorSummary $summary): Result
+    public function checkAndSaveSummary(CorrectorSummary $summary): ConstraintResult
     {
         $assignment = $this->repos->correctorAssignment()->oneByIds(
             $summary->getWriterId(),
@@ -307,7 +307,7 @@ readonly class Service implements FullService
         }
 
         if (!empty($failures)) {
-            return new Result(ResultStatus::BLOCK, $failures);
+            return new ConstraintResult(ResultStatus::BLOCK, $failures);
         }
 
         $this->repos->correctorSummary()->save($summary);
@@ -322,6 +322,6 @@ readonly class Service implements FullService
 
         $this->whole_process->updateStatus($writer);
 
-        return new Result(ResultStatus::OK, []);
+        return new ConstraintResult(ResultStatus::OK, []);
     }
 }

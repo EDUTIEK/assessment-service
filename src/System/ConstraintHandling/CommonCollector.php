@@ -27,7 +27,7 @@ class CommonCollector implements Collector
         }
     }
 
-    public function check(Action $action): Result
+    public function check(Action $action): ConstraintResult
     {
         $collection = new ResultCollection();
         array_map(
