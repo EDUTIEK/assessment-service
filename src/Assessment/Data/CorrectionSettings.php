@@ -61,14 +61,4 @@ abstract class CorrectionSettings implements AssessmentEntity
     {
         return $this->getRequiredCorrectors() > 1 && ($this->getProcedureWhenDecimals() || $this->getProcedureWhenDistance());
     }
-
-    public function addValidationError(CorrectionSettingsError $error)
-    {
-        $this->validation_errors[] = $error;
-    }
-
-    public function getValidationErrors(): array
-    {
-        return $this->validation_errors;
-    }
 }

@@ -38,7 +38,7 @@ readonly class ForTasks
 
     public function correctionSettings(): CorrectionSettingsReadService
     {
-        return $this->internal->correctionSettings($this->ass_id);
+        return $this->internal->correctionSettings($this->ass_id, $this->user_id);
     }
 
     public function pdfSettings(): PdfSettingsFullService

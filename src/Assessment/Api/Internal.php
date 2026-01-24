@@ -292,19 +292,20 @@ class Internal implements ComponentApi, ComponentApiFactory
             $ass_id,
             $user_id,
             $this->dependencies->repositories(),
-            $this->correctionSettings($ass_id),
+            $this->correctionSettings($ass_id, $user_id),
             $this->writer($ass_id, $user_id),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->dependencies->taskApi()->gradingProvider($ass_id, $user_id)
         );
     }
 
-    public function correctionSettings(int $ass_id): CorrectionSettingsService
+    public function correctionSettings(int $ass_id, int $user_id): CorrectionSettingsService
     {
-        return $this->instances[CorrectionSettingsService::class][$ass_id] = new CorrectionSettingsService(
+        return $this->instances[CorrectionSettingsService::class][$ass_id][$user_id] ??= new CorrectionSettingsService(
             $ass_id,
             $this->dependencies->repositories(),
-            $this->pseudonym($ass_id)
+            $this->pseudonym($ass_id),
+            $this->language($user_id)
         );
     }
 
@@ -367,7 +368,8 @@ class Internal implements ComponentApi, ComponentApiFactory
         return $this->instances[OrgaSettingsService::class][$ass_id][$user_id] = new OrgaSettingsService(
             $ass_id,
             $this->dependencies->repositories(),
-            $this->workingTimeFactory($user_id)
+            $this->workingTimeFactory($user_id),
+            $this->language($user_id)
         );
     }
 

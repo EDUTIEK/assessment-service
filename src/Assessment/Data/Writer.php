@@ -5,14 +5,10 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Data;
 
 use DateTimeImmutable;
-use Edutiek\AssessmentService\Assessment\Data\ValidationErrorStore;
-use Edutiek\AssessmentService\Assessment\Data\ValidationError;
 use Edutiek\AssessmentService\Assessment\WorkingTime\IndividualWorkingTime;
 
-abstract class Writer implements AssessmentEntity, ValidationErrorStore, IndividualWorkingTime
+abstract class Writer implements AssessmentEntity, IndividualWorkingTime
 {
-    /** @var ValidationError[] */
-    private $validation_errors = [];
     private ?WritingStatus $writing_status = null;
     private ?CombinedStatus $combined_status = null;
 
@@ -187,15 +183,5 @@ abstract class Writer implements AssessmentEntity, ValidationErrorStore, Individ
     public function isCorrectionFinalized(): bool
     {
         return $this->getCorrectionStatus() === CorrectionStatus::FINALIZED;
-    }
-
-    public function addValidationError(ValidationError $error): void
-    {
-        $this->validation_errors[] = $error;
-    }
-
-    public function getValidationErrors(): array
-    {
-        return $this->validation_errors;
     }
 }

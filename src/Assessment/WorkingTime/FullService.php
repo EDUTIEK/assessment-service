@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\WorkingTime;
 
 use DateTimeImmutable;
-use Edutiek\AssessmentService\Assessment\Data\ValidationErrorStore;
+use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\Format\FullService as SystemFormat;
 
 interface FullService
@@ -26,5 +26,5 @@ interface FullService
     public function isEndBeforeStart(): bool;
     public function isTimeLimitTooLong(): bool;
     public function format(SystemFormat $system_format): string;
-    public function validate(?ValidationErrorStore $store = null) : bool;
+    public function validate(?Result $result = null) : Result;
 }

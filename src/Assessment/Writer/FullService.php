@@ -4,6 +4,7 @@ namespace Edutiek\AssessmentService\Assessment\Writer;
 
 use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\System\Data\Result;
 
 interface FullService extends ReadService
 {
@@ -14,7 +15,7 @@ interface FullService extends ReadService
      */
     public function getByUserId(int $user_id): Writer;
     public function save(Writer $writer): void;
-    public function validate(Writer $writer): bool;
+    public function validate(Writer $writer): Result;
 
     public function authorizeWriting(Writer $writer, int $by_user_id, bool $as_admin): void;
     public function removeWritingAuthorization(Writer $writer, int $by_user_id): void;
@@ -27,7 +28,7 @@ interface FullService extends ReadService
         ?\DateTimeImmutable $earliest_start,
         ?\DateTimeImmutable $latest_end,
         ?int $time_limit_minutes,
-    ): bool;
+    ): Result;
     public function removeWorkingTime(Writer $writer): void;
 
     /**

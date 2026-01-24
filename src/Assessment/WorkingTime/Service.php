@@ -7,9 +7,7 @@ namespace Edutiek\AssessmentService\Assessment\WorkingTime;
 use DateTimeImmutable;
 use DateTimeZone;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
-use Edutiek\AssessmentService\Assessment\Data\ValidationError;
-use Edutiek\AssessmentService\Assessment\Data\ValidationErrorStore;
-use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\Format\FullService as SystemFormat;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 
@@ -251,22 +249,20 @@ readonly class Service implements FullService
         return $this->language->txt('not_specified');
     }
 
-    public function validate(?ValidationErrorStore $store = null): bool
+    public function validate(?Result $result = null): Result
     {
-        $valid = true;
+        $result ??= new Result();
+
         if ($this->isEndBeforeStart()) {
-            $store?->addValidationError(ValidationError::LATEST_END_BEFORE_EARLIEST_START);
-            $valid = false;
+            $result->addFailure($this->language->txt('working_time_latest_end_before_earliest_start'));
         } elseif ($this->isTimeLimitTooLong()) {
-            $store?->addValidationError(ValidationError::TIME_LIMIT_TOO_LONG);
-            $valid = false;
+            $result->addFailure($this->language->txt('working_time_limit_too_long'));
         }
         if ($this->solution_available
             && $this->solution_available_date !== null && $this->getWorkingDeadline() !== null
             && $this->solution_available_date <= $this->getWorkingDeadline()) {
-            $store?->addValidationError(ValidationError::TIME_EXCEEDS_SOLUTION_AVAILABILITY);
-            $valid = false;
+            $result->addFailure($this->language->txt('working_time_exceeds_solution_availability'));
         }
-        return $valid;
+        return $result;
     }
 }

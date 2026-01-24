@@ -14,6 +14,7 @@ use Edutiek\AssessmentService\Assessment\LogEntry\MentionUser as LogEntryMention
 use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
 use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
+use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
 use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
@@ -99,7 +100,7 @@ readonly class Service implements ReadService, FullService
         }
         $writer->setWritingAuthorized($now);
         $writer->setWritingAuthorizedBy($by_user_id);
-        if ($this->validate($writer)) {
+        if ($this->validate($writer)->isOk()) {
             $this->save($writer);
             if ($as_admin) {
                 $this->log_entry_service->addEntry(
@@ -116,7 +117,7 @@ readonly class Service implements ReadService, FullService
         $was_authorized = ($writer->getWritingAuthorized() !== null);
         $writer->setWritingAuthorized(null);
         $writer->setWritingAuthorizedBy(null);
-        if ($this->validate($writer)) {
+        if ($this->validate($writer)->isOk()) {
             $this->save($writer);
             if ($was_authorized) {
                 $this->log_entry_service->addEntry(
@@ -164,21 +165,20 @@ readonly class Service implements ReadService, FullService
         ?\DateTimeImmutable $earliest_start,
         ?\DateTimeImmutable $latest_end,
         ?int $time_limit_minutes,
-    ): bool {
+    ): Result {
         $writer->setEarliestStart($earliest_start);
         $writer->setLatestEnd($latest_end);
         $writer->setTimeLimitMinutes($time_limit_minutes);
-        if ($this->validate($writer)) {
+        $result = $this->validate($writer);
+        if ($result->isOk()) {
             $this->save($writer);
             $this->log_entry_service->addEntry(
                 LogEntryType::WORKING_TIME_CHANGE,
                 LogEntryMention::fromSystem($this->user_id),
                 LogEntryMention::fromWriter($writer)
             );
-            return true;
-        } else {
-            return false;
         }
+        return $result;
     }
 
     public function removeWorkingTime(Writer $writer): void
@@ -241,12 +241,12 @@ readonly class Service implements ReadService, FullService
         }
     }
 
-    public function validate(Writer $writer): bool
+    public function validate(Writer $writer): Result
     {
         $this->checkScope($writer);
         $settings = $this->repos->orgaSettings()->one($this->ass_id);
         $working_time = $this->working_time_factory->workingTime($settings, $writer);
-        return $working_time->validate($writer);
+        return $working_time->validate();
     }
 
     public function hasStitchDecisions(): bool

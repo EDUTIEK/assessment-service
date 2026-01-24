@@ -43,7 +43,7 @@ readonly class ForClients
 
     public function correctionSettings(): CorrectionSettingsFullService
     {
-        return $this->internal->correctionSettings($this->ass_id);
+        return $this->internal->correctionSettings($this->ass_id, $this->user_id);
     }
 
     public function corrector(): CorrectorFullService

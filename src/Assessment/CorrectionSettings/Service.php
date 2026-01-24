@@ -9,13 +9,16 @@ use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettingsError;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymService;
+use Edutiek\AssessmentService\System\Data\Result;
+use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 
 readonly class Service implements FullService
 {
     public function __construct(
         private int $ass_id,
         private Repositories $repos,
-        private PseudonymService $pseudonym_service
+        private PseudonymService $pseudonym_service,
+        private LanguageService $language,
     ) {
     }
 
@@ -28,15 +31,17 @@ readonly class Service implements FullService
         return clone $setting;
     }
 
-    public function validate(CorrectionSettings $settings): bool
+    public function validate(CorrectionSettings $settings): Result
     {
         $this->checkScope($settings);
+        $result = new Result();
 
-        if ($settings->getRequiredCorrectors() === 1 && ($settings->getProcedureWhenDecimals() || $settings->getProcedureWhenDistance())) {
-            $settings->addValidationError(CorrectionSettingsError::ATLEAST_TWO_CORRECTORS);
+        if ($settings->getRequiredCorrectors() === 1
+            && ($settings->getProcedureWhenDecimals() || $settings->getProcedureWhenDistance())) {
+            $result->addFailure($this->language->txt('correction_procedure_needs_two_correctors'));
         }
 
-        return empty($settings->getValidationErrors());
+        return $result;
     }
 
     public function save(CorrectionSettings $settings): void

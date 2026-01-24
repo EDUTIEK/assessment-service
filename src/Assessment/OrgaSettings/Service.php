@@ -7,15 +7,17 @@ namespace Edutiek\AssessmentService\Assessment\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
-use Edutiek\AssessmentService\Assessment\Data\ValidationError;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
+use Edutiek\AssessmentService\System\Data\Result;
+use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 
 readonly class Service implements FullService
 {
     public function __construct(
         private int $ass_id,
         private Repositories $repos,
-        private WorkingTimeFactory $working_time_factory
+        private WorkingTimeFactory $working_time_factory,
+        private LanguageService $language
     ) {
     }
 
@@ -25,29 +27,25 @@ readonly class Service implements FullService
             $this->repos->orgaSettings()->new()->setAssId($this->ass_id);
     }
 
-    public function validate(OrgaSettings $settings) : bool
+    public function validate(OrgaSettings $settings) : Result
     {
         $this->checkScope($settings);
+        $result = new Result();
 
-        $valid = true;
         $working_time = $this->working_time_factory->workingTime($settings);
-        if (!$working_time->validate($settings)) {
-            $valid = false;
-        }
+        $working_time->validate($result);
 
         if ($settings->getCorrectionStart() !== null && $settings->getCorrectionEnd() !== null
             && $settings->getCorrectionStart() > $settings->getCorrectionEnd()) {
-            $settings->addValidationError(ValidationError::CORRECTION_END_BEFORE_CORRECTION_START);
-            $valid = false;
+            $result->addFailure($this->language->txt('orga_correction_end_before_correction_start'));
         }
 
         if ($settings->getReviewStart() !== null && $settings->getReviewEnd() !== null
             && $settings->getReviewStart() > $settings->getReviewEnd()) {
-            $settings->addValidationError(ValidationError::REVIEW_END_BEFORE_REVIEW_START);
-            $valid = false;
+            $result->addFailure($this->language->txt('orga_review_end_before_review_start'));
         }
 
-        return $valid;
+        return $result;
     }
 
     public function save(OrgaSettings $settings): void
