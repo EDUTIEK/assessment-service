@@ -12,8 +12,7 @@ use Edutiek\AssessmentService\Assessment\LogEntry\MentionUser;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
-use Edutiek\AssessmentService\System\ConstraintHandling\ConstraintResult;
-use Edutiek\AssessmentService\System\ConstraintHandling\ResultStatus;
+use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as SummaryService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
@@ -171,12 +170,10 @@ readonly class Service implements FullService
         return true;
     }
 
-    public function authorizeCorrection(CorrectorAssignment $assignment): ConstraintResult
+    public function authorizeCorrection(CorrectorAssignment $assignment): Result
     {
         if (!$this->canAuthorize($assignment)) {
-            return new ConstraintResult(ResultStatus::BLOCK, [
-                $this->language->txt('authorization_not_allowed')
-            ]);
+            return new Result(false, $this->language->txt('authorization_not_allowed'));
         }
 
         $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
@@ -185,9 +182,7 @@ readonly class Service implements FullService
             $assignment->getCorrectorId()
         );
         if ($summary === null) {
-            return new ConstraintResult(ResultStatus::BLOCK, [
-               $this->language->txt('summary_not_found')
-            ]);
+            return new Result(false, $this->language->txt('summary_not_found'));
         }
 
         // use clone to allow compare with a previous version
@@ -197,15 +192,13 @@ readonly class Service implements FullService
         return $this->checkAndSaveSummary($summary);
     }
 
-    public function removeAuthorizations(int $task_id, Writer $writer): ConstraintResult
+    public function removeAuthorizations(int $task_id, Writer $writer): Result
     {
         $changed = false;
 
         if ($writer->getCorrectionStatus() === CorrectionStatus::STITCH ||
             $writer->isCorrectionFinalized() && $writer->getFinalizedFromStatus() === CorrectionStatus::STITCH) {
-            return new ConstraintResult(ResultStatus::BLOCK, [
-                $this->language->txt('authorization_not_removable')
-            ]);
+            return new Result(false,$this->language->txt('authorization_not_removable'));
         }
 
         // remove authorizations
@@ -225,17 +218,16 @@ readonly class Service implements FullService
                 MentionUser::fromSystem($this->user_id),
                 MentionUser::fromWriter($writer)
             );
-            return new ConstraintResult(ResultStatus::OK, []);
+            return new Result(true);
         }
 
-        return new ConstraintResult(ResultStatus::BLOCK, [
-            $this->language->txt('authorizations_not_found')
-        ]);
+        return new Result(false,$this->language->txt('authorizations_not_found'));
     }
 
-
-    public function checkAndSaveSummary(CorrectorSummary $summary): ConstraintResult
+    public function checkAndSaveSummary(CorrectorSummary $summary): Result
     {
+        $result = new Result();
+
         $assignment = $this->repos->correctorAssignment()->oneByIds(
             $summary->getWriterId(),
             $summary->getCorrectorId(),
@@ -243,7 +235,7 @@ readonly class Service implements FullService
         );
         $writer = $this->writer_service->oneByWriterId($summary->getWriterId());
         if ($assignment === null || $writer === null) {
-            $failures[] = $this->language->txt('assignment_or_writer_not_found');
+            $result->addFailure($this->language->txt('assignment_or_writer_not_found'));
         }
 
         $old = $this->summary_service->getForAssignment($assignment);
@@ -255,29 +247,29 @@ readonly class Service implements FullService
                 case GradingStatus::OPEN:
                 case GradingStatus::PRE_GRADED:
                     if ($old->isAuthorized() || $old->isRevised()) {
-                        $failures[] = $this->language->txt('authorization_not_removable');
+                        $result->addFailure($this->language->txt('authorization_not_removable'));
                     }
                     break;
                 case gradingStatus::AUTHORIZED:
                     if (!$this->canAuthorize($assignment)) {
-                        $failures[] = $this->language->txt('authorization_not_allowed');
+                        $result->addFailure($this->language->txt('authorization_not_allowed'));
                     }
                     if ($summary->getPoints() === null) {
-                        $failures[] = $this->language->txt('points_missing');
+                        $result->addFailure($this->language->txt('points_missing'));
                     }
                     if (empty($summary->getSummaryText()) && empty($summary->getSummaryPdf())) {
-                        $failures[] = $this->language->txt('authorization_text_missing');
+                        $result->addFailure($this->language->txt('authorization_text_missing'));
                     }
                     break;
                 case GradingStatus::REVISED:
                     if (!$this->canRevise($assignment)) {
-                        $failures[] = $this->language->txt('revision_not_allowed');
+                        $result->addFailure($this->language->txt('revision_not_allowed'));
                     }
                     if ($summary->getRevisionPoints() === null) {
-                        $failures[] = $this->language->txt('points_missing');
+                        $result->addFailure($this->language->txt('points_missing'));
                     }
                     if (empty($summary->getRevisionText())) {
-                        $failures[] = $this->language->txt('revision_text_missing');
+                        $result->addFailure($this->language->txt('revision_text_missing'));
                     }
                     break;
             }
@@ -286,28 +278,28 @@ readonly class Service implements FullService
         if (($summary->getSummaryText() != $old->getSummaryText() || $summary->getPoints() != $old->getPoints()
             || $summary->getSummaryPdf() != $old->getSummaryPdf())
             && ($old->isAuthorized() || $old->isRevised())) {
-            $failures[] = $this->language->txt('changing_correction_not_allowed');
+            $result->addFailure($this->language->txt('changing_correction_not_allowed'));
         }
 
         if (($summary->getRevisionText() != $old->getRevisionText() || $summary->getRevisionPoints() != $old->getRevisionPoints()
             || $summary->getRequireOtherRevision() != $old->getRequireOtherRevision())
             && (!$old->isAuthorized() || $old->isRevised())) {
-            $failures[] = $this->language->txt('revision_not_allowed');
+            $result->addFailure($this->language->txt('revision_not_allowed'));
         }
 
         if ($summary->getPoints() > $this->correction_settings->getMaxPoints()
             || $summary->getRevisionPoints() > $this->correction_settings->getMaxPoints()) {
-            $failures[] = $this->language->txt('points_exceed_maximum');
+            $result->addFailure($this->language->txt('points_exceed_maximum'));
         }
 
         if ($this->correction_settings->getNoManualDecimals()
             && (floor($summary->getPoints() ?? 0) < $summary->getPoints() ?? 0)
                 || floor($summary->getRevisionPoints() ?? 0) < $summary->getRevisionPoints() ?? 0) {
-            $failures[] = $this->language->txt('points_must_not_have_decimals');
+            $result->addFailure($this->language->txt('points_must_not_have_decimals'));
         }
 
-        if (!empty($failures)) {
-            return new ConstraintResult(ResultStatus::BLOCK, $failures);
+        if ($result->isFailed()) {
+            return $result;
         }
 
         $this->repos->correctorSummary()->save($summary);
@@ -321,7 +313,6 @@ readonly class Service implements FullService
         }
 
         $this->whole_process->updateStatus($writer);
-
-        return new ConstraintResult(ResultStatus::OK, []);
+        return $result;
     }
 }

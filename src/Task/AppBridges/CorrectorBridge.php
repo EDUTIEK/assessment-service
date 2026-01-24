@@ -569,10 +569,10 @@ class CorrectorBridge implements AppCorrectorBridge
         if ($change->getAction() === ChangeAction::SAVE) {
 
             $result = $this->process_service->checkAndSaveSummary($summary);
-            if ($result->status() === ResultStatus::OK) {
+            if ($result->isOk()) {
                 return $change->toResponse(true);
             } else {
-                return $change->toResponse(false, implode("; ", $result->messages()));
+                return $change->toResponse(false, implode("; ", $result->failures()));
             }
         }
         return $change->toResponse(false, 'wrong action');
