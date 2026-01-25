@@ -8,6 +8,8 @@ use DateTimeImmutable;
 
 interface FullService
 {
+    public function date(?DateTimeImmutable $date): string;
+
     public function dateRange(?DateTimeImmutable $start, ?DateTimeImmutable $end): string;
 
     /**

@@ -23,7 +23,9 @@ use Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service as HtmlService;
 use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\EssayTask\PdfCreation\CorrectionProvider;
 use Edutiek\AssessmentService\EssayTask\PdfCreation\WritingProvider;
+use Edutiek\AssessmentService\EssayTask\PdfOutput\Service as PdfOutputService;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
+use Edutiek\AssessmentService\EssayTask\WritingSteps\Service as WritingStepsService;
 use Edutiek\AssessmentService\System\BackgroundTask\Job;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 
@@ -207,9 +209,9 @@ class Internal
         );
     }
 
-    public function pdfOutput(int $ass_id, int $user_id): PdfOutput
+    public function pdfOutput(int $ass_id, int $user_id): PdfOutputService
     {
-        return $this->instances[PdfOutput::class] = new PdfOutput(
+        return $this->instances[PdfOutputService::class] = new PdfOutputService(
             $this->dependencies->assessmentApi($ass_id, $user_id)->pdfSettings(),
             $this->dependencies->repositories()->essayImage(),
             $this->dependencies->systemApi()->pdfCreator(),
@@ -234,9 +236,21 @@ class Internal
 
     public function writingSettings(int $ass_id): WritingSettingsService
     {
-        return $this->instances[WritingSettingsService::class] = new WritingSettingsService(
+        return $this->instances[WritingSettingsService::class][$ass_id] = new WritingSettingsService(
             $ass_id,
             $this->dependencies->repositories()
+        );
+    }
+
+    public function writingSteps(int $ass_id, int $user_id): WritingStepsService
+    {
+        return $this->instances[WritingStepsService::class][$ass_id][$user_id] = new WritingStepsService(
+            $this->essay($ass_id, $user_id),
+            $this->dependencies->taskApi($ass_id, $user_id)->tasks(),
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->config(),
+            $this->dependencies->systemApi()->tempStorage(),
+            $this->dependencies->systemApi()->format($user_id),
         );
     }
 
@@ -253,4 +267,5 @@ class Internal
             $this->essay($ass_id, $user_id, false),
         );
     }
+
 }

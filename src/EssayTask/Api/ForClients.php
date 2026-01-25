@@ -7,9 +7,9 @@ namespace Edutiek\AssessmentService\EssayTask\Api;
 use Edutiek\AssessmentService\EssayTask\AssessmentStatus\FullService as StatusFullService;
 use Edutiek\AssessmentService\EssayTask\Essay\ClientService as EssayClientService;
 use Edutiek\AssessmentService\EssayTask\EssayImport\FullService as FullImportService;
-use Edutiek\AssessmentService\EssayTask\EssayImport\Import;
 use Edutiek\AssessmentService\EssayTask\PdfOutput\FullService as FullPdfOutput;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\FullService as WritingSettingsFullService;
+use Edutiek\AssessmentService\EssayTask\WritingSteps\FullService as WritingStepsFullService;
 use Edutiek\AssessmentService\System\BackgroundTask\Job;
 
 readonly class ForClients
@@ -50,4 +50,10 @@ readonly class ForClients
     {
         return $this->internal->pdfOutput($this->ass_id, $this->user_id);
     }
+
+    public function writingSteps(): WritingStepsFullService
+    {
+        return $this->internal->writingSteps($this->ass_id, $this->user_id);
+    }
+
 }
