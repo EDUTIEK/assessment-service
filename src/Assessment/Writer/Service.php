@@ -90,7 +90,7 @@ readonly class Service implements ReadService, FullService
         $this->repos->writer()->save($writer);
     }
 
-    public function authorizeWriting(Writer $writer, int $by_user_id, bool $as_admin): void
+    public function authorizeWriting(Writer $writer, bool $as_admin): Result
     {
         $now = new DateTimeImmutable();
 
@@ -99,34 +99,38 @@ readonly class Service implements ReadService, FullService
             $writer->setWorkingStart($now);
         }
         $writer->setWritingAuthorized($now);
-        $writer->setWritingAuthorizedBy($by_user_id);
-        if ($this->validate($writer)->isOk()) {
+        $writer->setWritingAuthorizedBy($this->user_id);
+        $result = $this->validate($writer);
+        if ($result->isOk()) {
             $this->save($writer);
             if ($as_admin) {
                 $this->log_entry_service->addEntry(
                     LogEntryType::WRITING_POST_AUTHORIZED,
-                    LogEntryMention::fromSystem($by_user_id),
+                    LogEntryMention::fromSystem($this->user_id),
                     LogEntryMention::fromWriter($writer)
                 );
             }
         }
+        return $result;
     }
 
-    public function removeWritingAuthorization(Writer $writer, int $by_user_id): void
+    public function removeWritingAuthorization(Writer $writer): Result
     {
         $was_authorized = ($writer->getWritingAuthorized() !== null);
         $writer->setWritingAuthorized(null);
         $writer->setWritingAuthorizedBy(null);
-        if ($this->validate($writer)->isOk()) {
+        $result = $this->validate($writer);
+        if ($result->isOk()) {
             $this->save($writer);
             if ($was_authorized) {
                 $this->log_entry_service->addEntry(
                     LogEntryType::WRITING_REMOVE_AUTHORIZATION,
-                    LogEntryMention::fromSystem($by_user_id),
+                    LogEntryMention::fromSystem($this->user_id),
                     LogEntryMention::fromWriter($writer)
                 );
             }
         }
+        return $result;
     }
 
     public function removeCorrectionFinalisation(Writer $writer, int $by_user_id): void

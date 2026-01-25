@@ -93,7 +93,7 @@ class WriterBridge implements AppBridge
         if ($change->getAction() === ChangeAction::SAVE) {
             $data = $change->getPayload();
             if ($data['is_authorized'] ?? false) {
-                $this->writer_service->authorizeWriting($this->writer, $this->user_id, false);
+                $this->writer_service->authorizeWriting($this->writer, false);
                 return $change->toResponse(true, ['is_authorized' => true]);
             }
         }
