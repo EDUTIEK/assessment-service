@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\PdfCreation;
 
-use Edutiek\AssessmentService\Assessment\PdfCreation\FullService;
 use Edutiek\AssessmentService\Assessment\Api\ComponentApiFactory;
-use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\PdfConfig;
-use Edutiek\AssessmentService\System\PdfCreator\PdfPart;
+use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
+use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
+use Edutiek\AssessmentService\System\User\ReadService as UserService;
+use Edutiek\AssessmentService\System\File\Storage as FileStorage;
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingService;
+use Edutiek\AssessmentService\Task\Manager\ReadService as TasksReadService;
+use ZipArchive;
 
 class Service implements FullService
 {
@@ -17,8 +21,13 @@ class Service implements FullService
         private int $ass_id,
         private int $user_id,
         private ComponentApiFactory $apis,
+        private WriterService $writers,
         private Repositories $repos,
-        private PdfProcessingService $processor
+        private PdfProcessingService $processor,
+        private ConfigService $config,
+        private FileStorage $storage,
+        private UserService $users,
+        private TasksReadService $tasks
     ) {
     }
 
@@ -84,7 +93,53 @@ class Service implements FullService
         }
 
         // todo number and add meta data
-        return $this->processor->join($pdf_ids);
+        $id = $this->processor->join($pdf_ids);
+        $this->processor->cleanupExcept([$id]);
+        return $id;
+    }
+
+    public function createWritingZip(array $writer_ids): string
+    {
+        $zipfile = $this->config->getSetup()->getAbsoluteTempPath()
+            . uniqid('', true) . '.zip';
+        $zip = new ZipArchive();
+        $zip->open($zipfile, ZipArchive::CREATE);
+
+
+        $tasks = $this->tasks->all();
+        $multi = count($tasks) > 1;
+
+        foreach ($writer_ids as $writer_id) {
+            $writer = $this->writers->oneByWriterId($writer_id);
+            $user = $this->users->getUser($writer?->getUserId());
+            $name = $this->storage->asciiFilename($user->getListname(true));
+            if ($multi) {
+                $zip->addEmptyDir($name);
+            }
+
+            foreach ($tasks as $task) {
+                $pdf_id = $this->createWritingPdf($task->getId(), $writer_id);
+                if ($multi) {
+                    $entry = $name . '/' . $this->storage->asciiFilename($task->getTitle()) . '.pdf';
+                } else {
+                    $entry = $name . '.pdf';
+                }
+                $zip->addFile($this->storage->getReadablePath($pdf_id), $entry);
+            }
+        }
+        $zip->close();
+
+        $fp = fopen($zipfile, 'r');
+        $info = $this->storage->saveFile($fp, $this->storage->newInfo()
+            ->setFileName(
+                count($writer_ids) == 1
+                ? 'writer' . reset($writer_ids) . '-writing.zip'
+                : 'writings.zip'
+            )
+            ->setMimeType('application/zip'));
+        unlink($zipfile);
+
+        return $info->getId();
     }
 
     public function createCorrectionPdf(int $task_id, int $writer_id): string

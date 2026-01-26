@@ -209,21 +209,6 @@ class Internal
         );
     }
 
-    public function pdfOutput(int $ass_id, int $user_id): PdfOutputService
-    {
-        return $this->instances[PdfOutputService::class] = new PdfOutputService(
-            $this->dependencies->assessmentApi($ass_id, $user_id)->pdfSettings(),
-            $this->dependencies->repositories()->essayImage(),
-            $this->dependencies->systemApi()->pdfCreator(),
-            $this->dependencies->systemApi()->fileStorage(),
-            $this->htmlProcessing(),
-            $this->writingSettings($ass_id),
-            $this->dependencies->systemApi()->format($user_id),
-            $this->essayImage($ass_id), // lazy
-            $this->dependencies->systemApi()->pdfProcessing(),
-        );
-    }
-
     public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
     {
         return $this->instances[WritingProvider::class][$ass_id][$user_id] ?? new WritingProvider(

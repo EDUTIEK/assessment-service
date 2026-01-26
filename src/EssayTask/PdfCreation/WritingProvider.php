@@ -18,7 +18,7 @@ readonly class WritingProvider implements PdfPartProvider
 
     public function __construct(
         private int $ass_id,
-        private PdfProcessing $pdf_processing,
+        private PdfProcessing $processor,
         private LanguageService $language,
         private Repositories $repos
     ) {
@@ -51,15 +51,23 @@ readonly class WritingProvider implements PdfPartProvider
             return null;
         }
 
-        if ($essay->getPdfVersion() !== null) {
-            // todo: join with text, if needed
-            return $essay->getPdfVersion();
-        } else {
-            // todo: get options from pdf settings
-            return $this->pdf_processing->create(
+        $ids = [];
+        if (!empty($essay->getWrittenText())) {
+            $ids[] = $this->processor->create(
                 (string) $essay->getWrittenText(),
                 (new Options())
             );
+        }
+        if ($essay->getPdfVersion() !== null) {
+            $ids[] = $essay->getPdfVersion();
+        }
+
+        if (count($ids) == 0) {
+            return null;
+        } elseif (count($ids) > 1) {
+            return $this->processor->join($ids);
+        } else {
+            return reset($ids);
         }
     }
 }

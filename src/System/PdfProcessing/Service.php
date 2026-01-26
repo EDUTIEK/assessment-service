@@ -15,7 +15,7 @@ use Edutiek\AssessmentService\System\PdfCreator\Options;
 class Service implements FullService
 {
     private readonly string $temp_dir;
-    private ?array $trash_can = null;
+    private ?array $trash_can = [];
 
     public function __construct(
         private readonly PdfCreator $pdf_creator,
@@ -24,8 +24,7 @@ class Service implements FullService
         private readonly string $pdflatex_bin,
         private readonly string $pdftk_bin,
         string $temp_dir
-    )
-    {
+    ) {
         $this->temp_dir = rtrim($temp_dir, '/');
     }
 
@@ -33,14 +32,6 @@ class Service implements FullService
     {
         $pdf = fopen('php://memory', 'w+');
         fwrite($pdf, $this->pdf_creator->createPdf($html, $options));
-
-        return $this->saveFile($pdf);
-    }
-
-    public function createFromParts(array $elements, Options $options): string
-    {
-        $pdf = fopen('php://memory', 'w+');
-        fwrite($pdf, $this->pdf_creator->createPdfFromParts($elements, $options));
 
         return $this->saveFile($pdf);
     }
@@ -89,26 +80,24 @@ class Service implements FullService
         )));
     }
 
-    public function number(string $pdf_id, int $start_page_number = 1): array
+    public function number(string $pdf_id, int $start_page_number = 1): string
     {
-        return $this->cleanUpTrashFiles(function($keep_file) use ($pdf_id, $start_page_number){
-            foreach ($this->split($pdf_id) as $page) {
-                $nr = $this->create('', (new Options())->withPrintFooter(true)->withPrintHeader(false)->withStartPageNumber($start_page_number));
-                $out = $this->saveFile(fopen('php://memory', 'w+'));
-                $this->exec(sprintf(
-                    '%s %s stamp %s output %s 2>&1',
-                    escapeshellcmd($this->pdftk_bin),
-                    escapeshellarg($this->pathOfId($page)),
-                    escapeshellarg($this->pathOfId($nr)),
-                    escapeshellarg($this->pathOfId($out)),
-                ));
-                $start_page_number++;
-                $keep_file($out);
-                $ret[] = $out;
-            }
+        $pages = [];
+        foreach ($this->split($pdf_id) as $page) {
+            $nr = $this->create('', (new Options())->withPrintFooter(true)->withPrintHeader(false)->withStartPageNumber($start_page_number));
+            $out = $this->saveFile(fopen('php://memory', 'w+'));
+            $this->exec(sprintf(
+                '%s %s stamp %s output %s 2>&1',
+                escapeshellcmd($this->pdftk_bin),
+                escapeshellarg($this->pathOfId($page)),
+                escapeshellarg($this->pathOfId($nr)),
+                escapeshellarg($this->pathOfId($out)),
+            ));
+            $start_page_number++;
+            $pages[] = $out;
+        }
 
-            return $ret;
-        });
+        return $this->join($pages);
     }
 
     public function nextToEachOther(string $pdf_left, string $pdf_right): string
@@ -154,24 +143,18 @@ class Service implements FullService
         return $target;
     }
 
-    public function cleanUpTrashFiles(callable $thunk)
+    /**
+     * Cleanup temporary files created during the processing
+     * @param string[] $keep_ids    file ids of files that should be kept
+     */
+    public function cleanupExcept(array $keep_ids)
     {
-        $old_can = $this->trash_can;
-        $this->trash_can = [];
-        $to_keep = [];
-        $keep = function ($id) use (&$to_keep) {
-            $to_keep[] = $id;
-            return $id;
-        };
-
-        $ret = $thunk($keep);
-        array_map($this->storage->deleteFile(...), array_filter($this->trash_can, fn($f) => !in_array($f, $to_keep, true)));
-        $this->trash_can = $old_can;
-        if ($old_can !== null) {
-            $this->trash_can = array_merge($old_can, $to_keep);
+        foreach ($this->trash_can as $id) {
+            if (!in_array($id, $keep_ids)) {
+                $this->storage->deleteFile($id);
+            }
         }
-
-        return $ret;
+        $this->trash_can = [];
     }
 
     private function template(): string
@@ -215,9 +198,7 @@ END;
     private function saveFile($content): string
     {
         $id = $this->storage->saveFile($content)->getId();
-        if ($this->trash_can !== null) {
-            $this->trash_can[] = $id;
-        }
+        $this->trash_can[] = $id;
 
         return $id;
     }

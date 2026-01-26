@@ -9,6 +9,11 @@ use Edutiek\AssessmentService\System\Data\FileInfo;
 interface Delivery
 {
     /**
+     * Convert a filename to ASCII
+     */
+    public function asciiFilename(string $filename): string;
+
+    /**
      * Send a file which is stored with the given id
      */
     public function sendFile(string $id, Disposition $disposition): never;

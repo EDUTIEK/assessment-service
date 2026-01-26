@@ -46,11 +46,6 @@ readonly class ForClients
         return $this->internal->import($this->ass_id, $task_id, $this->user_id);
     }
 
-    public function pdfOutput(): FullPdfOutput
-    {
-        return $this->internal->pdfOutput($this->ass_id, $this->user_id);
-    }
-
     public function writingSteps(): WritingStepsFullService
     {
         return $this->internal->writingSteps($this->ass_id, $this->user_id);

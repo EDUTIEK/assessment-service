@@ -11,8 +11,7 @@ use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
 use Edutiek\AssessmentService\System\Format\FullService as FormatService;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TasksReadService;
-use ILIAS\Plugin\LongEssayAssessment\EssayTask\Data\WritingStep;
-use ILIAS\Plugin\LongEssayAssessment\System\Data\FileInfo;
+use Edutiek\AssessmentService\EssayTask\Data\WritingStep;
 use ZipArchive;
 
 class Service implements FullService
@@ -37,11 +36,7 @@ class Service implements FullService
         $zip->open($zipfile, ZipArchive::CREATE);
 
         foreach ($this->tasks->all() as $task) {
-            $task_dir = iconv(
-                "UTF-8",
-                "ASCII//TRANSLIT",
-                str_replace('/', '_', $task->getTitle())
-            );
+            $task_dir = $this->storage->asciiFilename($task->getTitle());
             $zip->addEmptyDir($task_dir);
 
             $essay = $this->essays->oneByWriterIdAndTaskId($writer_id, $task->getId());
@@ -84,9 +79,12 @@ class Service implements FullService
         $zip->close();
 
         $fp = fopen($zipfile, 'r');
-        $info = $this->storage->saveFile($fp, (new FileInfo())->setFileName(
-            'writer' . $writer_id . '-steps.zip'
-        ));
+        $info = $this->storage->saveFile(
+            $fp,
+            $this->storage->newInfo()
+            ->setFileName('writer' . $writer_id . '-steps.zip')
+            ->setMimeType('application/zip')
+        );
         unlink($zipfile);
 
         return $info->getId();

@@ -28,6 +28,12 @@ interface FullService
     public function createWritingPdf(int $task_id, int $writer_id): string;
 
     /**
+     * Create a ZIP file with all writing PDFs
+     * It may consist of text writtens in the web app and/or uploaded pdf files
+     */
+    public function createWritingZip(array $writer_ids): string;
+
+    /**
      * Create the PDF of a correction
      * It consists of parts that can be sorted and activated
      */

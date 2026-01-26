@@ -12,33 +12,31 @@ use Edutiek\AssessmentService\System\PdfCreator\Options;
 
 interface FullService
 {
-
     public function create(string $html, Options $options): string;
 
     /**
-     * @param PdfElement[] $elements
-     */
-    public function createFromParts(array $elements, Options $options): string;
-
-    /**
+     * Create page images of a PDF file
      * @param resource $pdf
      * @return array<ImageDescriptor>|ImageDescriptor|null
      */
     public function toImage($pdf, ConvertType $how, ImageSizeType $size = ImageSizeType::THUMBNAIL);
 
     /**
+     * Split a PDF file into parts
      * @param string $pdf_id
      * @return Generator<string>
      */
     public function split(string $pdf_id, ?int $from = null, ?int $to = null): Generator;
 
     /**
+     * Join separate PDF files into one
      * @param string[] $pdf_ids
      * @return string
      */
     public function join(array $pdf_ids): string;
 
     /**
+     * Count the pages of a pdf file
      * @param resource $pdf
      */
     public function count(string $pdf_id): int;
@@ -56,26 +54,16 @@ interface FullService
     public function onTopOfEachOther(string $pdf_left, string $pdf_right): string;
 
     /**
+     * Create page numbers in a pdf file
      * @todo
      */
-    public function number(string $pdf_id, int $start_page_number = 1): array;
+    public function number(string $pdf_id, int $start_page_number = 1): string;
 
-        /**
-     * Many "trash" files are created when using split, join, number, etc,
-     * to have them deleted automatically use this method.
-     * To keep files use the provided $keep_file argument:
+    /**
+     * Cleanup temporary files created during the processing
+     * This should be called after the last processing step of a sequence
      *
-     * return $this->cleanUpTrashFiles(function($keep_file){
-     *     return $keep_file($this->join($this->number($this->create('huhu', new Options()))));
-     * });
-     *
-     * The above example deletes all generated files except the returned one.
-     *
-     *
-     * @template A
-     *
-     * @param callable(callable(string): string): A
-     * @return A
+     * @param string[] $keep_ids    file ids of files that should be kept
      */
-    public function cleanUpTrashFiles(callable $thunk);
+    public function cleanupExcept(array $keep_ids);
 }

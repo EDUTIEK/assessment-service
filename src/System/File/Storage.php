@@ -8,6 +8,16 @@ use Psr\Http\Message\StreamInterface as Stream;
 interface Storage
 {
     /**
+     * Get a new file info
+     */
+    public function newInfo(): FileInfo;
+
+    /**
+     * Convert a filename to ASCII
+     */
+    public function asciiFilename(string $filename): string;
+
+    /**
      * Check if a file with an id exists
      */
     public function hasFile(?string $id): bool;
