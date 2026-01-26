@@ -396,6 +396,7 @@ class Internal implements ComponentApi, ComponentApiFactory
     {
         return new Format(
             $this->language($user_id),
+            $this->dependencies->systemApi()->user(),
             $this->dependencies->systemApi()->format($user_id),
             $this->assessmentGrading($ass_id),
             $orga

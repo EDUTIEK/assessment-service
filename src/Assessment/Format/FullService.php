@@ -10,4 +10,5 @@ interface FullService
 {
     public function resultAvailability(): string;
     public function finalResult(?Writer $writer): string;
+    public function writingStatus(Writer $writer): ?string;
 }
