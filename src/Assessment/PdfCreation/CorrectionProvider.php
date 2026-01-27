@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\PdfCreation;
 
-use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessing;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
-use Edutiek\AssessmentService\System\PdfCreator\PdfPart;
+use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessing;
 
 readonly class CorrectionProvider implements PdfPartProvider
 {

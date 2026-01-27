@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\PdfCreation;
 
+use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
+use Edutiek\AssessmentService\EssayTask\HtmlProcessing\FullService as HtmlProcessing;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessing;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
@@ -18,7 +20,8 @@ readonly class WritingProvider implements PdfPartProvider
 
     public function __construct(
         private int $ass_id,
-        private PdfProcessing $processor,
+        private HtmlProcessing $html_processing,
+        private PdfProcessing $pdf_processing,
         private LanguageService $language,
         private Repositories $repos
     ) {
@@ -39,35 +42,38 @@ readonly class WritingProvider implements PdfPartProvider
 
     public function renderPart(string $key, int $task_id, int $writer_id): ?string
     {
-        return match($key) {
-            default => $this->renderEssay($task_id, $writer_id),
-        };
+        $essay = $this->repos->essay()->oneByWriterIdAndTaskId($writer_id, $task_id);
+        if ($essay) {
+            return $this->renderEssay($essay);
+        }
+        return null;
     }
 
-    private function renderEssay(int $task_id, int $writer_id): ?string
+    public function renderEssay(Essay $essay): ?string
     {
-        $essay = $this->repos->essay()->oneByWriterIdAndTaskId($writer_id, $task_id);
-        if ($essay === null) {
-            return null;
+        $created = null;
+        if (!empty($essay->getWrittenText()) && !$essay->hasPdfFromWrittenText()) {
+            $settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
+            $html = $this->html_processing->processWrittenText($essay, $settings, true);
+
+            $options = new Options();
+            if ($settings->getAddCorrectionMargin()) {
+                $options = $options->withLeftMargin($options->getLeftMargin() + $settings->getLeftCorrectionMargin());
+                $options = $options->withRightMargin($options->getRightMargin() + $settings->getRightCorrectionMargin());
+            }
+            $created = $this->pdf_processing->create($html, $options);
         }
 
-        $ids = [];
-        if (!empty($essay->getWrittenText())) {
-            $ids[] = $this->processor->create(
-                (string) $essay->getWrittenText(),
-                (new Options())
-            );
-        }
-        if ($essay->getPdfVersion() !== null) {
-            $ids[] = $essay->getPdfVersion();
-        }
+        if ($created && $essay->getPdfVersion()) {
+            $id = $this->pdf_processing->join([$created, $essay->getPdfVersion()]);
+            $this->pdf_processing->cleanup([$created]);
+            return $id;
 
-        if (count($ids) == 0) {
-            return null;
-        } elseif (count($ids) > 1) {
-            return $this->processor->join($ids);
+        } elseif ($created) {
+            return $created;
+
         } else {
-            return reset($ids);
+            return $essay->getPdfVersion();
         }
     }
 }

@@ -4,22 +4,12 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\PdfProcessing;
 
-use Edutiek\AssessmentService\System\PdfCreator\PdfPart;
-use Edutiek\AssessmentService\System\Data\ImageDescriptor;
-use Edutiek\AssessmentService\System\Data\ImageSizeType;
-use Generator;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
+use Generator;
 
 interface FullService
 {
     public function create(string $html, Options $options): string;
-
-    /**
-     * Create page images of a PDF file
-     * @param resource $pdf
-     * @return array<ImageDescriptor>|ImageDescriptor|null
-     */
-    public function toImage($pdf, ConvertType $how, ImageSizeType $size = ImageSizeType::THUMBNAIL);
 
     /**
      * Split a PDF file into parts
@@ -58,6 +48,13 @@ interface FullService
      * @todo
      */
     public function number(string $pdf_id, int $start_page_number = 1): string;
+
+    /**
+     * Cleanup temporary files created during the processing
+     *
+     * @param string[] $ids    file ids of files that should be deleted
+     */
+    public function cleanup(array $ids);
 
     /**
      * Cleanup temporary files created during the processing

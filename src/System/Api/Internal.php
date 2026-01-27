@@ -123,7 +123,6 @@ class Internal
     {
         return $this->instances[PdfProcessing::class] ??= new PdfProcessing(
             $this->pdfCreator(),
-            $this->pdfConverter(),
             $this->dependencies->fileStorage(),
             exec('which pdflatex'),
             exec('which pdftk'),

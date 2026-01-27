@@ -23,7 +23,6 @@ use Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service as HtmlService;
 use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\EssayTask\PdfCreation\CorrectionProvider;
 use Edutiek\AssessmentService\EssayTask\PdfCreation\WritingProvider;
-use Edutiek\AssessmentService\EssayTask\PdfOutput\Service as PdfOutputService;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
 use Edutiek\AssessmentService\EssayTask\WritingSteps\Service as WritingStepsService;
 use Edutiek\AssessmentService\System\BackgroundTask\Job;
@@ -82,12 +81,12 @@ class Internal
         );
     }
 
-    public function backgroundTask(int $ass_id, string $class): Job
+    public function backgroundTask(int $ass_id, int $user_id, string $class): Job
     {
         $jobs = [
             GenerateEssayImages::class => fn() => $this->instances[GenerateEssayImages::class] ??= new GenerateEssayImages(
                 $this->dependencies->repositories()->essay(),
-                $this->essayImage($ass_id),
+                $this->essayImage($ass_id, $user_id),
             ),
         ];
         return $jobs[$class]();
@@ -129,24 +128,23 @@ class Internal
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->dependencies->taskApi($ass_id, $user_id)->tasks(),
             $this->backgroundTaskManager($ass_id, $user_id),
-            $this->essayImage($ass_id),
+            $this->essayImage($ass_id, $user_id),
             $this->language($user_id),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->eventDispatcher($ass_id, $user_id),
             $this->dependencies->constraintCollector($ass_id, $user_id),
+            $this->writingPartProvider($ass_id, $user_id),
         );
     }
 
-    public function essayImage(int $ass_id): EssayImageService
+    public function essayImage(int $ass_id, int $user_id): EssayImageService
     {
         return $this->instances[EssayImageFullService::class] = new EssayImageService(
             $this->dependencies->repositories()->essayImage(),
             $this->dependencies->repositories()->essay(),
-            $this->writingSettings($ass_id)->get(),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->pdfConverter(),
-            $this->dependencies->systemApi()->pdfCreator(),
-            $this->htmlProcessing(),
+            $this->writingPartProvider($ass_id, $user_id),
         );
     }
 
@@ -209,10 +207,11 @@ class Internal
         );
     }
 
-    public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
+    public function writingPartProvider(int $ass_id, int $user_id): ?WritingProvider
     {
         return $this->instances[WritingProvider::class][$ass_id][$user_id] ?? new WritingProvider(
             $ass_id,
+            $this->htmlProcessing(),
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->language($user_id),
             $this->dependencies->repositories()

@@ -125,6 +125,7 @@ class Service implements FullService
                     $entry = $name . '.pdf';
                 }
                 $zip->addFile($this->storage->getReadablePath($pdf_id), $entry);
+                $this->storage->deleteFile($pdf_id);
             }
         }
         $zip->close();

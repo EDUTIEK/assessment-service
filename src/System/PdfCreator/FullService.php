@@ -13,13 +13,7 @@ interface FullService
      * Compliance with PDF/A-2B shall be achieved
      * @see https://de.wikipedia.org/wiki/PDF/A
      */
-    public function createPdf(string $html, Options $options) : string;
-
-    /**
-     * @param PdfElement[] $elements
-     */
-    public function createPdfFromParts(array $elements, Options $options): string;
-
+    public function createPdf(string $html, Options $options): string;
 
     /**
      * Get the path of an image for pdf processing

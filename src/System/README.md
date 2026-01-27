@@ -31,11 +31,7 @@ This service converts PDF files in one or more JPEG images of the pages. A sourc
 
 ## PdfCreator
 
-This servides creates PDF files.Files are combined of PdfPart objects which are combined of PdfElement objects. 
-
-Each **PdfPart** creates a sequence of pages with common format, orientation, margins and visibility of header and footer. 
-
-A **PdfElement** can be an image or a HTML content with additional positioning information.
+This servides creates PDF files from HTML with **Options**.
 
 ## User
 

@@ -30,6 +30,8 @@ abstract class Essay implements EssayTaskEntity
     abstract public function setServiceVersion(int $service_version): self;
     abstract public function getFirstChange(): ?DateTimeImmutable;
     abstract public function setFirstChange(?DateTimeImmutable $first_change): self;
+    abstract public function hasPdfFromWrittenText(): bool;
+    abstract public function setPdfFromWrittenText(bool $pdf_from_written_text): self;
 
     public function getWordCount(): int
     {

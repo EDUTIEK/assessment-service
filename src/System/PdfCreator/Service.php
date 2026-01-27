@@ -56,47 +56,9 @@ class Service implements FullService
         return $pdf->output();
     }
 
-    public function createPdfFromParts(array $elements, Options $options): string
-    {
-        $html_parts = array_map(fn(PdfElement $el) => match (get_class($el)) {
-            PdfImage::class => sprintf('<img src="data:image/png;base64,%s" %s/>', base64_encode(file_get_contents($el->getPath())), $this->style($el)),
-            PdfHtml::class => sprintf('<div %s>%s</div>', $this->style($el), $el->getHtml()),
-        }, $elements);
-
-        return $this->createPdf(join($this->pageBreak(), $html_parts), $options);
-    }
-
-    public function options(?PdfSettings $pdf_settings): Options
-    {
-        if (!$pdf_settings) {
-            return new Options();
-        }
-
-        return (new Options())
-            ->withTopMargin($pdf_settings->getContentTopMargin())
-            ->withBottomMargin($pdf_settings->getContentBottomMargin())
-            ->withLeftMargin($pdf_settings->getLeftMargin())
-            ->withRightMargin($pdf_settings->getRightMargin())
-            ->withHeaderMargin($pdf_settings->getHeaderMargin())
-            ->withFooterMargin($pdf_settings->getFooterMargin())
-            ->withPrintHeader($pdf_settings->getAddHeader())
-            ->withPrintFooter($pdf_settings->getAddFooter());
-    }
-
     private function pageBreak(): string
     {
         return '<div class="force-new-page"></div>';
-    }
-
-    private function style(PdfElement $part): string
-    {
-        return sprintf(
-            'style="margin-top: %dmm ; margin-left: %dmm; width: %dmm; height: %dmm"',
-            $part->getTop(),
-            $part->getLeft(),
-            $part->getWidth(),
-            $part->getHeight(),
-        );
     }
 
     public function getImagePathForPdf(?ImageDescriptor $image): string

@@ -4,31 +4,24 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\EssayImage;
 
+use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\EssayImage;
 use Edutiek\AssessmentService\EssayTask\Data\EssayImageRepo;
-use Edutiek\AssessmentService\System\File\Storage;
-use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\EssayRepo;
-use Edutiek\AssessmentService\EssayTask\HtmlProcessing\FullService as HtmlProcessing;
-use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverter;
-use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreator;
-use Edutiek\AssessmentService\System\Data\ImageSizeType;
+use Edutiek\AssessmentService\EssayTask\PdfCreation\WritingProvider;
 use Edutiek\AssessmentService\System\Data\ImageDescriptor;
-use Edutiek\AssessmentService\System\PdfCreator\PlainSettings;
-use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
-use Edutiek\AssessmentService\System\PdfCreator\PdfPart;
-use Edutiek\AssessmentService\System\PdfCreator\PdfHtml;
+use Edutiek\AssessmentService\System\Data\ImageSizeType;
+use Edutiek\AssessmentService\System\File\Storage;
+use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverter;
 
 readonly class Service implements FullService
 {
     public function __construct(
         private EssayImageRepo $image_repo,
         private EssayRepo $essay_repo,
-        private WritingSettings $writing_settings,
         private Storage $storage,
         private PdfConverter $pdf_converter,
-        private PdfCreator $pdf_creator,
-        private HtmlProcessing $html_processing,
+        private WritingProvider $pdf_provider,
     ) {
     }
 
@@ -50,9 +43,9 @@ readonly class Service implements FullService
     {
         $delete_me = null;
         $pdfs = [];
-        if ($essay->getWrittenText()) {
-            $delete_me = $this->storage->saveFile($this->createPdfFromWrittenText($essay), null);
-            $pdfs[] = $this->storage->getFileStream($delete_me->getId());
+        if ($essay->getWrittenText() && !$essay->hasPdfFromWrittenText()) {
+            $delete_me = $this->pdf_provider->renderEssay($essay);
+            $pdfs[] = $this->storage->getFileStream($delete_me);
         }
         if ($essay->getPdfVersion()) {
             $stream = $this->storage->getFileStream($essay->getPdfVersion());
@@ -88,36 +81,15 @@ readonly class Service implements FullService
                                               ->setThumbHeight($thumb->height());
         }
 
-        $this->storage->deleteFile($delete_me?->getId());
+        $this->storage->deleteFile($delete_me);
         $this->purgeFiles($this->image_repo->replaceByEssayId($essay->getId(), $repo_images));
         return $repo_images;
     }
-
 
     public function deleteByEssayId(int $essay_id): void
     {
         $this->purgeFiles($this->image_repo->deleteByEssayId($essay_id));
     }
-
-
-    private function createPdfFromWrittenText(Essay $essay)
-    {
-        $pdf_settings = new PlainSettings();
-        $html = $this->html_processing->processWrittenText($essay, $this->writing_settings, true);
-
-        $element = new PdfHtml(
-            $html,
-            $pdf_settings->getLeftMargin() + $this->writing_settings->getLeftCorrectionMargin(),
-            $pdf_settings->getContentTopMargin(),
-            210 // A4
-            - $pdf_settings->getLeftMargin() - $pdf_settings->getRightMargin()
-            - $this->writing_settings->getLeftCorrectionMargin() - $this->writing_settings->getRightCorrectionMargin(),
-            null
-        );
-
-        return $this->pdf_creator->createPdfFromParts([$element], $this->pdf_creator->options($pdf_settings));
-    }
-
 
     /**
      * @param resource[] $pdfs

@@ -15,11 +15,10 @@ use Edutiek\AssessmentService\System\PdfCreator\Options;
 class Service implements FullService
 {
     private readonly string $temp_dir;
-    private ?array $trash_can = [];
+    private ?array $saved_files = [];
 
     public function __construct(
         private readonly PdfCreator $pdf_creator,
-        private readonly PdfConverter $pdf_converter,
         private readonly Storage $storage,
         private readonly string $pdflatex_bin,
         private readonly string $pdftk_bin,
@@ -34,11 +33,6 @@ class Service implements FullService
         fwrite($pdf, $this->pdf_creator->createPdf($html, $options));
 
         return $this->saveFile($pdf);
-    }
-
-    public function toImage($pdf, ConvertType $how, ImageSizeType $size = ImageSizeType::THUMBNAIL)
-    {
-        return $this->pdf_converter->{$how->value}($pdf, $size);
     }
 
     public function split(string $pdf_id, ?int $from = null, ?int $to = null): Generator
@@ -82,6 +76,8 @@ class Service implements FullService
 
     public function number(string $pdf_id, int $start_page_number = 1): string
     {
+        $keep = $this->saved_files;
+
         $pages = [];
         foreach ($this->split($pdf_id) as $page) {
             $nr = $this->create('', (new Options())->withPrintFooter(true)->withPrintHeader(false)->withStartPageNumber($start_page_number));
@@ -97,7 +93,10 @@ class Service implements FullService
             $pages[] = $out;
         }
 
-        return $this->join($pages);
+        $keep[] = $id = $this->join($pages);
+        $this->cleanupExcept($keep);
+
+        return $id;
     }
 
     public function nextToEachOther(string $pdf_left, string $pdf_right): string
@@ -143,18 +142,22 @@ class Service implements FullService
         return $target;
     }
 
-    /**
-     * Cleanup temporary files created during the processing
-     * @param string[] $keep_ids    file ids of files that should be kept
-     */
+    public function cleanup(array $ids)
+    {
+        return;
+        foreach (array_intersect($this->saved_files, $ids) as $id) {
+            $this->storage->deleteFile($id);
+        }
+        $this->saved_files = array_diff($this->saved_files, $ids);
+    }
+
     public function cleanupExcept(array $keep_ids)
     {
-        foreach ($this->trash_can as $id) {
-            if (!in_array($id, $keep_ids)) {
-                $this->storage->deleteFile($id);
-            }
+        return;
+        foreach (array_diff($this->saved_files, $keep_ids) as $id) {
+            $this->storage->deleteFile($id);
         }
-        $this->trash_can = [];
+        $this->saved_files = array_intersect($this->saved_files, $keep_ids);
     }
 
     private function template(): string
@@ -197,9 +200,13 @@ END;
 
     private function saveFile($content): string
     {
-        $id = $this->storage->saveFile($content)->getId();
-        $this->trash_can[] = $id;
-
+        $id = $this->storage->saveFile(
+            $content,
+            $this->storage->newInfo()
+            ->setMimeType('application/pdf')
+            ->setFileName('file.pdf')
+        )->getId();
+        $this->saved_files[] = $id;
         return $id;
     }
 }

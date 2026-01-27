@@ -8,6 +8,7 @@ use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImage;
+use Edutiek\AssessmentService\EssayTask\PdfCreation\WritingProvider;
 use Edutiek\AssessmentService\System\BackgroundTask\Manager as BackgroundTaskManager;
 use Edutiek\AssessmentService\System\ConstraintHandling\Actions\ChangeWritingContent;
 use Edutiek\AssessmentService\System\ConstraintHandling\Collector;
@@ -31,7 +32,8 @@ readonly class Service implements ClientService, EventService
         private Language $language,
         private Storage $storage,
         private Dispatcher $events,
-        private Collector $constraints
+        private Collector $constraints,
+        private WritingProvider $pdf_provider
     ) {
     }
 
@@ -128,6 +130,40 @@ readonly class Service implements ClientService, EventService
         ));
     }
 
+    public function textToPdf(Essay $essay): void
+    {
+        $result = $this->canChange($essay);
+        if ($result->status() == ResultStatus::BLOCK) {
+            throw new ApiException(implode("/n", $result->messages()), ApiException::CONSTRAINT);
+        }
+
+        $this->storage->deleteFile($essay->getPdfVersion());
+        $this->essay_image->deleteByEssayId($essay->getId());
+
+        // render pure text as pdf
+        $file_id = $this->pdf_provider->renderEssay($essay
+            ->setPdfVersion(null)
+            ->setPdfFromWrittenText(false));
+
+        $this->repos->essay()->save($essay
+            ->setPdfVersion($file_id)
+            ->setPdfFromWrittenText(true)
+            ->touch());
+
+        $this->events->dispatchEvent(new WritingContentChanged(
+            $essay->getWriterId(),
+            $essay->getTaskId(),
+            $essay->getLastChange()
+        ));
+
+        // create page images in background task
+        $this->task_manager->run(
+            $this->language->txt('writer_upload_pdf_bt_processing'),
+            GenerateEssayImages::class,
+            $essay->getId()
+        );
+    }
+
     public function replacePdf(Essay $essay, string $file_id): void
     {
         $result = $this->canChange($essay);
@@ -137,7 +173,11 @@ readonly class Service implements ClientService, EventService
 
         $this->storage->deleteFile($essay->getPdfVersion());
         $this->essay_image->deleteByEssayId($essay->getId());
-        $this->repos->essay()->save($essay->setPdfVersion($file_id)->touch());
+        $this->repos->essay()->save($essay
+            ->setPdfVersion($file_id)
+            ->setPdfFromWrittenText(false)
+            ->touch());
+
         $this->events->dispatchEvent(new WritingContentChanged(
             $essay->getWriterId(),
             $essay->getTaskId(),
@@ -160,7 +200,11 @@ readonly class Service implements ClientService, EventService
         }
 
         $this->storage->deleteFile($essay->getPdfVersion());
-        $this->repos->essay()->save($essay->setPdfVersion(null)->touch());
+        $this->repos->essay()->save($essay
+            ->setPdfVersion(null)
+            ->setPdfFromWrittenText(false)
+            ->touch());
+
         $this->events->dispatchEvent(new WritingContentChanged(
             $essay->getWriterId(),
             $essay->getTaskId(),

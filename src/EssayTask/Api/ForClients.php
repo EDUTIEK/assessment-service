@@ -38,7 +38,7 @@ readonly class ForClients
 
     public function backgroundTask(string $class): Job
     {
-        return $this->internal->backgroundTask($this->ass_id, $class);
+        return $this->internal->backgroundTask($this->ass_id, $this->user_id, $class);
     }
 
     public function import(int $task_id): FullImportService
