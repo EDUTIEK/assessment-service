@@ -9,6 +9,12 @@ use Edutiek\AssessmentService\System\ConstraintHandling\ConstraintResult;
 
 interface ClientService
 {
+    /**
+     * @param int[] $ids
+     * @return Essay[]
+     */
+    public function some(array $ids): array;
+
     /** @return Essay[] */
     public function allByWriterId(int $writer_id): array;
     /** @return Essay[] */

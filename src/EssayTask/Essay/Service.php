@@ -37,6 +37,11 @@ readonly class Service implements ClientService, EventService
     ) {
     }
 
+    public function some(array $ids): array
+    {
+        return $this->repos->essay()->some($ids);
+    }
+
     public function allByWriterId(int $writer_id): array
     {
         $this->checkWriterScope($writer_id);

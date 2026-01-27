@@ -8,7 +8,7 @@ use Edutiek\AssessmentService\System\Data\UserDisplay;
 use Edutiek\AssessmentService\Assessment\Data\Properties;
 use Edutiek\AssessmentService\Assessment\Data\Location;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
-use ILIAS\Plugin\LongEssayAssessment\Task\Data\Settings;
+use Edutiek\AssessmentService\Task\Data\Settings;
 
 abstract class CorrectionsView
 {

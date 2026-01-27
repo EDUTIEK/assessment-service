@@ -6,6 +6,11 @@ namespace Edutiek\AssessmentService\EssayTask\Data;
 
 interface EssayRepo
 {
+    /**
+     * @param int[] $ids
+     * @return Essay[]
+     */
+    public function some(array $ids): array;
     public function new(): Essay;
     public function one(int $id): ?Essay;
     public function oneByWriterIdAndTaskId(int $writer_id, int $task_id): ?Essay;
