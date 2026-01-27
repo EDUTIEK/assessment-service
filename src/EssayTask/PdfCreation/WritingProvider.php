@@ -54,7 +54,7 @@ readonly class WritingProvider implements PdfPartProvider
         $created = null;
         if (!empty($essay->getWrittenText()) && !$essay->hasPdfFromWrittenText()) {
             $settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
-            $html = $this->html_processing->processWrittenText($essay, $settings, true);
+            $html = $this->html_processing->getWrittenTextForPdf($essay, $settings);
 
             $options = new Options();
             if ($settings->getAddCorrectionMargin()) {

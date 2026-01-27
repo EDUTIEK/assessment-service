@@ -10,25 +10,23 @@ use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
 interface FullService
 {
     /**
-     * Fill a template with data
+     * Get the written text for display in the corrector web app
      */
-    public function fillTemplate(string $template, array $data): string;
+    public function getWrittenTextForCorrection(?Essay $essay, WritingSettings $settings): string;
 
     /**
-     * Process the written text for usage in the correction
-     * This will add the paragraph numbers and headline prefixes
-     * and split up all text to single word embedded in <w-p> elements.
-     *      the 'w' attribute is the word number
-     *      the 'p' attribute is the paragraph number
-     *
-     * @param bool $forPdf  styles and tweaks for pdf processing should be added
+     * Get the written text for for inclusion in a PDF file
      */
-    public function processWrittenText(?Essay $essay, WritingSettings $settings, bool $forPdf = false) : string;
+    public function getWrittenTextForPdf(?Essay $essay, WritingSettings $settings): string;
 
     /**
-     * Process the written text for inclusion in a pdf with comments at the side comments
-     * The text must have been processed with processedWrittenText()
+     * Get the marked and commented text for inclusion in a PDF file
      * @param CorrectorComment[]  $comments
      */
-    public function processCommentsForPdf(?Essay $essay, WritingSettings $writingSettings, CorrectionSettings $correctionSettings, array $comments) : string;
+    public function getCorrectedTextForPdf(
+        ?Essay $essay,
+        WritingSettings $writingSettings,
+        CorrectionSettings $correctionSettings,
+        array $comments
+    ): string;
 }

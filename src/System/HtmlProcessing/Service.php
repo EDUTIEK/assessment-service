@@ -4,6 +4,7 @@ namespace Edutiek\AssessmentService\System\HtmlProcessing;
 
 use DOMDocument;
 use Edutiek\AssessmentService\System\Data\HeadlineScheme;
+use Mustache_Engine;
 
 /**
  * Tool for processing HTML code coming from the rich text editor
@@ -19,55 +20,95 @@ class Service implements FullService
     public static int $h5Counter = 0;
     public static int $h6Counter = 0;
 
-    public static $headline_scheme = HeadlineScheme::NUMERIC;
+    public static $headlineScheme = HeadlineScheme::NUMERIC;
     public static bool $forPdf = false;
 
-
-    /**
-     * Process html text for marking
-     * This will add the paragraph numbers and headline prefixes
-     * and split up all text to single word embedded in <w-p> elements.
-     *      the 'w' attribute is the word number
-     *      the 'p' attribute is the paragraph number
-     */
-    public function processHtmlForMarking(string $html) : string
+    public function fillTemplate(string $template, array $data): string
     {
-        self::initParaCounter();
-        self::initWordCounter();
-        self::initHeadlineCounters();
+        $mustache = new Mustache_Engine(array('entity_flags' => ENT_QUOTES));
+        $template = file_get_contents($template);
+        return $mustache->render($template, $data);
+    }
 
-        // remove ascii control characters except tab, cr and lf
-        $html = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $html);
-
-        // don't process an empty text
-        $html = trim($html);
-        if (empty($html)) {
-            return '';
-        }
-
+    public function getContentForMarking(
+        string $html,
+        bool $add_paragraph_numbers,
+        HeadlineScheme $headline_scheme
+    ): string {
         $html = $this->processXslt($html, __DIR__ . '/xsl/cleanup.xsl', 0);
-        $html = $this->processXslt($html, __DIR__ . '/xsl/numbers.xsl', 0);
+        $html = $this->processXslt(
+            $html,
+            __DIR__ . '/xsl/numbers.xsl',
+            0,
+            $add_paragraph_numbers,
+            $headline_scheme
+        );
 
         return $html;
     }
 
+    public function getContentForPdf(
+        string $html,
+        bool $add_paragraph_numbers,
+        HeadlineScheme $headline_scheme
+    ): string {
+        $html = $this->processXslt($html, __DIR__ . '/xsl/cleanup.xsl', 0);
+        $html = $this->processXslt(
+            $html,
+            __DIR__ . '/xsl/numbers.xsl',
+            0,
+            $add_paragraph_numbers,
+            $headline_scheme,
+            true
+        );
 
-    /**
-     * Get the XSLt Processor for an XSL file
-     * The process_version is a number which can be increased with a new version of the processing
-     * This number is provided as a parameter to the XSLT processing
-     */
-    protected function processXslt(
+        return $this->getContentStyles($headline_scheme) . "\n" . $this->replaceCustomMarkup($html);
+    }
+
+    public function getContentStyles(HeadlineScheme $headline_scheme): string
+    {
+        $styles = file_get_contents(__DIR__ . '/styles/content.html');
+        if ($headline_scheme == 'three') {
+            $styles .= "\n" . file_get_contents(__DIR__ . '/styles/headlines-three.html');
+        }
+        return $styles;
+    }
+
+    public function replaceCustomMarkup(string $html): string
+    {
+        $html = preg_replace('/<w-p w="([0-9]+)" p="([0-9]+)">/', '<span data-w="$1" data-p="$2">', $html);
+        $html = str_replace('xlas-table', 'table', $html);
+        $html = str_replace('xlas-tr', 'tr', $html);
+        $html = str_replace('xlas-td', 'td', $html);
+        $html = str_replace('</w-p>', '</span>', $html);
+        return $html;
+    }
+
+    public function processXslt(
         string $html,
         string $xslt_file,
         int $service_version,
         bool $add_paragraph_numbers = false,
-        bool $for_pdf = false,
         HeadlineScheme $headline_scheme = HeadlineScheme::NUMERIC,
-    ): string
-    {
+        bool $for_pdf = false,
+    ): string {
         try {
-            self::$headline_scheme = $headline_scheme;
+            // functions called from XSLT are static and need a static state
+            self::$headlineScheme = $headline_scheme;
+            self::$forPdf = $for_pdf;
+
+            self::initParaCounter();
+            self::initWordCounter();
+            self::initHeadlineCounters();
+
+            // remove ascii control characters except tab, cr and lf
+            $html = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $html);
+
+            // don't process an empty text
+            $html = trim($html);
+            if (empty($html)) {
+                return '';
+            }
 
             // get the xslt document
             // set the URI to allow document() within the XSL file
@@ -81,7 +122,7 @@ class Service implements FullService
             $xslt->importStyleSheet($xslt_doc);
             $xslt->setParameter('', 'service_version', $service_version);
             $xslt->setParameter('', 'add_paragraph_numbers', (int) $add_paragraph_numbers);
-            $xslt->setParameter('', 'for_pdf', (int) $for_pdf);
+            $xslt->setParameter('', 'for_pdf', $for_pdf);
 
             // get the html document
             $dom_doc = new \DOMDocument('1.0', 'UTF-8');
@@ -101,7 +142,7 @@ class Service implements FullService
     }
 
     /**
-     * Get the paragraph counter tag for PDF generation
+     * Get the paragraph counter-tag for PDF generation
      * This should help for a correct vertical alignment with the counted block in TCPDF
      */
     public static function paraCounterTag($tag): string
@@ -112,8 +153,7 @@ class Service implements FullService
                 case 'ol':
                 case 'ul':
                 case 'li':
-                case 'p':
-                    return 'div';
+                    return 'p';
                 default:
                     return $tag;
             }
@@ -121,7 +161,6 @@ class Service implements FullService
             return 'p';
         }
     }
-
 
     public static function initParaCounter(): void
     {
@@ -208,7 +247,7 @@ class Service implements FullService
                 break;
         }
 
-        switch (self::$headline_scheme) {
+        switch (self::$headlineScheme) {
 
             case HeadlineScheme::NUMERIC->value:
                 switch ($tag) {

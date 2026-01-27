@@ -68,16 +68,11 @@ class Internal
             $ass_id,
             $user_id,
             $this->dependencies->repositories(),
-            $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->entity(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
-            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
-            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings(),
             $this->dependencies->taskApi($ass_id, $user_id)->correctorAssignments(),
             $this->dependencies->taskApi($ass_id, $user_id)->tasks(),
-            $this->language($user_id),
-            $this->dependencies->systemApi()->user(),
-            $this->dependencies->systemApi()->htmlProcessing()
+            $this->htmlProcessing()
         );
     }
 
@@ -161,7 +156,8 @@ class Internal
     public function htmlProcessing(): HtmlService
     {
         return $this->instances[HtmlService::class] ??= new HtmlService(
-            $this->comments()
+            $this->comments(),
+            $this->dependencies->systemApi()->htmlProcessing()
         );
     }
 

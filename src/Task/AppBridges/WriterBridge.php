@@ -16,6 +16,7 @@ use Edutiek\AssessmentService\Task\Data\ResourceAvailability;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Task\Data\WriterAnnotation;
 use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
+use Edutiek\AssessmentService\System\Data\HeadlineScheme;
 
 class WriterBridge implements AppBridge
 {
@@ -63,7 +64,11 @@ class WriterBridge implements AppBridge
                 'position' => $task->getPosition(),
                 'type' => $task->getTaskType(),
                 'title' => $task->getTitle(),
-                'instructions' => $this->html->processHtmlForMarking((string) $task->getInstructions()),
+                'instructions' => $this->html->getContentForMarking(
+                    (string) $task->getInstructions(),
+                    false,
+                    HeadlineScheme::THREE
+                ),
             ]);
         }
 
@@ -162,7 +167,7 @@ class WriterBridge implements AppBridge
         switch ($change->getAction()) {
             case ChangeAction::SAVE:
                 if ($found !== null) {
-                    if ( $found->getTaskId() !== $annotation->getTaskId()) {
+                    if ($found->getTaskId() !== $annotation->getTaskId()) {
                         return $change->toResponse(false, 'task reference changed');
                     }
                     $annotation->setId($found->getId());
