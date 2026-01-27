@@ -65,15 +65,15 @@ readonly class WritingProvider implements PdfPartProvider
         }
 
         if ($created && $essay->getPdfVersion()) {
+            // join the created and the uploaded pdf
             $id = $this->pdf_processing->join([$created, $essay->getPdfVersion()]);
             $this->pdf_processing->cleanup([$created]);
             return $id;
-
-        } elseif ($created) {
-            return $created;
-
-        } else {
-            return $essay->getPdfVersion();
+        } elseif ($essay->getPdfVersion()) {
+            // return a copy of the uploaded pdf to protect the original from cleanup
+            return $this->pdf_processing->copy($essay->getPdfVersion());
         }
+
+        return $created;
     }
 }

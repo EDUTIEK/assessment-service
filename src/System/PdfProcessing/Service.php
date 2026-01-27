@@ -64,6 +64,14 @@ class Service implements FullService
         return $target;
     }
 
+    public function copy(string $pdf_id): string
+    {
+        return $this->storage->saveFile(
+            $this->storage->getFileStream($pdf_id),
+            $this->storage->getFileInfo($pdf_id)->setId(null)
+        )->getId();
+    }
+
     public function count(string $pdf_id): int
     {
         // Cannot use escapeshellarg. The file is used inside the PS command and not as a standalone argument.

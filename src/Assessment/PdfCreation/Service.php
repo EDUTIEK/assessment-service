@@ -92,8 +92,14 @@ class Service implements FullService
             }
         }
 
-        // todo number and add meta data
-        $id = $this->processor->join($pdf_ids);
+        if (count($pdf_ids) == 1) {
+            $id = reset($pdf_ids);
+            return $id;
+        } else {
+            // todo: create page numbers number and add meta data
+            $id = $this->processor->join($pdf_ids);
+        }
+
         $this->processor->cleanupExcept([$id]);
         return $id;
     }
@@ -105,10 +111,10 @@ class Service implements FullService
         $zip = new ZipArchive();
         $zip->open($zipfile, ZipArchive::CREATE);
 
-
         $tasks = $this->tasks->all();
         $multi = count($tasks) > 1;
 
+        $temp_files = [];
         foreach ($writer_ids as $writer_id) {
             $writer = $this->writers->oneByWriterId($writer_id);
             $user = $this->users->getUser($writer?->getUserId());
@@ -118,17 +124,19 @@ class Service implements FullService
             }
 
             foreach ($tasks as $task) {
-                $pdf_id = $this->createWritingPdf($task->getId(), $writer_id);
+                $temp_files[] = $pdf_id = $this->createWritingPdf($task->getId(), $writer_id);
                 if ($multi) {
                     $entry = $name . '/' . $this->storage->asciiFilename($task->getTitle()) . '.pdf';
                 } else {
                     $entry = $name . '.pdf';
                 }
                 $zip->addFile($this->storage->getReadablePath($pdf_id), $entry);
-                $this->storage->deleteFile($pdf_id);
             }
         }
         $zip->close();
+        foreach ($temp_files as $id) {
+            $this->storage->deleteFile($id);
+        }
 
         $fp = fopen($zipfile, 'r');
         $info = $this->storage->saveFile($fp, $this->storage->newInfo()
@@ -138,8 +146,8 @@ class Service implements FullService
                 : 'writings.zip'
             )
             ->setMimeType('application/zip'));
-        unlink($zipfile);
 
+        unlink($zipfile);
         return $info->getId();
     }
 

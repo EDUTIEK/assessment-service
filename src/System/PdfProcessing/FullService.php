@@ -26,20 +26,22 @@ interface FullService
     public function join(array $pdf_ids): string;
 
     /**
+     * Create a copy of a PDF file
+     */
+    public function copy(string $pdf_id): string;
+
+    /**
      * Count the pages of a pdf file
-     * @param resource $pdf
      */
     public function count(string $pdf_id): int;
 
     /**
-     * @param resource $pdf_left
-     * @param resource $pdf_right
+     * Print two pdf files next to each other
      */
     public function nextToEachOther(string $pdf_left, string $pdf_right): string;
 
     /**
-     * @param resource $pdf_left
-     * @param resource $pdf_right
+     * Print two pdf files on top of each other
      */
     public function onTopOfEachOther(string $pdf_left, string $pdf_right): string;
 
