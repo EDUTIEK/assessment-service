@@ -111,7 +111,7 @@ class CorrectorBridge implements AppCorrectorBridge
 
         $data['Items'] = [];
         if ($this->is_admin) {
-            $assignments = $this->assignment_service->allForCorrectorAdminFiltered();
+            $assignments = $this->assignment_service->all();
         } elseif ($this->corrector !== null) {
             $assignments = $this->assignment_service->allByCorrectorIdFiltered($this->corrector->getId(), true);
         } else {
