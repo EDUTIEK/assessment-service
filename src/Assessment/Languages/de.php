@@ -12,7 +12,7 @@ return [
     'log_cat_exclusion' => 'Ausschluss',
     'log_cat_note' => 'Notiz',
     'log_cat_alert' => 'Benachrichtigung',
-    'lov_cat_working_time' => 'Zeitanpassung',
+    'log_cat_working_time' => 'Zeitanpassung',
     'log_entry_writing_post_authorized' => 'Die Abgabe von %s wurde durch %s nachträglich freigegeben.',
     'log_entry_working_time_changed' => 'Die Bearbeitungszeit von %s wurde durch %s angepasst.',
     'log_entry_working_time_deleted' => 'Die Anpassung der Bearbeitungszeit von %s wurde durch %s entfernt.',
