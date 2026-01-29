@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Alert;
 
@@ -26,7 +26,7 @@ readonly class Service implements FullService
         return $this->repos->alert()->new()->setAssId($this->ass_id);
     }
 
-    public function create(Alert $alert) : void
+    public function create(Alert $alert): void
     {
         $this->checkScope($alert);
         $this->repos->alert()->create($alert);
@@ -34,10 +34,10 @@ readonly class Service implements FullService
 
     public function one(int $id): ?Alert
     {
-        $grade_level = $this->repos->alert()->one($id);
-        if ($grade_level !== null) {
-            $this->checkScope($grade_level);
-            return $grade_level;
+        $alert = $this->repos->alert()->one($id);
+        if ($alert !== null) {
+            $this->checkScope($alert);
+            return $alert;
         }
         return null;
     }

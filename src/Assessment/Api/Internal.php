@@ -152,7 +152,9 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->repositories(),
             // set user_id 0 to use the system default language
             $this->language(0),
-            $this->dependencies->systemApi()->user()
+            $this->dependencies->systemApi()->format(0),
+            $this->dependencies->systemApi()->user(),
+            $this->dependencies->systemApi()->spreadsheet(true)
         );
     }
 

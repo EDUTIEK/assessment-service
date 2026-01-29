@@ -154,7 +154,8 @@ class Internal
     public function spreadsheet(bool $temporary): SpreadsheetService
     {
         return $this->instances[SessionService::class][(string) $temporary] ??= new SpreadsheetService(
-            $temporary ? $this->dependencies->tempStorage() : $this->dependencies->fileStorage()
+            $temporary ? $this->dependencies->tempStorage() : $this->dependencies->fileStorage(),
+            $this->config()->getSetup()->getAbsoluteTempPath(),
         );
     }
 }

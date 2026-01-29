@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Closure;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
+use DateTimeInterface;
 
 readonly class Service implements FullService
 {
@@ -21,12 +22,17 @@ readonly class Service implements FullService
     ) {
     }
 
-    public function date(?DateTimeImmutable $date): string
+    public function logDate(?DateTimeInterface $date): string
+    {
+        return  $date ? $date->setTimezone($this->timezone)->format('Y-m-d H:i:s') : '';
+    }
+
+    public function date(?\DateTimeInterface $date): string
     {
         return $date ? ($this->format_date)($date) : '';
     }
 
-    public function dateRange(?DateTimeImmutable $start, ?DateTimeImmutable $end): string
+    public function dateRange(?DateTimeInterface $start, ?DateTimeInterface $end): string
     {
         $txt = $this->language->txt(...);
         $start = $start?->setTimezone($this->timezone);

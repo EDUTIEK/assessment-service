@@ -57,7 +57,7 @@ class Service implements FullService
                     }
 
                     $toc .= '<a href="step' . sprintf('%09d', $index) . '.html">Step ' . $index . '</a> '
-                        . ' (' . $this->format->date($step->getTimestamp()) . ')';
+                        . ' (' . $this->format->logDate($step->getTimestamp()) . ')';
 
                     if ($step->getIsDelta()) {
                         $toc .= " - Incremental<br>\n";
