@@ -145,6 +145,17 @@ readonly class Service implements FullService
         return $filtered;
     }
 
+    public function allForCorrectorAdminFiltered(): array
+    {
+        // todo: use filter from corrector administration
+        $assignments = $this->all();
+        $writer_ids = $this->writer_service->correctableIds();
+        return array_filter(
+            $assignments,
+            fn(CorrectorAssignment $assignment) => in_array($assignment->getWriterId(), $writer_ids)
+        );
+    }
+
     public function removeAssignment(CorrectorAssignment $assignment): void
     {
         // todo: check scope

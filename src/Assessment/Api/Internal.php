@@ -43,6 +43,7 @@ use Slim\App;
 use Slim\Factory\AppFactory;
 use Edutiek\AssessmentService\Assessment\PdfCreation\CorrectionProvider;
 use Edutiek\AssessmentService\Assessment\Apps\AppWriter;
+use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 
 class Internal implements ComponentApi, ComponentApiFactory
 {
@@ -101,10 +102,13 @@ class Internal implements ComponentApi, ComponentApiFactory
     {
         return new AppCorrector(
             $ass_id,
+            $context_id,
             $user_id,
+            $this->permissions($ass_id, $context_id, $user_id),
             $this->restHelper($ass_id, $context_id, $user_id),
             $this,
             $this->slimApp(),
+            $this->dependencies->restContext(),
             $this->dependencies->systemApi()->fileDelivery()
         );
     }
@@ -117,10 +121,13 @@ class Internal implements ComponentApi, ComponentApiFactory
     {
         return new AppWriter(
             $ass_id,
+            $context_id,
             $user_id,
+            $this->permissions($ass_id, $context_id, $user_id),
             $this->restHelper($ass_id, $context_id, $user_id),
             $this,
             $this->slimApp(),
+            $this->dependencies->restContext(),
             $this->dependencies->systemApi()->fileDelivery()
         );
     }
@@ -317,7 +324,7 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    public function correctorBridge(int $ass_id, int $user_id): ?AppBridge
+    public function correctorBridge(int $ass_id, int $user_id): ?AppCorrectorBridge
     {
         return $this->instances[CorrectorBridge::class][$ass_id][$user_id] ??= new CorrectorBridge(
             $ass_id,

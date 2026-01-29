@@ -13,6 +13,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App as SlimApp;
 use Edutiek\AssessmentService\System\Config\Frontend;
+use Edutiek\AssessmentService\Assessment\Permissions\ReadService as Permissions;
 
 abstract class BaseApp implements RestService
 {
@@ -23,10 +24,13 @@ abstract class BaseApp implements RestService
 
     public function __construct(
         protected readonly int $ass_id,
+        protected readonly int $context_id,
         protected readonly int $user_id,
+        protected readonly Permissions $permissions,
         protected readonly RestHelper $rest_helper,
         protected readonly ComponentApiFactory $apis,
         protected readonly SlimApp $app,
+        protected readonly RestContext $rest_context,
         protected readonly Delivery $delivery
     ) {
     }
@@ -164,9 +168,13 @@ abstract class BaseApp implements RestService
     protected function getBridge(string $component): ?AppBridge
     {
         $api = $this->apis->api($component);
+        $params = $this->rest_context->getParams();
+
         return match($this->frontend) {
             Frontend::WRITER => $api?->writerBridge($this->ass_id, $this->user_id),
-            Frontend::CORRECTOR => $api?->correctorBridge($this->ass_id, $this->user_id)
+            Frontend::CORRECTOR => $api?->correctorBridge($this->ass_id, $this->user_id)?->setAdmin(
+                (($params['as_admin'] ?? '') === 'true') && $this->permissions->canMaintainCorrectors()
+            )
         };
     }
 }

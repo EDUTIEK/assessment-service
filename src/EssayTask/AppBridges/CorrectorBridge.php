@@ -17,6 +17,7 @@ class CorrectorBridge implements AppCorrectorBridge
 {
     private $corrector;
     private WritingSettings $settings;
+    private bool $is_admin;
 
     public function __construct(
         private readonly int $ass_id,
@@ -32,6 +33,11 @@ class CorrectorBridge implements AppCorrectorBridge
         $this->settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
     }
 
+    public function setAdmin(bool $is_admin): static
+    {
+        $this->is_admin = $is_admin;
+        return $this;
+    }
     public function getData(bool $for_update): array
     {
         $data = [];

@@ -50,14 +50,16 @@ class Service implements OpenService, RestService
     /**
      * Open the corrector frontend
      */
-    public function openCorrector(int $context_id, string $return_url, ?int $task_id, ?int $writer_id): void
+    public function openCorrector(int $context_id, string $return_url, ?int $task_id, ?int $writer_id, ?bool $as_admin = false): void
     {
         $this->frontend = Frontend::CORRECTOR;
         $this->context_id = $context_id;
+        $permissions = $this->internal->permissions($this->ass_id, $this->context_id, $this->user_id);
         $helper = $this->internal->openHelper($this->ass_id, $this->context_id, $this->user_id);
         $helper->setCommonFrontendParams($return_url);
         $helper->setFrontendParam('TaskId', (string) $task_id);
         $helper->setFrontendParam('WriterId', (string) $writer_id);
+        $helper->setFrontendParam('AsAdmin', ($as_admin && $permissions->canMaintainCorrectors()) ? 'true' : 'false');
         $helper->openFrontend($this->config->getFrontendUrl($this->frontend));
     }
 

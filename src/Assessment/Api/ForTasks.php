@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorReadS
 use Edutiek\AssessmentService\Assessment\LogEntry\TasksService as LogEntryTasksService;
 use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
+use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
 
 readonly class ForTasks
 {

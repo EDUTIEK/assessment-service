@@ -34,5 +34,10 @@ interface ReadService
      */
     public function allByCorrectorIdFiltered(int $corrector_id, bool $only_authorized_writings = false): array;
 
+    /**
+     * @return CorrectorAssignment[]
+     */
+    public function allForCorrectorAdminFiltered(): array;
+
     public function countMissingCorrectors();
 }

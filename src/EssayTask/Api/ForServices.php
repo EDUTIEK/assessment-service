@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApi;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeManager as ManagerInterface;
 use Edutiek\AssessmentService\EssayTask\AppBridges\WriterBridge as WriterBridgeService;
 use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
+use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 
 readonly class ForServices implements TypeApi
 {
@@ -28,7 +29,7 @@ readonly class ForServices implements TypeApi
         return $this->internal->writerBridge($ass_id, $user_id);
     }
 
-    public function correctorBridge(int $ass_id, int $user_id): ?AppBridge
+    public function correctorBridge(int $ass_id, int $user_id): ?AppCorrectorBridge
     {
         return $this->internal->correctorBridge($ass_id, $user_id);
     }

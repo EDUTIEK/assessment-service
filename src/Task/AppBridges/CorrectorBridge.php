@@ -44,7 +44,7 @@ class CorrectorBridge implements AppCorrectorBridge
     private const CHANGE_TYPE_PREFERENCES = 'preferences';
     private const CHANGE_TYPE_SNIPPETS = 'snippets';
 
-    private ?Corrector $corrector;
+    private ?Corrector $corrector = null;
     /** @var Settings */
     private array $tasks = [];
     /** @var Resource[] */
@@ -53,6 +53,7 @@ class CorrectorBridge implements AppCorrectorBridge
     private TaskCorrectionSettings $correction_settings;
     /** @var RatingCriterion[][][] task_id => corrector_id => criterion_id => criterion */
     private $criteria;
+    private bool $is_admin;
 
     public function __construct(
         private readonly int $ass_id,
@@ -82,6 +83,12 @@ class CorrectorBridge implements AppCorrectorBridge
         $this->correction_settings = $this->correction_settings_service->get();
     }
 
+    public function setAdmin(bool $is_admin): static
+    {
+        $this->is_admin = $is_admin;
+        return $this;
+    }
+
     public function getData($for_update): array
     {
         $data = [];
@@ -103,27 +110,48 @@ class CorrectorBridge implements AppCorrectorBridge
         }
 
         $data['Items'] = [];
-        if ($this->corrector !== null) {
+        if ($this->is_admin) {
+            $assignments = $this->assignment_service->allForCorrectorAdminFiltered();
+        } elseif ($this->corrector !== null) {
             $assignments = $this->assignment_service->allByCorrectorIdFiltered($this->corrector->getId(), true);
         } else {
-            $assignments = $this->assignment_service->all();
+            $assignments = [];
         }
 
         $task_ids = [];
+        $added = [];
         foreach ($assignments as $assignment) {
             $writer = $writers[$assignment->getWriterId()] ?? null;
-            $summary = $this->summary_service->getForAssignment($assignment);
-            $data['Items'][] = $this->entity->arrayToPrimitives([
-                'task_id' => $assignment->getTaskId(),
-                'writer_id' => $assignment->getWriterId(),
-                'position' => $assignment->getPosition()->value,
-                'pseudonym' => $writer->getPseudonym(),
-                'correction_status' => $writer->getCorrectionStatus()->value,
-                'grading_status' => $summary->getGradingStatus(),
-                'can_correct' => $this->process_service->canCorrect($assignment),
-                'can_authorize' => $this->process_service->canAuthorize($assignment),
-                'can_revise' => $this->process_service->canRevise($assignment),
-            ]);
+
+            if ($assignment->getCorrectorId() === $this->corrector?->getId()) {
+                $summary = $this->summary_service->getForAssignment($assignment);
+
+                $data['Items'][] = $this->entity->arrayToPrimitives([
+                    'task_id' => $assignment->getTaskId(),
+                    'writer_id' => $assignment->getWriterId(),
+                    'position' => $assignment->getPosition()->value,
+                    'pseudonym' => $writer->getPseudonym(),
+                    'correction_status' => $writer->getCorrectionStatus()->value,
+                    'grading_status' => $summary->getGradingStatus(),
+                    'can_correct' => $this->process_service->canCorrect($assignment),
+                    'can_authorize' => $this->process_service->canAuthorize($assignment),
+                    'can_revise' => $this->process_service->canRevise($assignment),
+                ]);
+            } elseif (!isset($added[$assignment->getTaskId()][$assignment->getWriterId()])) {
+                $data['Items'][] = $this->entity->arrayToPrimitives([
+                    'task_id' => $assignment->getTaskId(),
+                    'writer_id' => $assignment->getWriterId(),
+                    'position' => null,
+                    'pseudonym' => $writer->getPseudonym(),
+                    'correction_status' => $writer->getCorrectionStatus()->value,
+                    'grading_status' => null,
+                    'can_correct' => false,
+                    'can_authorize' => false,
+                    'can_revise' => false,
+                ]);
+            }
+
+            $added[$assignment->getTaskId()][$assignment->getWriterId()] = true;
             $task_ids[] = $assignment->getTaskId();
         }
         $task_ids = array_unique($task_ids);
@@ -164,7 +192,7 @@ class CorrectorBridge implements AppCorrectorBridge
             }
         }
 
-        $preferences = $this->repos->correctorPrefs()->one($this->corrector->getId() ?? 0)
+        $preferences = $this->repos->correctorPrefs()->one($this->corrector?->getId() ?? 0)
             ?? $this->repos->correctorPrefs()->new();
 
         $data['Preferences'] = $this->entity->arrayToPrimitives([
@@ -192,7 +220,6 @@ class CorrectorBridge implements AppCorrectorBridge
     public function getItem(int $task_id, int $writer_id): ?array
     {
         $data = [
-            'Corrector' => $this->entity->toPrimitives($this->corrector, Corrector::class),
             'Item' => [],
             'Corrections' => [],
             'Criteria' => [],
@@ -201,29 +228,53 @@ class CorrectorBridge implements AppCorrectorBridge
             'Points' => []
         ];
 
-        $assignment = $this->assignment_service->oneByIds($writer_id, (int) $this->corrector?->getId(), $task_id);
         $writer = $this->writer_service->oneByWriterId($writer_id);
-        if ($writer?->isAuthorized()) {
-            $summary = $this->summary_service->getForAssignment($assignment);
+        if (!$writer?->isAuthorized()) {
+            return [];
+        }
+
+        $assignments = $this->assignment_service->allByTaskIdAndWriterId($task_id, $writer_id);
+        if (empty($assignments)) {
+            return [];
+        }
+
+        $own_assignment = $this->assignment_service->oneByIds($writer_id, (int) $this->corrector?->getId(), $task_id);
+        if ($own_assignment !== null) {
+            $summary = $this->summary_service->getForAssignment($own_assignment);
             $data['Item'] = $this->entity->arrayToPrimitives([
-                'task_id' => $assignment->getTaskId(),
-                'writer_id' => $assignment->getWriterId(),
-                'position' => $assignment->getPosition()->value,
+                'task_id' => $task_id,
+                'writer_id' => $writer_id,
+                'position' => $own_assignment->getPosition()->value,
                 'pseudonym' => $writer->getPseudonym(),
                 'correction_status' => $writer->getCorrectionStatus()->value,
                 'grading_status' => $summary->getGradingStatus(),
-                'can_correct' => $this->process_service->canCorrect($assignment),
-                'can_authorize' => $this->process_service->canAuthorize($assignment),
-                'can_revise' => $this->process_service->canRevise($assignment),
+                'can_correct' => $this->process_service->canCorrect($own_assignment),
+                'can_authorize' => $this->process_service->canAuthorize($own_assignment),
+                'can_revise' => $this->process_service->canRevise($own_assignment),
+            ]);
+        } elseif ($this->is_admin) {
+            $data['Item'] = $this->entity->arrayToPrimitives([
+                'task_id' => $task_id,
+                'writer_id' => $writer_id,
+                'position' => null,
+                'pseudonym' => $writer->getPseudonym(),
+                'correction_status' => $writer->getCorrectionStatus()->value,
+                'grading_status' => null,
+                'can_correct' => false,
+                'can_authorize' => false,
+                'can_revise' => false,
             ]);
         } else {
             return [];
         }
 
-        foreach ($this->assignment_service->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
-            if ($this->corrector === null || $this->corrector->getId() === $assignment->getCorrectorId()
+        foreach ($assignments as $assignment) {
+
+            if ($this->is_admin || $this->corrector->getId() === $assignment->getCorrectorId()
                 || $this->assessment_settings->getMutualVisibility()) {
+
                 $corrector = $this->corrector_service->oneById($assignment->getCorrectorId());
+
                 if ($corrector) {
                     $user = $this->user_service->getUser($corrector->getUserId());
 

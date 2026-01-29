@@ -27,6 +27,7 @@ class CorrectorBridge implements AppCorrectorBridge
 
     private $tasks = [];
     private $resources = [];
+    private bool $is_admin;
 
     public function __construct(
         private readonly int $ass_id,
@@ -36,6 +37,12 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly Repositories $repos,
     ) {
         $this->corrector = $this->repos->corrector()->oneByUserIdAndAssId($this->user_id, $this->ass_id);
+    }
+
+    public function setAdmin(bool $is_admin): static
+    {
+        $this->is_admin = $is_admin;
+        return $this;
     }
 
     public function getData(bool $for_update): array

@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 
 use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
+use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 
 /**
  * Common API for components used by the Assessment component
@@ -27,7 +28,7 @@ interface ComponentApi
     /**
      * Get the bridge to provide and process data for the Writer web app
      */
-    public function correctorBridge(int $ass_id, int $user_id): ?AppBridge;
+    public function correctorBridge(int $ass_id, int $user_id): ?AppCorrectorBridge;
 
     /**
      * Get the provider of parts for the PDF of a writing

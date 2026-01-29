@@ -9,6 +9,7 @@ use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingProvider;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskApi as TaskApi;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager as ManagerInterface;
+use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 
 readonly class ForAssessment implements TaskApi
 {
@@ -32,7 +33,7 @@ readonly class ForAssessment implements TaskApi
         return $this->internal->writerBridge($ass_id, $user_id);
     }
 
-    public function correctorBridge(int $ass_id, int $user_id): ?AppBridge
+    public function correctorBridge(int $ass_id, int $user_id): ?AppCorrectorBridge
     {
         return $this->internal->correctorBridge($ass_id, $user_id);
     }
