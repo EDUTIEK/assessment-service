@@ -46,13 +46,22 @@ readonly class Service implements FullService, GradingProvider
         }
     }
 
-    public function getForAssignment(CorrectorAssignment $assignment): CorrectorSummary
+    public function oneForAssignment(CorrectorAssignment $assignment): ?CorrectorSummary
     {
-        return  $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+        return $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
             $assignment->getTaskId(),
             $assignment->getWriterId(),
             $assignment->getCorrectorId()
-        ) ?? $this->newForAssignment($assignment);
+        );
+    }
+
+    public function getForAssignment(CorrectorAssignment $assignment): CorrectorSummary
+    {
+        $summary = $this->oneForAssignment($assignment)
+            ?? $this->newForAssignment($assignment);
+
+        $this->repos->correctorSummary()->save($summary);
+        return $summary;
     }
 
     public function newForAssignment(CorrectorAssignment $assignment): CorrectorSummary

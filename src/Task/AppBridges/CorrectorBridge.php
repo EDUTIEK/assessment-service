@@ -291,15 +291,18 @@ class CorrectorBridge implements AppCorrectorBridge
                        'position' => $assignment->getPosition()->value,
                     ]);
 
-                    $summary = $this->summary_service->getForAssignment($assignment);
-                    if ($summary->getCorrectorId() == $this->corrector?->getId() && !$summary->getId()) {
-                        $this->repos->correctorSummary()->save($summary);
-                    }
-                    if ($summary->getCorrectorId() == $this->corrector?->getId() || $summary->isAuthorized()) {
+                    // todo
+                    if ($assignment->getCorrectorId() === $this->corrector?->getId()) {
+                        $summary = $this->summary_service->getForAssignment($assignment);
                         $add_details = true;
                     } else {
-                        $add_details = false;
-                        $summary = $this->summary_service->newForAssignment($assignment);
+                        $summary = $this->summary_service->oneForAssignment($assignment);
+                        if ($summary?->isAuthorized()) {
+                            $add_details = true;
+                        } else {
+                            $summary = $this->summary_service->newForAssignment($assignment);
+                            $add_details = false;
+                        }
                     }
 
                     $data['Summaries'][] = $this->entity->arrayToPrimitives([

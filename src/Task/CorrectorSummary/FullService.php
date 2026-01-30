@@ -16,6 +16,7 @@ interface FullService
     /** @return CorrectorSummary[] */
     public function allByTaskIdAndCorrectorId(int $task_id, int $corrector_id): array;
 
+    public function oneForAssignment(CorrectorAssignment $assignment): ?CorrectorSummary;
     public function getForAssignment(CorrectorAssignment $assignment): CorrectorSummary;
     public function newForAssignment(CorrectorAssignment $assignment): CorrectorSummary;
 }
