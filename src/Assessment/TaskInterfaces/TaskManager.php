@@ -23,6 +23,12 @@ interface TaskManager
     public function all(): array;
 
     /**
+     * Get the ids of all tasks in the assessment
+     * @return int[]
+     */
+    public function allIds(): array;
+
+    /**
      * Check if a task exists in the assessment
      */
     public function has(int $task_id): bool;

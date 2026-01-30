@@ -32,6 +32,11 @@ readonly class Service implements TaskManager, ReadService
         return $this->repos->settings()->countByAssId($this->ass_id);
     }
 
+    public function allIds(): array
+    {
+        return $this->repos->settings()->idsByAssId($this->ass_id);
+    }
+
     /** @return TaskInfo[] */
     public function all(): array
     {

@@ -16,7 +16,7 @@ interface Delivery
     /**
      * Send a file which is stored with the given id
      */
-    public function sendFile(string $id, Disposition $disposition): never;
+    public function sendFile(string $id, Disposition $disposition, ?FileInfo $info = null): never;
 
     /**
      * Send data content as a file with the given disposition

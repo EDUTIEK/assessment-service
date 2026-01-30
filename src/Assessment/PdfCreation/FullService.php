@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\PdfCreation;
 
+use Edutiek\AssessmentService\Assessment\Data\WritingTask;
+
 interface FullService
 {
     /**
@@ -25,13 +27,14 @@ interface FullService
      * Create the PDF of a writer submission
      * It may consist of text written in the web app and/or an uploaded pdf file
      */
-    public function createWritingPdf(int $task_id, int $writer_id): string;
+    public function createWritingPdf(int $task_id, int $writer_id, bool $anonymous = false): string;
 
     /**
      * Create a ZIP file with all writing PDFs
      * It may consist of text writtens in the web app and/or uploaded pdf files
+     * @param WritingTask[] $writings
      */
-    public function createWritingZip(array $writer_ids): string;
+    public function createWritingZip(array $writings, bool $anonymous = false): string;
 
     /**
      * Create the PDF of a correction

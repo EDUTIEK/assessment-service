@@ -12,6 +12,8 @@ interface ReadService
     /** @return Writer[] */
     public function all(): array;
 
+    /** @return int[] */
+    public function allIds(): array;
     /**
      * Get the ids of writers that can be corrected
      * - They must be authorized and not excluded

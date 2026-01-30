@@ -20,6 +20,7 @@ use Edutiek\AssessmentService\Assessment\Apps\AppCorrector;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\DisabledGroup\Service as DisabledGroupService;
 use Edutiek\AssessmentService\Assessment\EventHandling\Observer as EventObserver;
+use Edutiek\AssessmentService\Assessment\Export\Service as ExportService;
 use Edutiek\AssessmentService\Assessment\Format\FullService as FormatInterface;
 use Edutiek\AssessmentService\Assessment\Format\Service as Format;
 use Edutiek\AssessmentService\Assessment\GradeLevel\Service as GradeLevelService;
@@ -37,6 +38,7 @@ use Edutiek\AssessmentService\Assessment\Pseudonym\Service as PseudonymService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
+use Edutiek\AssessmentService\Assessment\WritingTask\Service as WritingTaskService;
 use Edutiek\AssessmentService\Assessment\AppBridges\WriterBridge;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Slim\App;
@@ -452,10 +454,28 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
+    public function export(int $ass_id, int $user_id): ExportService
+    {
+        return $this->instances[ExportService::class][$ass_id][$user_id] ??= new ExportService(
+            $this->pdfCreation($ass_id, $user_id),
+            $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
+            $this->writer($ass_id, $user_id),
+            $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->systemApi()->fileDelivery()
+        );
+    }
+
     public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
     {
         // currently the assessment component provides no writing parts
         return null;
     }
 
+    public function writingTask(int $ass_id, int $user_id): WritingTaskService
+    {
+        return  $this->instances[WritingTaskService::class][$ass_id][$user_id] = new WritingTaskService(
+            $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
+            $this->writer($ass_id, $user_id)
+        );
+    }
 }

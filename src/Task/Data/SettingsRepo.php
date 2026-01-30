@@ -10,6 +10,8 @@ interface SettingsRepo
     public function has(int $ass_id, int $task_id): bool;
     public function one(int $task_id): ?Settings;
     public function countByAssId(int $ass_id): int;
+    /** @return int[] */
+    public function idsByAssId(int $ass_id): array;
     /** @return Settings[] */
     public function allByAssId(int $ass_id): array;
     public function save(Settings $entity): void;

@@ -12,6 +12,7 @@ use Edutiek\AssessmentService\Assessment\Corrector\FullService as CorrectorFullS
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\DisabledGroup\FullService as DisabledGroupFullService;
+use Edutiek\AssessmentService\Assessment\Export\FullService as ExportFullService;
 use Edutiek\AssessmentService\Assessment\Format\FullService as FormatInterface;
 use Edutiek\AssessmentService\Assessment\GradeLevel\FullService as gradeLevelFullService;
 use Edutiek\AssessmentService\Assessment\Location\FullService as LocationFullService;
@@ -26,6 +27,7 @@ use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymServi
 use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as WorkingTimeService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\IndividualWorkingTime;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterFullService;
+use Edutiek\AssessmentService\Assessment\WritingTask\ReadService as WritingTaskReadService;
 
 readonly class ForClients
 {
@@ -132,5 +134,15 @@ readonly class ForClients
     public function disabledGroup(): DisabledGroupFullService
     {
         return $this->internal->disabledGroup($this->ass_id);
+    }
+
+    public function writingTask(): WritingTaskReadService
+    {
+        return $this->internal->writingTask($this->ass_id, $this->user_id);
+    }
+
+    public function export(): ExportFullService
+    {
+        return $this->internal->export($this->ass_id, $this->user_id);
     }
 }

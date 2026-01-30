@@ -79,7 +79,7 @@ class Service implements FullService
         }
     }
 
-    public function createWritingPdf(int $task_id, int $writer_id): string
+    public function createWritingPdf(int $task_id, int $writer_id, bool $anonymous = false): string
     {
         $pdf_ids = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
@@ -104,33 +104,43 @@ class Service implements FullService
         return $id;
     }
 
-    public function createWritingZip(array $writer_ids): string
+    public function createWritingZip(array $writings, bool $anonymous = false): string
     {
+        $tasks = [];
+        foreach ($this->tasks->all() as $task) {
+            $tasks[$task->getId()] = $task;
+        }
+        $multi_tasks = count($tasks) > 1;
+
+        $ids = [];
+        foreach ($writings as $writing) {
+            $ids[$writing->getWriterId()][$writing->getTaskId()] = $writing->getTaskId();
+        }
+
         $zipfile = $this->config->getSetup()->getAbsoluteTempPath()
             . uniqid('', true) . '.zip';
         $zip = new ZipArchive();
         $zip->open($zipfile, ZipArchive::CREATE);
 
-        $tasks = $this->tasks->all();
-        $multi = count($tasks) > 1;
-
         $temp_files = [];
-        foreach ($writer_ids as $writer_id) {
+        foreach ($ids as $writer_id => $task_ids) {
             $writer = $this->writers->oneByWriterId($writer_id);
             $user = $this->users->getUser($writer?->getUserId());
             $name = $this->storage->asciiFilename($user->getListname(true));
-            if ($multi) {
+            if ($multi_tasks) {
                 $zip->addEmptyDir($name);
             }
 
-            foreach ($tasks as $task) {
-                $temp_files[] = $pdf_id = $this->createWritingPdf($task->getId(), $writer_id);
-                if ($multi) {
-                    $entry = $name . '/' . $this->storage->asciiFilename($task->getTitle()) . '.pdf';
+            foreach ($task_ids as $task_id) {
+                $pdf_id = $this->createWritingPdf($task_id, $writer_id, $anonymous);
+                if ($multi_tasks) {
+                    $task = $tasks[$task_id] ?? null;
+                    $entry = $name . '/' . $this->storage->asciiFilename($task?->getTitle() ?? 'task') . '.pdf';
                 } else {
                     $entry = $name . '.pdf';
                 }
                 $zip->addFile($this->storage->getReadablePath($pdf_id), $entry);
+                $temp_files[] = $pdf_id;
             }
         }
         $zip->close();
@@ -141,8 +151,8 @@ class Service implements FullService
         $fp = fopen($zipfile, 'r');
         $info = $this->storage->saveFile($fp, $this->storage->newInfo()
             ->setFileName(
-                count($writer_ids) == 1
-                ? 'writer' . reset($writer_ids) . '-writing.zip'
+                count($ids) == 1
+                ? 'writer' . array_keys($ids)[0] . '-writing.zip'
                 : 'writings.zip'
             )
             ->setMimeType('application/zip'));

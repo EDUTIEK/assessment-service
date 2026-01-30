@@ -12,6 +12,12 @@ interface ReadService
     public function count(): int;
 
     /**
+     * Get the ids of all tasks in the assessment
+     * @return int[]
+     */
+    public function allIds(): array;
+
+    /**
      * Get the basic info of all tasks of the assessment
      * The array is ordered by the tasks positions
      *
