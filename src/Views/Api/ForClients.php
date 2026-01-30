@@ -11,4 +11,5 @@ interface ForClients
 {
     public function writer(): WriterViewRepo;
     public function corrections(): CorrectionsViewRepo;
+    public function statistic();
 }
