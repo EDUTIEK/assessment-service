@@ -73,6 +73,11 @@ interface ReadService
     public function canViewWriterStatistics(): bool;
 
     /**
+     *  Check if the current user can view correction statistics
+     */
+    public function canViewCorrectionStatistics(): bool;
+
+    /**
      * Check if the current user can view his assessment result
      */
     public function canViewResult(): bool;

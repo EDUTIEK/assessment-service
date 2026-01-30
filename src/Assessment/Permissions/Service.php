@@ -113,7 +113,16 @@ class Service implements ReadService
 
     public function canViewWriterStatistics(): bool
     {
+        return true;
         return $this->canViewResult() && $this->orga_settings->getStatisticsAvailable();
+    }
+
+    /**
+     *  Check if the current user can view the statistics
+     */
+    public function canViewCorrectionStatistics(): bool
+    {
+        return ($this->canCorrect() || $this->canMaintainCorrectors()) && !$this->orga_settings->getMultiTasks();
     }
 
     public function canViewResult(): bool
