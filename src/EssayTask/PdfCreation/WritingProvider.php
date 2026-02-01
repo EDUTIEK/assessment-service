@@ -13,6 +13,10 @@ use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfConfigPart;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
+use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
+use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropetiesReadService;
+use Edutiek\AssessmentService\Task\Manager\ReadService as TaskManagerReadService;
+use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 
 readonly class WritingProvider implements PdfPartProvider
 {
@@ -20,10 +24,15 @@ readonly class WritingProvider implements PdfPartProvider
 
     public function __construct(
         private int $ass_id,
+        private bool $anonymous,
         private HtmlProcessing $html_processing,
         private PdfProcessing $pdf_processing,
         private LanguageService $language,
-        private Repositories $repos
+        private Repositories $repos,
+        private WriterReadService $writers,
+        private PropetiesReadService $properties,
+        private TaskManagerReadService $tasks,
+        private UserReadService $users,
     ) {
     }
 
@@ -56,11 +65,34 @@ readonly class WritingProvider implements PdfPartProvider
             $settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
             $html = $this->html_processing->getWrittenTextForPdf($essay, $settings);
 
-            $options = new Options();
+            $options = (new Options())->withPrintHeader(true)->withPrintFooter(true);
             if ($settings->getAddCorrectionMargin()) {
                 $options = $options->withLeftMargin($options->getLeftMargin() + $settings->getLeftCorrectionMargin());
                 $options = $options->withRightMargin($options->getRightMargin() + $settings->getRightCorrectionMargin());
             }
+
+            $writer = $this->writers->oneByWriterId($essay->getWriterId());
+            $user = $this->users->getUser($writer?->getUserId() ?? 0);
+
+            if ($this->anonymous) {
+                $author = $writer->getPseudonym();
+            } else {
+                $author = $user->getFullname(false);
+            }
+
+            $properties = $this->properties->get();
+
+            $title = $author . ' | ' . $properties->getTitle();
+
+            if ($this->tasks->count() > 1) {
+                $task = $this->tasks->one($essay->getTaskId());
+                $title .= ' - ' . $task->getTitle();
+            }
+
+            $options = $options->withTitle($title);
+            $options = $options->withSubject($properties->getDescription());
+            $options = $options->withAuthor($author);
+
             $created = $this->pdf_processing->create($html, $options);
         }
 

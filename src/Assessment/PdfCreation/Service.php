@@ -42,7 +42,7 @@ class Service implements FullService
 
         $parts = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
-            foreach ($this->getProvider($component, $purpose)?->getAvailableParts() ?? [] as $part) {
+            foreach ($this->getProvider($component, $purpose, false, false)?->getAvailableParts() ?? [] as $part) {
                 $config = $configs[$part->getComponent()][$part->getKey()] ?? null;
                 /** @var PdfConfig $config */
                 if ($config !== null) {
@@ -83,7 +83,7 @@ class Service implements FullService
     {
         $pdf_ids = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
-            $provider = $this->getProvider($component, PdfPurpose::WRITING);
+            $provider = $this->getProvider($component, PdfPurpose::WRITING, $anonymous, $anonymous);
             foreach ($provider?->getAvailableParts() ?? [] as $part) {
                 $id = $provider->renderPart($part->getKey(), $task_id, $writer_id);
                 if ($id !== null) {
@@ -161,7 +161,7 @@ class Service implements FullService
         return $info->getId();
     }
 
-    public function createCorrectionPdf(int $task_id, int $writer_id): string
+    public function createCorrectionPdf(int $task_id, int $writer_id, bool $anonymous_writer, bool $anonymous_corrector): string
     {
         // TODO: Implement createCorrectionPdf() method.
         return '';
@@ -172,11 +172,11 @@ class Service implements FullService
         // TODO: Implement createCorrectionReport() method.
     }
 
-    private function getProvider(string $component, PdfPurpose $purpose): ?PdfPartProvider
+    private function getProvider(string $component, PdfPurpose $purpose, bool $anonymous_writer, bool $anonymous_corrector): ?PdfPartProvider
     {
         switch ($purpose) {
             case PdfPurpose::WRITING:
-                return $this->apis->api($component)?->writingPartProvider($this->ass_id, $this->user_id);
+                return $this->apis->api($component)?->writingPartProvider($this->ass_id, $this->user_id, $anonymous_writer);
 
             case PdfPurpose::CORRECTION:
                 return $this->apis->api($component)?->correctionPartProvider($this->ass_id, $this->user_id);

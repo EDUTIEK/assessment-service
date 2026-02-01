@@ -465,7 +465,7 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
+    public function writingPartProvider(int $ass_id, int $user_id, bool $anonymous): ?PdfPartProvider
     {
         // currently the assessment component provides no writing parts
         return null;

@@ -12,6 +12,7 @@ use Edutiek\AssessmentService\Assessment\LogEntry\TasksService as LogEntryTasksS
 use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
+use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropertiesReadService;
 
 readonly class ForTasks
 {
@@ -45,6 +46,11 @@ readonly class ForTasks
     public function pdfSettings(): PdfSettingsFullService
     {
         return $this->internal->pdfSettings($this->ass_id);
+    }
+
+    public function properties(): PropertiesReadService
+    {
+        return $this->internal->properties($this->ass_id);
     }
 
     public function assessmentGrading(): AssessmentGradingService

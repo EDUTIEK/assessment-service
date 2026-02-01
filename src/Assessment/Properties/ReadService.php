@@ -6,9 +6,7 @@ namespace Edutiek\AssessmentService\Assessment\Properties;
 
 use Edutiek\AssessmentService\Assessment\Data\Properties;
 
-interface FullService extends ReadService
+interface ReadService
 {
     public function get(): Properties;
-    public function validate(Properties $properties): bool;
-    public function save(Properties $properties): void;
 }

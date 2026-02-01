@@ -19,10 +19,10 @@ class Service implements FullService
     protected $main_font_size = 10;
 
     protected $header_font = 'helvetica';
-    protected $header_font_size = 12;
+    protected $header_font_size = 8;
 
     protected $footer_font = 'helvetica';
-    protected $footer_font_size = 10;
+    protected $footer_font_size = 8;
 
     protected $mono_font = 'courier';
 
@@ -40,18 +40,25 @@ class Service implements FullService
     {
         $pdf = $this->initPdf($options);
 
-        $header = $options->getPrintHeader() ? ('<header> ' . $options->getSubject() . '</header>') : '';
+        $header = $options->getPrintHeader() ? ('<header> ' . $options->getTitle() . '</header>') : '';
         $pdf->loadHtml(sprintf(
             '<!DOCTYPE html><html><head><meta charset="utf-8"/><style>%s</style></head><body>%s%s</body></html>',
             $this->css($options),
             $header,
             $html,
         ));
+
         $pdf->render();
 
         if ($options->getPrintFooter()) {
             $pdf->getCanvas()->page_script($this->renderPageNumbers($options));
         }
+
+        $pdf->addInfo('Creator', 'Fred' . $options->getCreator());
+        $pdf->addInfo('Author', $options->getAuthor());
+        $pdf->addInfo('Title', $options->getTitle());
+        $pdf->addInfo('Subject', $options->getSubject());
+        $pdf->addInfo('Keywords', $options->getKeywords());
 
         return $pdf->output();
     }
@@ -106,8 +113,6 @@ header
     left: ' . $options->getLeftMargin() . 'mm;
     right: ' . $options->getRightMargin() . 'mm;
     transform: translateY(-100%);
-    height: 20px;
-    border-bottom: 1px solid black;
     right: 0;
 }';
     }
@@ -135,11 +140,6 @@ header
     {
         $pdf = ($this->dom_pdf)();
         $pdf->setPaper('A4', $opts->getPortrait() ? 'portrait' : 'landscape');
-        $pdf->addInfo('Creator', $opts->getCreator());
-        $pdf->addInfo('Author', $opts->getAuthor());
-        $pdf->addInfo('Title', $opts->getTitle());
-        $pdf->addInfo('Subject', $opts->getSubject());
-        $pdf->addInfo('Keywords', $opts->getKeywords());
 
         $options = $pdf->getOptions();
         $options->set('isPdfAEnabled', true);

@@ -34,9 +34,9 @@ readonly class ForServices implements TypeApi
         return $this->internal->correctorBridge($ass_id, $user_id);
     }
 
-    public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
+    public function writingPartProvider(int $ass_id, int $user_id, bool $anonymous): ?PdfPartProvider
     {
-        return $this->internal->writingPartProvider($ass_id, $user_id);
+        return $this->internal->writingPartProvider($ass_id, $user_id, $anonymous);
     }
 
     public function correctionPartProvider(int $ass_id, int $user_id): ?PdfPartProvider

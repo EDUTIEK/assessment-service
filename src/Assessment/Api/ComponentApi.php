@@ -33,7 +33,7 @@ interface ComponentApi
     /**
      * Get the provider of parts for the PDF of a writing
      */
-    public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider;
+    public function writingPartProvider(int $ass_id, int $user_id, bool $anonymous): ?PdfPartProvider;
 
     /**
      * Get the provider of parts for the PDF of a correction
