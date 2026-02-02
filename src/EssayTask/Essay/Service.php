@@ -218,6 +218,13 @@ readonly class Service implements ClientService, EventService
         $this->essay_image->deleteByEssayId($essay->getId());
     }
 
+    public function createAll(int $writer_id): void
+    {
+        foreach ($this->tasks->allIds() as $task_id) {
+            $this->getByWriterIdAndTaskId($writer_id, $task_id);
+        }
+    }
+
     /**
      * This function is called from an event handler
      * No constraints to be checked

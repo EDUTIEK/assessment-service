@@ -14,6 +14,12 @@ class Observer extends AbstractObserver
         Internal $internal,
         Repositories $repos
     ) {
+
+        $this->registerHandler(OnWriterAdded::class, fn() => new OnWriterAdded(
+            $repos,
+            $internal->essay($ass_id, $user_id, true),
+        ));
+
         $this->registerHandler(OnWriterRemoved::class, fn() => new OnWriterRemoved(
             $repos,
             $internal->essay($ass_id, $user_id, true)

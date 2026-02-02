@@ -18,6 +18,7 @@ use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
 use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
+use Edutiek\AssessmentService\System\EventHandling\Events\WriterAdded;
 
 readonly class Service implements ReadService, FullService
 {
@@ -51,6 +52,8 @@ readonly class Service implements ReadService, FullService
             $this->repos->writer()->save($writer);
             $writer->setPseudonym($this->pseudonym_service->buildForWriter($writer->getId(), $user_id));
             $this->repos->writer()->save($writer);
+
+            $this->events->dispatchEvent(new WriterAdded($writer->getId(), $this->ass_id));
         } else {
             $this->checkScope($writer);
         }
