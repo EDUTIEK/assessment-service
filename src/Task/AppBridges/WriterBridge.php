@@ -88,7 +88,7 @@ class WriterBridge implements AppBridge
                     'embedded' => $resource->getEmbedded(),
                     'source' => $info?->getFileName() ?? $resource->getUrl(),
                     'mimetype' => $info?->getMimetype(),
-                    'size' => $info?->getMimetype(),
+                    'size' => $info?->getSize(),
                     'title' => $title
                 ]);
             }
