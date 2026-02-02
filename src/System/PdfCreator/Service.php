@@ -12,6 +12,7 @@ use Dompdf\FontMetrics;
 
 class Service implements FullService
 {
+    private const FONT_DIR = __DIR__ . '/../fonts';
     /**
      * Main text of the page
      */
@@ -86,13 +87,36 @@ class Service implements FullService
 
     private function css(Options $options): string
     {
+        $font_dir = self::FONT_DIR;
         return '
+@font-face
+{
+    font-family: sc;
+    font-weight: normal;
+    font-style: normal;
+    src: url(' . $font_dir . '/NotoSansCJKsc-VF.ttf) format(truetype);
+}
+@font-face
+{
+    font-family: tc;
+    font-weight: normal;
+    font-style: normal;
+    src: url(' . $font_dir . '/NotoSansCJKtc-VF.ttf) format(truetype);
+}
+@font-face
+{
+    font-family: Math;
+    font-weight: normal;
+    font-style: normal;
+    src: url(' . $font_dir . '/NotoSansMath-Regular.ttf) format(truetype);
+}
 .force-new-page
 {
     page-break-after: always;
 }
 body
 {
+    font-family: '. $this->main_font . ', sc, tc, Math;
     font-size: ' . $this->main_font_size . ';
     margin: 0;
     margin-top: ' . $options->getTopMargin() . 'mm;
