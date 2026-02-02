@@ -38,7 +38,7 @@ readonly class ForAssessment implements TaskApi
         return $this->internal->correctorBridge($ass_id, $user_id);
     }
 
-    public function writingPartProvider(int $ass_id, int $user_id, bool $anonymous): ?PdfPartProvider
+    public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
     {
         // currently the task component provides no writing pdf parts
         return null;

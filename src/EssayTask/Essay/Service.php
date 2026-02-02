@@ -148,7 +148,7 @@ readonly class Service implements ClientService, EventService
         // render pure text as pdf
         $file_id = $this->pdf_provider->renderEssay($essay
             ->setPdfVersion(null)
-            ->setPdfFromWrittenText(false));
+            ->setPdfFromWrittenText(false), true, false, false);
 
         $this->repos->essay()->save($essay
             ->setPdfVersion($file_id)

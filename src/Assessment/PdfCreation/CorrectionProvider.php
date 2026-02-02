@@ -31,8 +31,15 @@ readonly class CorrectionProvider implements PdfPartProvider
         ];
     }
 
-    public function renderPart(string $key, int $task_id, int $writer_id): ?string
-    {
+    public function renderPart(
+        string $key,
+        int $task_id,
+        int $writer_id,
+        bool $anonymous_writer,
+        bool $anonymous_corrector,
+        bool $with_header,
+        bool $with_footer
+    ): ?string {
         // todo: fill with content for a task and writer
         return null;
     }

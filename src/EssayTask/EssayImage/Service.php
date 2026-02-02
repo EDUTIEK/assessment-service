@@ -44,7 +44,7 @@ readonly class Service implements FullService
         $delete_me = null;
         $pdfs = [];
         if ($essay->getWrittenText() && !$essay->hasPdfFromWrittenText()) {
-            $delete_me = $this->pdf_provider->renderEssay($essay);
+            $delete_me = $this->pdf_provider->renderEssay($essay, true, false, false);
             $pdfs[] = $this->storage->getFileStream($delete_me);
         }
         if ($essay->getPdfVersion()) {

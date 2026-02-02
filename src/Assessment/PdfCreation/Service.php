@@ -85,7 +85,7 @@ class Service implements FullService
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
             $provider = $this->getProvider($component, PdfPurpose::WRITING, $anonymous, $anonymous);
             foreach ($provider?->getAvailableParts() ?? [] as $part) {
-                $id = $provider->renderPart($part->getKey(), $task_id, $writer_id);
+                $id = $provider->renderPart($part->getKey(), $task_id, $writer_id, $anonymous, true, true, true);
                 if ($id !== null) {
                     $pdf_ids[] = $id;
                 }
@@ -172,11 +172,11 @@ class Service implements FullService
         // TODO: Implement createCorrectionReport() method.
     }
 
-    private function getProvider(string $component, PdfPurpose $purpose, bool $anonymous_writer, bool $anonymous_corrector): ?PdfPartProvider
+    private function getProvider(string $component, PdfPurpose $purpose): ?PdfPartProvider
     {
         switch ($purpose) {
             case PdfPurpose::WRITING:
-                return $this->apis->api($component)?->writingPartProvider($this->ass_id, $this->user_id, $anonymous_writer);
+                return $this->apis->api($component)?->writingPartProvider($this->ass_id, $this->user_id);
 
             case PdfPurpose::CORRECTION:
                 return $this->apis->api($component)?->correctionPartProvider($this->ass_id, $this->user_id);

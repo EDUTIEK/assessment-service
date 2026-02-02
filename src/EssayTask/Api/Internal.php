@@ -128,7 +128,7 @@ class Internal
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->eventDispatcher($ass_id, $user_id),
             $this->dependencies->constraintCollector($ass_id, $user_id),
-            $this->writingPartProvider($ass_id, $user_id, true),
+            $this->writingPartProvider($ass_id, $user_id),
         );
     }
 
@@ -139,7 +139,7 @@ class Internal
             $this->dependencies->repositories()->essay(),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->pdfConverter(),
-            $this->writingPartProvider($ass_id, $user_id, true),
+            $this->writingPartProvider($ass_id, $user_id),
         );
     }
 
@@ -203,11 +203,10 @@ class Internal
         );
     }
 
-    public function writingPartProvider(int $ass_id, int $user_id, bool $anonymous): ?WritingProvider
+    public function writingPartProvider(int $ass_id, int $user_id): ?WritingProvider
     {
-        return $this->instances[WritingProvider::class][$ass_id][$user_id][$anonymous] ?? new WritingProvider(
+        return $this->instances[WritingProvider::class][$ass_id][$user_id] ?? new WritingProvider(
             $ass_id,
-            $anonymous,
             $this->htmlProcessing(),
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->language($user_id),
