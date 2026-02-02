@@ -98,9 +98,9 @@ readonly class Service implements FullService
                 GradingPosition::FIRST
             );
             $first_summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
-                $first?->getTaskId(),
-                $first?->getWriterId(),
-                $first?->getCorrectorId()
+                $first?->getTaskId() ?? 0,
+                $first?->getWriterId() ?? 0,
+                $first?->getCorrectorId() ?? 0
             );
             if ($first_summary === null || !$first_summary->isAuthorized()) {
                 return false;
