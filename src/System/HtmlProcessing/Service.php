@@ -68,7 +68,9 @@ class Service implements FullService
     public function getContentStyles(HeadlineScheme $headline_scheme): string
     {
         $styles = file_get_contents(__DIR__ . '/styles/content.html');
-        if ($headline_scheme == 'three') {
+        if ($headline_scheme === HeadlineScheme::THREE) {
+            // This is the only headline scheme that needs a style, because headlines have different sizes
+            // The numbers of the other headline schemes are creted in the XSLT processor
             $styles .= "\n" . file_get_contents(__DIR__ . '/styles/headlines-three.html');
         }
         return $styles;
@@ -249,7 +251,7 @@ class Service implements FullService
 
         switch (self::$headlineScheme) {
 
-            case HeadlineScheme::NUMERIC->value:
+            case HeadlineScheme::NUMERIC:
                 switch ($tag) {
                     case 'h1':
                         return self::$h1Counter . ' ';
@@ -264,9 +266,9 @@ class Service implements FullService
                     case 'h6':
                         return self::$h1Counter . '.' . self::$h2Counter . '.' . self::$h3Counter . '.' . self::$h4Counter . '.' . self::$h5Counter . '.' . self::$h6Counter . ' ';
                 }
+                return '';
 
-                // no break
-            case HeadlineScheme::EDUTIEK->value:
+            case HeadlineScheme::EDUTIEK:
                 switch ($tag) {
                     case 'h1':
                         return self::toLatin(self::$h1Counter, true) . '. ';
@@ -281,8 +283,8 @@ class Service implements FullService
                     case 'h6':
                         return '(' . self::$h6Counter . ') ';
                 }
+                return '';
         }
-
 
         return '';
     }
