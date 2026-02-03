@@ -43,11 +43,13 @@ readonly class Service implements FullService
     {
         $delete_me = null;
         $pdfs = [];
-        if ($essay->getWrittenText() && !$essay->hasPdfFromWrittenText()) {
-            $delete_me = $this->pdf_provider->renderEssay($essay, true, false, false);
+        if ($essay->getWrittenText()) {
+            // create an extra pdf for the marking, even if a converted pdf file exist
+            // it should have no header and footer
+            $delete_me = $this->pdf_provider->renderWrittenText($essay, true, false, false);
             $pdfs[] = $this->storage->getFileStream($delete_me);
         }
-        if ($essay->getPdfVersion()) {
+        if ($essay->getPdfVersion() && !$essay->hasPdfFromWrittenText()) {
             $stream = $this->storage->getFileStream($essay->getPdfVersion());
             if ($stream !== null) {
                 $pdfs[] = $stream;

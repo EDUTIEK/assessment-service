@@ -38,7 +38,12 @@ abstract class Essay implements EssayTaskEntity
         return str_word_count($this->getWrittenText() ?? "");
     }
 
-    public function hasPDFVersion(): bool
+    public function hasWrittenText(): bool
+    {
+        return !empty($this->getWrittenText());
+    }
+
+    public function hasPdfVersion(): bool
     {
         return $this->getPdfVersion() !== null;
     }

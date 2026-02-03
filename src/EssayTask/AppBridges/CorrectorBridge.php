@@ -7,6 +7,7 @@ use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorReadService;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
+use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImageFullService;
 use Edutiek\AssessmentService\EssayTask\HtmlProcessing\FullService as HtmlProcessing;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as AssignmentService;
@@ -23,6 +24,7 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly int $ass_id,
         private readonly int $user_id,
         private readonly Repositories $repos,
+        private readonly EssayImageFullService $essay_images,
         private readonly EntityFullService $entity,
         private readonly CorrectorReadService $corrector_service,
         private readonly AssignmentService $assignment_service,
@@ -69,7 +71,7 @@ class CorrectorBridge implements AppCorrectorBridge
             'text' => $this->html_processing->getWrittenTextForCorrection($essay, $this->settings),
         ]);
 
-        $pages = $this->repos->essayImage()->allByEssayId($essay->getId());
+        $pages = $this->essay_images->getByEssayId($essay->getId());
         foreach ($pages as $page) {
             $data['Pages'][] = $this->entity->arrayToPrimitives([
                 'id' => $page->getId(),

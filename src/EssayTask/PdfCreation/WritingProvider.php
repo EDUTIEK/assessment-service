@@ -58,64 +58,73 @@ readonly class WritingProvider implements PdfPartProvider
         bool $with_footer
     ): ?string {
         $essay = $this->repos->essay()->oneByWriterIdAndTaskId($writer_id, $task_id);
-        if ($essay) {
-            return $this->renderEssay($essay, $anonymous_writer, $with_header, $with_footer);
+        if (!$essay) {
+            return null;
         }
+
+        if ($essay->hasPdfVersion() && (!$essay->hasWrittenText() || $essay->hasPdfFromWrittenText())) {
+            // only the pdf file is relevant
+            // return a copy to protect the original from cleanup
+            return $this->pdf_processing->copy($essay->getPdfVersion());
+        }
+
+        if ($essay->hasPdfVersion() && $essay->hasWrittenText()) {
+            // both pdf and written text are relevant - create text pdf and join it with the odf file
+            $created = $this->renderWrittenText($essay, $anonymous_writer, $with_header, $with_footer);
+            $id = $this->pdf_processing->join([$created, $essay->getPdfVersion()]);
+            $this->pdf_processing->cleanup([$created]);
+            return $id;
+        }
+
+        if ($essay->hasWrittenText()) {
+            return $this->renderWrittenText($essay, $anonymous_writer, $with_header, $with_footer);
+        }
+
         return null;
     }
 
-    public function renderEssay(
+    /**
+     * Render the written text from an essay as a pdf file
+     * This is internally public for:
+     *  - essay service to convert a text to a pdf file
+     *  - essayImage service to create page images for an essay
+     */
+    public function renderWrittenText(
         Essay $essay,
         bool $anonymous_writer,
         bool $with_header,
         bool $with_footer
-    ): ?string {
-        $created = null;
-        if (!empty($essay->getWrittenText()) && !$essay->hasPdfFromWrittenText()) {
-            $settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
-            $html = $this->html_processing->getWrittenTextForPdf($essay, $settings);
+    ): string {
 
-            $options = (new Options())->withPrintHeader($with_header)->withPrintFooter($with_footer);
-            if ($settings->getAddCorrectionMargin()) {
-                $options = $options->withLeftMargin($options->getLeftMargin() + $settings->getLeftCorrectionMargin());
-                $options = $options->withRightMargin($options->getRightMargin() + $settings->getRightCorrectionMargin());
-            }
+        $settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
+        $html = $this->html_processing->getWrittenTextForPdf($essay, $settings);
 
-            $writer = $this->writers->oneByWriterId($essay->getWriterId());
-            $user = $this->users->getUser($writer?->getUserId() ?? 0);
-
-            if ($anonymous_writer) {
-                $author = $writer->getPseudonym();
-            } else {
-                $author = $user->getFullname(false);
-            }
-
-            $properties = $this->properties->get();
-
-            $title = $author . ' | ' . $properties->getTitle();
-
-            if ($this->tasks->count() > 1) {
-                $task = $this->tasks->one($essay->getTaskId());
-                $title .= ' - ' . $task->getTitle();
-            }
-
-            $options = $options->withTitle($title);
-            $options = $options->withSubject($properties->getDescription());
-            $options = $options->withAuthor($author);
-
-            $created = $this->pdf_processing->create($html, $options);
+        $options = (new Options())->withPrintHeader($with_header)->withPrintFooter($with_footer);
+        if ($settings->getAddCorrectionMargin()) {
+            $options = $options->withLeftMargin($options->getLeftMargin() + $settings->getLeftCorrectionMargin());
+            $options = $options->withRightMargin($options->getRightMargin() + $settings->getRightCorrectionMargin());
         }
 
-        if ($created && $essay->getPdfVersion()) {
-            // join the created and the uploaded pdf
-            $id = $this->pdf_processing->join([$created, $essay->getPdfVersion()]);
-            $this->pdf_processing->cleanup([$created]);
-            return $id;
-        } elseif ($essay->getPdfVersion()) {
-            // return a copy of the uploaded pdf to protect the original from cleanup
-            return $this->pdf_processing->copy($essay->getPdfVersion());
+        $writer = $this->writers->oneByWriterId($essay->getWriterId());
+        $user = $this->users->getUser($writer?->getUserId() ?? 0);
+        $properties = $this->properties->get();
+
+        if ($anonymous_writer) {
+            $author = $writer->getPseudonym();
+        } else {
+            $author = $user->getFullname(false);
         }
 
-        return $created;
+        $title = $author . ' | ' . $properties->getTitle();
+        if ($this->tasks->count() > 1) {
+            $task = $this->tasks->one($essay->getTaskId());
+            $title .= ' - ' . $task->getTitle();
+        }
+
+        $options = $options->withTitle($title);
+        $options = $options->withSubject($properties->getDescription());
+        $options = $options->withAuthor($author);
+
+        return $this->pdf_processing->create($html, $options);
     }
 }

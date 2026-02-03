@@ -142,31 +142,8 @@ readonly class Service implements ClientService, EventService
             throw new ApiException(implode("/n", $result->messages()), ApiException::CONSTRAINT);
         }
 
-        $this->storage->deleteFile($essay->getPdfVersion());
-        $this->essay_image->deleteByEssayId($essay->getId());
-
-        // render pure text as pdf
-        $file_id = $this->pdf_provider->renderEssay($essay
-            ->setPdfVersion(null)
-            ->setPdfFromWrittenText(false), true, false, false);
-
-        $this->repos->essay()->save($essay
-            ->setPdfVersion($file_id)
-            ->setPdfFromWrittenText(true)
-            ->touch());
-
-        $this->events->dispatchEvent(new WritingContentChanged(
-            $essay->getWriterId(),
-            $essay->getTaskId(),
-            $essay->getLastChange()
-        ));
-
-        // create page images in background task
-        $this->task_manager->run(
-            $this->language->txt('writer_upload_pdf_bt_processing'),
-            GenerateEssayImages::class,
-            $essay->getId()
-        );
+        $file_id = $this->pdf_provider->renderWrittenText($essay, true, true, true);
+        $this->updatePdf($essay, $file_id, true);
     }
 
     public function replacePdf(Essay $essay, string $file_id): void
@@ -175,26 +152,7 @@ readonly class Service implements ClientService, EventService
         if ($result->status() == ResultStatus::BLOCK) {
             throw new ApiException(implode("/n", $result->messages()), ApiException::CONSTRAINT);
         }
-
-        $this->storage->deleteFile($essay->getPdfVersion());
-        $this->essay_image->deleteByEssayId($essay->getId());
-        $this->repos->essay()->save($essay
-            ->setPdfVersion($file_id)
-            ->setPdfFromWrittenText(false)
-            ->touch());
-
-        $this->events->dispatchEvent(new WritingContentChanged(
-            $essay->getWriterId(),
-            $essay->getTaskId(),
-            $essay->getLastChange()
-        ));
-
-        // create page images in background task
-        $this->task_manager->run(
-            $this->language->txt('writer_upload_pdf_bt_processing'),
-            GenerateEssayImages::class,
-            $essay->getId()
-        );
+        $this->updatePdf($essay, $file_id, false);
     }
 
     public function deletePdf(Essay $essay): void
@@ -203,11 +161,17 @@ readonly class Service implements ClientService, EventService
         if ($result->status() == ResultStatus::BLOCK) {
             throw new ApiException(implode("/n", $result->messages()), ApiException::CONSTRAINT);
         }
+        $this->updatePdf($essay, null, false);
+    }
 
+    private function updatePdf(Essay $essay, ?string $file_id, bool $from_text = false): void
+    {
         $this->storage->deleteFile($essay->getPdfVersion());
+        $this->essay_image->deleteByEssayId($essay->getId());
+
         $this->repos->essay()->save($essay
-            ->setPdfVersion(null)
-            ->setPdfFromWrittenText(false)
+            ->setPdfVersion($file_id)
+            ->setPdfFromWrittenText($from_text)
             ->touch());
 
         $this->events->dispatchEvent(new WritingContentChanged(
@@ -215,7 +179,14 @@ readonly class Service implements ClientService, EventService
             $essay->getTaskId(),
             $essay->getLastChange()
         ));
-        $this->essay_image->deleteByEssayId($essay->getId());
+
+        if ($file_id) {
+            $this->task_manager->run(
+                $this->language->txt('writer_upload_pdf_bt_processing'),
+                GenerateEssayImages::class,
+                $essay->getId()
+            );
+        }
     }
 
     public function createAll(int $writer_id): void

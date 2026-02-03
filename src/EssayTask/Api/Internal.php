@@ -13,7 +13,6 @@ use Edutiek\AssessmentService\EssayTask\BackgroundTask\Service as BackgroundTask
 use Edutiek\AssessmentService\EssayTask\Comments\Service as CommentsService;
 use Edutiek\AssessmentService\EssayTask\ConstraintHandling\Provider as ConstraintProvider;
 use Edutiek\AssessmentService\EssayTask\Essay\Service as EssayService;
-use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImageFullService;
 use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImageService;
 use Edutiek\AssessmentService\EssayTask\EssayImport\ImportTypeBavaria;
 use Edutiek\AssessmentService\EssayTask\EssayImport\ImportTypeNrw;
@@ -68,6 +67,7 @@ class Internal
             $ass_id,
             $user_id,
             $this->dependencies->repositories(),
+            $this->essayImage($ass_id, $user_id),
             $this->dependencies->systemApi()->entity(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->taskApi($ass_id, $user_id)->correctorAssignments(),
@@ -134,7 +134,7 @@ class Internal
 
     public function essayImage(int $ass_id, int $user_id): EssayImageService
     {
-        return $this->instances[EssayImageFullService::class] = new EssayImageService(
+        return $this->instances[EssayImageService::class] = new EssayImageService(
             $this->dependencies->repositories()->essayImage(),
             $this->dependencies->repositories()->essay(),
             $this->dependencies->systemApi()->fileStorage(),
