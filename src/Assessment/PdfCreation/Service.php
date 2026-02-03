@@ -81,11 +81,67 @@ class Service implements FullService
 
     public function createWritingPdf(int $task_id, int $writer_id, bool $anonymous = false): string
     {
+        return $this->createPdfFile(
+            PdfPurpose::WRITING,
+            $task_id,
+            $writer_id,
+            $anonymous,
+            true
+        );
+    }
+
+    public function createWritingZip(array $writings, bool $anonymous = false): string
+    {
+        return $this->createZipFile(
+            PdfPurpose::WRITING,
+            $writings,
+            $anonymous,
+            true
+        );
+    }
+
+    public function createCorrectionPdf(int $task_id, int $writer_id, bool $anonymous_writer, bool $anonymous_corrector): string
+    {
+        return $this->createPdfFile(
+            PdfPurpose::CORRECTION,
+            $task_id,
+            $writer_id,
+            $anonymous_writer,
+            $anonymous_corrector
+        );
+    }
+
+    public function createCorrectionZip(array $writings, bool $anonymous_writer, bool $anonymous_corrector): string
+    {
+        return $this->createZipFile(
+            PdfPurpose::WRITING,
+            $writings,
+            $anonymous_writer,
+            $anonymous_corrector
+        );
+    }
+
+
+    public function createCorrectionReport(int $ass_id): string
+    {
+        // TODO: Implement createCorrectionReport() method.
+    }
+
+    private function createPdfFile(PdfPurpose $purpose, int $task_id, int $writer_id, bool $anonymous_writer, bool $anonymous_corrector): string
+    {
         $pdf_ids = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
-            $provider = $this->getProvider($component, PdfPurpose::WRITING, $anonymous, $anonymous);
+            $provider = $this->getProvider($component, $purpose);
             foreach ($provider?->getAvailableParts() ?? [] as $part) {
-                $id = $provider->renderPart($part->getKey(), $task_id, $writer_id, $anonymous, true, true, true);
+                $id = $provider->renderPart(
+                    $part->getKey(),
+                    $task_id,
+                    $writer_id,
+                    $anonymous_writer,
+                    $anonymous_corrector,
+                    true,
+                    true
+                );
                 if ($id !== null) {
                     $pdf_ids[] = $id;
                 }
@@ -104,7 +160,7 @@ class Service implements FullService
         return $id;
     }
 
-    public function createWritingZip(array $writings, bool $anonymous = false): string
+    private function createZipFile(PdfPurpose $purpose, array $writings, bool $anonymous_writer, bool $anonymous_corrector): string
     {
         $tasks = [];
         foreach ($this->tasks->all() as $task) {
@@ -132,7 +188,7 @@ class Service implements FullService
             }
 
             foreach ($task_ids as $task_id) {
-                $pdf_id = $this->createWritingPdf($task_id, $writer_id, $anonymous);
+                $pdf_id = $this->createPdfFile($purpose, $task_id, $writer_id, $anonymous_writer, $anonymous_corrector);
                 if ($multi_tasks) {
                     $task = $tasks[$task_id] ?? null;
                     $entry = $name . '/' . $this->storage->asciiFilename($task?->getTitle() ?? 'task') . '.pdf';
@@ -150,26 +206,10 @@ class Service implements FullService
 
         $fp = fopen($zipfile, 'r');
         $info = $this->storage->saveFile($fp, $this->storage->newInfo()
-            ->setFileName(
-                count($ids) == 1
-                ? 'writer' . array_keys($ids)[0] . '-writing.zip'
-                : 'writings.zip'
-            )
             ->setMimeType('application/zip'));
 
         unlink($zipfile);
         return $info->getId();
-    }
-
-    public function createCorrectionPdf(int $task_id, int $writer_id, bool $anonymous_writer, bool $anonymous_corrector): string
-    {
-        // TODO: Implement createCorrectionPdf() method.
-        return '';
-    }
-
-    public function createCorrectionReport(int $ass_id): string
-    {
-        // TODO: Implement createCorrectionReport() method.
     }
 
     private function getProvider(string $component, PdfPurpose $purpose): ?PdfPartProvider

@@ -458,10 +458,12 @@ class Internal implements ComponentApi, ComponentApiFactory
     {
         return $this->instances[ExportService::class][$ass_id][$user_id] ??= new ExportService(
             $this->pdfCreation($ass_id, $user_id),
+            $this->properties($ass_id),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->writer($ass_id, $user_id),
             $this->dependencies->systemApi()->fileStorage(),
-            $this->dependencies->systemApi()->fileDelivery()
+            $this->dependencies->systemApi()->fileDelivery(),
+            $this->language($user_id)
         );
     }
 

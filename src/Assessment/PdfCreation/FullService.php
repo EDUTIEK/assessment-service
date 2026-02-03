@@ -30,7 +30,7 @@ interface FullService
     public function createWritingPdf(int $task_id, int $writer_id, bool $anonymous = false): string;
 
     /**
-     * Create a ZIP file with all writing PDFs
+     * Create a ZIP file with writing PDFs
      * It may consist of text writtens in the web app and/or uploaded pdf files
      * @param WritingTask[] $writings
      */
@@ -41,6 +41,12 @@ interface FullService
      * It consists of parts that can be sorted and activated
      */
     public function createCorrectionPdf(int $task_id, int $writer_id, bool $anonymous_writer, bool $anonymous_corrector): string;
+
+    /**
+     * Create a ZIP file with correction PDFs
+     * @param WritingTask[] $writings
+     */
+    public function createCorrectionZip(array $writings, bool $anonymous_writer, bool $anonymous_corrector): string;
 
     /**
      * Create a PDF with the collected correction reports of all correctors

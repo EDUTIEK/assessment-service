@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Export;
 
 use Edutiek\AssessmentService\Assessment\Data\WritingTask;
+use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPurpose;
+use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropertiesService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\FullService as PdfCreation;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager;
@@ -12,6 +14,7 @@ use Edutiek\AssessmentService\System\Data\FileInfo;
 use Edutiek\AssessmentService\System\File\Disposition;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
 use Edutiek\AssessmentService\System\File\Delivery as FileDelivery;
+use Edutiek\AssessmentService\System\Language\FullService as Language;
 
 class Service implements FullService
 {
@@ -20,37 +23,98 @@ class Service implements FullService
 
     public function __construct(
         private PdfCreation $pdf,
+        private PropertiesService $properties,
         private TaskManager $tasks,
         private WriterService $writers,
         private FileStorage $storage,
         private FileDelivery $delivery,
+        private Language $lang,
     ) {
     }
 
+    /**
+     * @param WritingTask[] $writings
+     */
     public function downloadWritings(array $writings, bool $anonymous): void
     {
         if (count($writings) > 1) {
             $file_id = $this->pdf->createWritingZip($writings, $anonymous);
-            $filename = 'writings.zip';
             $mimetype = 'application/zip';
         } else {
             $wt = reset($writings);
             $file_id = $this->pdf->createWritingPdf($wt->getTaskId(), $wt->getWriterId(), $anonymous);
-            $filename = 'task' . $wt->getWriterId() . '_writer' . $wt->getWriterId() . '-writing.pdf';
             $mimetype = 'application/pdf';
         }
 
         $this->delivery->sendFile(
             $file_id,
             Disposition::ATTACHMENT,
-            $this->storage->newInfo()->setFileName($filename)->setMimeType($mimetype)
+            $this->storage->newInfo()
+                ->setFileName($this->storage->asciiFilename(
+                    $this->buildFilename($writings, PdfPurpose::WRITING)
+                ))
+                ->setMimeType($mimetype)
         );
         $this->storage->deleteFile($file_id);
     }
 
-
-    private function checkScope(WritingTask $writing_task): void
+    public function downloadCorrections(array $writings, bool $anonymous_writer, bool $anonymous_corrector): void
     {
+        if (count($writings) > 1) {
+            $file_id = $this->pdf->createCorrectionZip(
+                $writings,
+                $anonymous_writer,
+                $anonymous_corrector
+            );
+            $mimetype = 'application/zip';
+        } else {
+            $wt = reset($writings);
+            $file_id = $this->pdf->createCorrectionPdf(
+                $wt->getTaskId(),
+                $wt->getWriterId(),
+                $anonymous_writer,
+                $anonymous_corrector
+            );
+            $mimetype = 'application/pdf';
+        }
 
+        $this->delivery->sendFile(
+            $file_id,
+            Disposition::ATTACHMENT,
+            $this->storage->newInfo()
+                ->setFileName($this->storage->asciiFilename(
+                    $this->buildFilename($writings, PdfPurpose::CORRECTION)
+                ))
+                ->setMimeType($mimetype)
+        );
+        $this->storage->deleteFile($file_id);
+    }
+
+    /**
+     * @param WritingTask[] $writings
+     */
+    private function buildFilename($writings, PdfPurpose $purpose): string
+    {
+        if (count($writings) > 1) {
+            return $this->properties->get()->getTitle()
+                . ' - ' . $this->lang->txt(match($purpose) {
+                    PdfPurpose::WRITING => 'writings',
+                    PdfPurpose::CORRECTION => 'corrections',
+                })
+                . '.zip';
+        } else {
+            $wt = reset($writings);
+            $task = $this->tasks->one($wt->getTaskId());
+            $writer = $this->writers->oneByWriterId($wt->getWriterId());
+
+            return $this->properties->get()->getTitle()
+                . ($this->tasks->count() > 1 ? ' - ' . $this->tasks->one($wt->getTaskId())->getTitle() : '')
+                . ' - ' . $writer->getPseudonym()
+                . ' - ' . $this->lang->txt(match($purpose) {
+                    PdfPurpose::WRITING => 'writing',
+                    PdfPurpose::CORRECTION => 'correction',
+                })
+                . '.pdf';
+        }
     }
 }
