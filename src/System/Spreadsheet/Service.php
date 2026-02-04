@@ -43,13 +43,24 @@ readonly class Service implements FullService
     /**
      * Get the data from a file as an array
      */
-    public function dataFromFile(string $id): array
+    public function dataFromFile(string $id, ?string $select_sheet = null): array
     {
         $path = $this->store->getReadablePath($id);
         if ($path) {
-            return IOFactory::load($path)->getActiveSheet()->toArray();
+            $spreadsheet = IOFactory::load($path);
+
+            if($select_sheet !== null) {
+                $spreadsheet->setActiveSheetIndexByName($select_sheet);
+            }
+
+            return $spreadsheet->getActiveSheet()->toArray();
         }
         return [];
+    }
+
+    public function getNewSheet(?string $title, array $header, array $rows): Sheet
+    {
+        return new Sheet($title, $header, $rows);
     }
 
     /**
@@ -60,27 +71,43 @@ readonly class Service implements FullService
      */
     public function dataToFile(array $header, array $rows, ExportType $type, string $title = null): string
     {
+        return $this->sheetsToFile([$this->getNewSheet($title, $header, $rows)], $type);
+    }
+
+    public function sheetsToFile(array $sheets, ExportType $type): string
+    {
         $workbook = new Spreadsheet();
-        $sheet = $workbook->getActiveSheet();
-        if ($title) {
-            $sheet->setTitle($this->sheetName($title));
-        }
+        $first = true;
 
-        $c = $r = 1;
-        $columns = [];
+        foreach ($sheets as $data) {
+            if($first) {
+                $sheet = $workbook->getActiveSheet();
+                $first = false;
+            } else {
+                $sheet = $workbook->createSheet();
+            }
 
-        foreach ($header as $key => $title) {
-            $columns[] = $key;
-            $sheet->setCellValue($this->cellAddress($r, $c++), $this->cellValue($title));
-        }
+            if ($data->getTitle()) {
+                $sheet->setTitle($this->sheetName($data->getTitle()));
+            }
 
-        foreach ($rows as $row) {
-            $c = 1;
-            $r++;
-            foreach ($columns as $column) {
-                $sheet->setCellValue($this->cellAddress($r, $c++), $this->cellValue($row[$column] ?? null));
+            $c = $r = 1;
+            $columns = [];
+
+            foreach ($data->getHeader() as $key => $title) {
+                $columns[] = $key;
+                $sheet->setCellValue($this->cellAddress($r, $c++), $this->cellValue($title));
+            }
+
+            foreach ($data->getRows() as $row) {
+                $c = 1;
+                $r++;
+                foreach ($columns as $column) {
+                    $sheet->setCellValue($this->cellAddress($r, $c++), $this->cellValue($row[$column] ?? null));
+                }
             }
         }
+
 
         $file = $this->temp_path . '/' . uniqid('', true) . $type->extension();
 
@@ -102,13 +129,24 @@ readonly class Service implements FullService
         $info = $this->store->saveFile(
             $fp,
             $this->store->newInfo()
-                          ->setFileName($this->store->asciiFilename($title) . $type->extension())
-                          ->setMimeType($type->mimetype())
+                        ->setFileName($this->store->asciiFilename($title) . $type->extension())
+                        ->setMimeType($type->mimetype())
         );
         unlink($file);
 
         return $info->getId();
     }
+
+    //Possible way to add dropdown lists for a future implementation
+    //$objValidation = new DataValidation();
+    //
+    //$objValidation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
+    //$objValidation->setAllowBlank(true);
+    //$objValidation->setShowDropDown(true);
+    //$objValidation->setFormula1($a_target_formula);
+    //
+    //$address = CellAddress::fromColumnAndRow($a_col,$a_row) ;
+    //$this->workbook->getActiveSheet()->getCell($address)->setDataValidation(clone $objValidation);
 
     /**
      * Get an excel cell address

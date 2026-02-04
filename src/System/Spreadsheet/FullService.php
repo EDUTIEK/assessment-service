@@ -4,10 +4,14 @@ namespace Edutiek\AssessmentService\System\Spreadsheet;
 
 interface FullService
 {
+    public function getNewSheet(?string $title, array $header, array $rows): Sheet;
+
+    public function sheetsToFile(array $sheets, ExportType $type): string;
+
     /**
      * Get the data from a file as an array
      */
-    public function dataFromFile(string $id): array;
+    public function dataFromFile(string $id, ?string $select_sheet = null): array;
 
     /**
      * Export data to a file
