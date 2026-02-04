@@ -27,6 +27,7 @@ interface FullService extends ReadService
 
     /**
      * Remove a corrector assignment
+     * This triggers an AssignmentRemoved event to delete all assigned correction data
      */
     public function removeAssignment(CorrectorAssignment $assignment);
 

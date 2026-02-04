@@ -18,4 +18,5 @@ interface RatingCriterionRepo
     public function save(RatingCriterion $entity): void;
     public function delete(int $id): void;
     public function deleteByTaskId(int $task_id): void;
+    public function deleteByCorrectorId(int $corrector_id): void;
 }

@@ -6,15 +6,15 @@ namespace Edutiek\AssessmentService\Task\EventHandling;
 
 use Edutiek\AssessmentService\System\EventHandling\Handler;
 use Edutiek\AssessmentService\System\EventHandling\Event;
-use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
+use Edutiek\AssessmentService\System\EventHandling\Events\CorrectorRemoved;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentsService;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 
-readonly class OnWriterRemoved implements Handler
+readonly class OnCorrectorRemoved implements Handler
 {
     public static function events(): array
     {
-        return [WriterRemoved::class];
+        return [CorrectorRemoved::class];
     }
 
     public function __construct(
@@ -24,14 +24,15 @@ readonly class OnWriterRemoved implements Handler
     }
 
     /**
-     * @param WriterRemoved $event
+     * @param CorrectorRemoved $event
      */
     public function handle(Event $event): void
     {
-        foreach ($this->repos->writerAnnotation()->allByWriterId($event->getWriterId()) as $annotation) {
-            $this->repos->writerAnnotation()->delete($annotation->getId());
-        }
-        foreach ($this->assignments->allByWriterId($event->getWriterId()) as $assignment) {
+        $this->repos->correctorTaskPrefs()->deleteByCorrectorId($event->getCorrectorId());
+        $this->repos->correctorSnippets()->deleteByCorrectorId($event->getCorrectorId());
+        $this->repos->ratingCriterion()->deleteByCorrectorId($event->getCorrectorId());
+
+        foreach ($this->assignments->allByCorrectorId($event->getCorrectorId()) as $assignment) {
             // this triggers an AssignmentRemoved event to delete all assigned correction data
             $this->assignments->removeAssignment($assignment);
         }

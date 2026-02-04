@@ -3,6 +3,7 @@
 namespace Edutiek\AssessmentService\Task\AssessmentStatus;
 
 use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Assessment\Data\CombinedStatus;
 
 interface FullService
 {

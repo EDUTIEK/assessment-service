@@ -12,6 +12,7 @@ use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentsService;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
+use Edutiek\AssessmentService\Assessment\Data\CombinedStatus;
 
 readonly class Service implements FullService
 {

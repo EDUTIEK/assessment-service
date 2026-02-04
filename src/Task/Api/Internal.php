@@ -193,7 +193,8 @@ class Internal
             $ass_id,
             $user_id,
             $this,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->fileStorage(),
         );
     }
 

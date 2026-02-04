@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\System\EventHandling\Event;
 use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentsService;
 use Edutiek\AssessmentService\Task\Data\Repositories;
+use Edutiek\AssessmentService\System\File\Storage;
 
 readonly class OnAssignmentRemoved implements Handler
 {
@@ -19,7 +20,8 @@ readonly class OnAssignmentRemoved implements Handler
     }
 
     public function __construct(
-        private Repositories $repos
+        private Repositories $repos,
+        private Storage $storage
     ) {
     }
 
@@ -40,11 +42,15 @@ readonly class OnAssignmentRemoved implements Handler
             $event->getCorrectorId()
         );
 
-        // todo delete pdf file of summary
-        $this->repos->correctorSummary()->deleteByTaskIdAndWriterIdAndCorrectorId(
+        $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
             $event->getTaskId(),
             $event->getWriterId(),
             $event->getCorrectorId()
         );
+
+        if ($summary) {
+            $this->storage->deleteFile($summary->getSummaryPdf());
+            $this->repos->correctorSummary()->delete($summary->getId());
+        }
     }
 }

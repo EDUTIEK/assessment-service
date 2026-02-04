@@ -11,4 +11,5 @@ interface CorrectorTaskPrefsRepo
     public function save(CorrectorTaskPrefs $entity): void;
     public function deleteByCorrectorIdAndTaskId(int $corrector_id, int $task_id): void;
     public function deleteByTaskId(int $task_id): void;
+    public function deleteByCorrectorId(int $corrector_id): void;
 }

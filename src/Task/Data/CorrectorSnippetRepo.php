@@ -12,5 +12,5 @@ interface CorrectorSnippetRepo
     public function allByCorrectorId(int $ass_id, int $corrector_id): array;
     public function save(CorrectorSnippet $entity): void;
     public function deleteByKey(int $ass_id, int $corrector_id, string $key): void;
-    public function deleteByCorrectorId(int $ass_id, int $corrector_id): void;
+    public function deleteByCorrectorId(int $corrector_id): void;
 }

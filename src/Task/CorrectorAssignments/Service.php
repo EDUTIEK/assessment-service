@@ -175,7 +175,7 @@ readonly class Service implements FullService
         $this->repos->correctorAssignment()->delete($assignment->getId());
         $this->events->dispatchEvent(new AssignmentRemoved(
             $assignment->getTaskId(),
-            $assignment->getCorrectorId(),
+            $assignment->getWriterId(),
             $assignment->getCorrectorId()
         ));
     }
@@ -293,12 +293,13 @@ readonly class Service implements FullService
                     $this->repos->correctorAssignment()->save($new_assignment);
                 } elseif ($old_assignment !== null && $new_assignment === null
                 ) {
-                    $this->deleteCorrection(
-                        $task_id,
-                        $writer_id,
-                        $old_assignment->getCorrectorId()
-                    );
                     $this->repos->correctorAssignment()->delete($old_assignment->getId());
+                    $this->events->dispatchEvent(new AssignmentRemoved(
+                        $old_assignment->getTaskId(),
+                        $old_assignment->getWriterId(),
+                        $old_assignment->getCorrectorId()
+                    ));
+
                 } elseif ($new_assignment !== null) {
                     $this->repos->correctorAssignment()->save($new_assignment);
                 }
@@ -508,12 +509,5 @@ readonly class Service implements FullService
         $this->repos->correctorSummary()->moveCorrectorByTaskIdAndWriterId($task_id, $writer_id, $from_corrector, $to_corrector);
         $this->repos->correctorPoints()->deleteByTaskIdAndWriterIdAndCorrectorId($task_id, $writer_id, $from_corrector);
         $this->repos->correctorComment()->moveCorrectorByTaskIdAndWriterId($task_id, $writer_id, $from_corrector, $to_corrector);
-    }
-
-    private function deleteCorrection(int $task_id, int $writer_id, int $corrector)
-    {
-        $this->repos->correctorSummary()->deleteByTaskIdAndWriterIdAndCorrectorId($task_id, $writer_id, $corrector);
-        $this->repos->correctorComment()->deleteByTaskIdAndWriterIdAndCorrectorId($task_id, $writer_id, $corrector);
-        $this->repos->correctorPoints()->deleteByTaskIdAndWriterIdAndCorrectorId($task_id, $writer_id, $corrector);
     }
 }
