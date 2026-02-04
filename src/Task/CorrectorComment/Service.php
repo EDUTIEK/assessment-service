@@ -39,6 +39,37 @@ readonly class Service implements FullService
         $this->repos->correctorPoints()->deleteByTaskIdAndWriterId($this->task_id, $this->writer_id);
     }
 
+    /**
+     * @param CorrectorComment[] $comments
+     * @return CorrectorComment[]
+     */
+    public function filterAndLabel(array $comments, int $parent_no): array
+    {
+        $sort = [];
+        foreach ($comments as $comment) {
+            if ($comment->getParentNumber() == $parent_no) {
+                $key = sprintf('%06d', $comment->getStartPosition()) . $comment->getKey();
+                $sort[$key] = $comment;
+            }
+        }
+        ksort($sort);
+
+        $result = [];
+        $number = 1;
+        foreach ($sort as $comment) {
+            // only comments with details to show should get a label
+            // others are only marks in the text
+            if ($comment->hasDetailsToShow()) {
+                $result[] = $comment->withLabel($parent_no . '.' . $number++);
+            } else {
+                $result[] = $comment;
+            }
+        }
+
+        return $result;
+    }
+
+
     private function checkScope(CorrectorComment $comment)
     {
         if ($comment->getTaskId() !== $this->task_id && $comment->getWriterId() !== $this->writer_id) {

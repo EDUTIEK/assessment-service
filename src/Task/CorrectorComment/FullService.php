@@ -6,10 +6,8 @@ namespace Edutiek\AssessmentService\Task\CorrectorComment;
 
 use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 
-interface FullService
+interface FullService extends ReadService
 {
-    /** @return CorrectorComment[] */
-    public function allByCorrectorId(int $corrector_id): array;
     public function new(): CorrectorComment;
     public function save(CorrectorComment $comment): void;
     public function delete(): void;

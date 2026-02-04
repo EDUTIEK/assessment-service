@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\Task\Api;
 
 use Edutiek\AssessmentService\Task\CorrectionSettings\ReadService as CorrectionSettingsReadService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentReadService;
+use Edutiek\AssessmentService\Task\CorrectorComment\ReadService as CorrectorCommentReadService;
 use Edutiek\AssessmentService\Task\Manager\ReadService as ManagerReadService;
 
 readonly class ForTypes
@@ -25,6 +26,11 @@ readonly class ForTypes
     public function correctorAssignments(): CorrectorAssignmentReadService
     {
         return $this->internal->correctorAssignments($this->ass_id, $this->user_id);
+    }
+
+    public function correctorComments(): CorrectorCommentReadService
+    {
+        return $this->internal->correctorComment($this->ass_id, $this->user_id);
     }
 
     public function correctionSettings(): CorrectionSettingsReadService

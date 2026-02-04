@@ -10,7 +10,6 @@ use Edutiek\AssessmentService\EssayTask\AppBridges\WriterBridge as WriterBridgeS
 use Edutiek\AssessmentService\EssayTask\AssessmentStatus\Service as StatusService;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\GenerateEssayImages;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\Service as BackgroundTaskService;
-use Edutiek\AssessmentService\EssayTask\Comments\Service as CommentsService;
 use Edutiek\AssessmentService\EssayTask\ConstraintHandling\Provider as ConstraintProvider;
 use Edutiek\AssessmentService\EssayTask\Essay\Service as EssayService;
 use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImageService;
@@ -19,6 +18,7 @@ use Edutiek\AssessmentService\EssayTask\EssayImport\ImportTypeNrw;
 use Edutiek\AssessmentService\EssayTask\EssayImport\Service as ImportService;
 use Edutiek\AssessmentService\EssayTask\EventHandling\Observer as EventObserver;
 use Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service as HtmlService;
+use Edutiek\AssessmentService\EssayTask\ImageProcessing\Service as ImageService;
 use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\EssayTask\PdfCreation\CorrectionProvider;
 use Edutiek\AssessmentService\EssayTask\PdfCreation\WritingProvider;
@@ -54,13 +54,6 @@ class Internal
         );
     }
 
-    public function comments(): CommentsService
-    {
-        return $this->instances[CommentsService::class] ??= new CommentsService(
-            $this->dependencies->systemApi()->imageSketch()
-        );
-    }
-
     public function correctorBridge(int $ass_id, int $user_id): CorrectorBridgeService
     {
         return $this->instances[CorrectorBridgeService::class][$ass_id][$user_id] ??= new CorrectorBridgeService(
@@ -72,7 +65,7 @@ class Internal
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->taskApi($ass_id, $user_id)->correctorAssignments(),
             $this->dependencies->taskApi($ass_id, $user_id)->tasks(),
-            $this->htmlProcessing()
+            $this->htmlProcessing($ass_id, $user_id)
         );
     }
 
@@ -108,10 +101,14 @@ class Internal
     public function correctionPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
     {
         return $this->instances[CorrectionProvider::class][$ass_id][$user_id] ?? new CorrectionProvider(
-            $ass_id,
+            $this->dependencies->repositories(),
+            $this->htmlProcessing($ass_id, $user_id),
+            $this->imageProcessing(),
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->language($user_id),
-            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()
+            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings(),
+            $this->dependencies->taskApi($ass_id, $user_id)->correctorAssignments(),
+            $this->dependencies->taskApi($ass_id, $user_id)->correctorComments()
         );
     }
 
@@ -153,11 +150,20 @@ class Internal
         );
     }
 
-    public function htmlProcessing(): HtmlService
+    public function htmlProcessing(int $ass_id, int $user_id): HtmlService
     {
-        return $this->instances[HtmlService::class] ??= new HtmlService(
-            $this->comments(),
+        return $this->instances[HtmlService::class][$ass_id][$user_id] ??= new HtmlService(
+            $this->writingSettings($ass_id)->get(),
+            $this->dependencies->taskApi($ass_id, $user_id)->correctionSettings()->get(),
+            $this->dependencies->taskApi($ass_id, $user_id)->correctorComments(),
             $this->dependencies->systemApi()->htmlProcessing()
+        );
+    }
+
+    public function imageProcessing(): ImageService
+    {
+        return $this->instances[ImageService::class] ??= new ImageService(
+            $this->dependencies->systemApi()->imageSketch()
         );
     }
 
@@ -207,7 +213,7 @@ class Internal
     {
         return $this->instances[WritingProvider::class][$ass_id][$user_id] ?? new WritingProvider(
             $ass_id,
-            $this->htmlProcessing(),
+            $this->htmlProcessing($ass_id, $user_id),
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->language($user_id),
             $this->dependencies->repositories(),

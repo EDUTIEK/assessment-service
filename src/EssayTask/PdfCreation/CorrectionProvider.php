@@ -4,22 +4,39 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\PdfCreation;
 
+use Edutiek\AssessmentService\EssayTask\Data\Essay;
+use Edutiek\AssessmentService\EssayTask\Data\Repositories;
+use Edutiek\AssessmentService\EssayTask\HtmlProcessing\FullService as HtmlProcessing;
+use Edutiek\AssessmentService\EssayTask\ImageProcessing\FullService as ImageProcssing;
+use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessing;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfConfigPart;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
+use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as AssignmentsService;
+use Edutiek\AssessmentService\Task\CorrectorComment\ReadService as CommentsService;
+use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 
 readonly class CorrectionProvider implements PdfPartProvider
 {
     public const PART_SINGLE_COMMENTS = 'single_comments';
     public const PART_MULTI_COMMENTS = 'multi_comments';
 
+    private const KEY_CORRECTOR_1 = 'comments_corrector1';
+    private const KEY_CORRECTOR_2 = 'comments_corrector2';
+    private const KEY_CORRECTOR_3 = 'comments_corrector3';
+    private const KEY_COMMENTS_ALL = 'comments_all';
+
     public function __construct(
-        private int $ass_id,
-        private PdfProcessing $processing,
+        private Repositories $repos,
+        private HtmlProcessing $html_processing,
+        private ImageProcssing $image_processing,
+        private PdfProcessing $pdf_processing,
         private LanguageService $language,
         private CorrectionSettingsReadService $settings_service,
+        private AssignmentsService $assignments,
+        private CommentsService $comments,
     ) {
     }
 
@@ -81,7 +98,60 @@ readonly class CorrectionProvider implements PdfPartProvider
         bool $with_header,
         bool $with_footer
     ): ?string {
-        // todo: fill with content for a task and writer
+
+        $essay = $this->repos->essay()->oneByWriterIdAndTaskId($writer_id, $task_id);
+        if ($essay === null) {
+            return null;
+        }
+
+        $comments = [];
+        foreach ($this->assignments->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
+            if ($key === self::KEY_COMMENTS_ALL
+                || $key === self::KEY_CORRECTOR_1 && $assignment->getPosition() === 0
+                || $key === self::KEY_CORRECTOR_2 && $assignment->getPosition() === 1
+                || $key === self::KEY_CORRECTOR_3 && $assignment->getPosition() === 2
+            ) {
+                $comments = array_merge(
+                    $comments,
+                    $this->comments->allByCorrectorId($assignment->getCorrectorId())
+                );
+            }
+        }
+
+        $options = (new Options())
+            ->withPrintHeader($with_header)
+            ->withPrintFooter($with_footer);
+
+        if ($essay->hasPdfVersion()) {
+            return $this->renderFromImages($essay, $comments, $anonymous_corrector, $options);
+        } else {
+            return $this->renderFromText($essay, $comments, $anonymous_corrector, $options);
+        }
+    }
+
+    /**
+     * @param CorrectorComment[] $comments
+     */
+    private function renderFromText(Essay $essay, array $comments, bool $anonymous_corrector, Options $options): ?string
+    {
+        $html = $this->html_processing->getCorrectedTextForPdf($essay, $comments);
+        return $this->pdf_processing->create($html, $options);
+    }
+
+    /**
+     * @param CorrectorComment[] $comments
+     */
+    private function renderFromImages(Essay $essay, array $comments, bool $anonymous_corrector, Options $options): ?string
+    {
         return null;
     }
+
+
+    private function getTitle(string $key, bool $anonymous_corrector): string
+    {
+        return '';
+    }
+
+
+
 }
