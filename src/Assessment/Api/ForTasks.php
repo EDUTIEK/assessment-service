@@ -12,6 +12,8 @@ use Edutiek\AssessmentService\Assessment\LogEntry\TasksService as LogEntryTasksS
 use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
+use Edutiek\AssessmentService\Assessment\Location\ReadService as LocationService;
+use Edutiek\AssessmentService\Assessment\OrgaSettings\ReadService as OrgaSettingsService;
 use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropertiesReadService;
 
 readonly class ForTasks
@@ -61,5 +63,15 @@ readonly class ForTasks
     public function correctionProcess(): CorrectionProcessService
     {
         return $this->internal->correctionProcess($this->ass_id, $this->user_id);
+    }
+
+    public function location(): LocationService
+    {
+        return $this->internal->location($this->ass_id);
+    }
+
+    public function orgaSettings(): OrgaSettingsService
+    {
+        return $this->internal->orgaSettings($this->ass_id, $this->user_id);
     }
 }

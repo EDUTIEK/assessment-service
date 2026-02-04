@@ -6,21 +6,13 @@ namespace Edutiek\AssessmentService\Assessment\Location;
 
 use Edutiek\AssessmentService\Assessment\Data\Location;
 
-interface FullService
+interface FullService extends ReadService
 {
     public function one(int $id): ?Location;
 
     /** @return Location[] */
-    public function all(): array;
     public function new(): Location;
     public function save(Location $location);
-
-    /** @return string[] */
-    public function exampleTitles(): array;
-
-    /** @return string[] */
-    public function allTitles(): array;
-
     /** @param string[] $titles */
     public function saveTitles(array $titles): void;
 }
