@@ -35,5 +35,19 @@ return [
     'revision_not_allowed' => 'Status erlaubt keine Überarbeitung',
     'revision_text_missing' => 'Begründungstext fehlt',
     'summary_not_found' => 'Korrektur nicht gefunden',
-    'task_solution' => "Lösungshinweise"
+    'task_solution' => "Lösungshinweise",
+    'invalid_import_assignment' => 'Fehlerhafte zuweisung in Zeile %d',
+    'writer_not_found' => 'Teilnehmer mit Loginname "%2$s" in Zeile %1$d nicht gefunden.',
+    'corrector_not_found_pos' => 'Korrekturkraft %3$d mit Loginname "%2$s" in Zeile %1$d nicht gefunden.',
+    'corrector_not_found_task' => 'Korrekturkraft für Aufgabe %3$s mit Loginname "%2$s" in Zeile %1$d nicht gefunden.',
+    'login' => 'Loginname',
+    'firstname' => 'Vorname',
+    'lastname' => 'Familienname',
+    'email' => 'E-Mail',
+    'pseudonym' => 'Pseudonym',
+    'location' => 'Ort',
+    'words' => 'Wörter',
+    'authorized' => 'Klausur Freigegeben',
+    'corrector' => 'Korrektor',
+    'writer' => 'Teilnehmer'
 ];

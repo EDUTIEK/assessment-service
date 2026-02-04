@@ -62,4 +62,23 @@ interface FullService extends ReadService
      * @return int number of new assignments
      */
     public function assignMissing(int $task_id): int;
+
+    /**
+     * Export file with writer and its assigned correctors
+     * @return string
+     */
+    public function exportAssignmentSpreadsheet(bool $only_authorized): void;
+
+    /**
+     * Import assignments from a spreadsheet created with self::exportAssignmentSpreadsheet
+     * @return array Data
+     */
+    public function importSpreadsheet(string $file_id): array;
+
+    /**
+     * Assign correctors to writers from spreadsheet data created with self::importSpreadsheet
+     * @return string[] error strings, good if empty
+     */
+    public function assignSpreadsheetData(array $data, bool $dry_run = false): array;
+
 }

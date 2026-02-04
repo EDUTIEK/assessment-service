@@ -13,14 +13,27 @@ use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Edutiek\AssessmentService\Task\Data\Repositories;
+use Edutiek\AssessmentService\System\Spreadsheet\FullService as SpreadsheetService;
+use Edutiek\AssessmentService\System\File\Delivery as FileDelivery;
+use Edutiek\AssessmentService\System\File\Storage as FileStorage;
+use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
+use Edutiek\AssessmentService\Task\Api\Internal;
+use Edutiek\AssessmentService\System\Spreadsheet\ExportType;
+use Edutiek\AssessmentService\System\File\Disposition;
 
 readonly class Service implements FullService
 {
     public function __construct(
         private int $ass_id,
+        private int $user_id,
         private CorrectionSettings $correction_settings,
         private CorrectorService $corrector_service,
         private WriterService $writer_service,
+        private SpreadsheetService $spreadsheet_service,
+        private LanguageService $lang,
+        private FileDelivery $delivery,
+        private FileStorage $storage,
+        private Internal $internal,
         private Repositories $repos,
         private Dispatcher $events
     ) {
@@ -46,7 +59,7 @@ readonly class Service implements FullService
         $required = $this->correction_settings->getRequiredCorrectors();
         $count_assignments = [];
         array_map(
-            fn(CorrectorAssignment $x) => $count_assignments[$x->getWriterId()] = 1 + $count_assignments[$x->getWriterId()] ?? 0,
+            fn (CorrectorAssignment $x) => $count_assignments[$x->getWriterId()] = 1 + $count_assignments[$x->getWriterId()] ?? 0,
             $this->repos->correctorAssignment()->allByAssId($this->ass_id)
         );
 
@@ -69,7 +82,7 @@ readonly class Service implements FullService
             $writer_ids = $this->writer_service->correctableIds();
             return array_filter(
                 $assignments,
-                fn(CorrectorAssignment $assignment) => in_array($assignment->getWriterId(), $writer_ids)
+                fn (CorrectorAssignment $assignment) => in_array($assignment->getWriterId(), $writer_ids)
             );
         }
         return $assignments;
@@ -93,7 +106,7 @@ readonly class Service implements FullService
         $prefs->setFilterGradingStatus(
             $grading_status === null ? null : implode(
                 ',',
-                array_map(fn($status) => $status->value, $grading_status)
+                array_map(fn ($status) => $status->value, $grading_status)
             )
         );
 
@@ -152,7 +165,7 @@ readonly class Service implements FullService
         $writer_ids = $this->writer_service->correctableIds();
         return array_filter(
             $assignments,
-            fn(CorrectorAssignment $assignment) => in_array($assignment->getWriterId(), $writer_ids)
+            fn (CorrectorAssignment $assignment) => in_array($assignment->getWriterId(), $writer_ids)
         );
     }
 
@@ -302,6 +315,93 @@ readonly class Service implements FullService
             default:
                 return $this->assignByRandomEqualMode($task_id);
         }
+    }
+
+    public function exportAssignmentSpreadsheet(bool $only_authorized): void
+    {
+        $ea = $this->internal->excelAssignmentData($this->ass_id, $this->user_id);
+
+        $writer_sheet = $this->spreadsheet_service->getNewSheet(
+            $this->lang->txt('writer'),
+            $ea->writerHeader(),
+            $ea->writerBody()
+        );
+        $corrector_sheet = $this->spreadsheet_service->getNewSheet(
+            $this->lang->txt('corrector'),
+            $ea->correctorHeader(),
+            $ea->correctorBody()
+        );
+
+        $file_id = $this->spreadsheet_service->sheetsToFile([$writer_sheet, $corrector_sheet], ExportType::EXCEL);
+
+        $this->delivery->sendFile(
+            $file_id,
+            Disposition::ATTACHMENT,
+            $this->storage->newInfo()
+                          ->setFileName("corrector_assignment" . ExportType::EXCEL->extension())
+                          ->setMimeType(ExportType::EXCEL->mimetype())
+        );
+        $this->storage->deleteFile($file_id);
+    }
+
+    public function importSpreadsheet(string $file_id): array
+    {
+        $ea = $this->internal->excelAssignmentData($this->ass_id, $this->user_id);
+
+        $data = $this->spreadsheet_service->dataFromFile($file_id, $this->lang->txt('writer'));
+        return $assignments = $ea->importAssignments($data);
+    }
+
+    public function assignSpreadsheetData(array $data, bool $dry_run = false): array
+    {
+        $errors = [];
+        $ea = $this->internal->excelAssignmentData($this->ass_id, $this->user_id);
+
+        if ($ea->isMultiTask()) {
+            foreach ($data as $writer_id => $task_assignments) {
+                foreach ($task_assignments as list($corrector_id, $pos, $task_id, $row_id)) {
+                    $result = $this->assignMultiple(
+                        $task_id,
+                        $corrector_id ?? self::BLANK_CORRECTOR_ASSIGNMENT,
+                        self::BLANK_CORRECTOR_ASSIGNMENT,
+                        self::BLANK_CORRECTOR_ASSIGNMENT,
+                        [$writer_id],
+                        $dry_run
+                    );
+                    if (!empty($result['invalid'])) {
+                        $errors[] = sprintf(
+                            $this->lang->txt('invalid_import_assignment'),
+                            $row_id
+                        );
+                    }
+                }
+            }
+        } else {
+            $task = current($this->repos->settings()->idsByAssId($this->ass_id));
+            foreach ($data as $writer_id => $writer_assignments) {
+                $first = $second = $stitch = self::BLANK_CORRECTOR_ASSIGNMENT;
+
+                $row_id = null;
+                foreach ($writer_assignments as list($corrector_id, $pos, $task_id, $row_id)) {
+                    match($pos) {
+                        GradingPosition::FIRST->value => $first = $corrector_id,
+                        GradingPosition::SECOND->value => $second = $corrector_id,
+                        GradingPosition::STITCH->value => $stitch = $corrector_id,
+                    };
+                    $task = $task_id;
+                }
+
+                $result = $this->assignMultiple($task, $first, $second, $stitch, [$writer_id], $dry_run);
+                if (!empty($result['invalid'])) {
+                    $errors[] = sprintf(
+                        $this->lang->txt('invalid_import_assignment'),
+                        $row_id
+                    );
+                }
+            }
+        }
+
+        return array_merge($ea->getErrors(), $errors);
     }
 
     /**

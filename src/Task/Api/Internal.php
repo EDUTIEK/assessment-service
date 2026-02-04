@@ -23,6 +23,7 @@ use Edutiek\AssessmentService\Task\Resource\Service as ResourceService;
 use Edutiek\AssessmentService\Task\Settings\Service as SettingsService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Task\PdfCreation\CorrectionProvider;
+use Edutiek\AssessmentService\Task\CorrectorAssignments\ExcelAssignmentData;
 
 class Internal
 {
@@ -75,11 +76,32 @@ class Internal
     {
         return $this->instances[CorrectorAssignmentsService::class][$ass_id][$user_id] ??= new CorrectorAssignmentsService(
             $ass_id,
+            $user_id,
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
+            $this->dependencies->systemApi()->spreadsheet(true),
+            $this->dependencies->systemApi()->language($user_id, __DIR__ . '/../Languages/'),
+            $this->dependencies->systemApi()->fileDelivery(),
+            $this->dependencies->systemApi()->fileStorage(),
+            $this,
             $this->dependencies->repositories(),
             $this->dependencies->eventDispatcher($ass_id, $user_id)
+        );
+    }
+
+    public function excelAssignmentData(int $ass_id, int $user_id): ExcelAssignmentData
+    {
+        return $this->instances[ExcelAssignmentData::class][$ass_id][$user_id] ??= new ExcelAssignmentData(
+            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->orgaSettings()->get(),
+            $this->dependencies->repositories()->settings()->allByAssId($ass_id),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
+            $this->correctorAssignments($ass_id, $user_id),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->location(),
+            $this->dependencies->systemApi()->user(),
+            $this->language($user_id)
         );
     }
 
