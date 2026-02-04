@@ -43,6 +43,11 @@ abstract class UserData implements SystemEntity
     abstract public function getMatriculation(): ?string;
 
     /**
+     * Email address of the user, e.g. example@example.com
+     */
+    abstract public function getEmail(): string;
+
+    /**
      * Get the language of the user as ISO 639-1 two-letter code, e.g. 'en'
      */
     abstract public function getLanguage(): string;
