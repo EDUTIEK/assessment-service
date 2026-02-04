@@ -9,9 +9,6 @@ use Edutiek\AssessmentService\Assessment\WorkingTime\IndividualWorkingTime;
 
 abstract class Writer implements AssessmentEntity, IndividualWorkingTime
 {
-    private ?WritingStatus $writing_status = null;
-    private ?CombinedStatus $combined_status = null;
-
     abstract public function getId(): int;
     abstract public function setId(int $id): self;
     abstract public function getUserId(): int;
@@ -59,10 +56,6 @@ abstract class Writer implements AssessmentEntity, IndividualWorkingTime
 
     public function getWritingStatus(): WritingStatus
     {
-        if ($this->writing_status !== null) {
-            return $this->writing_status;
-        }
-
         $status = WritingStatus::NOT_STARTED;
         if ($this->getWritingExcluded() !== null) {
             $status = WritingStatus::EXCLUDED;
@@ -71,7 +64,7 @@ abstract class Writer implements AssessmentEntity, IndividualWorkingTime
         } elseif ($this->getWorkingStart() !== null) {
             $status = WritingStatus::STARTED;
         }
-        return $this->writing_status ??= $status;
+        return $status;
     }
 
     /**
@@ -79,16 +72,12 @@ abstract class Writer implements AssessmentEntity, IndividualWorkingTime
      */
     public function getCombinedStatus(): CombinedStatus
     {
-        if ($this->combined_status !== null) {
-            return $this->combined_status;
-        }
-
         $writing_status = $this->getWritingStatus();
         if ($writing_status !== WritingStatus::AUTHORIZED) {
-            return $this->combined_status ??= CombinedStatus::from($writing_status->value);
+            return CombinedStatus::from($writing_status->value);
         }
 
-        return $this->combined_status ??= match ($this->getCorrectionStatus()) {
+        return match ($this->getCorrectionStatus()) {
             CorrectionStatus::OPEN => CombinedStatus::OPEN,
             CorrectionStatus::APPROXIMATION => CombinedStatus::APPROXIMATION,
             CorrectionStatus::CONSULTING => CombinedStatus::CONSULTING,
