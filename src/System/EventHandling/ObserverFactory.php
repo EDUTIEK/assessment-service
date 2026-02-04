@@ -6,5 +6,13 @@ namespace Edutiek\AssessmentService\System\EventHandling;
 
 interface ObserverFactory
 {
-    public function observer(int $ass_id, int $user_id): Observer;
+    /**
+     * Observer for events occuring in an assessment
+     */
+    public function assessmentObserver(int $ass_id, int $user_id): ?Observer;
+
+    /**
+     * Observer for events occuring in the system
+     */
+    public function systemObserver(int $user_id): ?Observer;
 }

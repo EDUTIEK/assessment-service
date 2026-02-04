@@ -8,12 +8,15 @@ use Edutiek\AssessmentService\Assessment\Corrector\FullService;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Api\ApiException;
+use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
+use Edutiek\AssessmentService\System\EventHandling\Events\CorrectorRemoved;
 
 class Service implements FullService
 {
     public function __construct(
         private int $ass_id,
-        private Repositories $repos
+        private Repositories $repos,
+        private Dispatcher $events
     ) {
     }
 
@@ -49,7 +52,9 @@ class Service implements FullService
     {
         $this->checkScope($corrector);
         $this->repos->corrector()->delete($corrector->getId());
+        $this->events->dispatchEvent(new CorrectorRemoved($corrector->getId(), $this->ass_id));
     }
+
     private function checkScope(Corrector $corrector)
     {
         if ($corrector->getAssId() !== $this->ass_id) {
@@ -69,4 +74,3 @@ class Service implements FullService
         return $corrector;
     }
 }
-

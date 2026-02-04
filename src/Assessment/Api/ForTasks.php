@@ -32,7 +32,7 @@ readonly class ForTasks
 
     public function corrector(): CorrectorReadService
     {
-        return $this->internal->corrector($this->ass_id);
+        return $this->internal->corrector($this->ass_id, $this->user_id);
     }
 
     public function logEntry(): LogEntryTasksService

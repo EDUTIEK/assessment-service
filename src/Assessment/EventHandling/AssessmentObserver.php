@@ -8,7 +8,7 @@ use Edutiek\AssessmentService\System\EventHandling\AbstractObserver;
 use Edutiek\AssessmentService\Assessment\LogEntry;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterFullService;
 
-class Observer extends AbstractObserver
+class AssessmentObserver extends AbstractObserver
 {
     public function __construct(
         int $ass_id,

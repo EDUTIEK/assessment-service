@@ -15,8 +15,13 @@ readonly class ForEvents implements ObserverFactory
     }
 
 
-    public function observer(int $ass_id, int $user_id): Observer
+    public function assessmentObserver(int $ass_id, int $user_id): ?Observer
     {
         return $this->internal->eventObserver($ass_id, $user_id);
+    }
+
+    public function systemObserver(int $user_id): ?Observer
+    {
+        return null;
     }
 }

@@ -11,7 +11,8 @@ use Edutiek\AssessmentService\System\EventHandling\DispatcherFactory;
 
 class ForEvents implements DispatcherFactory
 {
-    private array $instances = [];
+    private array $for_assessment = [];
+    private array $for_system = [];
 
     public function __construct(
         /** @var ObserverFactory[] */
@@ -19,15 +20,34 @@ class ForEvents implements DispatcherFactory
     ) {
     }
 
-    public function dispatcher(int $ass_id, int $user_id): Dispatcher
+    public function assessmentDispatcher(int $ass_id, int $user_id): Dispatcher
     {
-        if (!isset($this->instances[$ass_id][$user_id])) {
+        if (!isset($this->for_assessment[$ass_id][$user_id])) {
             $dispatcher = new CommonDispatcher();
             foreach ($this->observer_factories as $observer_factory) {
-                $dispatcher->addObserver($observer_factory->observer($ass_id, $user_id));
+                $observer = $observer_factory->assessmentObserver($ass_id, $user_id);
+                if ($observer !== null) {
+                    $dispatcher->addObserver($observer);
+                }
             }
-            $this->instances[$ass_id][$user_id] = $dispatcher;
+            $this->for_assessment[$ass_id][$user_id] = $dispatcher;
         }
-        return $this->instances[$ass_id][$user_id];
+        return $this->for_assessment[$ass_id][$user_id];
     }
+
+    public function systemDispatcher(int $user_id): Dispatcher
+    {
+        if (!isset($this->for_system[$user_id])) {
+            $dispatcher = new CommonDispatcher();
+            foreach ($this->observer_factories as $observer_factory) {
+                $observer = $observer_factory->systemObserver($user_id);
+                if ($observer !== null) {
+                    $dispatcher->addObserver($observer);
+                }
+            }
+            $this->for_system[$user_id] = $dispatcher;
+        }
+        return $this->for_system[$user_id];
+    }
+
 }

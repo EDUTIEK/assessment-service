@@ -50,7 +50,7 @@ readonly class ForClients
 
     public function corrector(): CorrectorFullService
     {
-        return $this->internal->corrector($this->ass_id);
+        return $this->internal->corrector($this->ass_id, $this->user_id);
     }
 
     public function gradeLevel(): GradeLevelFullService

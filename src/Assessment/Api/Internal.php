@@ -19,7 +19,8 @@ use Edutiek\AssessmentService\Assessment\Corrector\Service as CorrectorService;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrector;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\DisabledGroup\Service as DisabledGroupService;
-use Edutiek\AssessmentService\Assessment\EventHandling\Observer as EventObserver;
+use Edutiek\AssessmentService\Assessment\EventHandling\AssessmentObserver as AssessmentObserver;
+use Edutiek\AssessmentService\Assessment\EventHandling\SystemObserver as SystemObserver;
 use Edutiek\AssessmentService\Assessment\Export\Service as ExportService;
 use Edutiek\AssessmentService\Assessment\Format\FullService as FormatInterface;
 use Edutiek\AssessmentService\Assessment\Format\Service as Format;
@@ -320,11 +321,12 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    public function corrector(int $ass_id): CorrectorService
+    public function corrector(int $ass_id, int $user_id): CorrectorService
     {
         return $this->instances[CorrectorService::class][$ass_id] ??= new CorrectorService(
             $ass_id,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->dependencies->eventDispatcher($ass_id, $user_id),
         );
     }
 
@@ -444,10 +446,19 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    public function eventObserver(int $ass_id, int $user_id): EventObserver
+    public function assessmentObserver(int $ass_id, int $user_id): AssessmentObserver
     {
-        return $this->instances[EventObserver::class][$ass_id][$user_id] ??= new EventObserver(
+        return $this->instances[AssessmentObserver::class][$ass_id][$user_id] ??= new AssessmentObserver(
             $ass_id,
+            $user_id,
+            $this,
+            $this->dependencies->repositories()
+        );
+    }
+
+    public function systemObserver(int $user_id): SystemObserver
+    {
+        return $this->instances[SystemObserver::class][$user_id] ??= new SystemObserver(
             $user_id,
             $this,
             $this->dependencies->repositories()

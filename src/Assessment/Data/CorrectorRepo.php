@@ -14,6 +14,8 @@ interface CorrectorRepo
     public function oneByUserIdAndAssId(int $user_id, int $ass_id): ?Corrector;
     /** @return Corrector[] */
     public function allByAssId(int $ass_id): array;
+    /** @return Corrector[] */
+    public function allByUserId(int $user_id): array;
     public function save(Corrector $entity): void;
     public function delete(int $id): void;
     public function deleteByAssId(int $ass_id): void;
