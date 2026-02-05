@@ -216,11 +216,7 @@ class Internal
             $this->htmlProcessing($ass_id, $user_id),
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->language($user_id),
-            $this->dependencies->repositories(),
-            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
-            $this->dependencies->assessmentApi($ass_id, $user_id)->properties(),
-            $this->dependencies->taskApi($ass_id, $user_id)->tasks(),
-            $this->dependencies->systemApi()->user()
+            $this->dependencies->repositories()
         );
     }
 

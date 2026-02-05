@@ -13,6 +13,7 @@ use Edutiek\AssessmentService\System\Data\ImageDescriptor;
 use Edutiek\AssessmentService\System\Data\ImageSizeType;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverter;
+use Edutiek\AssessmentService\System\PdfCreator\Options;
 
 readonly class Service implements FullService
 {
@@ -46,7 +47,11 @@ readonly class Service implements FullService
         if ($essay->getWrittenText()) {
             // create an extra pdf for the marking, even if a converted pdf file exist
             // it should have no header and footer
-            $delete_me = $this->pdf_provider->renderWrittenText($essay, true, false, false);
+            $delete_me = $this->pdf_provider->renderWrittenText(
+                $essay,
+                true,
+                (new Options())->withPrintHeader(false)->withPrintFooter(false)
+            );
             $pdfs[] = $this->storage->getFileStream($delete_me);
         }
         if ($essay->getPdfVersion() && !$essay->hasPdfFromWrittenText()) {

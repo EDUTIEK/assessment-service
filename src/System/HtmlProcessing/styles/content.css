@@ -1,4 +1,3 @@
-<style>
 /**
  * Style of written contents
  */
@@ -43,4 +42,16 @@ pre
     min-height: 1.5em;
     text-align: justify;
 }
-</style>
+
+.sr-only {
+    display: none;
+}
+
+.long-essay-content-table {
+    border: 0;
+    border-spacing: 10px;
+}
+
+.long-essay-counter-column {
+    text-align:left;
+}

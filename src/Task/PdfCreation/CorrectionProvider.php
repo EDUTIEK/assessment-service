@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\Task\PdfCreation;
 
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessing;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
+use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfConfigPart;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
@@ -67,8 +68,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         int $writer_id,
         bool $anonymous_writer,
         bool $anonymous_corrector,
-        bool $with_header,
-        bool $with_footer
+        Options $options,
     ): ?string {
         // todo: fill with content for a task and writer
         return null;

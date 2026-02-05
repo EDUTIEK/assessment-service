@@ -10,7 +10,7 @@
     </xsl:template>
 
     <!-- elements to leave out -->
-    <xsl:template match="html|body">
+    <xsl:template match="html|body|head">
         <xsl:apply-templates select="node()" />
     </xsl:template>
 
@@ -24,51 +24,55 @@
 
     <!-- add the comments column -->
     <xsl:template match="tr">
+        <xsl:text>&#xa;</xsl:text>
         <xsl:variable name="counter" select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::initCurrentComments', string(@data-p))" />
-        <xsl:copy>
+        <tr>
             <xsl:copy-of select="@*" />
             <xsl:choose>
                 <xsl:when test="$add_paragraph_numbers = 1">
-                    <td style="width: 8mm;">
+                    <xsl:text>&#xa;&#x9;</xsl:text>
+                    <td class="xlas-number">
                         <!-- paragraph number -->
                         <xsl:apply-templates select="td[1]/node()" />
                     </td>
-                    <td style="width: 92mm;">
+                    <xsl:text>&#xa;&#x9;</xsl:text>
+                    <td class="xlas-numbered-text">
                         <!-- text -->
                         <xsl:apply-templates select="td[2]/node()" />
                     </td>
                 </xsl:when>
                 <xsl:otherwise>
-                    <td style="width: 100mm;">
+                    <xsl:text>&#xa;&#x9;</xsl:text>
+                    <td class="xlas-pure-text">
                         <!-- text -->
                         <xsl:apply-templates select="td[1]/node()" />
                     </td>
                 </xsl:otherwise>
             </xsl:choose>
-             <td>
+            <xsl:text>&#xa;&#x9;</xsl:text>
+             <td class="xlas-comments">
                 <!-- comments -->
                 <xsl:for-each select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::getCurrentComments')/node()">
                     <xsl:copy-of select="." />
                 </xsl:for-each>
             </td>
-        </xsl:copy>
+            <xsl:text>&#xa;</xsl:text>
+        </tr>
     </xsl:template>
     
     <!-- add the marking and label for comments -->
     <xsl:template match="span">
         <xsl:choose>
-            <xsl:when test="@class='sr-only'">
-            </xsl:when>
             <xsl:when test="@data-w">
                 <xsl:variable name="label" select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::commentLabel',string(@data-w))" />
                 <xsl:variable name="color" select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::commentColor',string(@data-w))" />
+                <xsl:if test="$label">
+                    <sup class="xlas-label">
+                        <xsl:value-of select="$label" />
+                    </sup>
+                </xsl:if>
                 <xsl:choose>
                     <xsl:when test="$color">
-                        <xsl:if test="$label">
-                            <sup style="background-color: grey; color:white; padding:2px; font-family: sans-serif; font-size: 8px;">
-                                <xsl:value-of select="$label" />
-                            </sup>
-                        </xsl:if>
                         <span>
                             <xsl:attribute name="style">background-color: <xsl:value-of select="$color" />;</xsl:attribute>
                             <xsl:value-of select="text()" />

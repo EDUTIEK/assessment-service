@@ -50,8 +50,7 @@ interface FullService
         string $xslt_file,
         int $service_version,
         bool $add_paragraph_numbers = false,
-        HeadlineScheme $headline_scheme = HeadlineScheme::NUMERIC,
-        bool $for_pdf = false,
+        HeadlineScheme $headline_scheme = HeadlineScheme::NUMERIC
     ): string;
 
     /**

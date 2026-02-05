@@ -21,7 +21,6 @@ class Service implements FullService
     public static int $h6Counter = 0;
 
     public static $headlineScheme = HeadlineScheme::NUMERIC;
-    public static bool $forPdf = false;
 
     public function fillTemplate(string $template, array $data): string
     {
@@ -30,11 +29,8 @@ class Service implements FullService
         return $mustache->render($template, $data);
     }
 
-    public function getContentForMarking(
-        string $html,
-        bool $add_paragraph_numbers,
-        HeadlineScheme $headline_scheme
-    ): string {
+    public function getContentForMarking(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
+    {
         $html = $this->processXslt($html, __DIR__ . '/xsl/cleanup.xsl', 0);
         $html = $this->processXslt(
             $html,
@@ -43,37 +39,24 @@ class Service implements FullService
             $add_paragraph_numbers,
             $headline_scheme
         );
-
         return $html;
     }
 
-    public function getContentForPdf(
-        string $html,
-        bool $add_paragraph_numbers,
-        HeadlineScheme $headline_scheme
-    ): string {
-        $html = $this->processXslt($html, __DIR__ . '/xsl/cleanup.xsl', 0);
-        $html = $this->processXslt(
-            $html,
-            __DIR__ . '/xsl/numbers.xsl',
-            0,
-            $add_paragraph_numbers,
-            $headline_scheme,
-            true
-        );
-
-        return $this->getContentStyles($headline_scheme) . "\n" . $this->replaceCustomMarkup($html);
+    public function getContentForPdf(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
+    {
+        $html = $this->getContentForMarking($html, $add_paragraph_numbers, $headline_scheme);
+        return $this->getContentStyles($headline_scheme) . $this->replaceCustomMarkup($html);
     }
 
     public function getContentStyles(HeadlineScheme $headline_scheme): string
     {
-        $styles = file_get_contents(__DIR__ . '/styles/content.html');
+        $styles = file_get_contents(__DIR__ . '/styles/content.css');
         if ($headline_scheme === HeadlineScheme::THREE) {
             // This is the only headline scheme that needs a style, because headlines have different sizes
             // The numbers of the other headline schemes are creted in the XSLT processor
-            $styles .= "\n" . file_get_contents(__DIR__ . '/styles/headlines-three.html');
+            $styles .= "\n" . file_get_contents(__DIR__ . '/styles/headlines-three.css');
         }
-        return $styles;
+        return "<style>\n$styles</style>\n";
     }
 
     public function replaceCustomMarkup(string $html): string
@@ -91,13 +74,11 @@ class Service implements FullService
         string $xslt_file,
         int $service_version,
         bool $add_paragraph_numbers = false,
-        HeadlineScheme $headline_scheme = HeadlineScheme::NUMERIC,
-        bool $for_pdf = false,
+        HeadlineScheme $headline_scheme = HeadlineScheme::NUMERIC
     ): string {
         try {
             // functions called from XSLT are static and need a static state
             self::$headlineScheme = $headline_scheme;
-            self::$forPdf = $for_pdf;
 
             self::initParaCounter();
             self::initWordCounter();
@@ -124,7 +105,6 @@ class Service implements FullService
             $xslt->importStyleSheet($xslt_doc);
             $xslt->setParameter('', 'service_version', $service_version);
             $xslt->setParameter('', 'add_paragraph_numbers', (int) $add_paragraph_numbers);
-            $xslt->setParameter('', 'for_pdf', $for_pdf);
 
             // get the html document
             $dom_doc = new \DOMDocument('1.0', 'UTF-8');
@@ -140,27 +120,6 @@ class Service implements FullService
             return $xml;
         } catch (\Throwable $e) {
             return 'HTML PROCESSING ERROR:<br>' . $e->getMessage() . '<hr>' . $html;
-        }
-    }
-
-    /**
-     * Get the paragraph counter-tag for PDF generation
-     * This should help for a correct vertical alignment with the counted block in TCPDF
-     */
-    public static function paraCounterTag($tag): string
-    {
-        if (self::$forPdf) {
-            switch ($tag) {
-                case 'pre':
-                case 'ol':
-                case 'ul':
-                case 'li':
-                    return 'p';
-                default:
-                    return $tag;
-            }
-        } else {
-            return 'p';
         }
     }
 

@@ -2,6 +2,8 @@
 
 namespace Edutiek\AssessmentService\Assessment\PdfCreation;
 
+use Edutiek\AssessmentService\System\PdfCreator\Options;
+
 interface PdfPartProvider
 {
     /**
@@ -19,7 +21,6 @@ interface PdfPartProvider
         int $writer_id,
         bool $anonymous_writer,
         bool $anonymous_corrector,
-        bool $with_header,
-        bool $with_footer
+        Options $options,
     ): ?string;
 }

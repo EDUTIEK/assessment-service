@@ -8,35 +8,18 @@ use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 use Edutiek\AssessmentService\Task\Api\ApiException;
 
-readonly class Service implements FullService
+readonly class Service implements ReadService
 {
     public function __construct(
-        private int $task_id,
-        private int $writer_id,
+        private int $ass_id,
+        private int $usr_id,
         private Repositories $repos
     ) {
     }
 
-    public function allByCorrectorId(int $corrector_id): array
+    public function allByIds(int $task_id, int $writer_id, int $corrector_id): array
     {
-        return $this->repos->correctorComment()->allByTaskIdAndWriterIdAndCorrectorId($this->task_id, $this->writer_id, $corrector_id);
-    }
-
-    public function new(): CorrectorComment
-    {
-        return $this->repos->correctorComment()->new()->setTaskId($this->task_id)->setWriterId($this->writer_id);
-    }
-
-    public function save(CorrectorComment $comment): void
-    {
-        $this->checkScope($comment);
-        $this->repos->correctorComment()->save($comment);
-    }
-
-    public function delete(): void
-    {
-        $this->repos->correctorComment()->deleteByTaskIdAndWriterId($this->task_id, $this->writer_id);
-        $this->repos->correctorPoints()->deleteByTaskIdAndWriterId($this->task_id, $this->writer_id);
+        return $this->repos->correctorComment()->allByTaskIdAndWriterIdAndCorrectorId($task_id, $writer_id, $corrector_id);
     }
 
     /**
@@ -67,13 +50,5 @@ readonly class Service implements FullService
         }
 
         return $result;
-    }
-
-
-    private function checkScope(CorrectorComment $comment)
-    {
-        if ($comment->getTaskId() !== $this->task_id && $comment->getWriterId() !== $this->writer_id) {
-            throw new ApiException("wrong task_id and writer_id", ApiException::ID_SCOPE);
-        }
     }
 }

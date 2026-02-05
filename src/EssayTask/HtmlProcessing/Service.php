@@ -64,20 +64,25 @@ class Service implements FullService
 
     public function getCorrectedTextForPdf(?Essay $essay, array $comments): string
     {
-        $html = $this->processor->getContentForPdf(
+        self::$instance = $this;
+        $this->all_comments = $comments;
+        $this->current_comments = [];
+
+        $html = $this->processor->getContentForMarking(
             (string) $essay->getWrittenText(),
             $this->writing_settings->getAddParagraphNumbers(),
             $this->writing_settings->getHeadlineScheme()
         );
 
-        self::$instance = $this;
-        $this->all_comments = $comments;
-        $this->current_comments = [];
+        $html = $this->processor->getContentStyles($this->writing_settings->getHeadlineScheme())
+            . "<style>\n" . file_get_contents(__DIR__ . '/styles/correction.css') . "\n</style>\n"
+            . $html;
 
         $html = $this->processor->processXslt(
-            $html,
+            $this->processor->replaceCustomMarkup($html),
             __DIR__ . '/xsl/comments.xsl',
-            $essay ? $essay->getServiceVersion() : 0
+            $essay ? $essay->getServiceVersion() : 0,
+            $this->writing_settings->getAddParagraphNumbers(),
         );
 
         return $html;
@@ -115,7 +120,7 @@ class Service implements FullService
                     $content .= '<br />(' . $comment->getPoints() . ' Punkte)';
                 }
 
-                $content = '<p style="font-family: sans-serif; font-size:10px;">' . $content . '</p>';
+                $content = '<p>' . $content . '</p>';
 
                 $html .= $content . "\n";
 
@@ -132,7 +137,10 @@ class Service implements FullService
      */
     private function getTextBackgroundColor(array $comments): string
     {
-        return self::COLOR_NORMAL;
+        if (!empty($comments)) {
+            return self::COLOR_NORMAL;
+        }
+        return '';
     }
 
     /**
@@ -171,7 +179,7 @@ class Service implements FullService
                 $comments[] = $comment;
             }
         }
-        return self::getTextBackgroundColor($comments);
+        return self::$instance->getTextBackgroundColor($comments);
     }
 
     /**

@@ -8,7 +8,9 @@ use Edutiek\AssessmentService\Assessment\Api\ComponentApiFactory;
 use Edutiek\AssessmentService\Assessment\Data\PdfConfig;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
+use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropetiesReadService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
+use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Edutiek\AssessmentService\System\User\ReadService as UserService;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingService;
@@ -27,7 +29,8 @@ class Service implements FullService
         private ConfigService $config,
         private FileStorage $storage,
         private UserService $users,
-        private TasksReadService $tasks
+        private TasksReadService $tasks,
+        private PropetiesReadService $properties
     ) {
     }
 
@@ -129,6 +132,29 @@ class Service implements FullService
 
     private function createPdfFile(PdfPurpose $purpose, int $task_id, int $writer_id, bool $anonymous_writer, bool $anonymous_corrector): string
     {
+        $options = (new Options());
+
+        $writer = $this->writers->oneByWriterId($writer_id);
+        $user = $this->users->getUser($writer?->getUserId() ?? 0);
+        $properties = $this->properties->get();
+
+        if ($anonymous_writer) {
+            $title = $writer->getPseudonym();
+        } else {
+            $title = $user->getFullname(false);
+        }
+
+        $title .= ' | ' . $properties->getTitle();
+        if ($this->tasks->count() > 1) {
+            $task = $this->tasks->one($task_id);
+            $title .= ' - ' . $task->getTitle();
+        }
+
+        $options = $options->withTitle($title);
+        $options = $options->withSubject($properties->getDescription());
+        $options = $options->withAuthor('');
+
+
         $pdf_ids = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
             $provider = $this->getProvider($component, $purpose);
@@ -139,8 +165,7 @@ class Service implements FullService
                     $writer_id,
                     $anonymous_writer,
                     $anonymous_corrector,
-                    true,
-                    true
+                    $options,
                 );
                 if ($id !== null) {
                     $pdf_ids[] = $id;

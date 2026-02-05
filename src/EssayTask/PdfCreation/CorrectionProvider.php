@@ -95,8 +95,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         int $writer_id,
         bool $anonymous_writer,
         bool $anonymous_corrector,
-        bool $with_header,
-        bool $with_footer
+        Options $options
     ): ?string {
 
         $essay = $this->repos->essay()->oneByWriterIdAndTaskId($writer_id, $task_id);
@@ -107,20 +106,20 @@ readonly class CorrectionProvider implements PdfPartProvider
         $comments = [];
         foreach ($this->assignments->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
             if ($key === self::KEY_COMMENTS_ALL
-                || $key === self::KEY_CORRECTOR_1 && $assignment->getPosition() === 0
-                || $key === self::KEY_CORRECTOR_2 && $assignment->getPosition() === 1
-                || $key === self::KEY_CORRECTOR_3 && $assignment->getPosition() === 2
+                || $key === self::KEY_CORRECTOR_1 && $assignment->getPosition()->value === 0
+                || $key === self::KEY_CORRECTOR_2 && $assignment->getPosition()->value === 1
+                || $key === self::KEY_CORRECTOR_3 && $assignment->getPosition()->value === 2
             ) {
                 $comments = array_merge(
                     $comments,
-                    $this->comments->allByCorrectorId($assignment->getCorrectorId())
+                    $this->comments->allByIds(
+                        $assignment->getTaskId(),
+                        $assignment->getWriterId(),
+                        $assignment->getCorrectorId()
+                    )
                 );
             }
         }
-
-        $options = (new Options())
-            ->withPrintHeader($with_header)
-            ->withPrintFooter($with_footer);
 
         if ($essay->hasPdfVersion()) {
             return $this->renderFromImages($essay, $comments, $anonymous_corrector, $options);

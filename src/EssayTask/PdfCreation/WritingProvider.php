@@ -28,10 +28,6 @@ readonly class WritingProvider implements PdfPartProvider
         private PdfProcessing $pdf_processing,
         private LanguageService $language,
         private Repositories $repos,
-        private WriterReadService $writers,
-        private PropetiesReadService $properties,
-        private TaskManagerReadService $tasks,
-        private UserReadService $users,
     ) {
     }
 
@@ -54,8 +50,7 @@ readonly class WritingProvider implements PdfPartProvider
         int $writer_id,
         bool $anonymous_writer,
         bool $anonymous_corrector,
-        bool $with_header,
-        bool $with_footer
+        Options $options,
     ): ?string {
         $essay = $this->repos->essay()->oneByWriterIdAndTaskId($writer_id, $task_id);
         if (!$essay) {
@@ -70,14 +65,14 @@ readonly class WritingProvider implements PdfPartProvider
 
         if ($essay->hasPdfVersion() && $essay->hasWrittenText()) {
             // both pdf and written text are relevant - create text pdf and join it with the odf file
-            $created = $this->renderWrittenText($essay, $anonymous_writer, $with_header, $with_footer);
+            $created = $this->renderWrittenText($essay, $anonymous_writer, $options);
             $id = $this->pdf_processing->join([$created, $essay->getPdfVersion()]);
             $this->pdf_processing->cleanup([$created]);
             return $id;
         }
 
         if ($essay->hasWrittenText()) {
-            return $this->renderWrittenText($essay, $anonymous_writer, $with_header, $with_footer);
+            return $this->renderWrittenText($essay, $anonymous_writer, $options);
         }
 
         return null;
@@ -92,38 +87,16 @@ readonly class WritingProvider implements PdfPartProvider
     public function renderWrittenText(
         Essay $essay,
         bool $anonymous_writer,
-        bool $with_header,
-        bool $with_footer
+        Options $options
     ): string {
 
         $settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
         $html = $this->html_processing->getWrittenTextForPdf($essay, $settings);
 
-        $options = (new Options())->withPrintHeader($with_header)->withPrintFooter($with_footer);
         if ($settings->getAddCorrectionMargin()) {
             $options = $options->withLeftMargin($options->getLeftMargin() + $settings->getLeftCorrectionMargin());
             $options = $options->withRightMargin($options->getRightMargin() + $settings->getRightCorrectionMargin());
         }
-
-        $writer = $this->writers->oneByWriterId($essay->getWriterId());
-        $user = $this->users->getUser($writer?->getUserId() ?? 0);
-        $properties = $this->properties->get();
-
-        if ($anonymous_writer) {
-            $author = $writer->getPseudonym();
-        } else {
-            $author = $user->getFullname(false);
-        }
-
-        $title = $author . ' | ' . $properties->getTitle();
-        if ($this->tasks->count() > 1) {
-            $task = $this->tasks->one($essay->getTaskId());
-            $title .= ' - ' . $task->getTitle();
-        }
-
-        $options = $options->withTitle($title);
-        $options = $options->withSubject($properties->getDescription());
-        $options = $options->withAuthor($author);
 
         return $this->pdf_processing->create($html, $options);
     }

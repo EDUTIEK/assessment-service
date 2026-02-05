@@ -139,11 +139,11 @@ class Internal
         );
     }
 
-    public function correctorComment(int $task_id, int $writer_id): CorrectorCommentService
+    public function correctorComment(int $ass_id, int $user_id): CorrectorCommentService
     {
-        return $this->instances[CorrectorCommentService::class][$task_id][$writer_id] = new CorrectorCommentService(
-            $task_id,
-            $writer_id,
+        return $this->instances[CorrectorCommentService::class][$ass_id][$user_id] = new CorrectorCommentService(
+            $ass_id,
+            $user_id,
             $this->dependencies->repositories()
         );
     }

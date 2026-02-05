@@ -398,7 +398,8 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->systemApi()->config(),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->user(),
-            $this->dependencies->taskApi()->taskManager($ass_id, $user_id)
+            $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
+            $this->properties($ass_id)
         );
     }
 

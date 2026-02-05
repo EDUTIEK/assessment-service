@@ -18,6 +18,7 @@ use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
+use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TasksReadService;
 
 readonly class Service implements ClientService, EventService
@@ -142,7 +143,7 @@ readonly class Service implements ClientService, EventService
             throw new ApiException(implode("/n", $result->messages()), ApiException::CONSTRAINT);
         }
 
-        $file_id = $this->pdf_provider->renderWrittenText($essay, true, true, true);
+        $file_id = $this->pdf_provider->renderWrittenText($essay, true, new Options());
         $this->updatePdf($essay, $file_id, true);
     }
 

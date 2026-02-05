@@ -89,6 +89,11 @@ class Service implements FullService
     {
         $font_dir = self::FONT_DIR;
         return '
+        
+@page { 
+margin: 0px; 
+}
+        
 @font-face
 {
     font-family: sc;
@@ -116,7 +121,7 @@ class Service implements FullService
 }
 body
 {
-    font-family: '. $this->main_font . ', sc, tc, Math;
+    font-family: ' . $this->main_font . ', sc, tc, Math;
     font-size: ' . $this->main_font_size . ';
     margin: 0;
     margin-top: ' . $options->getTopMargin() . 'mm;

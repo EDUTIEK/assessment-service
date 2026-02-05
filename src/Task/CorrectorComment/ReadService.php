@@ -9,7 +9,7 @@ use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 interface ReadService
 {
     /** @return CorrectorComment[] */
-    public function allByCorrectorId(int $corrector_id): array;
+    public function allByIds(int $task_id, int $writer_id, int $corrector_id): array;
 
     /**
      * @param CorrectorComment[] $comments
