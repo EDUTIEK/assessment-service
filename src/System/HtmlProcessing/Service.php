@@ -37,7 +37,7 @@ class Service implements FullService
 
     public function getContentForMarking(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
     {
-        $html = $this->processXslt($html, __DIR__ . '/xsl/cleanup.xsl', 0);
+        $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', 0);
         $html = $this->processXslt(
             $html,
             __DIR__ . '/xsl/numbers.xsl',

@@ -129,6 +129,12 @@ body
     margin-right: ' . $options->getRightMargin() . 'mm;
     margin-bottom: ' . $options->getBottomMargin() . 'mm;
 }
+
+pre {
+    max-width: 200mm;
+    overflow-x: hidden;
+}
+
 :root
 {
 

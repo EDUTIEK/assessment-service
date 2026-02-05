@@ -23,22 +23,19 @@
     </xsl:template>
 
     <!--  Add numbers to the paragraph like elements -->
-    <xsl:template match="body/h1|body/h2|body/h3|body/h4|body/h5|body/h6|body/p|body/ul|body/ol|body/pre">
+    <xsl:template match="body/h1|body/h2|body/h3|body/h4|body/h5|body/h6|body/p|body/ul|body/ol|body/pre|body/table">
         <xsl:variable name="counter" select="php:function('Edutiek\AssessmentService\System\HtmlProcessing\Service::nextParaCounter')" />
         <xsl:variable name="prefix" select="php:function('Edutiek\AssessmentService\System\HtmlProcessing\Service::nextHeadlinePrefix', local-name())" />
-        <xlas-tr class="long-essay-content-row" style="vertical-align:top;">
+        <xlas-tr class="long-essay-content-row">
             <xsl:attribute name="data-p">
                 <xsl:value-of select="$counter" />
             </xsl:attribute>
             <xsl:if test="$add_paragraph_numbers = 1">
                 <xlas-td class="long-essay-counter-column">
-                    <xsl:attribute name="style">
-                        width: 5%;
-                    </xsl:attribute>
                     <p>
                         <xsl:attribute name="style">text-align:left;</xsl:attribute>
                         <span class="sr-only">Absatz</span>
-                        <span class="ParagraphNumber" style="font-family:sans-serif; font-size:0.6em; font-weight:normal;">
+                        <span class="long-essay-paragraph-number">
                             <xsl:choose>
                                 <xsl:when test="$service_version >= 20231218">
                                     <!-- from this version on paragraph numbers should be included to the word counter for comment markup  -->
@@ -57,11 +54,6 @@
                 </xlas-td>
             </xsl:if>
             <xlas-td class="long-essay-content-column">
-                <xsl:if test="$add_paragraph_numbers = 1">
-                    <xsl:attribute name="style">
-                        width: 95%;
-                    </xsl:attribute>
-                </xsl:if>
                 <xsl:copy>
                     <xsl:attribute name="class">long-essay-block</xsl:attribute>
                     <xsl:attribute name="long-essay-number">
@@ -82,7 +74,6 @@
                         </xsl:otherwise>
                     </xsl:choose>
 
-                    
                     <xsl:apply-templates select="node()" />
                 </xsl:copy>
             </xlas-td>

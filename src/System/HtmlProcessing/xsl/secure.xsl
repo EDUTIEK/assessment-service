@@ -22,7 +22,7 @@
     <!-- todo: pagebreaks are xomments -->
 
     <!-- copy allowed attributes -->
-    <xsl:template match="@style">
+    <xsl:template match="@style|@rowspan|@colspan">
         <xsl:copy></xsl:copy>
     </xsl:template>
 

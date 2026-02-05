@@ -43,15 +43,42 @@ pre
     text-align: justify;
 }
 
+pre {
+    /* dompdf needs a fixed value here */
+    max-width: 150mm;
+    overflow-x: hidden;
+}
+
 .sr-only {
     display: none;
+}
+
+table {
+    width: 100%;
+    overflow-x: hidden;
 }
 
 .long-essay-content-table {
     border: 0;
     border-spacing: 10px;
+    width: 100%;
 }
 
 .long-essay-counter-column {
     text-align:left;
+    width: 5%;
+}
+
+.long-essay-content-column {
+    width: 95%;
+}
+
+.long-essay-content-row {
+    vertical-align:top;
+}
+
+.long-essay-paragraph-number {
+    font-family:sans-serif;
+    font-size:0.6em;
+    font-weight:normal;
 }

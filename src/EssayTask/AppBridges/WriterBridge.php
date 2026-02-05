@@ -234,7 +234,9 @@ class WriterBridge implements AppBridge
             'hash_after' => $data['hash_after'] ?? null,
 
         ], $step, WritingStep::class);
-        $this->entity->secure($step, WritingStep::class);
+
+        // todo: this does not work well with the diff
+        //$this->entity->secure($step, WritingStep::class);
 
         $dmp = new DiffMatchPatch();
         $currentText = $essay->getWrittenText();
