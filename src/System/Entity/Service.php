@@ -8,11 +8,18 @@ use BackedEnum;
 use ReflectionClass;
 use ReflectionMethod;
 use Edutiek\AssessmentService\System\Api\HasHtml;
-use Monolog\DateTimeImmutable;
+use Edutiek\AssessmentService\System\HtmlProcessing\FullService as HtmlProcessing;
 use DateTime;
+use DateTimeImmutable;
 
 class Service implements FullService
 {
+    public function __construct(
+        private HtmlProcessing $html_processing
+    ) {
+    }
+
+
     /**
      * Cached properties of the given classes: class name => property (PascalCase) => meta data
      *
@@ -53,10 +60,7 @@ class Service implements FullService
                 $value = $entity->$getter();
                 if (!empty($value)) {
                     if ($meta['html']) {
-                        $entity->$setter(strip_tags(
-                            $value,
-                            '<p><div><br><strong><b><em><i><u><ol><ul><li><h1><h2><h3><h4><h5><h6><pre>'
-                        ));
+                        $entity->$setter($this->html_processing->secureContent($value));
                     } else {
                         $entity->$setter(strip_tags($value));
                     }
@@ -150,7 +154,7 @@ class Service implements FullService
                     return (new DateTime())->setTimestamp((int) $value);
                 case 'DateTimeImmutable':
                 case '?DateTimeImmutable':
-                    return (new DateTimeImmutable(false))->setTimestamp((int) $value);
+                    return (new DateTimeImmutable())->setTimestamp((int) $value);
                 default:
                     if (enum_exists($type)) {
                         /** @var BackedEnum $type */

@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\Task\CorrectionProcess\FullService as CorrectionPr
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsFullService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as CorrectorAssignmentsFullService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as CorrectorSummaryFullService;
+use Edutiek\AssessmentService\Task\CorrectorTemplate\FullService as CorrectorTemplateFullService;
 use Edutiek\AssessmentService\Task\Format\FullService as FormatFullService;
 use Edutiek\AssessmentService\Task\RatingCriterion\FullService as RatingCriterionFullService;
 use Edutiek\AssessmentService\Task\Resource\FullService as ResourceFullService;
@@ -52,6 +53,11 @@ readonly class ForClients
     public function correctorSummary(): CorrectorSummaryFullService
     {
         return $this->internal->correctorSummary($this->ass_id, $this->user_id);
+    }
+
+    public function correctorTemplates(): CorrectorTemplateFullService
+    {
+        return $this->internal->correctorTemplate($this->ass_id, $this->user_id);
     }
 
     public function ratingCriterion(int $task_id): RatingCriterionFullService

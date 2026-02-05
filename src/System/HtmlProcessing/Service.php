@@ -29,6 +29,12 @@ class Service implements FullService
         return $mustache->render($template, $data);
     }
 
+    public function secureContent(string $html): string
+    {
+        $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', 0);
+        return $html;
+    }
+
     public function getContentForMarking(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
     {
         $html = $this->processXslt($html, __DIR__ . '/xsl/cleanup.xsl', 0);

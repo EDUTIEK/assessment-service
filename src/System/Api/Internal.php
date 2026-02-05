@@ -37,6 +37,7 @@ use Edutiek\AssessmentService\System\Session\Service as SessionService;
 use Edutiek\AssessmentService\System\Spreadsheet\Service as SpreadsheetService;
 use Edutiek\AssessmentService\System\Transform\Service as TransformService;
 use Edutiek\AssessmentService\System\User\Service as UserService;
+use Edutiek\AssessmentService\System\HtmlProcessing\Service as HtmlProcessingService;
 
 class Internal
 {
@@ -56,7 +57,9 @@ class Internal
 
     public function entity(): EntityService
     {
-        return $this->instances[EntityService::class] ??= new EntityService();
+        return $this->instances[EntityService::class] ??= new EntityService(
+            $this->htmlProcessing()
+        );
     }
 
     public function format(int $user_id, ?DateTimeZone $timezone = null): FormatService
@@ -68,6 +71,11 @@ class Internal
             $timezone,
             $this->language($user_id, __DIR__ . '/../Languages/')
         );
+    }
+
+    public function htmlProcessing(): HtmlProcessingService
+    {
+        return $this->instances[HtmlProcessingService::class] ?? new HtmlProcessingService();
     }
 
     public function language(int $user_id, string $dir): LanguageService

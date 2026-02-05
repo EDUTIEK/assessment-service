@@ -12,6 +12,11 @@ interface FullService
     public function fillTemplate(string $template, array $data): string;
 
     /**
+     * Remove any non-allowed tags and attributes from the content
+     */
+    public function secureContent(string $html): string;
+
+    /**
      * Process HTML content (written text or instructions) for marking functions in the web apps
      * This will add the paragraph numbers and headline prefixes
      * and split up all text to single word embedded in <w-p> elements.

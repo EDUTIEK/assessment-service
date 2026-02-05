@@ -15,6 +15,7 @@ use Edutiek\AssessmentService\Task\CorrectionSettings\Service as CorrectionSetti
 use Edutiek\AssessmentService\Task\CorrectorAssignments\Service as CorrectorAssignmentsService;
 use Edutiek\AssessmentService\Task\CorrectorComment\Service as CorrectorCommentService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\Service as CorrectorSummaryService;
+use Edutiek\AssessmentService\Task\CorrectorTemplate\Service as CorrectorTemplateService;
 use Edutiek\AssessmentService\Task\EventHandling\Observer as EventObserver;
 use Edutiek\AssessmentService\Task\Format\Service as FormatService;
 use Edutiek\AssessmentService\Task\Manager\Service as ManagerService;
@@ -151,6 +152,14 @@ class Internal
     public function correctorSummary(int $ass_id, int $user_id): CorrectorSummaryService
     {
         return $this->instances[CorrectorSummaryService::class][$ass_id][$user_id] ??= new CorrectorSummaryService(
+            $this->checks($ass_id, $user_id),
+            $this->dependencies->repositories()
+        );
+    }
+
+    public function correctorTemplate(int $ass_id, int $user_id): CorrectorTemplateService
+    {
+        return $this->instances[CorrectorTemplateService::class][$ass_id][$user_id] ??= new CorrectorTemplateService(
             $this->checks($ass_id, $user_id),
             $this->dependencies->repositories()
         );

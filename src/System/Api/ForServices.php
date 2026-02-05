@@ -42,7 +42,7 @@ class ForServices
 
     public function entity(): EntityFullService
     {
-        return $this->instances[EntityService::class] ??= new EntityService();
+        return $this->internal->entity();
     }
 
     public function fileStorage(): Storage
@@ -72,7 +72,7 @@ class ForServices
 
     public function htmlProcessing(): HtmlProcessingFullService
     {
-        return new HtmlProcessingService();
+        return $this->internal->htmlProcessing();
     }
 
     public function user(): UserReadService
