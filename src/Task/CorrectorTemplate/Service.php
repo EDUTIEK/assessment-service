@@ -17,6 +17,11 @@ readonly class Service implements FullService
     ) {
     }
 
+    public function getSharableCorrectorIds(int $task_id): array
+    {
+        return $this->repos->correctorTemplates()->sharableCorrectorIds($task_id);
+    }
+
     public function getByTaskIdAndCorrectorId(int $task_id, int $corrector_id): CorrectorTemplate
     {
         $template = $this->repos->correctorTemplates()->oneByTaskIdAndCorrectorId($task_id, $corrector_id)

@@ -9,11 +9,11 @@ use Edutiek\AssessmentService\System\Data\UserDisplay;
 
 interface ReadService
 {
-    public function getUser(int $id) : ?UserData;
+    public function getUser(int $id): ?UserData;
 
     /**
      * @param int[] $ids
-     * @return UserData[]
+     * @return array<int, UserData> indexed by user_id
      */
     public function getUsersByIds(array $ids): array;
 

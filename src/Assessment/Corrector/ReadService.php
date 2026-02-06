@@ -12,5 +12,7 @@ interface ReadService
     public function oneByUserId(int $user_id): ?Corrector;
     /** @return Corrector[] */
     public function all(): array;
+    /** @return Corrector[] */
+    public function some(array $corrector_ids): array;
     public function oneById(int $corrector_id): ?Corrector;
 }
