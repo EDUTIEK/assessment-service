@@ -2,8 +2,8 @@
 
 namespace Edutiek\AssessmentService\EssayTask\HtmlProcessing;
 
-use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
+use Edutiek\AssessmentService\Task\CorrectorComment\CorrectorCommentInfo;
 
 interface FullService
 {
@@ -19,13 +19,13 @@ interface FullService
 
     /**
      * Get the marked and commented text for inclusion in a PDF file
-     * @param CorrectorComment[]  $comments
+     * @param CorrectorCommentInfo[]  $infos
      */
-    public function getCorrectedTextForPdf(?Essay $essay, array $comments): string;
+    public function getCorrectedTextForPdf(?Essay $essay, array $infos): string;
 
     /**
      * Get the html formatted comments for side display in a PDF File
-     * @param CorrectorComment[] $comments
+     * @param CorrectorCommentInfo[] $infos
      */
-    public function getCommentsHtml(array $comments): string;
+    public function getCommentsHtml(array $infos): string;
 }

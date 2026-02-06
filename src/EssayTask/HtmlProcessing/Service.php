@@ -3,13 +3,13 @@
 namespace Edutiek\AssessmentService\EssayTask\HtmlProcessing;
 
 use DOMDocument;
-use Edutiek\AssessmentService\EssayTask\Data\CommentRating;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings as CorrectionSettings;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
 use Edutiek\AssessmentService\System\HtmlProcessing\FullService as SystemHtmlProcessing;
-use Edutiek\AssessmentService\Task\CorrectorComment\ReadService as CommentsService;
-use Edutiek\AssessmentService\Task\Data\CorrectionSettings;
-use Edutiek\AssessmentService\Task\Data\CorrectorComment;
+use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
+use Edutiek\AssessmentService\Task\CorrectorComment\CorrectorCommentInfo;
+use Edutiek\AssessmentService\Task\CorrectorComment\InfoService as CommentsService;
 
 /**
  * Tool for processing HTML code coming from the rich text editor
@@ -26,21 +26,22 @@ class Service implements FullService
 
     /**
      * All Comments that should be merged
-     * @var CorrectorComment[]
+     * @var CorrectorCommentInfo[]
      */
-    private array $all_comments = [];
+    private array $all_infos = [];
 
     /**
      * Comments for the current paragraph
-     * @var CorrectorComment[]
+     * @var CorrectorCommentInfo[]
      */
-    private array $current_comments = [];
+    private array $current_infos = [];
 
     public function __construct(
         private readonly WritingSettings $writing_settings,
         private readonly CorrectionSettings $correction_settings,
         private readonly CommentsService $comments_service,
-        private readonly SystemHtmlProcessing $processor
+        private readonly SystemHtmlProcessing $processor,
+        private readonly LanguageService $lang
     ) {
     }
 
@@ -62,11 +63,11 @@ class Service implements FullService
         );
     }
 
-    public function getCorrectedTextForPdf(?Essay $essay, array $comments): string
+    public function getCorrectedTextForPdf(?Essay $essay, array $infos): string
     {
         self::$instance = $this;
-        $this->all_comments = $comments;
-        $this->current_comments = [];
+        $this->all_infos = $infos;
+        $this->current_infos = [];
 
         $html = $this->processor->getContentForMarking(
             (string) $essay->getWrittenText(),
@@ -88,36 +89,36 @@ class Service implements FullService
         return $html;
     }
 
-    public function getCommentsHtml(array $comments): string
+    /**
+     * @param CorrectorCommentInfo[] $infos
+     * @return string
+     */
+    public function getCommentsHtml(array $infos): string
     {
         $html = '';
-        foreach ($comments as $comment) {
-            if ($comment->hasDetailsToShow()) {
-                $content = $comment->getLabel();
-                if ($comment->showRating()) {
-
-                    $content = $comment->getLabel();
-                }
-                if ($comment->showRating() && $comment->getRating() == CommentRating::CARDINAL->value) {
-                    $content .= ' ' . $this->correction_settings->getNegativeRating();
-                }
-                if ($comment->showRating() && $comment->getRating() == CommentRating::EXCELLENT->value) {
-                    $content .= ' ' . $this->correction_settings->getPositiveRating();
+        foreach ($infos as $info) {
+            if ($info->hasDetailsToShow()) {
+                $content = $this->quote($info->getLabel());
+                if ($this->correction_settings->hasMultipleCorrectors()) {
+                    $content .= ' ' . $info->getPositionText();
                 }
 
-                $content = htmlspecialchars($content, ENT_NOQUOTES, 'UTF-8');
-
-                $color = $this->getTextBackgroundColor([$comment]);
+                $color = $this->getTextBackgroundColor([$info]);
                 $content = '<strong style="background-color:' . $color . ';">' . $content . '</strong>';
 
-                if (!empty($comment->getComment())) {
-                    $content .= ' ' . htmlspecialchars($comment->getComment(), ENT_NOQUOTES, 'UTF-8');
+                if ($info->getRatingText()) {
+                    $content .= ' ' . $info->getRatingText();
                 }
 
-                if ($comment->showPoints() && $comment->getPoints() == 1) {
-                    $content .= '<br />(1 Punkt)';
-                } elseif ($comment->showPoints() && $comment->getPoints() != 0) {
-                    $content .= '<br />(' . $comment->getPoints() . ' Punkte)';
+                if (!empty($info->getComment()->getComment())) {
+                    $content .= ' ' . $this->quote($info->getComment()->getComment());
+                }
+
+                $points = $info->getPoints();
+                if ($points == 1) {
+                    $content .= '<br>(' . $this->lang->txt('1_point') . ')';
+                } elseif ($points != 0) {
+                    $content .= '<br />(' . sprintf($this->lang->txt('x_points'), $points) . ')';
                 }
 
                 $content = '<p>' . $content . '</p>';
@@ -131,13 +132,18 @@ class Service implements FullService
         return $html;
     }
 
+    private function quote($html): string
+    {
+        return htmlspecialchars($html, ENT_NOQUOTES, 'UTF-8');
+    }
+
     /**
-     * @param CorrectorComment[] $comments
+     * @param CorrectorCommentInfo[] $infos
      * @todo: use corrector colors
      */
-    private function getTextBackgroundColor(array $comments): string
+    private function getTextBackgroundColor(array $infos): string
     {
-        if (!empty($comments)) {
+        if (!empty($infos)) {
             return self::COLOR_NORMAL;
         }
         return '';
@@ -148,9 +154,9 @@ class Service implements FullService
      */
     public static function initCurrentComments(string $paraNumber)
     {
-        self::$instance->current_comments = self::$instance->comments_service->filterAndLabel(
-            self::$instance->all_comments,
-            (int) $paraNumber
+        self::$instance->current_infos = self::$instance->comments_service->filterAndLabelInfos(
+            self::$instance->all_infos,
+            (int) $paraNumber,
         );
     }
 
@@ -160,12 +166,12 @@ class Service implements FullService
     public static function commentLabel(string $wordNumber): string
     {
         $labels = [];
-        foreach (self::$instance->current_comments as $comment) {
-            if ((int) $wordNumber == $comment->getStartPosition() && !empty($comment->getLabel())) {
-                $labels[] = $comment->getLabel();
+        foreach (self::$instance->current_infos as $info) {
+            if ((int) $wordNumber == $info->getComment()->getStartPosition() && !empty($info->getLabel())) {
+                $labels[] = $info->getLabel();
             }
         }
-        return (implode(',', $labels));
+        return (implode(', ', $labels));
     }
 
     /**
@@ -173,13 +179,13 @@ class Service implements FullService
      */
     public static function commentColor(string $wordNumber): string
     {
-        $comments = [];
-        foreach (self::$instance->current_comments as $comment) {
-            if ((int) $wordNumber >= $comment->getStartPosition() && (int) $wordNumber <= $comment->getEndPosition()) {
-                $comments[] = $comment;
+        $infos = [];
+        foreach (self::$instance->current_infos as $info) {
+            if ((int) $wordNumber >= $info->getComment()->getStartPosition() && (int) $wordNumber <= $info->getComment()->getEndPosition()) {
+                $infos[] = $info;
             }
         }
-        return self::$instance->getTextBackgroundColor($comments);
+        return self::$instance->getTextBackgroundColor($infos);
     }
 
     /**
@@ -189,7 +195,7 @@ class Service implements FullService
      */
     public static function getCurrentComments(): \DOMElement
     {
-        $html = self::$instance->getCommentsHtml(self::$instance->current_comments);
+        $html = self::$instance->getCommentsHtml(self::$instance->current_infos);
 
         $doc = new DOMDocument();
         $doc->loadXML('<root xml:id="root">' . $html . '</root>');

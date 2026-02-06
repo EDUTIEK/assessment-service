@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\PdfCreation;
 
+use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
+use Edutiek\AssessmentService\Assessment\PdfCreation\PdfConfigPart;
+use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\HtmlProcessing\FullService as HtmlProcessing;
 use Edutiek\AssessmentService\EssayTask\ImageProcessing\FullService as ImageProcssing;
+use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessing;
-use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
-use Edutiek\AssessmentService\Assessment\PdfCreation\PdfConfigPart;
-use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
-use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
-use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as AssignmentsService;
-use Edutiek\AssessmentService\Task\CorrectorComment\ReadService as CommentsService;
-use Edutiek\AssessmentService\Task\Data\CorrectorComment;
+use Edutiek\AssessmentService\Task\CorrectorComment\CorrectorCommentInfo;
+use Edutiek\AssessmentService\Task\CorrectorComment\InfoService as CommentsService;
 
 readonly class CorrectionProvider implements PdfPartProvider
 {
@@ -35,7 +35,6 @@ readonly class CorrectionProvider implements PdfPartProvider
         private PdfProcessing $pdf_processing,
         private LanguageService $language,
         private CorrectionSettingsReadService $settings_service,
-        private AssignmentsService $assignments,
         private CommentsService $comments,
     ) {
     }
@@ -85,7 +84,6 @@ readonly class CorrectionProvider implements PdfPartProvider
                     true
                 ),
             ];
-
         }
     }
 
@@ -103,54 +101,36 @@ readonly class CorrectionProvider implements PdfPartProvider
             return null;
         }
 
-        $comments = [];
-        foreach ($this->assignments->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
-            if ($key === self::KEY_COMMENTS_ALL
-                || $key === self::KEY_CORRECTOR_1 && $assignment->getPosition()->value === 0
-                || $key === self::KEY_CORRECTOR_2 && $assignment->getPosition()->value === 1
-                || $key === self::KEY_CORRECTOR_3 && $assignment->getPosition()->value === 2
-            ) {
-                $comments = array_merge(
-                    $comments,
-                    $this->comments->allByIds(
-                        $assignment->getTaskId(),
-                        $assignment->getWriterId(),
-                        $assignment->getCorrectorId()
-                    )
-                );
-            }
-        }
+        $positions = match($key) {
+            self::KEY_COMMENTS_ALL => [GradingPosition::FIRST, GradingPosition::SECOND, GradingPosition::STITCH],
+            self::KEY_CORRECTOR_1 => [GradingPosition::FIRST],
+            self::KEY_CORRECTOR_2 => [GradingPosition::SECOND],
+            self::KEY_CORRECTOR_3 => [GradingPosition::STITCH],
+        };
+
+        $infos = $this->comments->getInfos($task_id, $writer_id, $positions);
 
         if ($essay->hasPdfVersion()) {
-            return $this->renderFromImages($essay, $comments, $anonymous_corrector, $options);
+            return $this->renderFromImages($essay, $infos, $anonymous_corrector, $options);
         } else {
-            return $this->renderFromText($essay, $comments, $anonymous_corrector, $options);
+            return $this->renderFromText($essay, $infos, $anonymous_corrector, $options);
         }
     }
 
     /**
-     * @param CorrectorComment[] $comments
+     * @param CorrectorCommentInfo[] $infos
      */
-    private function renderFromText(Essay $essay, array $comments, bool $anonymous_corrector, Options $options): ?string
+    private function renderFromText(Essay $essay, array $infos, bool $anonymous_corrector, Options $options): ?string
     {
-        $html = $this->html_processing->getCorrectedTextForPdf($essay, $comments);
+        $html = $this->html_processing->getCorrectedTextForPdf($essay, $infos);
         return $this->pdf_processing->create($html, $options);
     }
 
     /**
-     * @param CorrectorComment[] $comments
+     * @param CorrectorCommentInfo[] $infos
      */
-    private function renderFromImages(Essay $essay, array $comments, bool $anonymous_corrector, Options $options): ?string
+    private function renderFromImages(Essay $essay, array $infos, bool $anonymous_corrector, Options $options): ?string
     {
         return null;
     }
-
-
-    private function getTitle(string $key, bool $anonymous_corrector): string
-    {
-        return '';
-    }
-
-
-
 }

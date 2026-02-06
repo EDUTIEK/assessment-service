@@ -145,7 +145,8 @@ class Internal
         return $this->instances[CorrectorCommentService::class][$ass_id][$user_id] = new CorrectorCommentService(
             $ass_id,
             $user_id,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->language($user_id),
         );
     }
 

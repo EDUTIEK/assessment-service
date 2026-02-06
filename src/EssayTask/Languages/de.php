@@ -28,5 +28,7 @@ return [
     'pdf_part_comments_corrector1' => 'Abgabe mit Markierungen/Kommentaren (Erstkorrektor)',
     'pdf_part_comments_corrector2' => 'Abgabe mit Markierungen/Kommentaren (Zweitkorrektor)',
     'pdf_part_comments_corrector3' => 'Abgabe mit Markierungen/Kommentaren (Stichentscheider)',
-    'pdf_part_comments_all_correctors' => 'Abgabe mit allen Markierungen/Kommentaren'
+    'pdf_part_comments_all_correctors' => 'Abgabe mit allen Markierungen/Kommentaren',
+    '1_point' => '1 Punkt',
+    'x_points' => '%s Punkte'
 ];

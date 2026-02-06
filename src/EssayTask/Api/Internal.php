@@ -107,7 +107,6 @@ class Internal
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->language($user_id),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings(),
-            $this->dependencies->taskApi($ass_id, $user_id)->correctorAssignments(),
             $this->dependencies->taskApi($ass_id, $user_id)->correctorComments()
         );
     }
@@ -154,9 +153,10 @@ class Internal
     {
         return $this->instances[HtmlService::class][$ass_id][$user_id] ??= new HtmlService(
             $this->writingSettings($ass_id)->get(),
-            $this->dependencies->taskApi($ass_id, $user_id)->correctionSettings()->get(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
             $this->dependencies->taskApi($ass_id, $user_id)->correctorComments(),
-            $this->dependencies->systemApi()->htmlProcessing()
+            $this->dependencies->systemApi()->htmlProcessing(),
+            $this->language($user_id),
         );
     }
 
