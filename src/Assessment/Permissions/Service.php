@@ -113,7 +113,6 @@ class Service implements ReadService
 
     public function canViewWriterStatistics(): bool
     {
-        return true;
         return $this->canViewResult() && $this->orga_settings->getStatisticsAvailable();
     }
 
