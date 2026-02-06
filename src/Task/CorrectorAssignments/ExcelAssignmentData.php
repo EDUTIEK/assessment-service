@@ -14,8 +14,8 @@ use Edutiek\AssessmentService\Task\Data\Settings;
 use Edutiek\AssessmentService\Assessment\Data\Location;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
-use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorService;
-use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
+use Edutiek\AssessmentService\Assessment\Corrector\FullService as CorrectorService;
+use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
 use Edutiek\AssessmentService\Assessment\Location\ReadService as LocationService;
 use Edutiek\AssessmentService\System\Spreadsheet\FullService as SpreadsheetService;
 
@@ -66,15 +66,15 @@ class ExcelAssignmentData
         private CorrectionSettings $correction_settings,
         private OrgaSettings $orga_settings,
         array $tasks,
-        CorrectorService $corrector_service,
-        WriterService $writer_service,
+        private CorrectorService $corrector_service,
+        private WriterService $writer_service,
         CorrectorAssignmentService $corrector_assignment_service,
         LocationService $location_service,
-        UserService $user_service,
+        private UserService $user_service,
         private readonly LanguageService $lng,
     ) {
         $this->multi_task = $this->orga_settings->getMultiTasks();
-        $this->needed_correctors = $this->correction_settings->getRequiredCorrectors();
+        $this->needed_correctors = $this->correction_settings->getRequiredCorrectors() + ($this->correction_settings->isStitchPossible() ? 1 : 0);
 
         foreach ($writer_service->all() as $writer) {
             $this->writers[$writer->getId()] = $writer;
@@ -193,7 +193,7 @@ class ExcelAssignmentData
                 $user_data->getEmail(),
                 $w->getPseudonym(),
                 $location?->getTitle() ?? "",
-                $w->getWritingAuthorized()?->format("dd/mm/yyyy hh:mm") ?? "",
+                $w->getWritingAuthorized()?->format("d/m/Y H:i") ?? "",
             ];
             //Target formular for dropdown list.
             //$std_value = '=\'' . $this->lng->txt('corrector') . '\'!$A$2:$A$' . (count($this->correctors) + 1);;
@@ -232,13 +232,28 @@ class ExcelAssignmentData
     {
         $first = true;
         $writer_login_index = 0;
-        $corrector_login_index = 7;
+        $corrector_login_index = [];
         $error = false;
         $first_task_id = $this->tasks[array_key_first($this->tasks)]?->getTaskId() ?? 0;
         $writer_assignments = [];
 
         foreach ($data as $row_id => $row) {
             if ($first) {
+                $writer_login_index = $this->findKey($row, fn ($x) => $x === $this->lng->txt('login') || $x === "Login"); // Login for backwards compatibility
+                if ($this->multi_task) {
+                    foreach ($this->tasks as $task) {
+                        $corrector_login_index[$task->getTitle()] = $this->findKey($row, fn ($x) => $x === $task->getTitle());
+                    }
+                } else {
+                    foreach (range(0, $this->needed_correctors - 1) as $pos) {
+                        $corrector_login_index[$pos] = $this->findKey(
+                            $row,
+                            fn ($x) => $x === $this->lng->txt('corrector') . ' ' . ($pos + 1) ||
+                                       $x === 'Corrector ' . ($pos + 1)// Corrector for backwards compatibility
+                        );
+                    }
+                }
+
                 $first = false;
                 continue;
             }
@@ -252,32 +267,29 @@ class ExcelAssignmentData
 
             $assignments = [];
             if ($this->multi_task) {
-                $i = 0;
                 foreach ($this->tasks as $task) {
-                    //Could be matched by header title, but assuming no task was added or removed is good enough
-                    $login = $row[$corrector_login_index+$i] ?? "";
+                    $login = $row[$corrector_login_index[$task->getTitle()]] ?? "";
                     $corrector_id = $this->getCorrectorByLogin($login)?->getId();
 
                     if (!empty($login) && $corrector_id === null) {
                         $this->errors[] = ["corrector_not_found_task", [$row_id+1, $login, $task->getTitle()]];
                         continue;
-                    } elseif ($corrector_id === null) {
-                        continue;
+                    } elseif (empty($login)) {
+                        $corrector_id = Service::BLANK_CORRECTOR_ASSIGNMENT;
                     }
-                    $assignments[] = [$corrector_id, $i, $task->getTaskId(), $row_id];
-                    $i++;
+                    $assignments[] = [$corrector_id, 0, $task->getTaskId(), $row_id];
                 }
 
             } else {
                 foreach (range(0, $this->needed_correctors - 1) as $pos) {
-                    $login = $row[$corrector_login_index + $pos] ?? "";
+                    $login = $row[$corrector_login_index[$pos]] ?? "";
                     $corrector_id = $this->getCorrectorByLogin($login)?->getId();
 
                     if (!empty($login) && $corrector_id === null) {
                         $this->errors[] = ["corrector_not_found_pos", [$row_id+1, $login, $pos + 1]];
                         continue;
-                    } elseif ($corrector_id === null) {
-                        continue;
+                    } elseif (empty($login)) {
+                        $corrector_id = Service::BLANK_CORRECTOR_ASSIGNMENT;
                     }
 
                     $assignments[] = [$corrector_id, $pos, $first_task_id, $row_id];
@@ -304,22 +316,72 @@ class ExcelAssignmentData
         return $this->needed_correctors;
     }
 
+    private function getUserByLogin(string $login): ?UserData
+    {
+        $user_data =  $this->users_by_login[$login] ?? null;
+
+        if ($user_data === null) {
+            $user_id = $this->user_service->getUserIdByLogin($login);
+            if ($user_id !== null) {
+                $user_data = $this->user_service->getUser($user_id);
+                $this->users_by_login[$login] = $user_data;
+                $this->users_by_id[$user_id] = $user_data;
+            }
+        }
+        return $user_data;
+    }
+
     private function getCorrectorByLogin(string $login): ?Corrector
     {
-        $user_data = $this->users_by_login[$login] ?? null;
+        $user_data = $this->getUserByLogin($login);
         if ($user_data === null) {
             return null;
         }
-        return $this->correctors_by_user[$user_data->getId()] ?? null;
+        $corrector = $this->correctors_by_user[$user_data->getId()] ?? null;
+
+        if ($corrector == null) {
+            $corrector = $this->corrector_service->getByUserId($user_data->getId());
+            if ($corrector !== null) {
+                $this->correctors_by_user[$user_data->getId()] = $corrector;
+                $this->correctors[$corrector->getId()] = $corrector;
+            }
+        }
+        return $corrector;
     }
 
     private function getWriterByLogin(string $login): ?Writer
     {
-        $user_data = $this->users_by_login[$login] ?? null;
+        $user_data = $this->getUserByLogin($login);
         if ($user_data === null) {
             return null;
         }
-        return $this->writers_by_user[$user_data->getId()] ?? null;
+        $writer = $this->writers_by_user[$user_data->getId()] ?? null;
+
+        if ($writer == null) {
+            $writer = $this->writer_service->getByUserId($user_data->getId());
+            if ($writer !== null) {
+                $this->writers_by_user[$user_data->getId()] = $writer;
+                $this->writers[$writer->getId()] = $writer;
+            }
+        }
+        return $writer;
+    }
+
+    /**
+     * Only needed because array_find_key is not available blow PHP 8.4
+     *
+     * @param array    $array
+     * @param callable $callback
+     * @return mixed
+     */
+    private function findKey(array $array, callable $callback): mixed
+    {
+        foreach ($array as $key => $value) {
+            if ($callback($value)) {
+                return $key;
+            }
+        }
+        return null;
     }
 
 }

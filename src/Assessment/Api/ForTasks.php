@@ -7,10 +7,10 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as AssessmentGradingService;
 use Edutiek\AssessmentService\Assessment\CorrectionProcess\FullService as CorrectionProcessService;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
-use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorReadService;
+use Edutiek\AssessmentService\Assessment\Corrector\FullService as CorrectorService;
 use Edutiek\AssessmentService\Assessment\LogEntry\TasksService as LogEntryTasksService;
 use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
-use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
+use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
 use Edutiek\AssessmentService\Assessment\Location\ReadService as LocationService;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\ReadService as OrgaSettingsService;
@@ -25,12 +25,12 @@ readonly class ForTasks
     ) {
     }
 
-    public function writer(): WriterReadService
+    public function writer(): WriterService
     {
         return $this->internal->writer($this->ass_id, $this->user_id);
     }
 
-    public function corrector(): CorrectorReadService
+    public function corrector(): CorrectorService
     {
         return $this->internal->corrector($this->ass_id, $this->user_id);
     }
