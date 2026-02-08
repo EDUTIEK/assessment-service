@@ -633,7 +633,9 @@ class CorrectorBridge implements AppCorrectorBridge
             'require_other_revision' => $data['require_other_revision'] ?? null,
             'last_change' => $data['last_change'] ?? null,
         ], $summary, CorrectorSummary::class);
-        $this->entity->secure($summary, CorrectorSummary::class);
+
+        // todo: find a better way to secure the summary
+        // $this->entity->secure($summary, CorrectorSummary::class);
 
         if ($status = GradingStatus::tryFrom($data['status'] ?? '')) {
             $summary->setGradingStatus($status, $this->user_id);
