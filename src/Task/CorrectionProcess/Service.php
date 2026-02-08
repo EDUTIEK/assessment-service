@@ -14,7 +14,7 @@ use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
-use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as SummaryService;
+use Edutiek\AssessmentService\Task\CorrectorSummary\ReadService as SummaryService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
@@ -97,23 +97,14 @@ readonly class Service implements FullService
                 $assignment->getWriterId(),
                 GradingPosition::FIRST
             );
-            $first_summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
-                $first?->getTaskId() ?? 0,
-                $first?->getWriterId() ?? 0,
-                $first?->getCorrectorId() ?? 0
-            );
-            if ($first_summary === null || !$first_summary->isAuthorized()) {
+            $first_summary = $this->summary_service->getForAssignment($first);
+            if (!$first_summary->isAuthorized()) {
                 return false;
             }
         }
 
-        $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
-            $assignment->getTaskId(),
-            $assignment->getWriterId(),
-            $assignment->getCorrectorId()
-        );
-
-        if ($summary === null || $summary->isAuthorized()) {
+        $summary = $this->summary_service->getForAssignment($assignment);
+        if ($summary->isAuthorized()) {
             return false;
         }
 
@@ -176,17 +167,8 @@ readonly class Service implements FullService
             return new Result(false, $this->language->txt('authorization_not_allowed'));
         }
 
-        $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
-            $assignment->getTaskId(),
-            $assignment->getWriterId(),
-            $assignment->getCorrectorId()
-        );
-        if ($summary === null) {
-            return new Result(false, $this->language->txt('summary_not_found'));
-        }
-
         // use clone to allow compare with a previous version
-        $summary = clone $summary;
+        $summary = clone $this->summary_service->getForAssignment($assignment);
         $summary->setGradingStatus(GradingStatus::AUTHORIZED, $this->user_id);
 
         return $this->checkAndSaveSummary($summary);
@@ -198,7 +180,7 @@ readonly class Service implements FullService
 
         if ($writer->getCorrectionStatus() === CorrectionStatus::STITCH ||
             $writer->isCorrectionFinalized() && $writer->getFinalizedFromStatus() === CorrectionStatus::STITCH) {
-            return new Result(false,$this->language->txt('authorization_not_removable'));
+            return new Result(false, $this->language->txt('authorization_not_removable'));
         }
 
         // remove authorizations
@@ -221,7 +203,7 @@ readonly class Service implements FullService
             return new Result(true);
         }
 
-        return new Result(false,$this->language->txt('authorizations_not_found'));
+        return new Result(false, $this->language->txt('authorizations_not_found'));
     }
 
     public function checkAndSaveSummary(CorrectorSummary $summary): Result
@@ -302,7 +284,7 @@ readonly class Service implements FullService
             return $result;
         }
 
-        $this->repos->correctorSummary()->save($summary);
+        $this->repos->correctorSummary()->save($summary->touch());
 
         if ($old->isAuthorized() && !$summary->isAuthorized() && !$summary->isRevised()) {
             $this->log_entry->addEntry(

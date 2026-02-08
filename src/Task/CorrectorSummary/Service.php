@@ -13,7 +13,7 @@ use Edutiek\AssessmentService\Task\Api\ApiException;
 use Edutiek\AssessmentService\Task\Checks\FullService as ChecksService;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 
-readonly class Service implements FullService, GradingProvider
+readonly class Service implements ReadService, GradingProvider
 {
     public function __construct(
         private ChecksService $checks,
@@ -57,11 +57,8 @@ readonly class Service implements FullService, GradingProvider
 
     public function getForAssignment(CorrectorAssignment $assignment): CorrectorSummary
     {
-        $summary = $this->oneForAssignment($assignment)
+        return $this->oneForAssignment($assignment)
             ?? $this->newForAssignment($assignment);
-
-        $this->repos->correctorSummary()->save($summary);
-        return $summary;
     }
 
     public function newForAssignment(CorrectorAssignment $assignment): CorrectorSummary

@@ -99,6 +99,8 @@ abstract class CorrectorSummary implements TaskEntity
             return $this;
         }
 
+        $now = new DateTimeImmutable();
+
         switch ($status) {
 
             // this handles a reset of the authorization
@@ -114,27 +116,32 @@ abstract class CorrectorSummary implements TaskEntity
                 break;
 
             case GradingStatus::PRE_GRADED:
-                $this->setPreGraded(new DateTimeImmutable());
+                $this->setPreGraded($now);
                 break;
 
             case GradingStatus::AUTHORIZED:
-                $this->setCorrectionAuthorized(new DateTimeImmutable());
+                $this->setCorrectionAuthorized($now);
                 $this->setCorrectionAuthorizedBy($user_id);
                 break;
 
             case GradingStatus::REVISED:
-                $this->setRevised(new DateTimeImmutable());
+                $this->setRevised($now);
                 break;
         }
 
-        $this->setLastChange(new DateTimeImmutable());
-        return $this;
+        return $this->setLastChange($now);
     }
 
-    /**
-     * The summary has been authorized
-     * @return bool
-     */
+    public function isComplete(): bool
+    {
+        return $this->getPoints() !== null && !(empty($this->getSummaryText() && empty($this->getSummaryPdf())));
+    }
+
+    public function isStarted(): bool
+    {
+        return $this->getLastChange() !== null;
+    }
+
     public function isAuthorized(): bool
     {
         return $this->getCorrectionAuthorized() !== null;
@@ -143,5 +150,11 @@ abstract class CorrectorSummary implements TaskEntity
     public function isRevised(): bool
     {
         return $this->getRevised() !== null;
+    }
+
+    public function touch(): self
+    {
+        $this->setLastChange(new DateTimeImmutable());
+        return $this;
     }
 }

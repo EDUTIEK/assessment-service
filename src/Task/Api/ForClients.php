@@ -9,7 +9,7 @@ use Edutiek\AssessmentService\Task\AssessmentStatus\FullService as StatusFullSer
 use Edutiek\AssessmentService\Task\CorrectionProcess\FullService as CorrectionProcessFullService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsFullService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as CorrectorAssignmentsFullService;
-use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as CorrectorSummaryFullService;
+use Edutiek\AssessmentService\Task\CorrectorSummary\ReadService as CorrectorSummaryFullService;
 use Edutiek\AssessmentService\Task\CorrectorTemplate\FullService as CorrectorTemplateFullService;
 use Edutiek\AssessmentService\Task\Format\FullService as FormatFullService;
 use Edutiek\AssessmentService\Task\RatingCriterion\FullService as RatingCriterionFullService;

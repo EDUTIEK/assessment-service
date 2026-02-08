@@ -134,6 +134,7 @@ class Internal
             $this->correctionSettings($ass_id, $user_id),
             $this->correctorAssignments($ass_id, $user_id),
             $this->correctorSummary($ass_id, $user_id),
+            $this->correctorTemplate($ass_id, $user_id),
             $this->correctionProcess($ass_id, $user_id),
             $this->language($user_id),
             $this->dependencies->systemApi()->user()

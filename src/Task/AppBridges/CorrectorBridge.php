@@ -13,7 +13,6 @@ use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService;
-use Edutiek\AssessmentService\System\ConstraintHandling\ResultStatus;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
@@ -21,7 +20,8 @@ use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentService;
-use Edutiek\AssessmentService\Task\CorrectorSummary\FullService as SummaryService;
+use Edutiek\AssessmentService\Task\CorrectorSummary\ReadService as SummaryService;
+use Edutiek\AssessmentService\Task\CorrectorTemplate\FullService as TemplateService;
 use Edutiek\AssessmentService\Task\Data\CorrectionSettings as TaskCorrectionSettings;
 use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 use Edutiek\AssessmentService\Task\Data\CorrectorPoints;
@@ -67,6 +67,7 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly CorrectionSettingsService $correction_settings_service,
         private readonly AssignmentService $assignment_service,
         private readonly SummaryService $summary_service,
+        private readonly TemplateService $template_service,
         private readonly CorrectionProcessService $process_service,
         private readonly Language $language,
         private readonly UserReadService $user_service,
@@ -167,6 +168,17 @@ class CorrectorBridge implements AppCorrectorBridge
                 'instructions' => $task->getInstructions(),
                 'solution' => $task->getSolution(),
             ]);
+        }
+
+        $data['Templates'] = [];
+        if ($this->corrector !== null) {
+            foreach ($task_ids as $task_id) {
+                $template = $this->template_service->getByTaskIdAndCorrectorId($task_id, $this->corrector->getId());
+                $data['Templates'][] = $this->entity->arrayToPrimitives([
+                    'task_id' => $template->getTaskId(),
+                    'content' => $template->getContent(),
+                ]);
+            }
         }
 
         $data['Resources'] = [];
@@ -270,8 +282,9 @@ class CorrectorBridge implements AppCorrectorBridge
 
         foreach ($assignments as $assignment) {
 
-            if ($this->is_admin || $this->corrector->getId() === $assignment->getCorrectorId()
-                || $this->assessment_settings->getMutualVisibility()) {
+            $is_corrector = $this->corrector?->getId() === $assignment->getCorrectorId();
+
+            if ($this->is_admin || $is_corrector || $this->assessment_settings->getMutualVisibility()) {
 
                 $corrector = $this->corrector_service->oneById($assignment->getCorrectorId());
 
@@ -291,18 +304,23 @@ class CorrectorBridge implements AppCorrectorBridge
                        'position' => $assignment->getPosition()->value,
                     ]);
 
-                    // todo
-                    if ($assignment->getCorrectorId() === $this->corrector?->getId()) {
-                        $summary = $this->summary_service->getForAssignment($assignment);
+                    $summary = $this->summary_service->getForAssignment($assignment);
+
+                    // add a template if the correction has not yet started
+                    if ($is_corrector && !$summary->isStarted() && empty($summary->getSummaryText())) {
+                        $template = $this->template_service->getByTaskIdAndCorrectorId(
+                            $assignment->getTaskId(),
+                            $assignment->getCorrectorId()
+                        );
+                        $summary->setSummaryText($template->getContent());
+                    }
+
+                    // Content of other corrections should only be shown if they are authorized
+                    if ($is_corrector || $summary->isAuthorized()) {
                         $add_details = true;
                     } else {
-                        $summary = $this->summary_service->oneForAssignment($assignment);
-                        if ($summary?->isAuthorized()) {
-                            $add_details = true;
-                        } else {
-                            $summary = $this->summary_service->newForAssignment($assignment);
-                            $add_details = false;
-                        }
+                        $add_details = false;
+                        $summary = $this->summary_service->newForAssignment($assignment);
                     }
 
                     $data['Summaries'][] = $this->entity->arrayToPrimitives([
@@ -326,6 +344,7 @@ class CorrectorBridge implements AppCorrectorBridge
                             $assignment->getTaskId(),
                             $assignment->getCorrectorId()
                         );
+
                         foreach ($criteria as $criterion) {
                             $data['Criteria'][] = $this->entity->arrayToPrimitives([
                                 'id' => $criterion->getId(),
@@ -725,7 +744,7 @@ class CorrectorBridge implements AppCorrectorBridge
             if ($info) {
                 $this->storage->deleteFile($summary->getSummaryPdf());
                 $summary->setSummaryPdf(($info->getId()));
-                $this->repos->correctorSummary()->save($summary);
+                $this->repos->correctorSummary()->save($summary->touch());
                 return $info->getId();
             }
             return $summary->getSummaryPdf();
