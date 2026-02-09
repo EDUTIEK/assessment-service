@@ -10,4 +10,5 @@ enum FormattingOptions: string
     case MINIMAL = 'minimal';
     case MEDIUM = 'medium';
     case FULL = 'full';
+    case EXTENDED = 'extended';
 }

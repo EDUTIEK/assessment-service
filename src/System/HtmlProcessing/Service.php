@@ -11,6 +11,16 @@ use Mustache_Engine;
  */
 class Service implements FullService
 {
+    private static array $allowedStyles = [
+        'background-color',
+        'border-color',
+        'border-collapse',
+        'border-width',
+        'border-style',
+        'color',
+        'text-align'
+    ];
+
     public static int $paraCounter = 0;
     public static int $wordCounter = 0;
     public static int $h1Counter = 0;
@@ -50,7 +60,10 @@ class Service implements FullService
 
     public function getContentForPdf(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
     {
-        $html = $this->getContentForMarking($html, $add_paragraph_numbers, $headline_scheme);
+        $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', 0);
+
+        // todo: apply marking
+
         return $this->getContentStyles($headline_scheme) . $this->replaceCustomMarkup($html);
     }
 
@@ -125,7 +138,7 @@ class Service implements FullService
 
             return $xml;
         } catch (\Throwable $e) {
-            return 'HTML PROCESSING ERROR:<br>' . $e->getMessage() . '<hr>' . $html;
+            return 'HTML PROCESSING ERROR:<br>' . $e->getMessage() . '<br><br>' . $html;
         }
     }
 
@@ -343,5 +356,27 @@ class Service implements FullService
         }
 
         return $root;
+    }
+
+    public static function filterStyle(string $style): string
+    {
+        $declarations = array_filter(array_map('trim', explode(';', $style)));
+
+        $kept = [];
+        foreach ($declarations as $declaration) {
+            // Property vom Wert trennen
+            $parts = explode(':', $declaration, 2);
+            if (count($parts) !== 2) {
+                continue;
+            }
+
+            $property = strtolower(trim($parts[0]));
+
+            if (in_array($property, self::$allowedStyles, true)) {
+                $kept[] = trim($parts[0]) . ': ' . trim($parts[1]);
+            }
+        }
+
+        return implode('; ', $kept);
     }
 }
