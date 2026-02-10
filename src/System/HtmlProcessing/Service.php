@@ -125,20 +125,17 @@ class Service implements FullService
             $xslt->setParameter('', 'service_version', $service_version);
             $xslt->setParameter('', 'add_paragraph_numbers', (int) $add_paragraph_numbers);
 
-            // get the html document
+            // fault tolerant html parsing
+            // add xml encoding to propery support asian characters
             $dom_doc = new \DOMDocument('1.0', 'UTF-8');
-            $dom_doc->loadHTML('<?xml encoding="UTF-8"?' . '>' . $html);
+            $dom_doc->loadHTML('<?xml encoding="UTF-8"?' . '>' . $html, LIBXML_NOWARNING | LIBXML_NOERROR);
 
-            //$xml = $xslt->transformToXml($dom_doc);
             $result = $xslt->transformToDoc($dom_doc);
-            $xml = $result->saveHTML();
+            $processed = $result->saveHTML();
 
-            $xml = preg_replace('/<\?xml.*\?>/', '', $xml);
-            $xml = str_replace(' xmlns:php="http://php.net/xsl"', '', $xml);
-
-            return $xml;
+            return $processed;
         } catch (\Throwable $e) {
-            return 'HTML PROCESSING ERROR:<br>' . $e->getMessage() . '<br><br>' . $html;
+            return 'HTML PROCESSING ERROR:<p>' . $e->getMessage() . '</p>' . $html;
         }
     }
 
