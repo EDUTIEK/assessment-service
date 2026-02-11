@@ -119,14 +119,20 @@ margin: 0px;
 {
     page-break-after: always;
 }
+
+html {
+    margin: 0;
+    margin-left: ' . $options->getLeftMargin() . 'mm;
+    margin-right: ' . $options->getRightMargin() . 'mm;
+
+}
+
 body
 {
     font-family: ' . $this->main_font . ', sc, tc, Math;
     font-size: ' . $this->main_font_size . ';
     margin: 0;
     margin-top: ' . $options->getTopMargin() . 'mm;
-    margin-left: ' . $options->getLeftMargin() . 'mm;
-    margin-right: ' . $options->getRightMargin() . 'mm;
     margin-bottom: ' . $options->getBottomMargin() . 'mm;
 }
 
@@ -145,10 +151,7 @@ header
     font-size: ' . $this->header_font_size . ';
     position: fixed;
     top: ' . $options->getHeaderMargin() . 'mm;
-    left: ' . $options->getLeftMargin() . 'mm;
-    right: ' . $options->getRightMargin() . 'mm;
     transform: translateY(-100%);
-    right: 0;
 }';
     }
 

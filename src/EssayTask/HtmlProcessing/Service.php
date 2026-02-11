@@ -75,16 +75,18 @@ class Service implements FullService
             $this->writing_settings->getHeadlineScheme()
         );
 
-        $html = $this->processor->getContentStyles($this->writing_settings->getHeadlineScheme())
-            . "<style>\n" . file_get_contents(__DIR__ . '/styles/correction.css') . "\n</style>\n"
-            . $html;
-
         $html = $this->processor->processXslt(
             $this->processor->replaceCustomMarkup($html),
             __DIR__ . '/xsl/comments.xsl',
             $essay ? $essay->getServiceVersion() : 0,
             $this->writing_settings->getAddParagraphNumbers(),
         );
+
+        $html = $this->processor->getContentStyles(
+            $this->writing_settings->getAddParagraphNumbers(),
+            $this->writing_settings->getHeadlineScheme())
+            . "<style>\n" . file_get_contents(__DIR__ . '/styles/correction.css') . "\n</style>\n"
+            . $html;
 
         return $html;
     }

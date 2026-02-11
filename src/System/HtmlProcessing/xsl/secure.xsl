@@ -3,7 +3,7 @@
     <xsl:output method="xml" version="1.0" encoding="UTF-8"/>
     <xsl:param name="service_version" select="0"/>
     
-    <!--  Basic rule: copy nothing -->
+    <!-- basic rule: copy nothing -->
     <xsl:template match="*|@*">
     </xsl:template>
 
@@ -11,33 +11,24 @@
         <xsl:apply-templates select="node()" />
     </xsl:template>
 
-    <!-- copy only allowed elements -->
-    <xsl:template match="p|br|strong|em|u|ol|ul|li|h1|h2|h3|h4|h5|h6|pre|code|blockquote|span|sub|sup|table|thead|tbody|th|tr|td|hr">
+    <!-- copy and process allowed elements -->
+    <xsl:template match="blockquote|br|code|em|h1|h2|h3|h4|h5|h6|hr|li|ol|p|pre|span|strong|s|sub|sup|table|tbody|td|th|thead|tr|u|ul">
         <xsl:copy>
             <xsl:apply-templates select="@*" />
             <xsl:apply-templates select="node()" />
         </xsl:copy>
-    </xsl:template>
-
-    <xsl:template match="br|code|h1|h2|h3|h4|h5|h6|p|ul|ol|li|p|pre|strong|span|sub|sup|em|u|table|thead|tbody|th|tr|td|hr|blockquote">
-        <xsl:copy>
-            <xsl:apply-templates select="@*" />
-            <xsl:apply-templates select="node()" />
-        </xsl:copy>
-    </xsl:template>
-
-    <!-- todo: pagebreaks are xomments -->
-
-    <!-- wrap words in word counter elements -->
-    <xsl:template match="@style">
-        <xsl:attribute name="style">
-            <xsl:value-of select="php:function('Edutiek\AssessmentService\System\HtmlProcessing\Service::filterStyle', string(.))" />
-        </xsl:attribute>
     </xsl:template>
 
     <!-- copy allowed attributes -->
     <xsl:template match="@border|@colspan|@rowspan">
         <xsl:copy></xsl:copy>
+    </xsl:template>
+
+    <!-- restrict style settings -->
+    <xsl:template match="@style">
+        <xsl:attribute name="style">
+            <xsl:value-of select="php:function('Edutiek\AssessmentService\System\HtmlProcessing\Service::filterStyle', string(.))" />
+        </xsl:attribute>
     </xsl:template>
 
 </xsl:stylesheet>

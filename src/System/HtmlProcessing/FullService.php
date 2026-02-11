@@ -19,7 +19,7 @@ interface FullService
     /**
      * Process HTML content (written text or instructions) for marking functions in the web apps
      * This will add the paragraph numbers and headline prefixes
-     * and split up all text to single word embedded in <w-p> elements.
+     * and split up all text to single words embedded in <w-p> elements.
      * - the 'w' attribute is the word number
      * - the 'p' attribute is the paragraph number
      */
@@ -28,7 +28,6 @@ interface FullService
         bool $add_paragraph_numbers,
         HeadlineScheme $headline_scheme
     ): string;
-
 
     /**
      * Process HTML content (written text or instructions) for inclusion in a PDF file
@@ -43,7 +42,7 @@ interface FullService
     /**
      * Get styles to be added to the HTML
      */
-    public function getContentStyles(HeadlineScheme $headline_scheme): string;
+    public function getContentStyles(bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string;
 
     /**
      * Get the XSLt Processor for an XSL file
@@ -59,9 +58,12 @@ interface FullService
     ): string;
 
     /**
-     * Replace markup added by the xslt processing with standard tags
-     * - special tables
-     * - word wrappers
+     * Replace the special <w-p> elements added in getContentForMarking() with standard <span> elements
      */
     public function replaceCustomMarkup(string $html): string;
+
+    /**
+     * Remove the special <w-p> elements added in getContentForMarking()
+     */
+    public function removeCustomMarkup(string $html): string;
 }

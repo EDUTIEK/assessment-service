@@ -13,12 +13,9 @@ class Service implements FullService
 {
     private static array $allowedStyles = [
         'background-color',
-        'border-color',
-        'border-collapse',
-        'border-width',
-        'border-style',
         'color',
-        'text-align'
+        'text-align',
+        'padding-left'
     ];
 
     public static int $paraCounter = 0;
@@ -48,10 +45,7 @@ class Service implements FullService
     public function getContentForMarking(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
     {
         $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', 0);
-        $html = $this->processXslt(
-            $html,
-            __DIR__ . '/xsl/numbers.xsl',
-            0,
+        $html = $this->processXslt($html, __DIR__ . '/xsl/numbers.xsl', 0,
             $add_paragraph_numbers,
             $headline_scheme
         );
@@ -61,13 +55,13 @@ class Service implements FullService
     public function getContentForPdf(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
     {
         $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', 0);
+        $html = $this->getContentForMarking($html, $add_paragraph_numbers, $headline_scheme);
+        $html = $this->getContentStyles($add_paragraph_numbers, $headline_scheme) . $this->removeCustomMarkup($html);
 
-        // todo: apply marking
-
-        return $this->getContentStyles($headline_scheme) . $this->replaceCustomMarkup($html);
+        return $html;
     }
 
-    public function getContentStyles(HeadlineScheme $headline_scheme): string
+    public function getContentStyles(bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
     {
         $styles = file_get_contents(__DIR__ . '/styles/content.css');
         if ($headline_scheme === HeadlineScheme::THREE) {
@@ -75,16 +69,24 @@ class Service implements FullService
             // The numbers of the other headline schemes are creted in the XSLT processor
             $styles .= "\n" . file_get_contents(__DIR__ . '/styles/headlines-three.css');
         }
+        if ($add_paragraph_numbers) {
+            // this adds a margin to the body and moves the paragraph number outside beneath the following block
+            $styles .= "\n" . file_get_contents(__DIR__ . '/styles/numbers.css');
+        }
         return "<style>\n$styles</style>\n";
     }
 
     public function replaceCustomMarkup(string $html): string
     {
         $html = preg_replace('/<w-p w="([0-9]+)" p="([0-9]+)">/', '<span data-w="$1" data-p="$2">', $html);
-        $html = str_replace('xlas-table', 'table', $html);
-        $html = str_replace('xlas-tr', 'tr', $html);
-        $html = str_replace('xlas-td', 'td', $html);
         $html = str_replace('</w-p>', '</span>', $html);
+        return $html;
+    }
+
+    public function removeCustomMarkup(string $html): string
+    {
+        $html = preg_replace('/<w-p w="([0-9]+)" p="([0-9]+)">/', '', $html);
+        $html = str_replace('</w-p>', '', $html);
         return $html;
     }
 
@@ -112,28 +114,28 @@ class Service implements FullService
                 return '';
             }
 
-            // get the xslt document
+            // get the XSLT document
             // set the URI to allow document() within the XSL file
             $xslt_doc = new \DOMDocument('1.0', 'UTF-8');
             $xslt_doc->loadXML(file_get_contents($xslt_file));
             $xslt_doc->documentURI = $xslt_file;
 
-            // get the xslt processor
+            // get the XSLT processor
             $xslt = new \XSLTProcessor();
             $xslt->registerPhpFunctions();
             $xslt->importStyleSheet($xslt_doc);
             $xslt->setParameter('', 'service_version', $service_version);
             $xslt->setParameter('', 'add_paragraph_numbers', (int) $add_paragraph_numbers);
 
-            // fault tolerant html parsing
-            // add xml encoding to propery support asian characters
+            // fault-tolerant HTML parsing
+            // add XML encoding to properly support asian characters
             $dom_doc = new \DOMDocument('1.0', 'UTF-8');
             $dom_doc->loadHTML('<?xml encoding="UTF-8"?' . '>' . $html, LIBXML_NOWARNING | LIBXML_NOERROR);
 
             $result = $xslt->transformToDoc($dom_doc);
             $processed = $result->saveHTML();
 
-            return $processed;
+            return str_replace('<?xml encoding="UTF-8"?>', '', $processed);
         } catch (\Throwable $e) {
             return 'HTML PROCESSING ERROR:<p>' . $e->getMessage() . '</p>' . $html;
         }
