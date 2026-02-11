@@ -58,6 +58,9 @@ class Service implements FullService
         $html = $this->getContentForMarking($html, $add_paragraph_numbers, $headline_scheme);
         $html = $this->getContentStyles($add_paragraph_numbers, $headline_scheme) . $this->removeCustomMarkup($html);
 
+        echo $html;
+        exit;
+
         return $html;
     }
 
@@ -73,7 +76,7 @@ class Service implements FullService
             // this adds a margin to the body and moves the paragraph number outside beneath the following block
             $styles .= "\n" . file_get_contents(__DIR__ . '/styles/numbers.css');
         }
-        return "<style>\n$styles</style>\n";
+        return "<style>\n$styles\n</style>\n";
     }
 
     public function replaceCustomMarkup(string $html): string

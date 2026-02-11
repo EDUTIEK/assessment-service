@@ -3,10 +3,11 @@
     <xsl:output method="xml" version="1.0" encoding="UTF-8"/>
     <xsl:param name="service_version" select="0"/>
     
-    <!-- basic rule: copy nothing -->
+    <!-- default rule: copy nothing -->
     <xsl:template match="*|@*">
     </xsl:template>
 
+    <!-- process children of html and body -->
     <xsl:template match="html|body">
         <xsl:apply-templates select="node()" />
     </xsl:template>
@@ -14,8 +15,7 @@
     <!-- copy and process allowed elements -->
     <xsl:template match="blockquote|br|code|em|h1|h2|h3|h4|h5|h6|hr|li|ol|p|pre|span|strong|s|sub|sup|table|tbody|td|th|thead|tr|u|ul">
         <xsl:copy>
-            <xsl:apply-templates select="@*" />
-            <xsl:apply-templates select="node()" />
+            <xsl:apply-templates select="@*|node()" />
         </xsl:copy>
     </xsl:template>
 

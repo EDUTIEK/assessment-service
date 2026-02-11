@@ -4,42 +4,43 @@
     <xsl:param name="service_version" select="0"/>
     <xsl:param name="add_paragraph_numbers" select="0"/>
     
-    <!--  Basic rule: copy everything not specified and process the children -->
+    <!--  aefault rule: copy everything not specified and process the children -->
     <xsl:template match="@*|node()">
         <xsl:copy><xsl:apply-templates select="@*|node()" /></xsl:copy>
     </xsl:template>
 
-    <!-- don't copy the html element -->
+    <!-- omit the html element-->
     <xsl:template match="html">
+        <xsl:apply-templates select="node()" />
+    </xsl:template>
+
+    <!-- remove the head -->
+    <xsl:template match="head">
+    </xsl:template>
+
+    <!-- omit the body element, intit counter and process children -->
+    <xsl:template match="body">
         <xsl:variable name="counter" select="php:function('Edutiek\AssessmentService\System\HtmlProcessing\Service::initParaCounter')" />
         <xsl:apply-templates select="node()" />
     </xsl:template>
 
-    <!--  Add paragraph numbers to all direct children of the body -->
+    <!--  add paragraph numbers to all direct children of the body -->
     <xsl:template match="body/*">
         <xsl:variable name="counter" select="php:function('Edutiek\AssessmentService\System\HtmlProcessing\Service::nextParaCounter')" />
         <xsl:variable name="prefix" select="php:function('Edutiek\AssessmentService\System\HtmlProcessing\Service::nextHeadlinePrefix', local-name())" />
-        <xsl:text>&#10;</xsl:text>
         <!-- add a visible paragraph counter -->
-        <xsl:if test="$add_paragraph_numbers = 1">
+        <xsl:if test="$add_paragraph_numbers = 1 and local-name() != 'hr' ">
             <div class="xlas-counter">
                 <xsl:attribute name="data-p">
                     <xsl:value-of select="$counter" />
                 </xsl:attribute>
                 <span class="sr-only">Absatz</span>
-                <xsl:choose>
-                    <xsl:when test="$service_version >= 20231218">
-                        <!-- from this version on paragraph numbers should be included to the word counter for comment markup  -->
-                        <xsl:call-template name="words">
-                            <xsl:with-param name="text">
-                                <xsl:value-of select="$counter" />
-                            </xsl:with-param>
-                        </xsl:call-template>
-                    </xsl:when>
-                    <xsl:otherwise>
+                <!-- paragraph numbers should be selectable -->
+                <xsl:call-template name="words">
+                    <xsl:with-param name="text">
                         <xsl:value-of select="$counter" />
-                    </xsl:otherwise>
-                </xsl:choose>
+                    </xsl:with-param>
+                </xsl:call-template>
             </div>
         </xsl:if>
 
@@ -50,7 +51,7 @@
                 <xsl:value-of select="$counter" />
             </xsl:attribute>
 
-            <!-- add a selectable prefix to the headline, according the headline scheme -->
+            <!-- add a selectable prefix to the headline, according to the headline scheme -->
             <xsl:if test="$prefix">
                 <xsl:call-template name="words">
                     <xsl:with-param name="text">
@@ -64,11 +65,7 @@
 
     </xsl:template>
 
-    <xsl:template match="span">
-        <xsl:copy><xsl:copy-of select="@*|node()" /></xsl:copy>
-    </xsl:template>
-
-    <!-- wrap words in word counter elements, use only test that has real content -->
+    <!-- apply words wrapping to text content -->
     <xsl:template match="text()[normalize-space()]">
         <xsl:call-template name="words">
             <xsl:with-param name="text">
@@ -77,6 +74,7 @@
         </xsl:call-template>
     </xsl:template>
 
+    <!-- function to wrap words in word counter elements for being selectable -->
     <xsl:template name="words">
         <xsl:param name="text" />
         <xsl:variable name="para" select="php:function('Edutiek\AssessmentService\System\HtmlProcessing\Service::currentParaCounter')" />
