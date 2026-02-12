@@ -62,26 +62,23 @@ class Service implements FullService
         $html = $this->removeCustomMarkup($html);
         $html = $this->addContentStyles($html, $add_paragraph_numbers, $headline_scheme);
 
-        //        echo $html; exit;
-
+        echo $html; exit;
         return $html;
     }
 
     public function addContentStyles(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
     {
-        $styles = [
-            file_get_contents(__DIR__ . '/styles/content.css'),
-            file_get_contents(__DIR__ . '/styles/headlines.css')
-        ];
+        $styles = [file_get_contents(__DIR__ . '/styles/content.css')];
         if ($add_paragraph_numbers) {
             // this adds a margin to the body and moves the paragraph number outside beneath the following block
             $styles[] = file_get_contents(__DIR__ . '/styles/numbers.css');
         }
 
-        $classes = [
-            'xlas-content',
-            $headline_scheme->class(),
-        ];
+        $classes = ['xlas-content'];
+        if ($headline_scheme == HeadlineScheme::THREE) {
+            // other schemes produce selectable prefixes
+            $classes[] = $headline_scheme->class();
+        }
 
         return sprintf(
             "<style>%s</style>\n" . '<div class="%s">' . "\n%s\n</div>",
