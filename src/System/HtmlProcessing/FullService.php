@@ -42,7 +42,7 @@ interface FullService
     /**
      * Get styles to be added to the HTML
      */
-    public function getContentStyles(bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string;
+    public function addContentStyles(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string;
 
     /**
      * Get the XSLt Processor for an XSL file

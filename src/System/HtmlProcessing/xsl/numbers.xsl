@@ -9,19 +9,13 @@
         <xsl:copy><xsl:apply-templates select="@*|node()" /></xsl:copy>
     </xsl:template>
 
-    <!-- omit the html element-->
-    <xsl:template match="html">
+    <!-- omit the html and body element-->
+    <xsl:template match="html|body">
         <xsl:apply-templates select="node()" />
     </xsl:template>
 
     <!-- remove the head -->
     <xsl:template match="head">
-    </xsl:template>
-
-    <!-- omit the body element, intit counter and process children -->
-    <xsl:template match="body">
-        <xsl:variable name="counter" select="php:function('Edutiek\AssessmentService\System\HtmlProcessing\Service::initParaCounter')" />
-        <xsl:apply-templates select="node()" />
     </xsl:template>
 
     <!--  add paragraph numbers to all direct children of the body -->

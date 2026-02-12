@@ -1,21 +1,21 @@
 /**
  * Style of written contents
+ * (font size in em needed for zoom on ReviewContentScreen)
  */
 
-body {
+.xlas-content {
     font-family: serif;
-    font-size: 10pt;
-    max-width: 60em;
+    font-size: 1rem;
     line-height: 150%;
     text-align: justify;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+.xlas-content h1,
+.xlas-content h2,
+.xlas-content h3,
+.xlas-content h4,
+.xlas-content h5,
+.xlas-content h6 {
     font-size: 1em;
     font-weight: bold;
     padding: 0;
@@ -24,53 +24,89 @@ h6 {
     min-height: 1.5em;
 }
 
-ol,
-ul {
+.xlas-content ol,
+.xlas-content ul {
     margin-left: 10px;
     margin-bottom: 20px;
 }
 
-li {
+.xlas-content li {
     margin-left: 20px;
     margin-bottom: 5px;
     min-height: 1.5em;
 }
 
-p,
-pre
-{
+.xlas-content p,
+.xlas-content pre {
     margin-top: 0;
     margin-bottom: 10px;
     min-height: 1.5em;
     text-align: justify;
 }
 
-pre {
+.xlas-content pre {
     max-width: 150mm;               /* dompdf needs a fixed value here */
     white-space: pre-wrap;          /* keep line breaks and break if needed */
     word-wrap: break-word;          /* legacy setting (older browsers) */
     overflow-wrap: break-word;      /* modern variant of word-wrap */
 }
 
-.sr-only {
-    display: none;
+.xlas-content {
+    counter-reset: h1 h2 h3 h4 h5 h6;
 }
 
-table {
+.xlas-content h1 {
+    counter-increment: h1;
+    counter-reset: h2 h3 h4 h5 h6;
+}
+
+.xlas-content h2 {
+    counter-increment: h2;
+    counter-reset: h3 h4 h5 h6;
+}
+
+.xlas-content h3 {
+    counter-increment: h3;
+    counter-reset: h4 h5 h6;
+}
+
+.xlas-content h4 {
+    counter-increment: h4;
+    counter-reset: h5 h6;
+}
+
+.xlas-content h5 {
+    counter-increment: h5;
+    counter-reset: h6;
+}
+
+.xlas-content h6 {
+    counter-increment: h6;
+}
+
+.xlas-content table {
     border-collapse: collapse;
     border: 1px solid gray;
     width: 100%;
     table-layout: fixed;
 }
 
-th, td {
+.xlas-content tr {
+    vertical-align: top;
+}
+
+.xlas-content td,
+.xlas-content th {
     border: 1px solid gray;
     min-width: 1em;
     min-height: 1em;
-    padding: 2mm;
+    padding: 5px;
 }
 
-hr {
+/**
+ * Pagebreak in printing
+ */
+.xlas-content hr {
     page-break-before: always;
     height: 0;
     width: 0;
@@ -78,8 +114,14 @@ hr {
     margin: 0;
 }
 
-span {
-    margin: 0;
-    padding: 0;
-    border: 0;
+/**
+ * Pagebreak in tiny
+ */
+.xlas-content .mce-pagebreak {
+    width: calc(100% + 40px);
+    height: 1px;
+    height: 20px;
+    background-color: #eeeeee;
+    border-top: 1px solid #ccc;
+    margin-left: -20px;
 }

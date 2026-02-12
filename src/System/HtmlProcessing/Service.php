@@ -45,7 +45,10 @@ class Service implements FullService
     public function getContentForMarking(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
     {
         $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', 0);
-        $html = $this->processXslt($html, __DIR__ . '/xsl/numbers.xsl', 0,
+        $html = $this->processXslt(
+            $html,
+            __DIR__ . '/xsl/numbers.xsl',
+            0,
             $add_paragraph_numbers,
             $headline_scheme
         );
@@ -56,27 +59,36 @@ class Service implements FullService
     {
         $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', 0);
         $html = $this->getContentForMarking($html, $add_paragraph_numbers, $headline_scheme);
-        $html = $this->getContentStyles($add_paragraph_numbers, $headline_scheme) . $this->removeCustomMarkup($html);
+        $html = $this->removeCustomMarkup($html);
+        $html = $this->addContentStyles($html, $add_paragraph_numbers, $headline_scheme);
 
-        echo $html;
-        exit;
+        //        echo $html; exit;
 
         return $html;
     }
 
-    public function getContentStyles(bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
+    public function addContentStyles(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
     {
-        $styles = file_get_contents(__DIR__ . '/styles/content.css');
-        if ($headline_scheme === HeadlineScheme::THREE) {
-            // This is the only headline scheme that needs a style, because headlines have different sizes
-            // The numbers of the other headline schemes are creted in the XSLT processor
-            $styles .= "\n" . file_get_contents(__DIR__ . '/styles/headlines-three.css');
-        }
+        $styles = [
+            file_get_contents(__DIR__ . '/styles/content.css'),
+            file_get_contents(__DIR__ . '/styles/headlines.css')
+        ];
         if ($add_paragraph_numbers) {
             // this adds a margin to the body and moves the paragraph number outside beneath the following block
-            $styles .= "\n" . file_get_contents(__DIR__ . '/styles/numbers.css');
+            $styles[] = file_get_contents(__DIR__ . '/styles/numbers.css');
         }
-        return "<style>\n$styles\n</style>\n";
+
+        $classes = [
+            'xlas-content',
+            $headline_scheme->class(),
+        ];
+
+        return sprintf(
+            "<style>%s</style>\n" . '<div class="%s">' . "\n%s\n</div>",
+            implode("\n", $styles),
+            implode(" ", $classes),
+            $html
+        );
     }
 
     public function replaceCustomMarkup(string $html): string
@@ -104,9 +116,14 @@ class Service implements FullService
             // functions called from XSLT are static and need a static state
             self::$headlineScheme = $headline_scheme;
 
-            self::initParaCounter();
-            self::initWordCounter();
-            self::initHeadlineCounters();
+            self::$paraCounter = 0;
+            self::$wordCounter = 0;
+            self::$h1Counter = 0;
+            self::$h2Counter = 0;
+            self::$h3Counter = 0;
+            self::$h4Counter = 0;
+            self::$h5Counter = 0;
+            self::$h6Counter = 0;
 
             // remove ascii control characters except tab, cr and lf
             $html = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $html);
@@ -144,11 +161,6 @@ class Service implements FullService
         }
     }
 
-    public static function initParaCounter(): void
-    {
-        self::$paraCounter = 0;
-    }
-
     public static function currentParaCounter(): string
     {
         return self::$paraCounter;
@@ -160,11 +172,6 @@ class Service implements FullService
         return self::$paraCounter;
     }
 
-    public static function initWordCounter(): void
-    {
-        self::$wordCounter = 0;
-    }
-
     public static function currentWordCounter(): string
     {
         return self::$wordCounter;
@@ -174,16 +181,6 @@ class Service implements FullService
     {
         self::$wordCounter++;
         return self::$wordCounter;
-    }
-
-    public static function initHeadlineCounters(): void
-    {
-        self::$h1Counter = 0;
-        self::$h2Counter = 0;
-        self::$h3Counter = 0;
-        self::$h4Counter = 0;
-        self::$h5Counter = 0;
-        self::$h6Counter = 0;
     }
 
     public static function nextHeadlinePrefix($tag): string

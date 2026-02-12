@@ -13,3 +13,7 @@ body {
     margin-left: -10mm;
     position: absolute;
 }
+
+.sr-only {
+    display: none;
+}

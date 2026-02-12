@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
 use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Format\FullService as FormatFullService;
+use Edutiek\AssessmentService\System\HtmlProcessing\FullService as HtmlProcessingFullService;
 use Edutiek\AssessmentService\System\Spreadsheet\FullService as SpreadsheetService;
 use Edutiek\AssessmentService\System\Transform\FullService as TransformFullService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
@@ -41,6 +42,12 @@ readonly class ForClients
     {
         return $this->dependencies->fileDelivery();
     }
+
+    public function htmlProcessing(): HtmlProcessingFullService
+    {
+        return $this->internal->htmlProcessing();
+    }
+
 
     public function tempStorage(): Storage
     {
