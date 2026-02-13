@@ -10,6 +10,10 @@ namespace Edutiek\AssessmentService\System\Data;
  */
 abstract class Config implements SystemEntity
 {
+    public const DEFAULT_PRIMARY_COLOR = '04427E';
+    public const DEFAULT_PRIMARY_TEXT_COLOR = 'FFFFFF';
+    public const DEFAULT_HASH_ALGO = 'sha256';
+
     /**
      * URL of the writer web app
      * This can be set for development purposes
@@ -55,4 +59,11 @@ abstract class Config implements SystemEntity
     abstract public function getHashAlgo(): string;
     abstract public function setHashAlgo(string $algo): Config;
 
+    /**
+     * Get the available options for hash algorithms
+     */
+    public function getHashAlgoOptions(): array
+    {
+        return array_combine(hash_algos(), hash_algos());
+    }
 }
