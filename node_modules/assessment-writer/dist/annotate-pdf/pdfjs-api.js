@@ -35,7 +35,14 @@ export default (parent, viewer, pdf) => {
     const nextId = ((i = 0) => () => ++i)();
     const pending = {};
     const frame = document.createElement('iframe');
-    const ready = Promise.withResolvers();
+    const ready = (function(){
+        const ret = {};
+        ret.promise = new Promise(function(resolve, reject){
+            ret.resolve = resolve;
+            ret.reject = reject;
+        });
+        return ret;
+    })();
     frame.src = viewer + '?file=' + encodeURIComponent(pdf);
     frame.style.width = '100%';
     frame.style.height = '100%';

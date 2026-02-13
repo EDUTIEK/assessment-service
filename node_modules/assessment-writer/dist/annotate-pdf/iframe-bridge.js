@@ -5,7 +5,6 @@ function run()
     window.localStorage.removeItem('pdfjs.history');
     window.localStorage.removeItem('pdfjs.preferences');
     setup(forwardEvent, actions => {
-        overwriteMethodOnce(PDFViewerApplication.pdfSidebar, 'setInitialView', setView => setView(0));
         window.addEventListener('message', event => {
             then(
                 actions[event.data.name](...event.data.args),
@@ -104,6 +103,7 @@ function setup(dispatch, ready){
 
         pdfSwitchToMode(PDF_EDIT_MODE());
         ready(actions);
+        PDFViewerApplication.viewsManager.setInitialView(0);
         dispatch('ready');
 
         function deleteEntry(entry)
@@ -116,7 +116,7 @@ function setup(dispatch, ready){
 
         function checkForChanges(){
             const page = pdfCurrentPageIndex();
-            const usedIds = manager.getEditors(page).map(createOrUpdateEntry.bind(null, page));
+            const usedIds = Array.from(manager.getEditors(page)).map(createOrUpdateEntry.bind(null, page));
             const isUsed = x => x.page !== page || usedIds.includes(x.id) || (x.pending || []).length || updating === x.id;
             const deleted = entries.filter(x => !isUsed(x));
             entries = entries.filter(isUsed);
@@ -208,7 +208,7 @@ function uuid()
 
 function then(p, proc)
 {
-    return (p instanceof Promise ? p : Promise.resolve(p)).then(proc);
+    return Promise.resolve(p).then(proc);
 }
 
 /**
@@ -294,18 +294,17 @@ function sync(entry, name, action)
 
     function enqueue()
     {
-        const p = Promise.withResolvers();
-        const pending = {run: action, return: p.resolve, name};
-        entry.pending = (entry.pending || []).filter(pending => {
-            if(pending?.name === name){
-                kill(pending);
-                return false;
-            }
-            return true;
+        return new Promise(function(resolve){
+            const pending = {run: action, return: resolve, name};
+            entry.pending = (entry.pending || []).filter(pending => {
+                if(pending?.name === name){
+                    kill(pending);
+                    return false;
+                }
+                return true;
+            });
+            entry.pending.push(pending);
         });
-        entry.pending.push(pending);
-
-        return p.promise;
     }
 
     function dequeue(layer)
@@ -318,7 +317,7 @@ function sync(entry, name, action)
         const ret = head.run(layer);
         head.return(ret);
 
-        return Promise.resolve(ret).then(() => {
+        return then(ret, () => {
             entry.pending = entry.pending.slice(1);
             dequeue(layer);
         });
@@ -328,7 +327,7 @@ function sync(entry, name, action)
 function pdfOnInit(thunk)
 {
     pdfReady(function(){
-         PDFViewerApplication.pdfViewer.eventBus.on('annotationeditoruimanager', thunk);
+         pdfOn('annotationeditoruimanager', thunk);
     });
 }
 
@@ -409,6 +408,7 @@ function pdfCurrentPageIndex()
 
 function pdfSwitchToPageIndex(page)
 {
+    // PDFViewerApplication.eventBus is the same object as PDFViewerApplication.pdfViewer.eventBus
     PDFViewerApplication.eventBus.dispatch('pagenumberchanged', {value: page + 1});
 }
 
@@ -419,17 +419,17 @@ function pdfOnPageChanging(proc)
 
 function pdfOn(n, proc)
 {
-    PDFViewerApplication.pdfViewer.eventBus.on(n, proc);
+    PDFViewerApplication.eventBus.on(n, proc);
 }
 
 function pdfOnce(n, proc)
 {
-    PDFViewerApplication.pdfViewer.eventBus.on(n, proc, {once: true});
+    PDFViewerApplication.eventBus.on(n, proc, {once: true});
 }
 
 function pdfOff(n, f)
 {
-    PDFViewerApplication.pdfViewer.eventBus.off(n, f);
+    PDFViewerApplication.eventBus.off(n, f);
 }
 
 function PDF_EDIT_MODE()
@@ -439,7 +439,7 @@ function PDF_EDIT_MODE()
 
 function pdfSwitchToMode(mode, editId = null)
 {
-    PDFViewerApplication.pdfViewer.eventBus.dispatch('switchannotationeditormode', {mode, editId});
+    PDFViewerApplication.eventBus.dispatch('switchannotationeditormode', {mode, editId});
 }
 
 /**
