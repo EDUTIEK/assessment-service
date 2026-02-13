@@ -62,7 +62,8 @@ class Service implements FullService
         $html = $this->removeCustomMarkup($html);
         $html = $this->addContentStyles($html, $add_paragraph_numbers, $headline_scheme);
 
-        echo $html; exit;
+//        echo $html; exit;
+        
         return $html;
     }
 

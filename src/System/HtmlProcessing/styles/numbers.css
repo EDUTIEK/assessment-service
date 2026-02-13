@@ -11,7 +11,7 @@ body {
     font-size:0.6em;
     font-weight:normal;
     margin-left: -10mm;
-    position: absolute;
+    float: left;
 }
 
 .sr-only {
