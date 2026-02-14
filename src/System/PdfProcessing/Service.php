@@ -20,8 +20,9 @@ class Service implements FullService
     public function __construct(
         private readonly PdfCreator $pdf_creator,
         private readonly Storage $storage,
-        private readonly string $pdflatex_bin,
+        private readonly string $ghostscript_bin,
         private readonly string $pdftk_bin,
+        private readonly string $pdflatex_bin,
         string $temp_dir
     ) {
         $this->temp_dir = rtrim($temp_dir, '/');
@@ -41,7 +42,8 @@ class Service implements FullService
         foreach (range(1, $this->count($pdf_id)) as $page) {
             $target = $this->saveFile(fopen('php://memory', 'w+'));
             $this->exec(sprintf(
-                'gs -dNOPAUSE -dQUIET -dBATCH -sOutputFile=%s -dFirstPage=%d -dLastPage=%d -sDEVICE=pdfwrite %s',
+                '%s -dNOPAUSE -dQUIET -dBATCH -sOutputFile=%s -dFirstPage=%d -dLastPage=%d -sDEVICE=pdfwrite %s',
+                escapeshellcmd($this->ghostscript_bin),
                 escapeshellarg($this->pathOfId($target)),
                 $page,
                 $page,
@@ -56,7 +58,8 @@ class Service implements FullService
     {
         $target = $this->saveFile(fopen('php://memory', 'w+'));
         $this->exec(sprintf(
-            'gs -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -sOutputFile=%s %s',
+            '%s -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -sOutputFile=%s %s',
+            escapeshellcmd($this->ghostscript_bin),
             escapeshellarg($this->pathOfId($target)),
             join(' ', array_map('escapeshellarg', array_map($this->pathOfId(...), $pdf_ids))),
         ));
@@ -77,7 +80,8 @@ class Service implements FullService
         // Cannot use escapeshellarg. The file is used inside the PS command and not as a standalone argument.
         // This means that it is currently vulnerable to command injecting attacks.
         return (int) current($this->exec(sprintf(
-            'gs -q -dNOSAFER -dNODISPLAY -c "(%s) (r) file runpdfbegin pdfpagecount = quit"',
+            '%s -q -dNOSAFER -dNODISPLAY -c "(%s) (r) file runpdfbegin pdfpagecount = quit"',
+            escapeshellcmd($this->ghostscript_bin),
             $this->pathOfId($pdf_id)
         )));
     }

@@ -50,8 +50,11 @@ class CorrectorBridge implements AppCorrectorBridge
         $config = $this->config->getConfig();
 
         $data['Config'] = $this->entity->arrayToPrimitives([
-            'primary_color' => $config->getPrimaryColor(),
-            'primary_text_color' => $config->getPrimaryTextColor(),
+            'primary_color' => $config->getPrimaryColor() ?? Config::DEFAULT_PRIMARY_COLOR,
+            'primary_text_color' => $config->getPrimaryTextColor() ?? Config::DEFAULT_PRIMARY_TEXT_COLOR,
+            'corrector1_color' => $config->getCorrector1Color() ?? Config::DEFAULT_CORRECTOR1_COLOR,
+            'corrector2_color' => $config->getCorrector2Color() ?? Config::DEFAULT_CORRECTOR2_COLOR,
+            'corrector3_color' => $config->getCorrector3Color() ?? Config::DEFAULT_CORRECTOR3_COLOR,
         ]);
 
         $data['GradeLevels'] = [];

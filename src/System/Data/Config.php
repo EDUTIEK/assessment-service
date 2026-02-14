@@ -12,6 +12,9 @@ abstract class Config implements SystemEntity
 {
     public const DEFAULT_PRIMARY_COLOR = '04427E';
     public const DEFAULT_PRIMARY_TEXT_COLOR = 'FFFFFF';
+    public const DEFAULT_CORRECTOR1_COLOR = '00FFFF';
+    public const DEFAULT_CORRECTOR2_COLOR = '00FF00';
+    public const DEFAULT_CORRECTOR3_COLOR = 'FFFF00';
     public const DEFAULT_HASH_ALGO = 'sha256';
 
     /**
@@ -45,6 +48,27 @@ abstract class Config implements SystemEntity
     abstract public function setPrimaryTextColor(?string $primary_text_color): Config;
 
     /**
+     * Get the comor for markings of corrector 1
+     * e.g. '00F0FF'
+     */
+    abstract public function getCorrector1Color(): ?string;
+    abstract public function setCorrector1Color(?string $corrector1_color): self;
+
+    /**
+     * Get the comor for markings of corrector 2
+     * e.g. '00F0FF'
+     */
+    abstract public function getCorrector2Color(): ?string;
+    abstract public function setCorrector2Color(?string $corrector2_color): self;
+
+    /**
+     * Get the comor for markings of corrector 3
+     * e.g. '00F0FF'
+     */
+    abstract public function getCorrector3Color(): ?string;
+    abstract public function setCorrector3Color(?string $corrector3_color): self;
+
+    /**
      * Get how to respond to REST calls
      */
     abstract public function getSimulateOffline(): bool;
@@ -56,6 +80,15 @@ abstract class Config implements SystemEntity
     abstract public function getPathToGhostscript(): ?string;
     abstract public function setPathToGhostscript(?string $path_to_ghostscript): Config;
 
+    /**
+     * Get the file path to the pdftk executable
+     */
+    abstract public function getPathToPdftk(): ?string;
+    abstract public function setPathToPdftk(?string $path_to_pdftk): self;
+
+    /**
+     * Get the alorithm used for caching
+     */
     abstract public function getHashAlgo(): string;
     abstract public function setHashAlgo(string $algo): Config;
 

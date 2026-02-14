@@ -48,6 +48,11 @@ readonly class Service implements ReadService, FullService
         return $this->getConfig()->getPathToGhostscript() ?? $this->getSetup()->getDefaultPathToGhostscript();
     }
 
+    public function getPathToPdfTk(): ?string
+    {
+        return $this->getConfig()->getPathToPdftk() ?? '/usr/bin/pdftk';
+    }
+
     /**
      * Build the URL of a frontend web app
      * Add a query string with the revision to avoid an outdated cached app
