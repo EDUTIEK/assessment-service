@@ -12,9 +12,9 @@ abstract class Config implements SystemEntity
 {
     public const DEFAULT_PRIMARY_COLOR = '04427E';
     public const DEFAULT_PRIMARY_TEXT_COLOR = 'FFFFFF';
-    public const DEFAULT_CORRECTOR1_COLOR = '00FFFF';
-    public const DEFAULT_CORRECTOR2_COLOR = '00FF00';
-    public const DEFAULT_CORRECTOR3_COLOR = 'FFFF00';
+    public const DEFAULT_CORRECTOR1_COLOR = '83c9d6';
+    public const DEFAULT_CORRECTOR2_COLOR = '91ce82';
+    public const DEFAULT_CORRECTOR3_COLOR = 'eec751';
     public const DEFAULT_HASH_ALGO = 'sha256';
 
     /**
