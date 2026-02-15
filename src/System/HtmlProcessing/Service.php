@@ -57,13 +57,9 @@ class Service implements FullService
 
     public function getContentForPdf(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
     {
-        $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', 0);
         $html = $this->getContentForMarking($html, $add_paragraph_numbers, $headline_scheme);
         $html = $this->removeCustomMarkup($html);
         $html = $this->addContentStyles($html, $add_paragraph_numbers, $headline_scheme);
-
-//        echo $html; exit;
-        
         return $html;
     }
 

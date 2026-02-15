@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\EssayTask\PdfCreation;
 
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
+use Edutiek\AssessmentService\Assessment\Data\PdfFeedbackMode;
+use Edutiek\AssessmentService\Assessment\Data\PdfSettings as PdfSettings;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfConfigPart;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
@@ -30,6 +32,7 @@ readonly class CorrectionProvider implements PdfPartProvider
 
     public function __construct(
         private Repositories $repos,
+        private PdfSettings $pdf_settings,
         private HtmlProcessing $html_processing,
         private ImageProcssing $image_processing,
         private PdfProcessing $pdf_processing,
@@ -122,6 +125,10 @@ readonly class CorrectionProvider implements PdfPartProvider
      */
     private function renderFromText(Essay $essay, array $infos, bool $anonymous_corrector, Options $options): ?string
     {
+        if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
+            $options = $options->withPortrait(false);
+        }
+
         $html = $this->html_processing->getCorrectedTextForPdf($essay, $infos);
         return $this->pdf_processing->create($html, $options);
     }

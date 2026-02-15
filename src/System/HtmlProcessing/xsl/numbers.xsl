@@ -22,40 +22,48 @@
     <xsl:template match="body/*">
         <xsl:variable name="counter" select="php:function('Edutiek\AssessmentService\System\HtmlProcessing\Service::nextParaCounter')" />
         <xsl:variable name="prefix" select="php:function('Edutiek\AssessmentService\System\HtmlProcessing\Service::nextHeadlinePrefix', local-name())" />
-        <!-- add a visible paragraph counter -->
-        <xsl:if test="$add_paragraph_numbers = 1 and local-name() != 'hr' ">
-            <div class="xlas-counter">
-                <xsl:attribute name="data-p">
-                    <xsl:value-of select="$counter" />
-                </xsl:attribute>
-                <span class="sr-only">Absatz</span>
-                <!-- paragraph numbers should be selectable -->
-                <xsl:call-template name="words">
-                    <xsl:with-param name="text">
-                        <xsl:value-of select="$counter" />
-                    </xsl:with-param>
-                </xsl:call-template>
-            </div>
-        </xsl:if>
 
-        <!-- copy the element and add the counter attibute -->
-        <xsl:copy>
-            <xsl:copy-of select="@*"></xsl:copy-of>
+        <!-- put every body block in a div - this helps aligning the comments -->
+        <div class="xlas-block">
             <xsl:attribute name="data-p">
                 <xsl:value-of select="$counter" />
             </xsl:attribute>
 
-            <!-- add a selectable prefix to the headline, according to the headline scheme -->
-            <xsl:if test="$prefix">
-                <xsl:call-template name="words">
-                    <xsl:with-param name="text">
-                        <xsl:value-of select="$prefix" />
-                    </xsl:with-param>
-                </xsl:call-template>
+            <!-- add a visible paragraph counter -->
+            <xsl:if test="$add_paragraph_numbers = 1 and local-name() != 'hr' ">
+                <div class="xlas-counter">
+                    <xsl:attribute name="data-p">
+                        <xsl:value-of select="$counter" />
+                    </xsl:attribute>
+                    <span class="sr-only">Absatz</span>
+                    <!-- paragraph numbers should be selectable -->
+                    <xsl:call-template name="words">
+                        <xsl:with-param name="text">
+                            <xsl:value-of select="$counter" />
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </div>
             </xsl:if>
 
-            <xsl:apply-templates select="node()" />
-        </xsl:copy>
+            <!-- copy the element and add the counter attibute -->
+            <xsl:copy>
+                <xsl:copy-of select="@*"></xsl:copy-of>
+                <xsl:attribute name="data-p">
+                    <xsl:value-of select="$counter" />
+                </xsl:attribute>
+
+                <!-- add a selectable prefix to the headline, according to the headline scheme -->
+                <xsl:if test="$prefix">
+                    <xsl:call-template name="words">
+                        <xsl:with-param name="text">
+                            <xsl:value-of select="$prefix" />
+                        </xsl:with-param>
+                    </xsl:call-template>
+                </xsl:if>
+
+                <xsl:apply-templates select="node()" />
+            </xsl:copy>
+        </div>
 
     </xsl:template>
 

@@ -102,6 +102,7 @@ class Internal
     {
         return $this->instances[CorrectionProvider::class][$ass_id][$user_id] ?? new CorrectionProvider(
             $this->dependencies->repositories(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->pdfSettings()->get(),
             $this->htmlProcessing($ass_id, $user_id),
             $this->imageProcessing(),
             $this->dependencies->systemApi()->pdfProcessing(),
@@ -156,6 +157,7 @@ class Internal
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
             $this->dependencies->taskApi($ass_id, $user_id)->correctorComments(),
             $this->dependencies->systemApi()->htmlProcessing(),
+            $this->dependencies->systemApi()->config()->getConfig(),
             $this->language($user_id),
         );
     }

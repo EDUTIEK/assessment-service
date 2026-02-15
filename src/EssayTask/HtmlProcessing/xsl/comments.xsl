@@ -14,50 +14,19 @@
         <xsl:apply-templates select="node()" />
     </xsl:template>
 
-    <!-- remove the number attributes -->
-    <xsl:template match="@long-essay-number">
-    </xsl:template>
-
-    <!-- remove the table header -->
-    <xsl:template match="thead">
-    </xsl:template>
-
-    <!-- add the comments column -->
-    <xsl:template match="tr">
-        <xsl:text>&#xa;</xsl:text>
+    <!-- put content and comments beneth each other -->
+    <xsl:template match="div[@class='xlas-block']">
         <xsl:variable name="counter" select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::initCurrentComments', string(@data-p))" />
-        <tr>
-            <xsl:copy-of select="@*" />
-            <xsl:choose>
-                <xsl:when test="$add_paragraph_numbers = 1">
-                    <xsl:text>&#xa;&#x9;</xsl:text>
-                    <td class="xlas-number">
-                        <!-- paragraph number -->
-                        <xsl:apply-templates select="td[1]/node()" />
-                    </td>
-                    <xsl:text>&#xa;&#x9;</xsl:text>
-                    <td class="xlas-numbered-text">
-                        <!-- text -->
-                        <xsl:apply-templates select="td[2]/node()" />
-                    </td>
-                </xsl:when>
-                <xsl:otherwise>
-                    <xsl:text>&#xa;&#x9;</xsl:text>
-                    <td class="xlas-pure-text">
-                        <!-- text -->
-                        <xsl:apply-templates select="td[1]/node()" />
-                    </td>
-                </xsl:otherwise>
-            </xsl:choose>
-            <xsl:text>&#xa;&#x9;</xsl:text>
-             <td class="xlas-comments">
-                <!-- comments -->
+        <div class="xlas-block">
+            <div class="xlas-comments-left">
+                <xsl:apply-templates select="node()" />
+            </div>
+            <div class="xlas-comments-right">
                 <xsl:for-each select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::getCurrentComments')/node()">
                     <xsl:copy-of select="." />
                 </xsl:for-each>
-            </td>
-            <xsl:text>&#xa;</xsl:text>
-        </tr>
+            </div>
+        </div>
     </xsl:template>
     
     <!-- add the marking and label for comments -->
@@ -84,7 +53,7 @@
                 </xsl:choose>
              </xsl:when>
             <xsl:otherwise>
-                <xsl:copy-of select="." />
+                <xsl:copy><xsl:apply-templates select="@*|node()" /></xsl:copy>
             </xsl:otherwise>
         </xsl:choose>
     </xsl:template>

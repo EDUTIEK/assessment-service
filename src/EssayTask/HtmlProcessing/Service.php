@@ -4,9 +4,12 @@ namespace Edutiek\AssessmentService\EssayTask\HtmlProcessing;
 
 use DOMDocument;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings as CorrectionSettings;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
+use Edutiek\AssessmentService\System\Data\Config;
 use Edutiek\AssessmentService\System\HtmlProcessing\FullService as SystemHtmlProcessing;
+use Edutiek\AssessmentService\System\Data\Config as SystemConfig;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Task\CorrectorComment\CorrectorCommentInfo;
 use Edutiek\AssessmentService\Task\CorrectorComment\InfoService as CommentsService;
@@ -16,8 +19,6 @@ use Edutiek\AssessmentService\Task\CorrectorComment\InfoService as CommentsServi
  */
 class Service implements FullService
 {
-    public const COLOR_NORMAL = '#D8E5F4';
-
     /**
      * A static instance is needed for calls from XSLT
      * It must be set to the current object before
@@ -41,6 +42,7 @@ class Service implements FullService
         private readonly CorrectionSettings $correction_settings,
         private readonly CommentsService $comments_service,
         private readonly SystemHtmlProcessing $processor,
+        private readonly SystemConfig $config,
         private readonly LanguageService $lang
     ) {
     }
@@ -69,26 +71,26 @@ class Service implements FullService
         $this->all_infos = $infos;
         $this->current_infos = [];
 
-        $html = $this->processor->getContentForMarking(
+        $html = $this->processor->replaceCustomMarkup(
+            $this->processor->getContentForMarking(
             (string) $essay->getWrittenText(),
             $this->writing_settings->getAddParagraphNumbers(),
             $this->writing_settings->getHeadlineScheme()
-        );
+        ));
 
         $html = $this->processor->processXslt(
-            $this->processor->replaceCustomMarkup($html),
+            $html,
             __DIR__ . '/xsl/comments.xsl',
             $essay ? $essay->getServiceVersion() : 0,
             $this->writing_settings->getAddParagraphNumbers(),
         );
 
-        $html = $this->processor->addContentStyles(
+        $html = "<style>\n" . file_get_contents(__DIR__ . '/styles/correction.css') . "\n</style>\n"
+            . $this->processor->addContentStyles(
             $html,
             $this->writing_settings->getAddParagraphNumbers(),
             $this->writing_settings->getHeadlineScheme()
-        )
-            . "<style>\n" . file_get_contents(__DIR__ . '/styles/correction.css') . "\n</style>\n"
-            . $html;
+        );
 
         return $html;
     }
@@ -115,7 +117,7 @@ class Service implements FullService
                 }
 
                 if (!empty($info->getComment()->getComment())) {
-                    $content .= ' ' . $this->quote($info->getComment()->getComment());
+                    $content .= ' ' . nl2br($this->quote($info->getComment()->getComment()));
                 }
 
                 $points = $info->getPoints();
@@ -142,15 +144,32 @@ class Service implements FullService
     }
 
     /**
+     * Get the backgound color for marking text
+     * If multiple correctors marked the same text then the latest wins
      * @param CorrectorCommentInfo[] $infos
-     * @todo: use corrector colors
      */
     private function getTextBackgroundColor(array $infos): string
     {
-        if (!empty($infos)) {
-            return self::COLOR_NORMAL;
+        $colors = [];
+        foreach ($infos as $info) {
+            switch ($info->getPosition()) {
+                case GradingPosition::FIRST:
+                    $colors[0] = $this->config->getCorrector1Color() ?? Config::DEFAULT_CORRECTOR1_COLOR;
+                    break;
+                case GradingPosition::SECOND:
+                    $colors[1] = $this->config->getCorrector2Color() ?? Config::DEFAULT_CORRECTOR2_COLOR;
+                    break;
+                case GradingPosition::STITCH:
+                    $colors[2] = $this->config->getCorrector3Color()  ?? Config::DEFAULT_CORRECTOR2_COLOR;
+                    break;
+            }
         }
-        return '';
+
+        if (!empty($colors)) {
+            return '#' . $colors[max(array_keys($colors))];
+        }
+
+        return 'inherit';
     }
 
     /**

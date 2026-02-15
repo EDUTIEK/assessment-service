@@ -2,26 +2,21 @@
 Specific styles for the correction output
 */
 
-html, body {
-    max-width: 100%;
+.xlas-block {
+    clear:both;
 }
 
-td.xlas-number {
-    width: 3%;
+.xlas-comments-left {
+    width: 50%;
+    float: left;
 }
 
-td.xlas-numbered-text {
-    width: 57%;
-}
-
-td.xlas-pure-text {
-    width: 60%;
-}
-
-td.xlas-comments {
-    width: 40%;
+.xlas-comments-right {
+    width: 45%;
+    float: left;
     font-family: sans-serif;
     font-size: 12px;
+    margin-left: 5%;
 }
 
 .xlas-label {

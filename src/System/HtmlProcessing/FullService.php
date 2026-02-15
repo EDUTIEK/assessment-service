@@ -31,7 +31,8 @@ interface FullService
 
     /**
      * Process HTML content (written text or instructions) for inclusion in a PDF file
-     * This will add the paragraph numbers and headline prefixes
+     * - add the paragraph numbers and headline prefixes
+     * - add the content style and style for paragraph numbers
      */
     public function getContentForPdf(
         string $html,
@@ -40,7 +41,7 @@ interface FullService
     ): string;
 
     /**
-     * Get styles to be added to the HTML
+     * Add the styles for pdf generation to the content
      */
     public function addContentStyles(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string;
 
