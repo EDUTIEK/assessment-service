@@ -3,6 +3,7 @@
 namespace Edutiek\AssessmentService\Views\Data;
 
 use Edutiek\AssessmentService\System\Data\UserData;
+use Edutiek\AssessmentService\Assessment\Data\Properties;
 
 abstract class StatisticView
 {
@@ -20,4 +21,16 @@ abstract class StatisticView
     abstract public function getPointsCounts(): array;
     abstract public function isMaxPointUniform(): bool;
     abstract public function isGradesUniform(): bool;
+    /**
+     * @return UserData[]
+     */
+    abstract public function getUsers(): array;
+
+    /**
+     * @return Properties[]
+     */
+    abstract public function getAssessments(): array;
+    abstract public function fromUser(UserData $user): self;
+    abstract public function fromAssessent(Properties $assessment): self;
+    abstract public function fromUserAndAssessemnt(UserData $user, Properties $assessment): self;
 }
