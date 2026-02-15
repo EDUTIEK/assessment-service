@@ -156,9 +156,9 @@ class Service implements FullService
 
 
         $pdf_ids = [];
-        foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
-            $provider = $this->getProvider($component, $purpose);
-            foreach ($provider?->getAvailableParts() ?? [] as $part) {
+        foreach ($this->getSortedParts($purpose) as $part) {
+            if ($part->getIsActive()) {
+                $provider = $this->getProvider($part->getComponent(), $purpose);
                 $id = $provider->renderPart(
                     $part->getKey(),
                     $task_id,

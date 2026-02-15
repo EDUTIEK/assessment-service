@@ -47,28 +47,28 @@ readonly class CorrectionProvider implements PdfPartProvider
             return [
                 new PdfConfigPart(
                     "EssayTask",
-                    'comments_corrector1',
+                    self::KEY_CORRECTOR_1,
                     self::PART_SINGLE_COMMENTS,
                     $this->language->txt('pdf_part_comments_corrector1'),
                     true
                 ),
                 new PdfConfigPart(
                     "EssayTask",
-                    'comments_corrector2',
+                    self::KEY_CORRECTOR_2,
                     self::PART_SINGLE_COMMENTS,
                     $this->language->txt('pdf_part_comments_corrector2'),
                     true
                 ),
                 new PdfConfigPart(
                     "EssayTask",
-                    'comments_corrector2',
+                    self::KEY_CORRECTOR_3,
                     self::PART_SINGLE_COMMENTS,
                     $this->language->txt('pdf_part_comments_corrector3'),
                     true
                 ),
                 new PdfConfigPart(
                     "EssayTask",
-                    'comments_all',
+                    self::KEY_COMMENTS_ALL,
                     self::PART_MULTI_COMMENTS,
                     $this->language->txt('pdf_part_comments_all_correctors'),
                     true
@@ -78,7 +78,7 @@ readonly class CorrectionProvider implements PdfPartProvider
             return [
                 new PdfConfigPart(
                     "EssayTask",
-                    'comments_all',
+                    self::KEY_COMMENTS_ALL,
                     self::PART_MULTI_COMMENTS,
                     $this->language->txt('pdf_part_comments_all_correctors'),
                     true

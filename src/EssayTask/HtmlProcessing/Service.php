@@ -83,6 +83,7 @@ class Service implements FullService
         );
 
         $html = $this->processor->addContentStyles(
+            $html,
             $this->writing_settings->getAddParagraphNumbers(),
             $this->writing_settings->getHeadlineScheme()
         )

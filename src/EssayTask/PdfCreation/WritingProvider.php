@@ -64,7 +64,7 @@ readonly class WritingProvider implements PdfPartProvider
         }
 
         if ($essay->hasPdfVersion() && $essay->hasWrittenText()) {
-            // both pdf and written text are relevant - create text pdf and join it with the odf file
+            // both pdf and written text are relevant - create text pdf and join it with the pdf file
             $created = $this->renderWrittenText($essay, $anonymous_writer, $options);
             $id = $this->pdf_processing->join([$created, $essay->getPdfVersion()]);
             $this->pdf_processing->cleanup([$created]);
@@ -91,7 +91,7 @@ readonly class WritingProvider implements PdfPartProvider
     ): string {
 
         $settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
-        $html = $this->html_processing->getWrittenTextForPdf($essay, $settings);
+        $html = $this->html_processing->getWrittenTextForPdf($essay);
 
         if ($settings->getAddCorrectionMargin()) {
             $options = $options->withLeftMargin($options->getLeftMargin() + $settings->getLeftCorrectionMargin());
