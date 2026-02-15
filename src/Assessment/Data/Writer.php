@@ -173,4 +173,14 @@ abstract class Writer implements AssessmentEntity, IndividualWorkingTime
     {
         return $this->getCorrectionStatus() === CorrectionStatus::FINALIZED;
     }
+
+    public function canFinalizedUnsubmitted(): bool
+    {
+        return !$this->isAuthorized() && !$this->isCorrectionFinalized();
+    }
+
+    public function isUnsubmitted(): bool
+    {
+        return  !$this->isAuthorized() && $this->isCorrectionFinalized();
+    }
 }

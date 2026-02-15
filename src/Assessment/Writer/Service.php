@@ -19,6 +19,7 @@ use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
 use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
 use Edutiek\AssessmentService\System\EventHandling\Events\WriterAdded;
+use Edutiek\AssessmentService\Assessment\Data\GradeLevel;
 
 readonly class Service implements ReadService, FullService
 {
@@ -139,6 +140,16 @@ readonly class Service implements ReadService, FullService
             }
         }
         return $result;
+    }
+
+    public function setUnsubmittedAsGraded(Writer $writer): bool
+    {
+        if(!$writer->canFinalizedUnsubmitted()) {
+            return false;
+        }
+
+        $this->changeCorrectionStatus($writer, CorrectionStatus::FINALIZED, $this->user_id);
+        return true;
     }
 
     public function removeCorrectionFinalisation(Writer $writer, int $by_user_id): void

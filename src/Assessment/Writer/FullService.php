@@ -5,6 +5,7 @@ namespace Edutiek\AssessmentService\Assessment\Writer;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\System\Data\Result;
+use Edutiek\AssessmentService\Assessment\Data\GradeLevel;
 
 interface FullService extends ReadService
 {
@@ -22,6 +23,8 @@ interface FullService extends ReadService
 
     public function removeCorrectionFinalisation(Writer $writer, int $by_user_id): void;
     public function changeCorrectionStatus(Writer $writer, CorrectionStatus $status, int $by_user_id): void;
+
+    public function setUnsubmittedAsGraded(Writer $writer): bool;
 
     public function changeWorkingTime(
         Writer $writer,
