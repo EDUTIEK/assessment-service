@@ -44,7 +44,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         private LanguageService $language,
         private FileStorage $file_storage,
         private FileStorage $temp_storage,
-        private SystemHtmlProcessing $system_html_processing,
+        private SystemHtmlProcessing $template_engine,
         private CorrectionSettingsReadService $settings_service,
         private CommentsService $comments,
     ) {
@@ -120,6 +120,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         };
 
         $infos = $this->comments->getInfos($task_id, $writer_id, $positions);
+        $options = $options->withTitle($options->getTitle() . ' | ' . $this->getPartTitle($key));
 
         if ($essay->hasPdfVersion()) {
             return $this->renderFromImages($key, $essay, $infos, $anonymous_corrector, $options);
@@ -143,7 +144,7 @@ readonly class CorrectionProvider implements PdfPartProvider
             'partComments' => $this->html_processing->getCorrectedTextForPdf($essay, $infos)
         ];
 
-        $html = $this->system_html_processing->fillTemplate(__DIR__ . '/templates/text_comments.html', $data);
+        $html = $this->template_engine->fillTemplate(__DIR__ . '/templates/text_comments.html', $data);
 
         return $this->pdf_processing->create($html, $options);
     }
@@ -158,10 +159,12 @@ readonly class CorrectionProvider implements PdfPartProvider
             'pages' => []
         ];
 
+        $pdf_ids = [];
         $temp_ids = [];
 
+        $start_page = $options->getStartPageNumber();
         foreach ($this->essay_images->getByEssayId($essay->getId()) as $page_no => $essay_image) {
-            $page_no++;
+            $page_no++; // stored page numbers are 1-based
             $stream = $this->file_storage->getFileStream(($essay_image->getFileId()));
             if ($stream !== null) {
                 $raw_image = new ImageDescriptor(
@@ -180,21 +183,48 @@ readonly class CorrectionProvider implements PdfPartProvider
                 );
 
                 $file_info = $this->temp_storage->saveFile($applied_image->stream());
-
                 $temp_ids[] = $image_id = $file_info->getId();
-                $data['pages'][] = [
-                    'partTitle' => $page_no == 1 ? $this->getPartTitle($key) : '',
-                    'pageBreakClass' => $page_no > 1 ? 'xlas-page-break' : '',
-                    'src' => $this->temp_storage->getReadablePath($image_id),
-                    'comments' => $this->html_processing->getCommentsHtml($page_infos),
-                ];
-            }
 
+                if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
+                    // print image and comments beneath each other
+
+                    $data['pages'][] = [
+                        'partTitle' => $page_no == 1 ? $this->getPartTitle($key) : '',
+                        'pageBreakClass' => $page_no > 1 ? 'xlas-page-break' : '',
+                        'src' => $this->temp_storage->getReadablePath($image_id),
+                        'comments' => $this->html_processing->getCommentsHtml($page_infos),
+                    ];
+                } else {
+                    // add comments to a separate page following the image
+
+                    $html = $this->template_engine->fillTemplate(__DIR__ . '/templates/solo_image.html', [
+                        'src' => $this->temp_storage->getReadablePath($image_id),
+                    ]);
+                    $pdf_ids[] = $id1 = $this->pdf_processing->create($html, $options->withStartPageNumber($start_page));
+                    $start_page += $this->pdf_processing->count($id1);
+
+                    $html = $this->template_engine->fillTemplate(__DIR__ . '/templates/solo_comments.html', [
+                        'correctionCss' => file_get_contents(__DIR__ . '/templates/correction.css'),
+                        'partTitle' => $this->getPartTitle($key),
+                        'partComments' => $this->html_processing->getCommentsHtml($page_infos),
+                    ]);
+
+                    if (!empty($page_infos)) {
+                        $pdf_ids[] = $id2 = $this->pdf_processing->create($html, ($options->withStartPageNumber($start_page)));
+                        $start_page += $this->pdf_processing->count($id2);
+                    }
+                }
+            }
         }
 
-        $html = $this->system_html_processing->fillTemplate(__DIR__ . '/templates/image_comments.html', $data);
+        if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
+            $html = $this->template_engine->fillTemplate(__DIR__ . '/templates/image_comments.html', $data);
+            $pdf_id = $this->pdf_processing->create($html, $options->withPortrait(false));
 
-        $pdf_id = $this->pdf_processing->create($html, $options->withPortrait(false));
+        } else {
+            $pdf_id = $this->pdf_processing->join($pdf_ids);
+            $temp_ids = array_merge($temp_ids, $pdf_ids);
+        }
 
         foreach ($temp_ids as $image_id) {
             $this->temp_storage->deleteFile($image_id);
