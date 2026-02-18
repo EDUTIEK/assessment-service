@@ -31,8 +31,6 @@ class Service implements FullService
      * @param Closure(): Dompdf $dom_pdf
      */
     public function __construct(
-        private string $absolute_temp_path,
-        private string $relative_temp_path,
         private Closure $dom_pdf
     ) {
     }
@@ -67,17 +65,6 @@ class Service implements FullService
     private function pageBreak(): string
     {
         return '<div class="force-new-page"></div>';
-    }
-
-    public function getImagePathForPdf(?ImageDescriptor $image): string
-    {
-        if ($image !== null) {
-            $content = stream_get_contents($image->stream());
-            $file = tempnam($this->absolute_temp_path, 'LAS');
-            file_put_contents($file, $content);
-            return $this->relative_temp_path . '/' . basename($file);
-        }
-        return '';
     }
 
     private function mm2px(float $mm): float
@@ -183,7 +170,6 @@ header
         $options->set('isPdfAEnabled', true);
         $options->set('defaultFont', $this->main_font);
         // $options->setDpi(150);
-        // $options->setChroot($dir);
         // $options->set('fontDir', $tmp);
         // $options->set('fontCache', $tmp);
         // $options->set('tempDir', $tmp);

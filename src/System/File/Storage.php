@@ -52,11 +52,17 @@ interface Storage
 
     /**
      * Get an absolute path from which the contents of a file can be read
-     * Depending on the implementation of the storage service (e.g. remote)
+     * Depending on the implementation of the storage service,
      * this may be the path of a temporary local copy of the file
      *
      * @param string|null $id
      * @return string|null  absolute file path or null if not found
      */
     public function getReadablePath(?string $id): ?string;
+
+    /**
+     * Get the root directory all getReadablePath() calls
+     * Dompdf needs this to set the chroot directory
+     */
+    public function getReadableRoot(): string;
 }

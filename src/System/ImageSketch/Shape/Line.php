@@ -11,7 +11,7 @@ class Line extends NoShape
 {
     private Point $end;
 
-    public const LINE_WIDTH = 10;
+    public const LINE_WIDTH = 6;
 
     public function __construct(Point $end, ...$args)
     {
@@ -24,7 +24,7 @@ class Line extends NoShape
         $draw->with([
             'strokeColor' => $this->color(),
             'strokeWidth' => self::LINE_WIDTH,
-        ], fn () => $draw->polygon([$this->pos(), $draw->shiftBy($this->pos(), $this->end)]));
+        ], fn() => $draw->polygon([$this->pos(), $draw->shiftBy($this->pos(), $this->end)]));
 
         $this->drawLabel($draw);
     }

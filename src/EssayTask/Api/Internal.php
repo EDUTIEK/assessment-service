@@ -169,7 +169,8 @@ class Internal
     public function imageProcessing(): ImageService
     {
         return $this->instances[ImageService::class] ??= new ImageService(
-            $this->dependencies->systemApi()->imageSketch()
+            $this->dependencies->systemApi()->imageSketch(),
+            $this->dependencies->systemApi()->config()->getConfig(),
         );
     }
 

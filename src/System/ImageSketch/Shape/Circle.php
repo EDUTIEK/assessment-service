@@ -24,16 +24,16 @@ class Circle extends NoShape
     public function draw(Draw $draw): void
     {
         $draw->withFillColor($this->color(), function (Draw $draw): void {
-            $draw->circle($this->pos(), 50);
+            $draw->circle($this->pos(), 30);
         });
 
         $draw->withFillColor($this->symbol_color, function (Draw $draw): void {
             $draw->withCenteredText(function (Draw $draw): void {
                 $draw->withFontSize($this->font_size, function (Draw $draw): void {
-                    $draw->text(new Point($this->pos()->x(), $this->pos()->y() - 10), $this->symbol);
+                    $draw->text(new Point($this->pos()->x(), $this->pos()->y() - 5), $this->symbol);
                 });
             });
         });
-        $this->drawLabel($draw, new Point($this->pos()->x(), $this->pos()->y() - 120));
+        $this->drawLabel($draw, new Point(2300, $this->pos()->y()));
     }
 }

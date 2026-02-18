@@ -12,9 +12,9 @@ class Wave extends NoShape
 {
     private Point $end;
 
-    public const LENGTH = 50;
-    public const HEIGHT = 50;
-    public const LINE_WIDTH = 10;
+    public const LENGTH = 15;
+    public const HEIGHT = 10;
+    public const LINE_WIDTH = 6;
 
     public function __construct(Point $end, ...$args)
     {
@@ -46,7 +46,7 @@ class Wave extends NoShape
             'strokeColor' => $this->color(),
             'strokeWidth' => self::LINE_WIDTH,
             'originAt' => $origin,
-        ], fn () => $draw->path(new Point(0, 0), $path));
+        ], fn() => $draw->path(new Point(0, 0), $path));
 
         $this->drawLabel($draw);
     }
@@ -143,7 +143,7 @@ class Wave extends NoShape
 
     private function range(int $length): array
     {
-        return $length > 0 ? range(0, $length -1) : [];
+        return $length > 0 ? range(0, $length - 1) : [];
     }
 
     private function relativePos(Point $pos, Point $direction): Point
@@ -155,12 +155,10 @@ class Wave extends NoShape
     {
         if ($direction->x() > 0) {
             return atan($direction->y() / $direction->x());
-        }
-        else if ($direction->x() < 0) {
+        } elseif ($direction->x() < 0) {
             return pi() + atan($direction->y() / $direction->x());
-        }
-        else {
-            return ($direction->y() <=> 0) * pi()/2;
+        } else {
+            return ($direction->y() <=> 0) * pi() / 2;
         }
     }
 

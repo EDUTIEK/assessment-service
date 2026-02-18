@@ -30,5 +30,9 @@ return [
     'pdf_part_comments_corrector3' => 'Abgabe mit Markierungen/Kommentaren (Stichentscheider)',
     'pdf_part_comments_all_correctors' => 'Abgabe mit allen Markierungen/Kommentaren',
     '1_point' => '1 Punkt',
-    'x_points' => '%s Punkte'
+    'x_points' => '%s Punkte',
+    'comments_corrector1' => 'Anmerkungen Erstkorrektur',
+    'comments_corrector2' => 'Anmerkungen Zweitkorrektur',
+    'comments_corrector3' => 'Anmerkungen Stichentscheid',
+    'comments_corrector_all' => 'Korrektur-Anmerkungen',
 ];

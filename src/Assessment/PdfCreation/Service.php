@@ -169,6 +169,9 @@ class Service implements FullService
                 );
                 if ($id !== null) {
                     $pdf_ids[] = $id;
+                    $options = $options->withStartPageNumber(
+                        $options->getStartPageNumber() + $this->processor->count($id)
+                    );
                 }
             }
         }
@@ -177,7 +180,6 @@ class Service implements FullService
             $id = reset($pdf_ids);
             return $id;
         } else {
-            // todo: create page numbers number and add meta data
             $id = $this->processor->join($pdf_ids);
         }
 

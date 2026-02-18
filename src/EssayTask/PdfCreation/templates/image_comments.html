@@ -1,33 +1,20 @@
 <style>
-    .xlas-page {
-        page-break-after: always;
-    }
-
-    .xlas_image {
-        height: "210mm;"
-    }
-
-    .xlas-comments-left {
-        width: 50%;
-        float: left;
-    }
-
-    .xlas-comments-right {
-        width: 45%;
-        float: left;
-        font-family: sans-serif;
-        font-size: 12px;
-        margin-left: 5%;
-    }
+    {{{correctionCss}}}
 </style>
 
-{{#page}}
-<div class="xlas-page">
+{{#pages}}
+<div class="xlas-page {{pageBreakClass}}">
     <div class="xlas-comments-left">
         <img class="xlas-image" src="{{src}}" />
     </div>
     <div class="xlas-comments-right">
+        {{#partTitle}}
+        <div class="xlas-part-title">
+            {{.}}
+        </div>
+        {{/partTitle}}
+
         {{{comments}}}
     </div>
 </div>
-{{/page}}
+{{/pages}}

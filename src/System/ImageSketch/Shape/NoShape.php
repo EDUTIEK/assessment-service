@@ -39,7 +39,7 @@ abstract class NoShape implements Shape
     protected function drawLabel(Draw $draw, ?Point $pos = null): void
     {
         if ($this->label) {
-            $pos = $pos ?? new Point($this->pos()->x(), $this->pos()->y() - 20);
+            $pos = $pos ?? new Point(2300, $this->pos()->y());
             $draw->withFillColor('white', function (Draw $draw) use ($pos): void {
                 $draw->text($pos, ' ' . $this->label() . ' ', '#808080');
             });

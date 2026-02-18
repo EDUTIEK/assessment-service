@@ -14,9 +14,4 @@ interface FullService
      * @see https://de.wikipedia.org/wiki/PDF/A
      */
     public function createPdf(string $html, Options $options): string;
-
-    /**
-     * Get the path of an image for pdf processing
-     */
-    public function getImagePathForPdf(?ImageDescriptor $image): string;
 }

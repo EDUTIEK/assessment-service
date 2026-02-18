@@ -11,6 +11,8 @@ use Edutiek\AssessmentService\System\ImageSketch\Point;
 use Edutiek\AssessmentService\System\ImageSketch\Shape;
 use Edutiek\AssessmentService\Task\CorrectorComment\CorrectorCommentInfo;
 use Edutiek\AssessmentService\Task\Data\CorrectorComment;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
+use Edutiek\AssessmentService\System\Data\Config as SystemConfig;
 
 class Service implements FullService
 {
@@ -18,7 +20,8 @@ class Service implements FullService
     private const BORDER_NORMAL = '#3365ff';
 
     public function __construct(
-        private readonly ImageSketchService $sketch
+        private readonly ImageSketchService $sketch,
+        private readonly SystemConfig $config,
     ) {
     }
 
@@ -27,8 +30,8 @@ class Service implements FullService
     {
         $shapes = [];
         foreach ($infos as $info) {
-            $marks = json_decode($info->getComment()->getMarks(), true);
-            if ($info->getComment()->getParentNumber() == $page_number && is_array($marks) && !empty($marks)) {
+            $marks = CorrectionMark::multiFromArray((array) json_decode($info->getComment()->getMarks()));
+            if ($info->getComment()->getParentNumber() == $page_number && !empty($marks)) {
                 foreach ($marks as $mark) {
                     $filled = in_array($mark->getShape(), CorrectionMark::FILLED_SHAPES);
                     if ($filled) {
@@ -54,16 +57,26 @@ class Service implements FullService
      */
     private function getMarkFillColor(CorrectorCommentInfo $info): string
     {
-        return self::FILL_NORMAL;
+        switch ($info->getPosition()) {
+            case GradingPosition::FIRST:
+                return '#' . $this->config->getCorrector1Color() ?? SystemConfig::DEFAULT_CORRECTOR1_COLOR;
+            case GradingPosition::SECOND:
+                return '#' . $this->config->getCorrector2Color() ?? SystemConfig::DEFAULT_CORRECTOR2_COLOR;
+                break;
+            case GradingPosition::STITCH:
+                return '#' . $this->config->getCorrector3Color() ?? SystemConfig::DEFAULT_CORRECTOR2_COLOR;
+        }
+
+        return '#' . $this->config->getCorrector1Color() ?? SystemConfig::DEFAULT_CORRECTOR1_COLOR;
+
     }
 
     /**
      * Get the border color for a graphical mark
-     *  todo: use corrector colors
      */
     private function getMarkBorderColor(CorrectorCommentInfo $info): string
     {
-        return self::BORDER_NORMAL;
+        return $this->getMarkFillColor($info);
     }
 
     /**
@@ -96,7 +109,7 @@ class Service implements FullService
 
             case CorrectionMark::SHAPE_CIRCLE:
             default:
-                return new Shape\Circle($this->getShapeSymbol($mark), '#000000', 80, $pos, $label, $color);
+                return new Shape\Circle($this->getShapeSymbol($mark), '#000000', 40, $pos, $label, $color);
         }
     }
 

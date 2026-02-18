@@ -2,8 +2,22 @@
 Specific styles for the correction output
 */
 
+.xlas-page-break {
+    page-break-before: always;
+}
+
+.xlas-part-title {
+    font-size: 16px;
+    color: #555555;
+}
+
 .xlas-block {
     clear:both;
+}
+
+.xlas-image {
+    height: 100%;
+    width: 100%;
 }
 
 .xlas-comments-left {
@@ -15,7 +29,7 @@ Specific styles for the correction output
     width: 45%;
     float: left;
     font-family: sans-serif;
-    font-size: 12px;
+    font-size: 10px;
     margin-left: 5%;
 }
 

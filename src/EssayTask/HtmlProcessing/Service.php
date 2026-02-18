@@ -73,10 +73,11 @@ class Service implements FullService
 
         $html = $this->processor->replaceCustomMarkup(
             $this->processor->getContentForMarking(
-            (string) $essay->getWrittenText(),
-            $this->writing_settings->getAddParagraphNumbers(),
-            $this->writing_settings->getHeadlineScheme()
-        ));
+                (string) $essay->getWrittenText(),
+                $this->writing_settings->getAddParagraphNumbers(),
+                $this->writing_settings->getHeadlineScheme()
+            )
+        );
 
         $html = $this->processor->processXslt(
             $html,
@@ -85,8 +86,7 @@ class Service implements FullService
             $this->writing_settings->getAddParagraphNumbers(),
         );
 
-        $html = "<style>\n" . file_get_contents(__DIR__ . '/styles/correction.css') . "\n</style>\n"
-            . $this->processor->addContentStyles(
+        $html = $this->processor->addContentStyles(
             $html,
             $this->writing_settings->getAddParagraphNumbers(),
             $this->writing_settings->getHeadlineScheme()
@@ -160,7 +160,7 @@ class Service implements FullService
                     $colors[1] = $this->config->getCorrector2Color() ?? Config::DEFAULT_CORRECTOR2_COLOR;
                     break;
                 case GradingPosition::STITCH:
-                    $colors[2] = $this->config->getCorrector3Color()  ?? Config::DEFAULT_CORRECTOR2_COLOR;
+                    $colors[2] = $this->config->getCorrector3Color() ?? Config::DEFAULT_CORRECTOR2_COLOR;
                     break;
             }
         }

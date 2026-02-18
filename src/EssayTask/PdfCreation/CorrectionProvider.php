@@ -122,37 +122,46 @@ readonly class CorrectionProvider implements PdfPartProvider
         $infos = $this->comments->getInfos($task_id, $writer_id, $positions);
 
         if ($essay->hasPdfVersion()) {
-            return $this->renderFromImages($essay, $infos, $anonymous_corrector, $options);
+            return $this->renderFromImages($key, $essay, $infos, $anonymous_corrector, $options);
         } else {
-            return $this->renderFromText($essay, $infos, $anonymous_corrector, $options);
+            return $this->renderFromText($key, $essay, $infos, $anonymous_corrector, $options);
         }
     }
 
     /**
      * @param CorrectorCommentInfo[] $infos
      */
-    private function renderFromText(Essay $essay, array $infos, bool $anonymous_corrector, Options $options): ?string
+    private function renderFromText(string $key, Essay $essay, array $infos, bool $anonymous_corrector, Options $options): ?string
     {
         if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
             $options = $options->withPortrait(false);
         }
 
-        $html = $this->html_processing->getCorrectedTextForPdf($essay, $infos);
+        $data = [
+            'correctionCss' => file_get_contents(__DIR__ . '/templates/correction.css'),
+            'partTitle' => $this->getPartTitle($key),
+            'partComments' => $this->html_processing->getCorrectedTextForPdf($essay, $infos)
+        ];
+
+        $html = $this->system_html_processing->fillTemplate(__DIR__ . '/templates/text_comments.html', $data);
+
         return $this->pdf_processing->create($html, $options);
     }
 
     /**
      * @param CorrectorCommentInfo[] $infos
      */
-    private function renderFromImages(Essay $essay, array $infos, bool $anonymous_corrector, Options $options): ?string
+    private function renderFromImages(string $key, Essay $essay, array $infos, bool $anonymous_corrector, Options $options): ?string
     {
         $data = [
+            'correctionCss' => file_get_contents(__DIR__ . '/templates/correction.css'),
             'pages' => []
         ];
 
         $temp_ids = [];
 
         foreach ($this->essay_images->getByEssayId($essay->getId()) as $page_no => $essay_image) {
+            $page_no++;
             $stream = $this->file_storage->getFileStream(($essay_image->getFileId()));
             if ($stream !== null) {
                 $raw_image = new ImageDescriptor(
@@ -167,21 +176,24 @@ readonly class CorrectionProvider implements PdfPartProvider
                 $applied_image = $this->image_processing->applyCommentsMarks(
                     $page_no,
                     $raw_image,
-                    $infos
+                    $page_infos
                 );
 
                 $file_info = $this->temp_storage->saveFile($applied_image->stream());
 
                 $temp_ids[] = $image_id = $file_info->getId();
                 $data['pages'][] = [
+                    'partTitle' => $page_no == 1 ? $this->getPartTitle($key) : '',
+                    'pageBreakClass' => $page_no > 1 ? 'xlas-page-break' : '',
                     'src' => $this->temp_storage->getReadablePath($image_id),
-                    'comments' => $this->html_processing->getCommentsHtml($infos),
+                    'comments' => $this->html_processing->getCommentsHtml($page_infos),
                 ];
             }
 
         }
 
-        $html = $this->system_html_processing->fillTemplate(__DIR__ . '/../templates/image_comments.html', $data);
+        $html = $this->system_html_processing->fillTemplate(__DIR__ . '/templates/image_comments.html', $data);
+
         $pdf_id = $this->pdf_processing->create($html, $options->withPortrait(false));
 
         foreach ($temp_ids as $image_id) {
@@ -189,5 +201,15 @@ readonly class CorrectionProvider implements PdfPartProvider
         }
 
         return $pdf_id;
+    }
+
+    private function getPartTitle($key)
+    {
+        return match($key) {
+            self::KEY_CORRECTOR_1 => $this->language->txt('comments_corrector1'),
+            self::KEY_CORRECTOR_2 => $this->language->txt('comments_corrector2'),
+            self::KEY_CORRECTOR_3 => $this->language->txt('comments_corrector3'),
+            default => $this->language->txt('comments_corrector_all'),
+        };
     }
 }
