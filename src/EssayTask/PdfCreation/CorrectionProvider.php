@@ -120,7 +120,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         };
 
         $infos = $this->comments->getInfos($task_id, $writer_id, $positions);
-        $options = $options->withTitle($options->getTitle() . ' | ' . $this->getPartTitle($key));
+        $options = $options->withTitle($options->getTitle() . ' | ' . $this->getCorrectionTitle($key));
 
         if ($essay->hasPdfVersion()) {
             return $this->renderFromImages($key, $essay, $infos, $anonymous_corrector, $options);
@@ -140,7 +140,7 @@ readonly class CorrectionProvider implements PdfPartProvider
 
         $data = [
             'correctionCss' => file_get_contents(__DIR__ . '/templates/correction.css'),
-            'partTitle' => $this->getPartTitle($key),
+            'partTitle' => $this->getCorrectionTitle($key),
             'partComments' => $this->html_processing->getCorrectedTextForPdf($essay, $infos)
         ];
 
@@ -189,7 +189,7 @@ readonly class CorrectionProvider implements PdfPartProvider
                     // print image and comments beneath each other
 
                     $data['pages'][] = [
-                        'partTitle' => $page_no == 1 ? $this->getPartTitle($key) : '',
+                        'partTitle' => $page_no == 1 ? $this->getCorrectionTitle($key) : '',
                         'pageBreakClass' => $page_no > 1 ? 'xlas-page-break' : '',
                         'src' => $this->temp_storage->getReadablePath($image_id),
                         'comments' => $this->html_processing->getCommentsHtml($page_infos),
@@ -205,7 +205,7 @@ readonly class CorrectionProvider implements PdfPartProvider
 
                     $html = $this->template_engine->fillTemplate(__DIR__ . '/templates/solo_comments.html', [
                         'correctionCss' => file_get_contents(__DIR__ . '/templates/correction.css'),
-                        'partTitle' => $this->getPartTitle($key),
+                        'partTitle' => $this->getCorrectionTitle($key),
                         'partComments' => $this->html_processing->getCommentsHtml($page_infos),
                     ]);
 
@@ -233,7 +233,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         return $pdf_id;
     }
 
-    private function getPartTitle($key)
+    private function getCorrectionTitle($key)
     {
         return match($key) {
             self::KEY_CORRECTOR_1 => $this->language->txt('comments_corrector1'),

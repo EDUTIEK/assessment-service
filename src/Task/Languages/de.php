@@ -34,6 +34,13 @@ return [
     'points_must_not_have_decimals' => 'Punkte nicht ganzzahlig',
     'revision_not_allowed' => 'Status erlaubt keine Überarbeitung',
     'revision_text_missing' => 'Begründungstext fehlt',
+    'summary' => 'Gutachten',
+    'summary_corrector1' => 'Gutachten Erstkorrektur',
+    'summary_corrector2' => 'Gutachten Zweitkorrektur',
+    'summary_corrector3' => 'Gutachten Stichentscheid',
+    'approximation_corrector1' => 'Gutachten zur Annäherung der Erstkorrektur',
+    'approximation_corrector2' => 'Gutachten zur Annäherung der Zweitkorrektur',
+    'consulting' => 'Gutachten zur Beratung',
     'summary_not_found' => 'Korrektur nicht gefunden',
     'task_solution' => "Lösungshinweise",
     'invalid_import_assignment' => 'Fehlerhafte zuweisung in Zeile %d',
@@ -49,5 +56,7 @@ return [
     'words' => 'Wörter',
     'authorized' => 'Klausur Freigegeben',
     'corrector' => 'Korrektor',
-    'writer' => 'Teilnehmer'
+    'writer' => 'Teilnehmer',
+    'correction_not_authorized' => 'Die Korrektur ist noch nicht freigegeben.',
+    'correction_not_revised' => 'Die überarbeitete Korrektur ist noch nicht freigegeben.',
 ];
