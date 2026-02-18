@@ -12,11 +12,15 @@ use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
+use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImages;
 use Edutiek\AssessmentService\EssayTask\HtmlProcessing\FullService as HtmlProcessing;
 use Edutiek\AssessmentService\EssayTask\ImageProcessing\FullService as ImageProcssing;
+use Edutiek\AssessmentService\System\Data\ImageDescriptor;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
+use Edutiek\AssessmentService\System\HtmlProcessing\FullService as SystemHtmlProcessing;
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessing;
+use Edutiek\AssessmentService\System\File\Storage as FileStorage;
 use Edutiek\AssessmentService\Task\CorrectorComment\CorrectorCommentInfo;
 use Edutiek\AssessmentService\Task\CorrectorComment\InfoService as CommentsService;
 
@@ -33,10 +37,14 @@ readonly class CorrectionProvider implements PdfPartProvider
     public function __construct(
         private Repositories $repos,
         private PdfSettings $pdf_settings,
+        private EssayImages $essay_images,
         private HtmlProcessing $html_processing,
         private ImageProcssing $image_processing,
         private PdfProcessing $pdf_processing,
         private LanguageService $language,
+        private FileStorage $file_storage,
+        private FileStorage $temp_storage,
+        private SystemHtmlProcessing $system_html_processing,
         private CorrectionSettingsReadService $settings_service,
         private CommentsService $comments,
     ) {
@@ -138,6 +146,48 @@ readonly class CorrectionProvider implements PdfPartProvider
      */
     private function renderFromImages(Essay $essay, array $infos, bool $anonymous_corrector, Options $options): ?string
     {
-        return null;
+        $data = [
+            'pages' => []
+        ];
+
+        $temp_ids = [];
+
+        foreach ($this->essay_images->getByEssayId($essay->getId()) as $page_no => $essay_image) {
+            $stream = $this->file_storage->getFileStream(($essay_image->getFileId()));
+            if ($stream !== null) {
+                $raw_image = new ImageDescriptor(
+                    $stream,
+                    $essay_image->getWidth(),
+                    $essay_image->getHeight(),
+                    $essay_image->getMime()
+                );
+
+                $page_infos = $this->comments->filterAndLabelInfos($infos, $page_no);
+
+                $applied_image = $this->image_processing->applyCommentsMarks(
+                    $page_no,
+                    $raw_image,
+                    $infos
+                );
+
+                $file_info = $this->temp_storage->saveFile($applied_image->stream());
+
+                $temp_ids[] = $image_id = $file_info->getId();
+                $data['pages'][] = [
+                    'src' => $this->temp_storage->getReadablePath($image_id),
+                    'comments' => $this->html_processing->getCommentsHtml($infos),
+                ];
+            }
+
+        }
+
+        $html = $this->system_html_processing->fillTemplate(__DIR__ . '/../templates/image_comments.html', $data);
+        $pdf_id = $this->pdf_processing->create($html, $options->withPortrait(false));
+
+        foreach ($temp_ids as $image_id) {
+            $this->temp_storage->deleteFile($image_id);
+        }
+
+        return $pdf_id;
     }
 }

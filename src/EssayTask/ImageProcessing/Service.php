@@ -9,6 +9,7 @@ use Edutiek\AssessmentService\System\Data\ImageDescriptor;
 use Edutiek\AssessmentService\System\ImageSketch\FullService as ImageSketchService;
 use Edutiek\AssessmentService\System\ImageSketch\Point;
 use Edutiek\AssessmentService\System\ImageSketch\Shape;
+use Edutiek\AssessmentService\Task\CorrectorComment\CorrectorCommentInfo;
 use Edutiek\AssessmentService\Task\Data\CorrectorComment;
 
 class Service implements FullService
@@ -22,17 +23,18 @@ class Service implements FullService
     }
 
 
-    public function applyCommentsMarks(int $page_number, ImageDescriptor $image, array $comments): ImageDescriptor
+    public function applyCommentsMarks(int $page_number, ImageDescriptor $image, array $infos): ImageDescriptor
     {
         $shapes = [];
-        foreach ($comments as $comment) {
-            if ($comment->getParentNumber() == $page_number && !empty($comment->getMarks())) {
-                foreach ($comment->getMarks() as $mark) {
+        foreach ($infos as $info) {
+            $marks = json_decode($info->getComment()->getMarks(), true);
+            if ($info->getComment()->getParentNumber() == $page_number && is_array($marks) && !empty($marks)) {
+                foreach ($marks as $mark) {
                     $filled = in_array($mark->getShape(), CorrectionMark::FILLED_SHAPES);
                     if ($filled) {
-                        $shapes[] = $this->getShapeFromMark($mark, $comment->getLabel(), $this->getMarkFillColor($comment));
+                        $shapes[] = $this->getShapeFromMark($mark, $info->getLabel(), $this->getMarkFillColor($info));
                     } else {
-                        $shapes[] = $this->getShapeFromMark($mark, $comment->getLabel(), $this->getMarkBorderColor($comment));
+                        $shapes[] = $this->getShapeFromMark($mark, $info->getLabel(), $this->getMarkBorderColor($info));
                     }
                 }
             }
@@ -50,7 +52,7 @@ class Service implements FullService
      * Get the fill color for a graphical mark
      * todo: use corrector colors
      */
-    private function getMarkFillColor(CorrectorComment $comment): string
+    private function getMarkFillColor(CorrectorCommentInfo $info): string
     {
         return self::FILL_NORMAL;
     }
@@ -59,7 +61,7 @@ class Service implements FullService
      * Get the border color for a graphical mark
      *  todo: use corrector colors
      */
-    private function getMarkBorderColor(CorrectorComment $comment): string
+    private function getMarkBorderColor(CorrectorCommentInfo $info): string
     {
         return self::BORDER_NORMAL;
     }
