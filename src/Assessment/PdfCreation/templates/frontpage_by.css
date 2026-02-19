@@ -1,0 +1,45 @@
+.label {
+    font-size: 10px;
+    width: 100%;
+    margin_bottom: 1em;
+}
+.field {
+    width: 100%;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.centered {
+    text-align: center;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid black;
+    width: 100%;
+    table-layout: fixed;
+    font-family: sans-serif;
+}
+table.first {
+    margin-bottom: 10mm;
+}
+table.second {
+    margin-bottom: 5mm;
+}
+
+tr {
+    vertical-align: top;
+}
+tr.wide {
+    min-height: 20mm;
+}
+
+td {
+    border: 1px solid black;
+    padding: 5px;
+}
+
+tr.wide {
+    min-height: 20mm;
+}

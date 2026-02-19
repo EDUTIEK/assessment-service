@@ -345,6 +345,9 @@ class Internal implements ComponentApi, ComponentApiFactory
     {
         return $this->instances[CorrectionProvider::class][$ass_id][$user_id] ?? new CorrectionProvider(
             $ass_id,
+            $this->pdfSettings($ass_id)->get(),
+            $this->correctionSettings($ass_id, $user_id)->get(),
+            $this->dependencies->systemApi()->htmlProcessing(),
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->language($user_id),
         );
