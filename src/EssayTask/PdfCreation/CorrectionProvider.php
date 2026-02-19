@@ -44,7 +44,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         private LanguageService $language,
         private FileStorage $file_storage,
         private FileStorage $temp_storage,
-        private SystemHtmlProcessing $template_engine,
+        private SystemHtmlProcessing $system_processing,
         private CorrectionSettingsReadService $settings_service,
         private CommentsService $comments,
     ) {
@@ -139,12 +139,12 @@ readonly class CorrectionProvider implements PdfPartProvider
         }
 
         $data = [
-            'correctionCss' => file_get_contents(__DIR__ . '/templates/correction.css'),
             'partTitle' => $this->getCorrectionTitle($key),
             'partComments' => $this->html_processing->getCorrectedTextForPdf($essay, $infos)
         ];
 
-        $html = $this->template_engine->fillTemplate(__DIR__ . '/templates/text_comments.html', $data);
+        $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/text_comments.html', $data);
+        $html = $this->system_processing->addCorrectionStyles($html);
 
         return $this->pdf_processing->create($html, $options);
     }
@@ -155,7 +155,6 @@ readonly class CorrectionProvider implements PdfPartProvider
     private function renderFromImages(string $key, Essay $essay, array $infos, bool $anonymous_corrector, Options $options): ?string
     {
         $data = [
-            'correctionCss' => file_get_contents(__DIR__ . '/templates/correction.css'),
             'pages' => []
         ];
 
@@ -197,17 +196,17 @@ readonly class CorrectionProvider implements PdfPartProvider
                 } else {
                     // add comments to a separate page following the image
 
-                    $html = $this->template_engine->fillTemplate(__DIR__ . '/templates/solo_image.html', [
+                    $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/solo_image.html', [
                         'src' => $this->temp_storage->getReadablePath($image_id),
                     ]);
                     $pdf_ids[] = $id1 = $this->pdf_processing->create($html, $options->withStartPageNumber($start_page));
                     $start_page += $this->pdf_processing->count($id1);
 
-                    $html = $this->template_engine->fillTemplate(__DIR__ . '/templates/solo_comments.html', [
-                        'correctionCss' => file_get_contents(__DIR__ . '/templates/correction.css'),
+                    $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/solo_comments.html', [
                         'partTitle' => $this->getCorrectionTitle($key),
                         'partComments' => $this->html_processing->getCommentsHtml($page_infos),
                     ]);
+                    $html = $this->system_processing->addCorrectionStyles($html);
 
                     if (!empty($page_infos)) {
                         $pdf_ids[] = $id2 = $this->pdf_processing->create($html, ($options->withStartPageNumber($start_page)));
@@ -218,7 +217,8 @@ readonly class CorrectionProvider implements PdfPartProvider
         }
 
         if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
-            $html = $this->template_engine->fillTemplate(__DIR__ . '/templates/image_comments.html', $data);
+            $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/image_comments.html', $data);
+            $html = $this->system_processing->addCorrectionStyles($html);
             $pdf_id = $this->pdf_processing->create($html, $options->withPortrait(false));
 
         } else {

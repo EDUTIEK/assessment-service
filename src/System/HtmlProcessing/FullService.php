@@ -46,6 +46,11 @@ interface FullService
     public function addContentStyles(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string;
 
     /**
+     * Add Styles for PDF generation of correction texts
+     */
+    public function addCorrectionStyles(string $html): string;
+
+    /**
      * Get the XSLt Processor for an XSL file
      * The process_version is a number, which can be increased with a new version of the processing
      * This number is provided as a parameter to the XSLT processing

@@ -158,15 +158,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         } elseif (!empty($summary->getSummaryPdf())) {
             return $this->pdf_processing->copy($summary->getSummaryPdf());
         } else {
-            $html = $this->html_processing->fillTemplate(__DIR__ . '/templates/content.html', [
-                'title' => $title,
-                'content' => $this->html_processing->addContentStyles(
-                    $summary->getSummaryText(),
-                    false,
-                    HeadlineScheme::THREE
-                )
-            ]);
-            return $this->pdf_processing->create($html, $options);
+            return $this->renderContent($title, $summary->getSummaryText(), $options);
         }
     }
 
@@ -175,15 +167,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         if (!$is_own && !$summary->isRevised()) {
             return $this->renderContent($title, $this->language->txt('correction_not_revised'), $options);
         } else {
-            $html = $this->html_processing->fillTemplate(__DIR__ . '/templates/content.html', [
-                'title' => $title,
-                'content' => $this->html_processing->addContentStyles(
-                    $summary->getRevisionText(),
-                    false,
-                    HeadlineScheme::THREE
-                )
-            ]);
-            return $this->pdf_processing->create($html, $options);
+            return $this->renderContent($title, $summary->getRevisionText(), $options);
         }
     }
 
@@ -192,7 +176,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         return null;
     }
 
-    private function renderContent(string $content, string $title, Options $options): ?string
+    private function renderContent(string $title, string $content, Options $options): ?string
     {
         $html = $this->html_processing->fillTemplate(__DIR__ . '/templates/content.html', [
             'title' => $title,
@@ -202,6 +186,7 @@ readonly class CorrectionProvider implements PdfPartProvider
                 HeadlineScheme::THREE
             )
         ]);
+        $html = $this->html_processing->addCorrectionStyles($html);
         return $this->pdf_processing->create($html, $options);
     }
 }

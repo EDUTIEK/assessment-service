@@ -85,6 +85,15 @@ class Service implements FullService
         );
     }
 
+    public function addCorrectionStyles(string $html): string
+    {
+        return sprintf(
+            "<style>%s</style>\n%s",
+            file_get_contents(__DIR__ . '/styles/correction.css'),
+            $html
+        );
+    }
+
     public function replaceCustomMarkup(string $html): string
     {
         $html = preg_replace('/<w-p w="([0-9]+)" p="([0-9]+)">/', '<span data-w="$1" data-p="$2">', $html);
