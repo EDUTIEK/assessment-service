@@ -62,7 +62,7 @@ readonly class ForClients
 
     public function ratingCriterion(int $task_id): RatingCriterionFullService
     {
-        return $this->internal->ratingCriterion($task_id);
+        return $this->internal->ratingCriterion($task_id, $this->ass_id, $this->user_id);
     }
 
     public function assessmentStatus(): StatusFullService

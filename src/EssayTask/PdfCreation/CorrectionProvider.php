@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\PdfCreation;
 
-use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
 use Edutiek\AssessmentService\Assessment\Data\PdfFeedbackMode;
 use Edutiek\AssessmentService\Assessment\Data\PdfSettings as PdfSettings;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfConfigPart;
@@ -23,6 +22,8 @@ use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessing;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
 use Edutiek\AssessmentService\Task\CorrectorComment\CorrectorCommentInfo;
 use Edutiek\AssessmentService\Task\CorrectorComment\InfoService as CommentsService;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings as AssessmentSettings;
+use Edutiek\AssessmentService\Task\Data\CorrectionSettings as TaskSettings;
 
 readonly class CorrectionProvider implements PdfPartProvider
 {
@@ -45,16 +46,19 @@ readonly class CorrectionProvider implements PdfPartProvider
         private FileStorage $file_storage,
         private FileStorage $temp_storage,
         private SystemHtmlProcessing $system_processing,
-        private CorrectionSettingsReadService $settings_service,
         private CommentsService $comments,
+        private AssessmentSettings $assessment_settings,
+        private TaskSettings $task_settings,
     ) {
     }
 
     public function getAvailableParts(): array
     {
-        $settings = $this->settings_service->get();
+        if (!$this->task_settings->getEnableComments()) {
+            return [];
+        }
 
-        if ($settings->hasMultipleCorrectors()) {
+        if ($this->assessment_settings->hasMultipleCorrectors()) {
             return [
                 new PdfConfigPart(
                     "EssayTask",
@@ -106,6 +110,10 @@ readonly class CorrectionProvider implements PdfPartProvider
         bool $anonymous_corrector,
         Options $options
     ): ?string {
+
+        if (!$this->task_settings->getEnableComments()) {
+            return null;
+        }
 
         $essay = $this->repos->essay()->oneByWriterIdAndTaskId($writer_id, $task_id);
         if ($essay === null) {

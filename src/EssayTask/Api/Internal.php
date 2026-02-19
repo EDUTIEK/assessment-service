@@ -111,8 +111,9 @@ class Internal
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->tempStorage(),
             $this->dependencies->systemApi()->htmlProcessing(),
-            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings(),
             $this->dependencies->taskApi($ass_id, $user_id)->correctorComments(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
+            $this->dependencies->taskApi($ass_id, $user_id)->correctionSettings()->get(),
         );
     }
 

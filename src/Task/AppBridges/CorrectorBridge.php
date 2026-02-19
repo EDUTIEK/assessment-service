@@ -30,6 +30,7 @@ use Edutiek\AssessmentService\Task\Data\CorrectorSnippet;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 use Edutiek\AssessmentService\Task\Data\CriteriaMode;
 use Edutiek\AssessmentService\Task\Data\RatingCriterion;
+use Edutiek\AssessmentService\Task\RatingCriterion\Factory as RatingCriterionServiceFactory;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\Resource;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
@@ -61,16 +62,17 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly Repositories $repos,
         private readonly Storage $storage,
         private readonly EntityFullService $entity,
+        private readonly UserReadService $user_service,
         private readonly CorrectorReadService $corrector_service,
         private readonly WriterReadService $writer_service,
         private readonly AssessmentSettingsService $assesment_settings_service,
+        private readonly RatingCriterionServiceFactory $criteria_services,
         private readonly CorrectionSettingsService $correction_settings_service,
         private readonly AssignmentService $assignment_service,
         private readonly SummaryService $summary_service,
         private readonly TemplateService $template_service,
         private readonly CorrectionProcessService $process_service,
-        private readonly Language $language,
-        private readonly UserReadService $user_service,
+        private readonly Language $language
     ) {
         $this->corrector = $this->corrector_service->oneByUserId($this->user_id);
         foreach ($this->repos->settings()->allByAssId($this->ass_id) as $task) {
@@ -712,25 +714,20 @@ class CorrectorBridge implements AppCorrectorBridge
         return $change->toResponse(false, 'wrong action');
     }
 
+    /**
+     * @param int $task_id
+     * @param int $corrector_id
+     * @return array|RatingCriterion[] - indexed by criterion id
+     */
     private function getCriteriaForTaskAndCorrector(int $task_id, int $corrector_id)
     {
-        switch ($this->correction_settings->getCriteriaMode()) {
-            case CriteriaMode::CORRECTOR:
-                break;
-            case CriteriaMode::FIXED:
-                $corrector_id = null;
-                break;
-            case CriteriaMode::NONE:
-                return [];
-        }
-
-        if (!isset($this->criteria[$task_id][(int) $corrector_id])) {
-            $this->criteria[$task_id][(int) $corrector_id] = [];
-            foreach ($this->repos->ratingCriterion()->allByTaskIdAndCorrectorId($task_id, $corrector_id) as $criterion) {
-                $this->criteria[$task_id][(int) $corrector_id][$criterion->getId()] = $criterion;
+        if (!isset($this->criteria[$task_id][$corrector_id])) {
+            $criteria = $this->criteria_services->ratingCriterion($task_id, $this->ass_id, $this->user_id)->allForCorrector($corrector_id);
+            foreach ($criteria as $criterion) {
+                $this->criteria[$task_id][$corrector_id][$criterion->getId()] = $criterion;
             }
         }
-        return $this->criteria[$task_id][(int) $corrector_id];
+        return $this->criteria[$task_id][$corrector_id];
     }
 
     public function processUploadedFile(UploadedFileInterface $file, int $task_id, int $writer_id): ?string

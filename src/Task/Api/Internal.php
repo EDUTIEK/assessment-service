@@ -20,13 +20,14 @@ use Edutiek\AssessmentService\Task\EventHandling\Observer as EventObserver;
 use Edutiek\AssessmentService\Task\Format\Service as FormatService;
 use Edutiek\AssessmentService\Task\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\Task\RatingCriterion\Service as RatingCriterionService;
+use Edutiek\AssessmentService\Task\RatingCriterion\Factory as RatingCriterionServiceFactory;
 use Edutiek\AssessmentService\Task\Resource\Service as ResourceService;
 use Edutiek\AssessmentService\Task\Settings\Service as SettingsService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Task\PdfCreation\CorrectionProvider;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ExcelAssignmentData;
 
-class Internal
+class Internal implements RatingCriterionServiceFactory
 {
     private array $instances = [];
 
@@ -128,16 +129,17 @@ class Internal
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->entity(),
+            $this->dependencies->systemApi()->user(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings(),
+            $this,
             $this->correctionSettings($ass_id, $user_id),
             $this->correctorAssignments($ass_id, $user_id),
             $this->correctorSummary($ass_id, $user_id),
             $this->correctorTemplate($ass_id, $user_id),
             $this->correctionProcess($ass_id, $user_id),
-            $this->language($user_id),
-            $this->dependencies->systemApi()->user()
+            $this->language($user_id)
         );
     }
 
@@ -175,10 +177,13 @@ class Internal
             $this->dependencies->systemApi()->htmlProcessing(),
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->language($user_id),
-            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
+            $this->correctionSettings($ass_id, $user_id)->get(),
+            $this,
             $this->correctorAssignments($ass_id, $user_id),
             $this->correctorSummary($ass_id, $user_id),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
+            $this->dependencies->repositories()
         );
     }
 
@@ -214,11 +219,12 @@ class Internal
         );
     }
 
-    public function ratingCriterion(int $task_id): RatingCriterionService
+    public function ratingCriterion(int $task_id, int $ass_id, int $user_id): RatingCriterionService
     {
-        return $this->instances[RatingCriterionService::class][$task_id] ??= new RatingCriterionService(
+        return $this->instances[RatingCriterionService::class][$task_id][$ass_id][$user_id] ??= new RatingCriterionService(
             $task_id,
-            $this->dependencies->repositories()
+            $this->dependencies->repositories(),
+            $this->correctionSettings($ass_id, $user_id)
         );
     }
 

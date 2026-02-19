@@ -1,0 +1,28 @@
+<div class="xlas-part-title">
+    {{title}}
+</div>
+
+<div class="xlas-correction">
+    {{#tables}}
+    <h2>{{title}}</h2>
+    <table>
+        <thead>
+        <th>{{head_title}}</th>
+        <th>{{head_description}}</th>
+        <th>{{head_points}} / {{head_max_points}}</th>
+        </thead>
+        <tbody>
+        {{#rows}}
+        <tr>
+            <td>{{title}}</td>
+            <td>{{description}}</td>
+            <td>
+                {{points}} {{#max_points}} / {{.}} {{/max_points}}
+            </td>
+        </tr>
+        {{/rows}}
+        </tbody>
+    </table>
+
+    {{/tables}}
+</div>

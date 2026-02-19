@@ -11,11 +11,14 @@ use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as Correctors;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfConfigPart;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
-use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings as AssessmentSettings;
+use Edutiek\AssessmentService\Task\Data\CorrectionSettings as TaskSettings;
+use Edutiek\AssessmentService\Task\RatingCriterion\Factory as RatingCriterionServiceFactory;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as Assignments;
 use Edutiek\AssessmentService\Task\CorrectorSummary\ReadService as Summaries;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
+use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\System\Data\HeadlineScheme;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionProcedure;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
@@ -26,66 +29,84 @@ readonly class CorrectionProvider implements PdfPartProvider
     public const PART_REVISION = 'revision';
     public const PART_CRITERIA = 'criteria';
 
+    public const CORRECTOR_1 = 'corrector1';
+    public const CORRECTOR_2 = 'corrector2';
+    public const CORRECTOR_3 = 'corrector3';
+
     public function __construct(
         private int $ass_id,
         private int $user_id,
         private HtmlProcessing $html_processing,
         private PdfProcessing $pdf_processing,
         private LanguageService $language,
-        private CorrectionSettingsReadService $settings_service,
+        private AssessmentSettings $assessment_settings,
+        private TaskSettings $task_settings,
+        private RatingCriterionServiceFactory $criteria_services,
         private Assignments $assignments,
         private Summaries $summaries,
-        private Correctors $correctors
+        private Correctors $correctors,
+        private Repositories $repos
     ) {
     }
 
     public function getAvailableParts(): array
     {
-        $settings = $this->settings_service->get();
-
         $parts = [];
-        if ($settings->hasMultipleCorrectors()) {
-            foreach ([self::PART_SUMMARY, self::PART_REVISION, self::PART_CRITERIA] as $type) {
-                foreach (['corrector1', 'corrector2', 'corrector3'] as $corrector) {
-                    $key = $type . '_' . $corrector;
-                    $parts[$key] = new PdfConfigPart(
+        foreach ([self::PART_SUMMARY, self::PART_REVISION, self::PART_CRITERIA] as $type) {
+            foreach ([self::CORRECTOR_1, self::CORRECTOR_2, self::CORRECTOR_3] as $corrector) {
+                if ($this->isPartAvailable($type, $corrector)) {
+                    $parts[] = new PdfConfigPart(
                         "Task",
-                        $key,
+                        $type . '_' . $corrector,
                         $type,
-                        $this->language->txt('pdf_part_' . $key),
+                        $this->getPartTitle($type, $corrector),
                         true
                     );
                 }
             }
-
-            switch ($settings->getProcedure()) {
-                case CorrectionProcedure::NONE:
-                    unset($parts[self::PART_REVISION . '_corrector1']);
-                    unset($parts[self::PART_REVISION . '_corrector2']);
-                    break;
-                case CorrectionProcedure::CONSULTING:
-                    // in consulting only corrector 2 can enter a revision text
-                    unset($parts[self::PART_REVISION . '_corrector1']);
-                    break;
-            }
-            // stich decision has no revision
-            unset($parts[self::PART_REVISION . '_corrector3']);
-
-        } else {
-            foreach ([self::PART_SUMMARY, self::PART_CRITERIA] as $type) {
-                $parts[] = new PdfConfigPart(
-                    "Task",
-                    $type . '_corrector1',
-                    $type,
-                    $this->language->txt('pdf_part_' . $type),
-                    true
-                );
-            }
         }
 
-        return array_values($parts);
+        return $parts;
     }
 
+    private function isPartAvailable(string $type, string $corrector): bool
+    {
+        switch ($type) {
+            case self::PART_CRITERIA:
+                return $this->task_settings->getEnablePartialPoints();
+            case self::PART_SUMMARY:
+                return $corrector === self::CORRECTOR_1 || $this->assessment_settings->hasMultipleCorrectors();
+            case self::PART_REVISION:
+                switch ($this->assessment_settings->getProcedure()) {
+                    case CorrectionProcedure::NONE:
+                        return false;
+                    case CorrectionProcedure::APPROXIMATION:
+                        // only corrector1 or 2 can approximate
+                        return $this->assessment_settings->hasMultipleCorrectors() && $corrector !== self::CORRECTOR_3;
+                    case CorrectionProcedure::CONSULTING:
+                        // in consulting only corrector 2 can enter a revision text
+                        return $this->assessment_settings->hasMultipleCorrectors() && $corrector === self::CORRECTOR_2;
+                }
+        }
+        return false;
+    }
+
+    private function getPartTitle(string $type, string $corrector): string
+    {
+        if ($type == self::PART_REVISION) {
+            $lang_var = match ($this->assessment_settings->getProcedure()) {
+                CorrectionProcedure::APPROXIMATION => 'pdf_part_approximation_' . $corrector,
+                CorrectionProcedure::CONSULTING => 'pdf_part_consulting',
+                default => ''
+            };
+        } elseif ($this->assessment_settings->hasMultipleCorrectors()) {
+            $lang_var = 'pdf_part_' . $type . '_' . $corrector;
+        } else {
+            $lang_var = 'pdf_part_' . $type;
+        }
+
+        return $this->language->txt($lang_var);
+    }
 
     public function renderPart(
         string $key,
@@ -95,35 +116,19 @@ readonly class CorrectionProvider implements PdfPartProvider
         bool $anonymous_corrector,
         Options $options,
     ): ?string {
-        $settings = $this->settings_service->get();
 
-        [$type, $corr] = explode('_', $key);
-        switch ($type) {
-            case self::PART_CRITERIA:
-                $part_title = $this->language->txt($settings->hasMultipleCorrectors() ?
-                    'criteria_' . $corr : 'criteria');
-                break;
-            case self::PART_SUMMARY:
-                $part_title = $this->language->txt($settings->hasMultipleCorrectors() ?
-                'summary_' . $corr : 'summary');
-                break;
-            case self::PART_REVISION:
-                if ($settings->getProcedure() == CorrectionProcedure::APPROXIMATION) {
-                    $part_title = $this->language->txt('approximation_' . $corr);
-                } else {
-                    $part_title = $this->language->txt('consulting');
-                }
-                break;
-
+        [$type, $corrector] = explode('_', $key);
+        if (!$this->isPartAvailable($type, $corrector)) {
+            return null;
         }
-
+        $part_title = $this->getPartTitle($type, $corrector);
         $options = $options->withTitle($options->getTitle() . ' | ' . $part_title);
 
-        $position = match($corr) {
-            'corrector1' => GradingPosition::FIRST,
-            'corrector2' => GradingPosition::SECOND,
-            'corrector3' => GradingPosition::STITCH,
-            'default' => null
+        $position = match($corrector) {
+            self::CORRECTOR_1 => GradingPosition::FIRST,
+            self::CORRECTOR_2 => GradingPosition::SECOND,
+            self::CORRECTOR_3 => GradingPosition::STITCH,
+            default => null
         };
 
         $assignment = null;
@@ -134,9 +139,8 @@ readonly class CorrectionProvider implements PdfPartProvider
         }
 
         if ($assignment !== null) {
-            $corrector = $this->correctors->oneById($assignment->getCorrectorId());
             $summary = $this->summaries->getForAssignment($assignment);
-            $is_own = $corrector->getUserId() == $this->user_id;
+            $is_own = $this->correctors->oneById($assignment->getCorrectorId())?->getUserId() == $this->user_id;
 
             switch ($type) {
                 case self::PART_CRITERIA:
@@ -173,7 +177,63 @@ readonly class CorrectionProvider implements PdfPartProvider
 
     private function renderCriteria(CorrectorAssignment $assignment, string $title, bool $is_own, Options $options): ?string
     {
-        return null;
+        // criterion_id => points
+        $sum_of_points = [];
+
+        // criterion id is 0 for points without a criterion
+        foreach ($this->repos->correctorPoints()->allByTaskIdAndCorrectorId($assignment->getTaskId(), $assignment->getCorrectorId()) as $point) {
+            $sum_of_points[(int) $point->getCriterionId()] = ($sum_of_points[$point->getCriterionId()] ?? 0) + $point->getPoints();
+        }
+
+        $criteria_service = $this->criteria_services->ratingCriterion($assignment->getTaskId(), $this->ass_id, $this->user_id);
+
+        $criteria_by_type = [
+            'general' => [],
+            'comment' => [
+                $criteria_service->new()
+                    ->setId(0)
+                    ->setCorrectorId($assignment->getCorrectorId())
+                    ->setTaskId($assignment->getTaskId())
+                    ->setGeneral(0)
+                    ->setTitle($this->language->txt('independent_points'))
+                    ->setDescription($this->language->txt('independent_points_description'))
+            ]
+        ];
+
+        foreach ($criteria_service->allForCorrector($assignment->getCorrectorId()) as $criterion) {
+            $criteria_by_type[$criterion->getGeneral() ? 'general' : 'comment'][] = $criterion;
+        }
+
+        $data = [
+            'title' => $title,
+            'head_title' => $this->language->txt('criterion_title'),
+            'head_description' => $this->language->txt('criterion_description'),
+            'head_max_points' => $this->language->txt('criterion_max_points'),
+            'head_points' => $this->language->txt('criterion_points'),
+            'tables' => [],
+         ];
+
+        foreach ($criteria_by_type as $type => $criteria) {
+            if (!empty($criteria)) {
+                $table = [
+                    'title' => $this->language->txt($type . '_points'),
+                    'rows' => []
+                ];
+                foreach ($criteria as $criterion) {
+                    $table['rows'][] = [
+                        'title' => $criterion->getTitle(),
+                        'description' => $criterion->getDescription(),
+                        'max_points' => $criterion->getPoints(),
+                        'points' => $sum_of_points[$criterion->getId()] ?? 0
+                    ];
+                }
+                $data['tables'][] = $table;
+            }
+        }
+
+        $html = $this->html_processing->fillTemplate(__DIR__ . '/templates/criteria.html', $data);
+        $html = $this->html_processing->addCorrectionStyles($html);
+        return $this->pdf_processing->create($html, $options);
     }
 
     private function renderContent(string $title, string $content, Options $options): ?string
