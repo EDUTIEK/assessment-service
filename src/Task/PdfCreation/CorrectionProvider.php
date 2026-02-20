@@ -77,7 +77,8 @@ readonly class CorrectionProvider implements PdfPartProvider
     {
         switch ($type) {
             case self::PART_CRITERIA:
-                return $this->task_settings->getEnablePartialPoints();
+                return $this->task_settings->getEnablePartialPoints() &&
+                    $corrector === self::CORRECTOR_1 || $this->assessment_settings->hasMultipleCorrectors();
             case self::PART_SUMMARY:
                 return $corrector === self::CORRECTOR_1 || $this->assessment_settings->hasMultipleCorrectors();
             case self::PART_REVISION:

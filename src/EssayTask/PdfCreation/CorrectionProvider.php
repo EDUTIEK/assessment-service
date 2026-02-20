@@ -101,7 +101,7 @@ readonly class CorrectionProvider implements PdfPartProvider
                     "EssayTask",
                     self::KEY_COMMENTS_ALL,
                     self::PART_MULTI_COMMENTS,
-                    $this->language->txt('pdf_part_comments_all_correctors'),
+                    $this->language->txt('pdf_part_comments'),
                     true
                 ),
             ];

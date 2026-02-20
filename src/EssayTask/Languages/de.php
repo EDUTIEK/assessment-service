@@ -25,6 +25,7 @@ return [
     'import_wrong_hash' => 'Falscher Hash-Wert',
     'import_double_id_match' => 'Zur Prüflings-ID %s wurden zwei PDF_Dateien gefunden!',
     'import_missing_files_for' => 'Für die folgenden Prüflings-IDs wurden keine Dateien gefunden: %s',
+    'pdf_part_comments' => 'Anmerkungen',
     'pdf_part_comments_corrector1' => 'Anmerkungen (Erstkorrektur)',
     'pdf_part_comments_corrector2' => 'Anmerkungen (Zweitkorrektur)',
     'pdf_part_comments_corrector3' => 'Anmerkungen (Stichentscheid)',
