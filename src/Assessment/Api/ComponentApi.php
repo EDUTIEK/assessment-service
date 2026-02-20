@@ -33,10 +33,10 @@ interface ComponentApi
     /**
      * Get the provider of parts for the PDF of a writing
      */
-    public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider;
+    public function writingPartProvider(int $ass_id, int $context_id, int $user_id): ?PdfPartProvider;
 
     /**
      * Get the provider of parts for the PDF of a correction
      */
-    public function correctionPartProvider(int $ass_id, int $user_id): ?PdfPartProvider;
+    public function correctionPartProvider(int $ass_id, int $context_id, int $user_id): ?PdfPartProvider;
 }

@@ -341,15 +341,20 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    public function correctionPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
+    public function correctionPartProvider(int $ass_id, int $context_id, int $user_id): ?PdfPartProvider
     {
         return $this->instances[CorrectionProvider::class][$ass_id][$user_id] ?? new CorrectionProvider(
             $ass_id,
+            $context_id,
+            $this->dependencies->repositories(),
             $this->pdfSettings($ass_id)->get(),
             $this->correctionSettings($ass_id, $user_id)->get(),
+            $this->assessmentGrading($ass_id),
+            $this->dependencies->taskApi()->gradingProvider($ass_id, $user_id),
             $this->dependencies->systemApi()->htmlProcessing(),
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->language($user_id),
+            $this->dependencies->systemApi()->user()
         );
     }
 
@@ -389,10 +394,11 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    public function pdfCreation(int $ass_id, int $user_id): PdfCreationService
+    public function pdfCreation(int $ass_id, int $context_id, int $user_id): PdfCreationService
     {
-        return $this->instances[PdfCreationService::class][$ass_id][$user_id] = new PdfCreationService(
+        return $this->instances[PdfCreationService::class][$ass_id][$context_id][$user_id] = new PdfCreationService(
             $ass_id,
+            $context_id,
             $user_id,
             $this,
             $this->writer($ass_id, $user_id),
@@ -469,10 +475,10 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    public function export(int $ass_id, int $user_id): ExportService
+    public function export(int $ass_id, int $context_id, int $user_id): ExportService
     {
-        return $this->instances[ExportService::class][$ass_id][$user_id] ??= new ExportService(
-            $this->pdfCreation($ass_id, $user_id),
+        return $this->instances[ExportService::class][$ass_id][$context_id][$user_id] ??= new ExportService(
+            $this->pdfCreation($ass_id, $context_id, $user_id),
             $this->properties($ass_id),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->writer($ass_id, $user_id),
@@ -482,7 +488,7 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    public function writingPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
+    public function writingPartProvider(int $ass_id, int $context_id, int $user_id): ?PdfPartProvider
     {
         // currently the assessment component provides no writing parts
         return null;

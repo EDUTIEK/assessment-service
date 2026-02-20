@@ -21,6 +21,7 @@ class Service implements FullService
 {
     public function __construct(
         private int $ass_id,
+        private int $context_id,
         private int $user_id,
         private ComponentApiFactory $apis,
         private WriterService $writers,
@@ -243,10 +244,10 @@ class Service implements FullService
     {
         switch ($purpose) {
             case PdfPurpose::WRITING:
-                return $this->apis->api($component)?->writingPartProvider($this->ass_id, $this->user_id);
+                return $this->apis->api($component)?->writingPartProvider($this->ass_id, $this->context_id, $this->user_id);
 
             case PdfPurpose::CORRECTION:
-                return $this->apis->api($component)?->correctionPartProvider($this->ass_id, $this->user_id);
+                return $this->apis->api($component)?->correctionPartProvider($this->ass_id, $this->context_id, $this->user_id);
         }
         return null;
     }

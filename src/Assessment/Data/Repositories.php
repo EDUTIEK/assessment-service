@@ -15,6 +15,7 @@ interface Repositories
     public function corrector(): CorrectorRepo;
     public function gradeLevel(): GradeLevelRepo;
     public function orgaSettings(): OrgaSettingsRepo;
+    public function contextInfo(): ContextInfoRepo;
     public function pdfConfig(): PdfConfigRepo;
     public function pdfSettings(): PdfSettingsRepo;
     public function token(): TokenRepo;

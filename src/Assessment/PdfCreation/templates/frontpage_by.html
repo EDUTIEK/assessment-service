@@ -1,34 +1,34 @@
 <h1 class="centered">{{#context}}{{description}}{{/context}}</h1>
 
-<table class="first">
+<table>
     <tr class="wide">
         <td>
-            <p class="label centered">Prüfungsnummer:<p>
-            <p class="field">{{#writer}}{{firstname}} {{lastname}}{{/writer}}</p>
+            <p class="label centered">Prüfungsnummer:</p>
+            <p class="field centered">{{#writer}}{{firstname}} {{lastname}}{{/writer}}</p>
         </td>
         <td>
             <p class="label centered">Aufgabennummer:</p>
-            <p class="field">{{#assessment}}{{description}}{{/assessment}}</p>
+            <p class="field centered">{{#assessment}}{{description}}{{/assessment}}</p>
         </td>
     </tr>
 </table>
 
-<table class="second">
+<table>
     <tr>
         <td colspan="3"><p class="label">Erstbewertung</p></td>
     </tr>
     <tr class="wide">
         <td>
             <p class="label">Note</p>
-            <p class="field">{{#corrector1}}{{grade}}{{/corrector1}}</p>
-        </td>
-        <td>
-            <p class="label"></p>
-            <p class="field">{{#corrector1}}{{points}}{{/corrector1}}</p>
+            <p class="field centered">{{#corrector1}}{{grade}}{{/corrector1}}</p>
         </td>
         <td>
             <p class="label centered">Punktzahl</p>
-            <p class="field">{{#corrector1}}{{fullname}}{{/corrector1}}</p>
+            <p class="field centered">{{#corrector1}}{{points}}{{/corrector1}}</p>
+        </td>
+        <td>
+            <p class="label centered">&nbsp;</p>
+            <p class="field centered">{{#corrector1}}{{fullname}}{{/corrector1}}</p>
         </td>
     </tr>
 
@@ -38,15 +38,15 @@
     <tr class="wide">
         <td>
             <p class="label">Note</p>
-            <p class="field">{{#corrector2}}{{grade}}{{/corrector2}}</p>
+            <p class="field centered">{{#corrector2}}{{grade}}{{/corrector2}}</p>
         </td>
         <td>
             <p class="label centered">Punktzahl</p>
-            <p class="field">{{#corrector2}}{{points}}{{/corrector2}}</p>
+            <p class="field centered">{{#corrector2}}{{points}}{{/corrector2}}</p>
         </td>
         <td>
-            <p class="label"></p>
-            <p class="field">{{#corrector2}}{{fullname}}{{/corrector2}}</p>
+            <p class="label">&nbsp;</p>
+            <p class="field centered">{{#corrector2}}{{fullname}}{{/corrector2}}</p>
         </td>
     </tr>
 
@@ -56,28 +56,28 @@
     <tr class="wide">
         <td>
             <p class="label">Note</p>
-            <p class="field">{{#corrector3}}{{grade}}{{/corrector3}}</p>
+            <p class="field centered">{{#corrector3}}{{grade}}{{/corrector3}}</p>
         </td>
         <td>
             <p class="label centered">Punktzahl</p>
-            <p class="field">{{#corrector3}}{{points}}{{/corrector3}}</p>
+            <p class="field centered">{{#corrector3}}{{points}}{{/corrector3}}</p>
         </td>
         <td>
-            <p class="label"></p>
-            <p class="field">{{#corrector3}}{{fullname}}{{/corrector3}}</p>
+            <p class="label">&nbsp;</p>
+            <p class="field centered">{{#corrector3}}{{fullname}}{{/corrector3}}</p>
         </td>
     </tr>
 </table>
 
-<table class="third">
+<table>
     <tr class="wide">
         <td>
             <p class="label">Endnote</p>
-            <p class="field">{{#writer}}{{final_grade}}{{/writer}}</p>
+            <p class="field centered">{{#result}}{{grade}}{{/result}}</p>
         </td>
         <td>
-            <p class="label">Endgültige Punktzahl</p>
-            <p class="field">{{#writer}}{{final_points}}{{/writer}}</p>
+            <p class="label centered">Endgültige Punktzahl</p>
+            <p class="field centered">{{#result}}{{points}}{{/result}}</p>
         </td>
         <td></td>
     </tr>

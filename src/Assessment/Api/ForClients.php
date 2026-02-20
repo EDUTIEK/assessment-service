@@ -73,9 +73,9 @@ readonly class ForClients
         return $this->internal->orgaSettings($this->ass_id, $this->user_id);
     }
 
-    public function pdfCreation(): PdfCreationService
+    public function pdfCreation(int $context_id): PdfCreationService
     {
-        return $this->internal->pdfCreation($this->ass_id, $this->user_id);
+        return $this->internal->pdfCreation($this->ass_id, $context_id, $this->user_id);
     }
 
     public function pdfSettings(): PdfSettingsFullService
@@ -141,8 +141,8 @@ readonly class ForClients
         return $this->internal->writingTask($this->ass_id, $this->user_id);
     }
 
-    public function export(): ExportFullService
+    public function export(int $context_id): ExportFullService
     {
-        return $this->internal->export($this->ass_id, $this->user_id);
+        return $this->internal->export($this->ass_id, $context_id, $this->user_id);
     }
 }
