@@ -132,6 +132,11 @@ abstract class CorrectorSummary implements TaskEntity
         return $this->setLastChange($now);
     }
 
+    public function hasPdf(): bool
+    {
+        return !empty($this->getSummaryPdf());
+    }
+
     public function isComplete(): bool
     {
         return $this->getPoints() !== null && !(empty($this->getSummaryText() && empty($this->getSummaryPdf())));

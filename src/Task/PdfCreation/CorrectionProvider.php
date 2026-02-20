@@ -8,7 +8,9 @@ use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessing;
 use Edutiek\AssessmentService\System\HtmlProcessing\FullService as HtmlProcessing;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
+use Edutiek\AssessmentService\Assessment\Writer\ReadService as Writers;
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as Correctors;
+use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as AssessmentGrading;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfConfigPart;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings as AssessmentSettings;
@@ -44,7 +46,9 @@ readonly class CorrectionProvider implements PdfPartProvider
         private RatingCriterionServiceFactory $criteria_services,
         private Assignments $assignments,
         private Summaries $summaries,
+        private Writers $writers,
         private Correctors $correctors,
+        private AssessmentGrading $grading,
         private Repositories $repos
     ) {
     }
@@ -144,7 +148,7 @@ readonly class CorrectionProvider implements PdfPartProvider
 
             switch ($type) {
                 case self::PART_CRITERIA:
-                    return $this->renderCriteria($assignment, $part_title, $is_own, $options);
+                    return $this->renderCriteria($summary, $part_title, $is_own, $options);
                 case self::PART_SUMMARY:
                     return $this->renderSummary($summary, $part_title, $is_own, $options);
                 case self::PART_REVISION:
@@ -158,49 +162,74 @@ readonly class CorrectionProvider implements PdfPartProvider
     private function renderSummary(CorrectorSummary $summary, string $title, bool $is_own, Options $options): ?string
     {
         if (!$is_own && !$summary->isAuthorized()) {
-            return $this->renderContent($title, $this->language->txt('correction_not_authorized'), $options);
-        } elseif (!empty($summary->getSummaryPdf())) {
-            return $this->pdf_processing->copy($summary->getSummaryPdf());
-        } else {
-            return $this->renderContent($title, $summary->getSummaryText(), $options);
+            return null;
         }
+
+        $pdf = $this->renderContent(
+            $title,
+            $summary->hasPdf() ? $this->language->txt('pdf_summary_follows') : $summary->getSummaryText(),
+            $summary->getPoints(),
+            $options
+        );
+
+        if ($summary->hasPdf()) {
+            $joined = $this->pdf_processing->join([$pdf, $summary->getSummaryPdf()]);
+            $this->pdf_processing->cleanup([$pdf]);
+            return $joined;
+        }
+
+        return $pdf;
     }
 
     private function renderRevision(CorrectorSummary $summary, string $title, bool $is_own, Options $options): ?string
     {
+        $writer = $this->writers->oneByWriterId($summary->getWriterId());
+
         if (!$is_own && !$summary->isRevised()) {
-            return $this->renderContent($title, $this->language->txt('correction_not_revised'), $options);
-        } else {
-            return $this->renderContent($title, $summary->getRevisionText(), $options);
+            return null;
         }
+        if ($is_own && !($summary->isRevised() || $writer?->isRevisionNeeded())) {
+            return null;
+        }
+
+        return $this->renderContent(
+            $title,
+            $summary->getRevisionText(),
+            $summary->getRevisionPoints(),
+            $options
+        );
     }
 
-    private function renderCriteria(CorrectorAssignment $assignment, string $title, bool $is_own, Options $options): ?string
+    private function renderCriteria(CorrectorSummary $summary, string $title, bool $is_own, Options $options): ?string
     {
+        if (!$is_own && !$summary->isAuthorized()) {
+            return null;
+        }
+
         // criterion_id => points
         $sum_of_points = [];
 
         // criterion id is 0 for points without a criterion
-        foreach ($this->repos->correctorPoints()->allByTaskIdAndCorrectorId($assignment->getTaskId(), $assignment->getCorrectorId()) as $point) {
+        foreach ($this->repos->correctorPoints()->allByTaskIdAndCorrectorId($summary->getTaskId(), $summary->getCorrectorId()) as $point) {
             $sum_of_points[(int) $point->getCriterionId()] = ($sum_of_points[$point->getCriterionId()] ?? 0) + $point->getPoints();
         }
 
-        $criteria_service = $this->criteria_services->ratingCriterion($assignment->getTaskId(), $this->ass_id, $this->user_id);
+        $criteria_service = $this->criteria_services->ratingCriterion($summary->getTaskId(), $this->ass_id, $this->user_id);
 
         $criteria_by_type = [
             'general' => [],
             'comment' => [
                 $criteria_service->new()
                     ->setId(0)
-                    ->setCorrectorId($assignment->getCorrectorId())
-                    ->setTaskId($assignment->getTaskId())
+                    ->setCorrectorId($summary->getCorrectorId())
+                    ->setTaskId($summary->getTaskId())
                     ->setGeneral(0)
                     ->setTitle($this->language->txt('independent_points'))
                     ->setDescription($this->language->txt('independent_points_description'))
             ]
         ];
 
-        foreach ($criteria_service->allForCorrector($assignment->getCorrectorId()) as $criterion) {
+        foreach ($criteria_service->allForCorrector($summary->getCorrectorId()) as $criterion) {
             $criteria_by_type[$criterion->getGeneral() ? 'general' : 'comment'][] = $criterion;
         }
 
@@ -236,16 +265,23 @@ readonly class CorrectionProvider implements PdfPartProvider
         return $this->pdf_processing->create($html, $options);
     }
 
-    private function renderContent(string $title, string $content, Options $options): ?string
+    private function renderContent(string $title, ?string $content, ?float $points, Options $options): ?string
     {
-        $html = $this->html_processing->fillTemplate(__DIR__ . '/templates/content.html', [
+        $level = $this->grading->getGradLevelForPoints($points);
+        $data = [
             'title' => $title,
             'content' => $this->html_processing->addContentStyles(
-                $content,
+                $content ?? '',
                 false,
                 HeadlineScheme::THREE
-            )
-        ]);
+            ),
+            'label_points' => $this->language->txt('pdf_label_points'),
+            'points' => $points,
+            'grade' => $level?->getGrade(),
+            'statement' => $level?->getStatement(),
+        ];
+
+        $html = $this->html_processing->fillTemplate(__DIR__ . '/templates/content.html', $data);
         $html = $this->html_processing->addCorrectionStyles($html);
         return $this->pdf_processing->create($html, $options);
     }

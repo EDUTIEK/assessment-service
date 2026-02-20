@@ -101,6 +101,8 @@ class Internal
     public function correctionPartProvider(int $ass_id, int $user_id): ?PdfPartProvider
     {
         return $this->instances[CorrectionProvider::class][$ass_id][$user_id] ?? new CorrectionProvider(
+            $ass_id,
+            $user_id,
             $this->dependencies->repositories(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->pdfSettings()->get(),
             $this->essayImage($ass_id, $user_id),
@@ -113,7 +115,9 @@ class Internal
             $this->dependencies->systemApi()->htmlProcessing(),
             $this->dependencies->taskApi($ass_id, $user_id)->correctorComments(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->taskApi($ass_id, $user_id)->correctionSettings()->get(),
+            $this->dependencies->taskApi($ass_id, $user_id)->gradingProvider()
         );
     }
 

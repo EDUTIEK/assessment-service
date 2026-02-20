@@ -18,6 +18,15 @@ Specific styles for the correction output
     font-size: 1rem;
 }
 
+.xlas-grading {
+    font-family: sans-serif;
+    font-size: 1rem;
+    border: 1px solid gray;
+    margin-top: 1rem;
+    padding-left: 5mm;
+    padding-right: 5mm;
+}
+
 .xlas-correction h2 {
     font-size: 1rem;
     font-weight: normal;

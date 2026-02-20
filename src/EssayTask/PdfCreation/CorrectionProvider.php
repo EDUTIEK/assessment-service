@@ -9,6 +9,8 @@ use Edutiek\AssessmentService\Assessment\Data\PdfSettings as PdfSettings;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfConfigPart;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingProvider;
+use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorService;
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImages;
@@ -36,6 +38,8 @@ readonly class CorrectionProvider implements PdfPartProvider
     private const KEY_COMMENTS_ALL = 'comments_all';
 
     public function __construct(
+        private int $ass_id,
+        private int $user_id,
         private Repositories $repos,
         private PdfSettings $pdf_settings,
         private EssayImages $essay_images,
@@ -48,7 +52,9 @@ readonly class CorrectionProvider implements PdfPartProvider
         private SystemHtmlProcessing $system_processing,
         private CommentsService $comments,
         private AssessmentSettings $assessment_settings,
+        private CorrectorService $correctors,
         private TaskSettings $task_settings,
+        private GradingProvider $gradings,
     ) {
     }
 
@@ -127,7 +133,18 @@ readonly class CorrectionProvider implements PdfPartProvider
             self::KEY_CORRECTOR_3 => [GradingPosition::STITCH],
         };
 
-        $infos = $this->comments->getInfos($task_id, $writer_id, $positions);
+        $allowed_positions = [];
+        $gradings = $this->gradings->gradingsForTaskAndWriter($task_id, $writer_id);
+        $corrector = $this->correctors->oneByUserId($this->user_id);
+        foreach ($positions as $position) {
+            if (!empty($grading = $gradings[$position->value] ?? null)) {
+                if ($grading->isAuthorized() || $grading->getCorrectorId() === $corrector->getId()) {
+                    $allowed_positions[] = $position;
+                }
+            }
+        }
+
+        $infos = $this->comments->getInfos($task_id, $writer_id, $allowed_positions);
         $options = $options->withTitle($options->getTitle() . ' | ' . $this->getCorrectionTitle($key));
 
         if ($essay->hasPdfVersion()) {

@@ -148,7 +148,13 @@ abstract class Writer implements AssessmentEntity, IndividualWorkingTime
         return !empty($this->getWorkingStart());
     }
 
-    public function getStitchNeeded(): bool
+    public function isRevisionNeeded(): bool
+    {
+        return $this->getCorrectionStatus() === CorrectionStatus::APPROXIMATION
+            || $this->getWorkingStart() === CorrectionStatus::CONSULTING;
+    }
+
+    public function isStitchNeeded(): bool
     {
         return $this->getCorrectionStatus() === CorrectionStatus::STITCH;
     }

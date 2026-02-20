@@ -61,4 +61,7 @@ return [
     'criterion_description' => 'Beschreibung',
     'criterion_points' => 'Summe Punkte',
     'criterion_max_points' => 'Maximale Punkte',
+    'pdf_summary_follows' => 'Das Gutachten finden Sie auf den folgenden Seiten.',
+    'pdf_label_points' => 'Vergebene Punktzahl'
+
 ];

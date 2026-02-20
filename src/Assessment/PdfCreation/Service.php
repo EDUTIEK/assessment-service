@@ -6,14 +6,16 @@ namespace Edutiek\AssessmentService\Assessment\PdfCreation;
 
 use Edutiek\AssessmentService\Assessment\Api\ComponentApiFactory;
 use Edutiek\AssessmentService\Assessment\Data\PdfConfig;
+use Edutiek\AssessmentService\Assessment\Data\PdfFormat;
+use Edutiek\AssessmentService\Assessment\Data\PdfSettings;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
-use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropetiesReadService;
+use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
-use Edutiek\AssessmentService\System\PdfCreator\Options;
-use Edutiek\AssessmentService\System\User\ReadService as UserService;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
+use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingService;
+use Edutiek\AssessmentService\System\User\ReadService as UserService;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TasksReadService;
 use ZipArchive;
 
@@ -26,12 +28,13 @@ class Service implements FullService
         private ComponentApiFactory $apis,
         private WriterService $writers,
         private Repositories $repos,
+        private PdfSettings $pdf_settings,
         private PdfProcessingService $processor,
         private ConfigService $config,
         private FileStorage $storage,
         private UserService $users,
         private TasksReadService $tasks,
-        private PropetiesReadService $properties
+        private PropetiesReadService $properties,
     ) {
     }
 
@@ -129,32 +132,13 @@ class Service implements FullService
     public function createCorrectionReport(int $ass_id): string
     {
         // TODO: Implement createCorrectionReport() method.
+        return '';
     }
 
     private function createPdfFile(PdfPurpose $purpose, int $task_id, int $writer_id, bool $anonymous_writer, bool $anonymous_corrector): string
     {
-        $options = (new Options());
-
-        $writer = $this->writers->oneByWriterId($writer_id);
-        $user = $this->users->getUser($writer?->getUserId() ?? 0);
-        $properties = $this->properties->get();
-
-        if ($anonymous_writer) {
-            $title = $writer->getPseudonym();
-        } else {
-            $title = $user->getFullname(false);
-        }
-
-        $title .= ' | ' . $properties->getTitle();
-        if ($this->tasks->count() > 1) {
-            $task = $this->tasks->one($task_id);
-            $title .= ' - ' . $task->getTitle();
-        }
-
-        $options = $options->withTitle($title);
-        $options = $options->withSubject($properties->getDescription());
-        $options = $options->withAuthor('');
-
+        $options = (new Options())
+            ->withTitle($this->buildTitle($task_id, $writer_id, $anonymous_writer));
 
         $pdf_ids = [];
         foreach ($this->getSortedParts($purpose) as $part) {
@@ -186,6 +170,33 @@ class Service implements FullService
 
         $this->processor->cleanupExcept([$id]);
         return $id;
+    }
+
+    private function buildTitle(int $task_id, int $writer_id, bool $anonymous_writer)
+    {
+        $writer = $this->writers->oneByWriterId($writer_id);
+        $properties = $this->properties->get();
+
+        if ($anonymous_writer) {
+            $writer_name = $writer->getPseudonym();
+        } else {
+            $user = $this->users->getUser($writer?->getUserId() ?? 0);
+            $writer_name = $user->getFullname(false);
+        }
+
+        switch ($this->pdf_settings->getFormat()) {
+            case PdfFormat::BY:
+                return $writer_name . ' | ' . $properties->getDescription();
+
+            case PdfFormat::NRW:
+            default:
+                $title = $writer_name . ' | ' . $properties->getTitle();
+                if ($this->tasks->count() > 1) {
+                    $task = $this->tasks->one($task_id);
+                    $title .= ' - ' . $task->getTitle();
+                }
+                return $title;
+        }
     }
 
     private function createZipFile(PdfPurpose $purpose, array $writings, bool $anonymous_writer, bool $anonymous_corrector): string

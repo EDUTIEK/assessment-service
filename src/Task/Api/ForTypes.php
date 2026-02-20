@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Task\Api;
 
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingProvider;
 use Edutiek\AssessmentService\Task\CorrectionSettings\ReadService as CorrectionSettingsReadService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentReadService;
 use Edutiek\AssessmentService\Task\CorrectorComment\InfoService as CorrectorCommentInfoService;
@@ -36,5 +37,10 @@ readonly class ForTypes
     public function correctionSettings(): CorrectionSettingsReadService
     {
         return $this->internal->correctionSettings($this->ass_id, $this->user_id);
+    }
+
+    public function gradingProvider(): GradingProvider
+    {
+        return $this->internal->correctorSummary($this->ass_id, $this->user_id);
     }
 }

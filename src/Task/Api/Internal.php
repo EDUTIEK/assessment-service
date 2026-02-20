@@ -182,7 +182,9 @@ class Internal implements RatingCriterionServiceFactory
             $this,
             $this->correctorAssignments($ass_id, $user_id),
             $this->correctorSummary($ass_id, $user_id),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->assessmentGrading(),
             $this->dependencies->repositories()
         );
     }

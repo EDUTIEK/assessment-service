@@ -403,6 +403,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this,
             $this->writer($ass_id, $user_id),
             $this->dependencies->repositories(),
+            $this->pdfSettings($ass_id)->get(),
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->dependencies->systemApi()->config(),
             $this->dependencies->systemApi()->fileStorage(),
