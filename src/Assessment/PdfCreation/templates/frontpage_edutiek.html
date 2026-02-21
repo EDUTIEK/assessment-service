@@ -1,0 +1,76 @@
+<h1 class="centered">{{#assessment}}{{title}}{{/assessment}}</h1>
+
+<table>
+    <tr class="wide">
+        <td>
+            <p class="label centered">{{txt.writer}}:</p>
+            <p class="field centered">{{#writer}}{{firstname}} {{lastname}}{{/writer}}</p>
+        </td>
+        <td>
+            <p class="label centered">{{txt.authorization}}:</p>
+            <p class="field centered">{{#writer}}{{authorization}}{{/writer}}</p>
+        </td>
+    </tr>
+</table>
+
+
+<table>
+    {{#correctors}}
+    <tr>
+        <th colspan="3" class=""><p class="label">{{position}}</p></th>
+    </tr>
+    <tr class="wide">
+        <td>
+            <p class="label">{{txt.grade}}</p>
+            <p class="field centered">{{grade}}</p>
+        </td>
+        <td>
+            <p class="label centered">{{txt.points}}</p>
+            <p class="field centered">{{points}}</p>
+        </td>
+        {{#anonymous}}
+        <td></td>
+        {{/anonymous}}
+        {{^anonymous}}
+        <td>
+            <p class="label centered">{{txt.correction}}</p>
+            <p class="field centered">{{fullname}}</p>
+        </td>
+        {{/anonymous}}
+    </tr>
+    {{/correctors}}
+</table>
+
+{{#multi_tasks}}
+<table>
+    <tr>
+        <th><p class="label centered">{{txt.sub_task}}</p></th>
+        <th><p class="label centered">{{txt.weight}}</p></th>
+        <th><p class="label centered">{{txt.points}}</p></th>
+    </tr>
+    {{#tasks}}
+    <tr>
+        <td><p class="label">{{title}}</p></td>
+        <td><p class="label centered">{{weight}}</p></td>
+        <td><p class="label centered">{{points}}</p></td>
+    </tr>
+    {{/tasks}}
+</table>
+{{/multi_tasks}}
+
+<table>
+    <tr class="wide">
+        <td>
+            <p class="label">{{txt.final_grade}}</p>
+            <p class="field centered">{{#result}}{{grade}}{{/result}}</p>
+        </td>
+        <td>
+            <p class="label centered">{{txt.final_points}}</p>
+            <p class="field centered">{{#result}}{{points}}{{/result}}</p>
+        </td>
+        <td>
+            <p class="label centered">{{txt.correction_status}}</p>
+            <p class="field centered">{{#result}}{{status}}{{/result}}</p>
+        </td>
+    </tr>
+</table>

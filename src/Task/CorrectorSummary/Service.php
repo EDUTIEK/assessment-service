@@ -7,6 +7,7 @@ namespace Edutiek\AssessmentService\Task\CorrectorSummary;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\Grading;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingProvider;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Task\Api\ApiException;
@@ -77,23 +78,23 @@ readonly class Service implements ReadService, GradingProvider
             GradingPosition::STITCH->value => null,
         ];
 
-        $assignments = [];
-        foreach ($this->repos->correctorAssignment()->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
-            $assignments[$assignment->getCorrectorId()] = $assignment;
+        $summaries = [];
+        foreach ($this->repos->correctorSummary()->allByTaskIdAndWriterId($task_id, $writer_id) as $summary) {
+            $summaries[$summary->getCorrectorId()] = $summary;
         }
 
-        foreach ($this->repos->correctorSummary()->allByTaskIdAndWriterId($task_id, $writer_id) as $summary) {
-            if (!empty($assignment = $assignments[$summary->getCorrectorId()] ?? null)) {
-                $gradings[$assignment->getPosition()->value] = new Grading(
-                    $summary->getWriterId(),
-                    $summary->getTaskId(),
-                    $summary->getCorrectorId(),
-                    $assignment->getPosition(),
-                    $summary->getGradingStatus(),
-                    $summary->getEffectivePoints(),
-                    $summary->getRequireOtherRevision()
-                );
-            }
+        foreach ($this->repos->correctorAssignment()->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
+            $summary = $summaries[$assignment->getCorrectorId()] ?? null;
+
+            $gradings[$assignment->getPosition()->value] = new Grading(
+                $assignment->getWriterId(),
+                $assignment?->getTaskId(),
+                $assignment->getCorrectorId(),
+                $assignment->getPosition(),
+                $summary?->getGradingStatus() ?? GradingStatus::OPEN,
+                $summary?->getEffectivePoints(),
+                $summary?->getRequireOtherRevision() ?? false
+            );
         }
 
         return $gradings;

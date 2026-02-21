@@ -345,15 +345,19 @@ class Internal implements ComponentApi, ComponentApiFactory
     {
         return $this->instances[CorrectionProvider::class][$ass_id][$user_id] ?? new CorrectionProvider(
             $ass_id,
+            $user_id,
             $context_id,
             $this->dependencies->repositories(),
+            $this->orgaSettings($ass_id, $user_id)->get(),
             $this->pdfSettings($ass_id)->get(),
             $this->correctionSettings($ass_id, $user_id)->get(),
             $this->assessmentGrading($ass_id),
+            $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->dependencies->taskApi()->gradingProvider($ass_id, $user_id),
             $this->dependencies->systemApi()->htmlProcessing(),
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->language($user_id),
+            $this->dependencies->systemApi()->format($user_id),
             $this->dependencies->systemApi()->user()
         );
     }

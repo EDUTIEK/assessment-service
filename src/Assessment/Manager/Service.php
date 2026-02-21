@@ -47,7 +47,7 @@ readonly class Service implements FullService
         // create the first task of the assessment
         $this->tasks->create(new TaskInfo(
             $multi_tasks
-                ? $this->language->txt('sub_task', ['number' => '1'])
+                ? $this->language->txt('sub_task_x', ['number' => '1'])
                 : $this->language->txt('task'),
             TaskType::ESSAY
         ));

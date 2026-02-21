@@ -30,6 +30,11 @@ class Service implements FullService
         return $this;
     }
 
+    public function all(): array
+    {
+        return $this->texts[$this->language] ?? [];
+    }
+
     /**
      * Retrieves a translated text string based on a given key and replaces variables within the text.
      * Variables are referenced in the text embedded in '{' and '}'

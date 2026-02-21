@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Language;
 
@@ -24,6 +24,11 @@ interface FullService
      * @param string $code 2-letter language code, e.g. 'en'
      */
     public function setDefaultLanguage(string $code): self;
+
+    /**
+     * Retrun all texts defined for a language as a key/value array
+     */
+    public function all(): array;
 
     /**
      * Returns a translated text identified by its key

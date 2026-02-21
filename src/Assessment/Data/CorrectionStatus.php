@@ -36,4 +36,16 @@ enum CorrectionStatus: string
     {
         return $this === self::APPROXIMATION || $this === self::CONSULTING;
     }
+
+
+    public function languageVariable(): string
+    {
+        return match ($this) {
+            self::OPEN => 'correction_status_open',
+            self::APPROXIMATION => 'correction_status_approximation',
+            self::CONSULTING => 'correction_status_consulting',
+            self::STITCH => 'correction_status_stitch',
+            self::FINALIZED => 'correction_status_finalized',
+        };
+    }
 }
