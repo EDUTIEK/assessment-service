@@ -7,6 +7,7 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 use Edutiek\AssessmentService\Assessment\Alert\FullService as FullAlertService;
 use Edutiek\AssessmentService\Assessment\Apps\OpenService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as AssessmentGradingReadService;
+use Edutiek\AssessmentService\Assessment\BackgroundTask\FullService as BackgroundTaskService;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\FullService as CorrectionSettingsFullService;
 use Edutiek\AssessmentService\Assessment\Corrector\FullService as CorrectorFullService;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
@@ -129,6 +130,11 @@ readonly class ForClients
     public function assessmentGrading(): AssessmentGradingReadService
     {
         return $this->internal->assessmentGrading($this->ass_id);
+    }
+
+    public function backgroundTasks(int $context_id): BackgroundTaskService
+    {
+        return $this->internal->backgroundTasks($this->ass_id, $context_id, $this->user_id);
     }
 
     public function disabledGroup(): DisabledGroupFullService

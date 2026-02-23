@@ -78,4 +78,5 @@ return [
     'correction_status_consulting' => 'im Beratungsverfahren',
     'correction_status_stitch' => 'im Stichentscheid',
     'correction_status_finalized' => 'abgeschlossen',
+    'download_corrections' => 'Korrekturen {title}',
 ];

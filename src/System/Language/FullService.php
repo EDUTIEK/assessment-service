@@ -34,5 +34,5 @@ interface FullService
      * Returns a translated text identified by its key
      * either in preferred language, in default language or in its original
      */
-    public function txt(string $key): string;
+    public function txt(string $key, array $variables = []): string;
 }

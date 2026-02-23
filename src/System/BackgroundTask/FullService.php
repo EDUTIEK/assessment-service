@@ -20,10 +20,6 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\BackgroundTask;
 
-interface ClientManager
+interface FullService extends SystemManager
 {
-    /**
-     * @param class-string<Job> $job
-     */
-    public function run(string $component, array $component_args, string $title, string $job, ...$args): void;
 }

@@ -12,6 +12,7 @@ use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
 use Edutiek\AssessmentService\Assessment\Apps\Service as AppService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\Service as AssessmentGradingService;
 use Edutiek\AssessmentService\Assessment\Authentication\Service as AuthenticationService;
+use Edutiek\AssessmentService\Assessment\BackgroundTask\Service as BackgroundTaskService;
 use Edutiek\AssessmentService\Assessment\ConstraintHandling\Provider as ConstraintProvider;
 use Edutiek\AssessmentService\Assessment\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\Service as CorrectionSettingsService;
@@ -135,7 +136,6 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-
     /**
      * Internal authentication service for REST handlers
      */
@@ -145,6 +145,19 @@ class Internal implements ComponentApi, ComponentApiFactory
             $ass_id,
             $context_id,
             $this->dependencies->repositories()
+        );
+    }
+
+    public function backgroundTasks(int $ass_id, int $context_id, int $user_id): BackgroundTaskService
+    {
+        return $this->instances[BackgroundTaskService::class] ??= new BackgroundTaskService(
+            $ass_id,
+            $context_id,
+            $user_id,
+            $this->properties($ass_id),
+            $this->dependencies->systemApi()->backgroundTask(),
+            $this->language($user_id),
+            $this
         );
     }
 
@@ -484,6 +497,7 @@ class Internal implements ComponentApi, ComponentApiFactory
     {
         return $this->instances[ExportService::class][$ass_id][$context_id][$user_id] ??= new ExportService(
             $this->pdfCreation($ass_id, $context_id, $user_id),
+            $this->backgroundTasks($ass_id, $context_id, $user_id),
             $this->properties($ass_id),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->writer($ass_id, $user_id),

@@ -1,39 +1,56 @@
 <?php
 
-/**
- * This file is part of ILIAS, a powerful learning management system
- * published by ILIAS open source e-Learning e.V.
- *
- * ILIAS is licensed with the GPL-3.0,
- * see https://www.gnu.org/licenses/gpl-3.0.en.html
- * You should have received a copy of said license along with the
- * source code, too.
- *
- * If this is not the case or you just want to try ILIAS, you'll find
- * us at:
- * https://www.ilias.de
- * https://github.com/ILIAS-eLearning
- *
- *********************************************************************/
-
 declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\EssayTask\BackgroundTask;
 
-use Edutiek\AssessmentService\System\BackgroundTask\Manager;
-use Edutiek\AssessmentService\System\BackgroundTask\ClientManager;
+use Edutiek\AssessmentService\System\BackgroundTask\ComponentManager;
+use Edutiek\AssessmentService\System\BackgroundTask\FullService as BackgroundTasks;
+use Edutiek\AssessmentService\System\Language\FullService as Language;
+use Edutiek\AssessmentService\System\BackgroundTask\ComponentJob;
+use Edutiek\AssessmentService\EssayTask\Api\Internal;
+use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 
-class Service implements Manager
+readonly class Service implements ComponentManager, FullService
 {
     public function __construct(
-        private readonly int $ass_id,
-        private readonly int $user_id,
-        private readonly ClientManager $manager,
+        private int $ass_id,
+        private int $user_id,
+        private BackgroundTasks $manager,
+        private Language $language,
+        private Repositories $repos,
+        private Internal $internal
     ) {
     }
 
-    public function run(string $title, string $job, ...$args): void
+    /**
+     * Generate the page images of an essay
+     */
+    public function generateEssayImages(int $essay_id): void
     {
-        $this->manager->run('essayTask', [$this->ass_id, $this->user_id], $title, $job, ...$args);
+        $this->create($this->language->txt('generate_essay_images'), GenerateEssayImages::class, [$essay_id]);
+    }
+
+    public function create(string $title, string $job, array $args): void
+    {
+        $this->manager->create($title, 'essayTask', $job, [$this->ass_id, $this->user_id], [], $args);
+    }
+
+    public function run(string $job, array $args): ?string
+    {
+        return $this->getJob($job)?->run($args);
+    }
+
+    private function getJob(string $job): ?ComponentJob
+    {
+        switch ($job) {
+            case GenerateEssayImages::class:
+                return new GenerateEssayImages(
+                    $this->repos->essay(),
+                    $this->internal->essayImage($this->ass_id, $this->user_id)
+                );
+            default:
+                return null;
+        }
     }
 }

@@ -22,7 +22,6 @@ namespace Edutiek\AssessmentService\System\Api;
 
 use DateTimeZone;
 use Dompdf\Dompdf;
-use Edutiek\AssessmentService\System\BackgroundTask\ClientManager as BackgroundTaskManager;
 use Edutiek\AssessmentService\System\BackgroundTask\Service as BackgroundTaskService;
 use Edutiek\AssessmentService\System\Config\Service as ConfigService;
 use Edutiek\AssessmentService\System\Entity\Service as EntityService;
@@ -122,9 +121,11 @@ class Internal
         );
     }
 
-    public function backgroundTask(): BackgroundTaskManager
+    public function backgroundTask(): BackgroundTaskService
     {
-        return new BackgroundTaskService($this->dependencies->backgroundTaskManager());
+        return  $this->instances[BackgroundTaskService::class] ??= new BackgroundTaskService(
+            $this->dependencies->backgroundTaskManager()
+        );
     }
 
     public function pdfProcessing(): PdfProcessing

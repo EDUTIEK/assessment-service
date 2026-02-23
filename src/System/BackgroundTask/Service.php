@@ -22,19 +22,18 @@ namespace Edutiek\AssessmentService\System\BackgroundTask;
 
 use Exception;
 
-class Service implements ClientManager
+class Service implements FullService
 {
     public function __construct(
-        private readonly ClientManager $manager
-    )
-    {
+        private readonly SystemManager $manager
+    ) {
     }
 
-    public function run(string $component, array $component_args, string $title, string $job, ...$args): void
+    public function create(string $title, string $component, string $job, array $component_args, array $service_args, array $job_args): void
     {
-        if (!is_a($job, Job::class, true)) {
-            throw new Exception('Trying to run ' . $job . ', which does not implement: ' . Job::class);
+        if (!is_a($job, ComponentJob::class, true)) {
+            throw new Exception('Trying to run ' . $job . ', which does not implement: ' . ComponentJob::class);
         }
-        $this->manager->run($component, $component_args, $title, $job, ...$args);
+        $this->manager->create($title, $component, $job, $component_args, $service_args, $job_args);
     }
 }

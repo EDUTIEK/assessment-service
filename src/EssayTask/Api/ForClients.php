@@ -9,7 +9,7 @@ use Edutiek\AssessmentService\EssayTask\Essay\ClientService as EssayClientServic
 use Edutiek\AssessmentService\EssayTask\EssayImport\FullService as FullImportService;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\FullService as WritingSettingsFullService;
 use Edutiek\AssessmentService\EssayTask\WritingSteps\FullService as WritingStepsFullService;
-use Edutiek\AssessmentService\System\BackgroundTask\Job;
+use Edutiek\AssessmentService\EssayTask\BackgroundTask\FullService as BackgroundTaskService;
 
 readonly class ForClients
 {
@@ -35,9 +35,9 @@ readonly class ForClients
         return $this->internal->assessmentStatus($this->ass_id, $this->user_id);
     }
 
-    public function backgroundTask(string $class): Job
+    public function backgroundTasks(): BackgroundTaskService
     {
-        return $this->internal->backgroundTask($this->ass_id, $this->user_id, $class);
+        return $this->internal->backgroundTasks($this->ass_id, $this->user_id);
     }
 
     public function import(int $task_id): FullImportService

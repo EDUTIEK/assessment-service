@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Export;
 
 use Edutiek\AssessmentService\Assessment\Data\WritingTask;
+use Edutiek\AssessmentService\Assessment\BackgroundTask\FullService as BackgroundTaskService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPurpose;
 use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropertiesService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\FullService as PdfCreation;
@@ -23,6 +24,7 @@ class Service implements FullService
 
     public function __construct(
         private PdfCreation $pdf,
+        private BackgroundTaskService $background_tasks,
         private PropertiesService $properties,
         private TaskManager $tasks,
         private WriterService $writers,
@@ -58,25 +60,25 @@ class Service implements FullService
         $this->storage->deleteFile($file_id);
     }
 
+    /**
+     * @param WritingTask[] $writings
+     */
     public function downloadCorrections(array $writings, bool $anonymous_writer, bool $anonymous_corrector): void
     {
         if (count($writings) > 1) {
-            $file_id = $this->pdf->createCorrectionZip(
-                $writings,
-                $anonymous_writer,
-                $anonymous_corrector
-            );
-            $mimetype = 'application/zip';
-        } else {
-            $wt = reset($writings);
-            $file_id = $this->pdf->createCorrectionPdf(
-                $wt->getTaskId(),
-                $wt->getWriterId(),
-                $anonymous_writer,
-                $anonymous_corrector
-            );
-            $mimetype = 'application/pdf';
+            $this->background_tasks->downloadCorrections($writings, $anonymous_writer, $anonymous_corrector);
+            return;
         }
+
+        $wt = reset($writings);
+        $file_id = $this->pdf->createCorrectionPdf(
+            $wt->getTaskId(),
+            $wt->getWriterId(),
+            $anonymous_writer,
+            $anonymous_corrector
+        );
+        $mimetype = 'application/pdf';
+
 
         $this->delivery->sendFile(
             $file_id,

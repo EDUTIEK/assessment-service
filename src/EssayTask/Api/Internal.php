@@ -24,7 +24,7 @@ use Edutiek\AssessmentService\EssayTask\PdfCreation\CorrectionProvider;
 use Edutiek\AssessmentService\EssayTask\PdfCreation\WritingProvider;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
 use Edutiek\AssessmentService\EssayTask\WritingSteps\Service as WritingStepsService;
-use Edutiek\AssessmentService\System\BackgroundTask\Job;
+use Edutiek\AssessmentService\System\BackgroundTask\ComponentJob;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 
 class Internal
@@ -69,23 +69,15 @@ class Internal
         );
     }
 
-    public function backgroundTask(int $ass_id, int $user_id, string $class): Job
-    {
-        $jobs = [
-            GenerateEssayImages::class => fn() => $this->instances[GenerateEssayImages::class] ??= new GenerateEssayImages(
-                $this->dependencies->repositories()->essay(),
-                $this->essayImage($ass_id, $user_id),
-            ),
-        ];
-        return $jobs[$class]();
-    }
-
-    public function backgroundTaskManager(int $ass_id, int $user_id): BackgroundTaskService
+    public function backgroundTasks(int $ass_id, int $user_id): BackgroundTaskService
     {
         return $this->instances[BackgroundTaskService::class] ??= new BackgroundTaskService(
             $ass_id,
             $user_id,
             $this->dependencies->systemApi()->backgroundTask(),
+            $this->language($user_id),
+            $this->dependencies->repositories(),
+            $this
         );
     }
 
@@ -128,7 +120,7 @@ class Internal
             $this->dependencies->repositories(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->dependencies->taskApi($ass_id, $user_id)->tasks(),
-            $this->backgroundTaskManager($ass_id, $user_id),
+            $this->backgroundTasks($ass_id, $user_id),
             $this->essayImage($ass_id, $user_id),
             $this->language($user_id),
             $this->dependencies->systemApi()->fileStorage(),

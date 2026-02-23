@@ -36,4 +36,5 @@ return [
     'comments_corrector2' => 'Anmerkungen (Zweitkorrektur)',
     'comments_corrector3' => 'Anmerkungen (Stichentscheid)',
     'comments_corrector_all' => 'Korrektur-Anmerkungen',
+    'generate_essay_images' => 'Erstelle Seitenbilder',
 ];

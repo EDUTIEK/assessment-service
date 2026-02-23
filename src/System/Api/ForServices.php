@@ -4,16 +4,13 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Api;
 
-use Edutiek\AssessmentService\System\BackgroundTask\ClientManager as BackgroundTaskManager;
-use Edutiek\AssessmentService\System\BackgroundTask\Service as BackgroundTaskService;
+use Edutiek\AssessmentService\System\BackgroundTask\FullService as BackgroundTaskService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigReadService;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
-use Edutiek\AssessmentService\System\Entity\Service as EntityService;
 use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Format\FullService as FormatFullService;
 use Edutiek\AssessmentService\System\HtmlProcessing\FullService as HtmlProcessingFullService;
-use Edutiek\AssessmentService\System\HtmlProcessing\Service as HtmlProcessingService;
 use Edutiek\AssessmentService\System\ImageSketch\FullService as ImageSketchFullService;
 use Edutiek\AssessmentService\System\ImageSketch\ImageMagick\Sketch;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageFullService;
@@ -116,9 +113,9 @@ class ForServices
         return $this->internal->pdfCreator();
     }
 
-    public function backgroundTask(): BackgroundTaskManager
+    public function backgroundTask(): BackgroundTaskService
     {
-        return new BackgroundTaskService($this->dependencies->backgroundTaskManager());
+        return $this->internal->backgroundTask();
     }
 
     public function pdfProcessing(): PdfProcessingService

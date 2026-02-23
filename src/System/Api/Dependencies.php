@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\System\Api;
 
 use DateTimeInterface;
-use Edutiek\AssessmentService\System\BackgroundTask\ClientManager as BackgroundTaskManager;
+use Edutiek\AssessmentService\System\BackgroundTask\SystemManager as BackgroundTaskManager;
 use Edutiek\AssessmentService\System\Data\ConfigRepo;
 use Edutiek\AssessmentService\System\Data\SetupRepo;
 use Edutiek\AssessmentService\System\Data\UserDataRepo;

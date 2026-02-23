@@ -9,7 +9,7 @@ use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImage;
 use Edutiek\AssessmentService\EssayTask\PdfCreation\WritingProvider;
-use Edutiek\AssessmentService\System\BackgroundTask\Manager as BackgroundTaskManager;
+use Edutiek\AssessmentService\EssayTask\BackgroundTask\Service as BackgroundTaskManager;
 use Edutiek\AssessmentService\System\ConstraintHandling\Actions\ChangeWritingContent;
 use Edutiek\AssessmentService\System\ConstraintHandling\Collector;
 use Edutiek\AssessmentService\System\ConstraintHandling\ConstraintResult;
@@ -28,7 +28,7 @@ readonly class Service implements ClientService, EventService
         private Repositories $repos,
         private WriterReadService $writer_service,
         private TasksReadService $tasks,
-        private BackgroundTaskManager $task_manager,
+        private BackgroundTaskManager $background_tasks,
         private EssayImage $essay_image,
         private Language $language,
         private Storage $storage,
@@ -182,11 +182,8 @@ readonly class Service implements ClientService, EventService
         ));
 
         if ($file_id) {
-            $this->task_manager->run(
-                $this->language->txt('writer_upload_pdf_bt_processing'),
-                GenerateEssayImages::class,
-                $essay->getId()
-            );
+            // run a background task to create the page images
+            $this->background_tasks->generateEssayImages($essay->getId());
         }
     }
 

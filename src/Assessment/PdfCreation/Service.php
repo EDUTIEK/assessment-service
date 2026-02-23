@@ -121,7 +121,7 @@ class Service implements FullService
     public function createCorrectionZip(array $writings, bool $anonymous_writer, bool $anonymous_corrector): string
     {
         return $this->createZipFile(
-            PdfPurpose::WRITING,
+            PdfPurpose::CORRECTION,
             $writings,
             $anonymous_writer,
             $anonymous_corrector
