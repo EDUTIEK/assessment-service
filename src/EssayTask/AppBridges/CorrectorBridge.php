@@ -68,7 +68,7 @@ class CorrectorBridge implements AppCorrectorBridge
         }
 
         $data['Essay'] = $this->entity->arrayToPrimitives([
-            'text' => $this->html_processing->getWrittenTextForCorrection($essay, $this->settings),
+            'text' => $this->html_processing->getWrittenTextForCorrection($essay),
         ]);
 
         $pages = $this->essay_images->getByEssayId($essay->getId());
