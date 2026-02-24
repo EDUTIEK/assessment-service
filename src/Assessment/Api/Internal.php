@@ -155,8 +155,9 @@ class Internal implements ComponentApi, ComponentApiFactory
             $context_id,
             $user_id,
             $this->properties($ass_id),
-            $this->dependencies->systemApi()->backgroundTask(),
             $this->language($user_id),
+            $this->dependencies->systemApi()->backgroundTask(),
+            $this->dependencies->systemApi()->fileStorage(),
             $this
         );
     }

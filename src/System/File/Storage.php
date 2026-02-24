@@ -44,6 +44,12 @@ interface Storage
     public function getFileInfo(?string $id): ?FileInfo;
 
     /**
+     * Update the information of a file, e.g. to set the filename
+     * @param FileInfo $info
+     */
+    public function updateFileInfo(FileInfo $info): void;
+
+    /**
      * Get the resource handle of an opened file stream for reading
      * @return resource|null
      */

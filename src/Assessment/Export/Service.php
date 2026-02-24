@@ -52,11 +52,11 @@ class Service implements FullService
             $file_id,
             Disposition::ATTACHMENT,
             $this->storage->newInfo()
-                ->setFileName($this->storage->asciiFilename(
-                    $this->buildFilename($writings, PdfPurpose::WRITING)
-                ))
+                ->setFileName($this->buildFilename($writings, PdfPurpose::WRITING))
                 ->setMimeType($mimetype)
         );
+
+        $this->delivery->sendFile($file_id, Disposition::ATTACHMENT);
         $this->storage->deleteFile($file_id);
     }
 
@@ -66,7 +66,12 @@ class Service implements FullService
     public function downloadCorrections(array $writings, bool $anonymous_writer, bool $anonymous_corrector): void
     {
         if (count($writings) > 1) {
-            $this->background_tasks->downloadCorrections($writings, $anonymous_writer, $anonymous_corrector);
+            $this->background_tasks->downloadCorrections(
+                $writings,
+                $anonymous_writer,
+                $anonymous_corrector,
+                $this->buildFilename($writings, PdfPurpose::CORRECTION)
+            );
             return;
         }
 
@@ -79,14 +84,11 @@ class Service implements FullService
         );
         $mimetype = 'application/pdf';
 
-
         $this->delivery->sendFile(
             $file_id,
             Disposition::ATTACHMENT,
             $this->storage->newInfo()
-                ->setFileName($this->storage->asciiFilename(
-                    $this->buildFilename($writings, PdfPurpose::CORRECTION)
-                ))
+                ->setFileName($this->buildFilename($writings, PdfPurpose::CORRECTION))
                 ->setMimeType($mimetype)
         );
         $this->storage->deleteFile($file_id);
@@ -98,7 +100,7 @@ class Service implements FullService
     private function buildFilename($writings, PdfPurpose $purpose): string
     {
         if (count($writings) > 1) {
-            return $this->properties->get()->getTitle()
+            $filename = $this->properties->get()->getTitle()
                 . ' - ' . $this->lang->txt(match($purpose) {
                     PdfPurpose::WRITING => 'writings',
                     PdfPurpose::CORRECTION => 'corrections',
@@ -109,7 +111,7 @@ class Service implements FullService
             $task = $this->tasks->one($wt->getTaskId());
             $writer = $this->writers->oneByWriterId($wt->getWriterId());
 
-            return $this->properties->get()->getTitle()
+            $filename = $this->properties->get()->getTitle()
                 . ($this->tasks->count() > 1 ? ' - ' . $this->tasks->one($wt->getTaskId())->getTitle() : '')
                 . ' - ' . $writer->getPseudonym()
                 . ' - ' . $this->lang->txt(match($purpose) {
@@ -118,5 +120,7 @@ class Service implements FullService
                 })
                 . '.pdf';
         }
+
+        return $this->storage->asciiFilename($filename);
     }
 }

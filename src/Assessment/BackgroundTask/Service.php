@@ -7,6 +7,7 @@ namespace Edutiek\AssessmentService\Assessment\BackgroundTask;
 use Edutiek\AssessmentService\System\BackgroundTask\ComponentManager;
 use Edutiek\AssessmentService\System\BackgroundTask\FullService as BackgroundTasks;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
+use Edutiek\AssessmentService\System\File\Storage as Storage;
 use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropertiesService;
 use Edutiek\AssessmentService\Assessment\Data\WritingTask;
 use Edutiek\AssessmentService\Assessment\Api\Internal;
@@ -19,8 +20,9 @@ readonly class Service implements ComponentManager, FullService
         private int $context_id,
         private int $user_id,
         private PropertiesService $properties,
-        private BackgroundTasks $manager,
         private language $language,
+        private BackgroundTasks $manager,
+        private Storage $storage,
         private Internal $internal,
     ) {
     }
@@ -28,7 +30,7 @@ readonly class Service implements ComponentManager, FullService
     /**
      * @param WritingTask[] $writings
      */
-    public function downloadCorrections(array $writings, bool $anonymous_writer, bool $anonymous_corrector): void
+    public function downloadCorrections(array $writings, bool $anonymous_writer, bool $anonymous_corrector, string $filename): void
     {
         $ids = [];
         foreach ($writings as $writing) {
@@ -38,7 +40,7 @@ readonly class Service implements ComponentManager, FullService
         $this->create(
             $this->language->txt('download_corrections', ['title' => $this->properties->get()->getTitle()]),
             DownloadCorrections::class,
-            [$ids, $anonymous_writer, $anonymous_corrector]
+            [$ids, $anonymous_writer, $anonymous_corrector, $filename]
         );
     }
 
@@ -57,11 +59,11 @@ readonly class Service implements ComponentManager, FullService
         switch ($job) {
             case DownloadCorrections::class:
                 return new DownloadCorrections(
-                    $this->internal->pdfCreation($this->ass_id, $this->context_id, $this->user_id)
+                    $this->internal->pdfCreation($this->ass_id, $this->context_id, $this->user_id),
+                    $this->storage
                 );
             default:
                 return null;
         }
     }
-
 }
