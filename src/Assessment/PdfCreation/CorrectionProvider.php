@@ -113,7 +113,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         ];
 
         $writer = $this->repos->writer()->one($writer_id);
-        $user = $anonymous_writer ? null : $this->users->getUser($writer?->getUserId() ?? 0);
+        $user = ($anonymous_writer ? null : $this->users->getUser($writer?->getUserId() ?? 0));
 
         $data['writer'] = [
             'anonymous' => $anonymous_writer,
