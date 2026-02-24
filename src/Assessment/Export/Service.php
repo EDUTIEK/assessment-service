@@ -37,7 +37,7 @@ class Service implements FullService
     /**
      * @param WritingTask[] $writings
      */
-    public function downloadWritings(array $writings, bool $anonymous): void
+    public function downloadWritings(array $writings, bool $anonymous): bool
     {
         if (count($writings) > 1) {
             $file_id = $this->pdf->createWritingZip($writings, $anonymous);
@@ -58,12 +58,13 @@ class Service implements FullService
 
         $this->delivery->sendFile($file_id, Disposition::ATTACHMENT);
         $this->storage->deleteFile($file_id);
+        return false;
     }
 
     /**
      * @param WritingTask[] $writings
      */
-    public function downloadCorrections(array $writings, bool $anonymous_writer, bool $anonymous_corrector): void
+    public function downloadCorrections(array $writings, bool $anonymous_writer, bool $anonymous_corrector): bool
     {
         if (count($writings) > 1) {
             $this->background_tasks->downloadCorrections(
@@ -72,7 +73,7 @@ class Service implements FullService
                 $anonymous_corrector,
                 $this->buildFilename($writings, PdfPurpose::CORRECTION)
             );
-            return;
+            return true;
         }
 
         $wt = reset($writings);
@@ -92,6 +93,7 @@ class Service implements FullService
                 ->setMimeType($mimetype)
         );
         $this->storage->deleteFile($file_id);
+        return false;
     }
 
     /**
