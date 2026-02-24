@@ -8,12 +8,13 @@ interface ComponentJob
 {
     /**
      * The background task should offer a download to the user when finished
+     * The id of the file to be downloaded is returned by run()
      */
     public static function withDownload(): bool;
 
 
     /**
-     * Allow the deletion of a created file by the user
+     * The created file should be deleted when the download is no longer needed
      */
     public static function allowDelete(): bool;
 
