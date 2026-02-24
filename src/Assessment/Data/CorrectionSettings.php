@@ -51,6 +51,10 @@ abstract class CorrectionSettings implements AssessmentEntity
     abstract public function setReportsAvailableStart(?DateTimeImmutable $reports_available_start): self;
     abstract public function getMaxPoints(): ?int;
     abstract public function setMaxPoints(?int $max_points): self;
+    abstract public function getDownloadWriting(): bool;
+    abstract public function setDownloadWriting(bool $download_writing): self;
+    abstract public function getDownloadCorrection(): bool;
+    abstract public function setDownloadCorrection(bool $download_correction): self;
 
     public function hasMultipleCorrectors(): bool
     {
