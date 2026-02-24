@@ -168,11 +168,11 @@ class Service implements ReadService
         }
 
         if ($this->orga_settings->getReviewStart() !== null &&
-            $this->orga_settings->getReviewStart()->getTimestamp() < time()) {
+            $this->orga_settings->getReviewStart()->getTimestamp() > time()) {
             return false;
         }
         if ($this->orga_settings->getReviewEnd() !== null &&
-            $this->orga_settings->getReviewStart()->getTimestamp() > time()) {
+            $this->orga_settings->getReviewEnd()->getTimestamp() < time()) {
             return false;
         }
 

@@ -138,7 +138,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         $corrector = $this->correctors->oneByUserId($this->user_id);
         foreach ($positions as $position) {
             if (!empty($grading = $gradings[$position->value] ?? null)) {
-                if ($grading->isAuthorized() || $grading->getCorrectorId() === $corrector->getId()) {
+                if ($grading->isAuthorized() || $grading->getCorrectorId() === $corrector?->getId()) {
                     $allowed_positions[] = $position;
                 }
             }
