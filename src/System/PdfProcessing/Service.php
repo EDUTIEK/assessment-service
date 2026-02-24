@@ -30,11 +30,12 @@ class Service implements FullService
 
     public function create(string $html, Options $options): string
     {
-        $pdf = fopen('php://memory', 'w+');
-        fwrite($pdf, $this->pdf_creator->createPdf($html, $options));
-
-        return $this->saveFile($pdf);
-    }
+        $file = tempnam($this->temp_dir, 'tmp') . '.pdf';
+        $stream = fopen($file, 'w+');
+        fwrite($stream, $this->pdf_creator->createPdf($html, $options));
+        $file_id = $this->saveFile($stream);
+        return $file_id;
+   }
 
     public function split(string $pdf_id, ?int $from = null, ?int $to = null): Generator
     {
@@ -203,11 +204,7 @@ END;
 
     private function pathOfId(string $id): string
     {
-        $s = $this->storage->getFileStream($id);
-        $path = stream_get_meta_data($s)['uri'];
-        fclose($s);
-
-        return $path;
+        return $this->storage->getReadablePath($id);
     }
 
     private function saveFile($content): string
