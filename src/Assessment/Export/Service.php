@@ -40,20 +40,27 @@ class Service implements FullService
     public function downloadWritings(array $writings, bool $anonymous): bool
     {
         if (count($writings) > 1) {
-            $file_id = $this->pdf->createWritingZip($writings, $anonymous);
-            $mimetype = 'application/zip';
-        } else {
-            $wt = reset($writings);
-            $file_id = $this->pdf->createWritingPdf($wt->getTaskId(), $wt->getWriterId(), $anonymous);
-            $mimetype = 'application/pdf';
+            $this->background_tasks->downloadWritings(
+                $writings,
+                $anonymous,
+                $this->buildFilename($writings, PdfPurpose::WRITING)
+            );
+            return true;
         }
+
+        $wt = reset($writings);
+        $file_id = $this->pdf->createWritingPdf(
+            $wt->getTaskId(),
+            $wt->getWriterId(),
+            $anonymous
+        );
 
         $this->delivery->sendFile(
             $file_id,
             Disposition::ATTACHMENT,
             $this->storage->newInfo()
                 ->setFileName($this->buildFilename($writings, PdfPurpose::WRITING))
-                ->setMimeType($mimetype)
+                ->setMimeType('application/pdf')
         );
 
         $this->delivery->sendFile($file_id, Disposition::ATTACHMENT);
@@ -83,14 +90,13 @@ class Service implements FullService
             $anonymous_writer,
             $anonymous_corrector
         );
-        $mimetype = 'application/pdf';
 
         $this->delivery->sendFile(
             $file_id,
             Disposition::ATTACHMENT,
             $this->storage->newInfo()
                 ->setFileName($this->buildFilename($writings, PdfPurpose::CORRECTION))
-                ->setMimeType($mimetype)
+                ->setMimeType('application/pdf')
         );
         $this->storage->deleteFile($file_id);
         return false;

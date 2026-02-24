@@ -30,6 +30,23 @@ readonly class Service implements ComponentManager, FullService
     /**
      * @param WritingTask[] $writings
      */
+    public function downloadWritings(array $writings, bool $anonymous, string $filename): void
+    {
+        $ids = [];
+        foreach ($writings as $writing) {
+            $ids[] = [$writing->getWriterId(), $writing->getTaskId()];
+        }
+
+        $this->create(
+            $this->language->txt('download_writings', ['title' => $this->properties->get()->getTitle()]),
+            DownloadWritings::class,
+            [$ids, $anonymous, $filename]
+        );
+    }
+
+    /**
+     * @param WritingTask[] $writings
+     */
     public function downloadCorrections(array $writings, bool $anonymous_writer, bool $anonymous_corrector, string $filename): void
     {
         $ids = [];
@@ -57,6 +74,13 @@ readonly class Service implements ComponentManager, FullService
     private function getJob(string $job): ?ComponentJob
     {
         switch ($job) {
+
+            case DownloadWritings::class:
+                return new DownloadWritings(
+                    $this->internal->pdfCreation($this->ass_id, $this->context_id, $this->user_id),
+                    $this->storage
+                );
+
             case DownloadCorrections::class:
                 return new DownloadCorrections(
                     $this->internal->pdfCreation($this->ass_id, $this->context_id, $this->user_id),
