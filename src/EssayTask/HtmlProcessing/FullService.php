@@ -24,7 +24,8 @@ interface FullService
     public function getCorrectedTextForPdf(?Essay $essay, array $infos): string;
 
     /**
-     * Get the html formatted comments for side display in a PDF File
+     * Get the HTML formatted comments for side display in a PDF File
+     * Note: this must be XML compatible because it is used in XSL processing
      * @param CorrectorCommentInfo[] $infos
      */
     public function getCommentsHtml(array $infos): string;

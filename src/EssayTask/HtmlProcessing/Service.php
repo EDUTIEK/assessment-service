@@ -71,12 +71,10 @@ class Service implements FullService
         $this->all_infos = $infos;
         $this->current_infos = [];
 
-        $html = $this->processor->replaceCustomMarkup(
-            $this->processor->getContentForMarking(
-                (string) $essay->getWrittenText(),
-                $this->writing_settings->getAddParagraphNumbers(),
-                $this->writing_settings->getHeadlineScheme()
-            )
+        $html = $this->processor->getContentForMarking(
+            (string) $essay->getWrittenText(),
+            $this->writing_settings->getAddParagraphNumbers(),
+            $this->writing_settings->getHeadlineScheme()
         );
 
         $html = $this->processor->processXslt(
@@ -95,10 +93,6 @@ class Service implements FullService
         return $html;
     }
 
-    /**
-     * @param CorrectorCommentInfo[] $infos
-     * @return string
-     */
     public function getCommentsHtml(array $infos): string
     {
         $html = '';
@@ -117,12 +111,12 @@ class Service implements FullService
                 }
 
                 if (!empty($info->getComment()->getComment())) {
-                    $content .= ' ' . nl2br($this->quote($info->getComment()->getComment()));
+                    $content .= ' ' . nl2br($this->quote($info->getComment()->getComment()), true);
                 }
 
                 $points = $info->getPoints();
                 if ($points == 1) {
-                    $content .= '<br>(' . $this->lang->txt('1_point') . ')';
+                    $content .= '<br />(' . $this->lang->txt('1_point') . ')';
                 } elseif ($points != 0) {
                     $content .= '<br />(' . sprintf($this->lang->txt('x_points'), $points) . ')';
                 }
