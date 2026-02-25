@@ -727,7 +727,7 @@ class CorrectorBridge implements AppCorrectorBridge
                 $this->criteria[$task_id][$corrector_id][$criterion->getId()] = $criterion;
             }
         }
-        return $this->criteria[$task_id][$corrector_id];
+        return $this->criteria[$task_id][$corrector_id] ?? [];
     }
 
     public function processUploadedFile(UploadedFileInterface $file, int $task_id, int $writer_id): ?string
