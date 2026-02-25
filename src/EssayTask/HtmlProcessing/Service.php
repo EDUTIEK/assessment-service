@@ -77,6 +77,8 @@ class Service implements FullService
             $this->writing_settings->getHeadlineScheme()
         );
 
+        $html = $this->processor->replaceCustomMarkup($html);
+
         $html = $this->processor->processXslt(
             $html,
             __DIR__ . '/xsl/comments.xsl',
@@ -89,6 +91,8 @@ class Service implements FullService
             $this->writing_settings->getAddParagraphNumbers(),
             $this->writing_settings->getHeadlineScheme()
         );
+
+        $html = $this->processor->addCorrectionStyles($html);
 
         return $html;
     }
