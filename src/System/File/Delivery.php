@@ -19,6 +19,11 @@ interface Delivery
     public function sendFile(string $id, Disposition $disposition, ?FileInfo $info = null): void;
 
     /**
+     * Send a file from the temporary directory
+     */
+    public function sendTempFile(string $file_path, Disposition $disposition, ?FileInfo $info = null): void;
+
+    /**
      * Send data content as a file with the given disposition
      * Use the file name and mime type provided by the file info
      */

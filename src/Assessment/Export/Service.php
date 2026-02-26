@@ -55,16 +55,17 @@ class Service implements FullService
             $anonymous
         );
 
-        $this->delivery->sendFile(
-            $file_id,
+        $temp_file = $this->storage->copyAsTempFile($file_id);
+
+        $this->storage->deleteFile($file_id);
+        $this->delivery->sendTempFile(
+            $temp_file,
             Disposition::ATTACHMENT,
             $this->storage->newInfo()
-                ->setFileName($this->buildFilename($writings, PdfPurpose::WRITING))
-                ->setMimeType('application/pdf')
+            ->setFileName($this->buildFilename($writings, PdfPurpose::WRITING))
+            ->setMimeType('application/pdf')
         );
 
-        $this->delivery->sendFile($file_id, Disposition::ATTACHMENT);
-        $this->storage->deleteFile($file_id);
         return false;
     }
 
@@ -91,14 +92,18 @@ class Service implements FullService
             $anonymous_corrector
         );
 
-        $this->delivery->sendFile(
-            $file_id,
+
+        $temp_file = $this->storage->copyAsTempFile($file_id);
+
+        $this->storage->deleteFile($file_id);
+        $this->delivery->sendTempFile(
+            $temp_file,
             Disposition::ATTACHMENT,
             $this->storage->newInfo()
-                ->setFileName($this->buildFilename($writings, PdfPurpose::CORRECTION))
-                ->setMimeType('application/pdf')
+            ->setFileName($this->buildFilename($writings, PdfPurpose::CORRECTION))
+            ->setMimeType('application/pdf')
         );
-        $this->storage->deleteFile($file_id);
+
         return false;
     }
 

@@ -36,17 +36,8 @@ abstract readonly class Setup
     /**
      * Get the absolute path for temp files
      * It must be without a trailing slash
-     * The PDF generation will store temporary images there
      */
     abstract public function getAbsoluteTempPath(): string;
-
-    /**
-     * Get a path for temp files which is relative to the current directory
-     * It must be without a trailing slash
-     * It must correspond to getRelativeTempPath
-     * TCPDF requires this path for image sources
-     */
-    abstract public function getRelativeTempPath(): string;
 
     /**
      * Get the default path of the ghostscript executable

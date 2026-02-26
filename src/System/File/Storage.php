@@ -71,4 +71,9 @@ interface Storage
      * Dompdf needs this to set the chroot directory
      */
     public function getReadableRoot(): string;
+
+    /**
+     * Copy a file to the temporary directory
+     */
+    public function copyAsTempFile(string $id): string;
 }
