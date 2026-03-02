@@ -57588,6 +57588,12 @@ class MarkupAnnotation extends Annotation {
     if (Number.isInteger(annotation.parentTreeId)) {
       annotationDict.set("StructParent", annotation.parentTreeId);
     }
+    // edutiek-patch: begin
+    annotationDict.setIfDefined(
+        "Contents",
+      stringToAsciiOrUTF16BE(annotation.contents)
+    );
+    // edutiek-patch: end
     changes.put(annotationRef, {
       data: annotationDict
     });

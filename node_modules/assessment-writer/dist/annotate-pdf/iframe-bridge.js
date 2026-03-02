@@ -52,11 +52,20 @@ function setup(dispatch, ready){
             add: newOne => {
                 const id = newOne.id || uuid();
                 const page = newOne.page || pdfCurrentPageIndex();
-                const entry = {id, page, editor: null, intern: newOne.intern};
+                const entry = {
+                    id,
+                    page,
+                    text: newOne.text,
+                    editor: null,
+                    intern: newOne.intern
+                };
                 entries.push(entry);
                 sync(entry, 'create', layer => {
                     return layer.deserialize(newOne.intern).then(editor => {
                         entry.editor = editor;
+                        if(entry.text){
+                            editor.contents = entry.text;
+                        }
                         pdfAddEditorToLayerNoFocus(layer, entry.editor);
                     });
                 });

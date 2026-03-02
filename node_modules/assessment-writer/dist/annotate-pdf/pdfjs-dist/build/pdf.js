@@ -28470,7 +28470,10 @@ class HighlightEditor extends AnnotationEditor {
       opacity: this.opacity,
       thickness: this.#thickness,
       quadPoints: this.#serializeBoxes(),
-      outlines: this.#serializeOutlines(serialized.rect)
+      // edutiek-patch: begin
+      outlines: this.#serializeOutlines(serialized.rect),
+      contents: this.contents,
+      // edutiek-patch: end
     });
     this.addComment(serialized);
     if (this.annotationElementId && !this.#hasElementChanged(serialized)) {

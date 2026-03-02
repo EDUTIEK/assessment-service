@@ -6,6 +6,7 @@
  *     id: {string},
  *     page: {number},
  *     intern: {Object},
+ *     text: {string},
  * }} Annotation
  *
  * @param {string} parent   id of the parent element to add the iframe
