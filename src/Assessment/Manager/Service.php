@@ -98,12 +98,16 @@ readonly class Service implements FullService
             $this->repos->disabledGroup()->save($entity->setAssId($new_ass_id));
         }
 
-        // clone data that is not user related
+        // clone data that is not user-related
         foreach ($this->repos->gradeLevel()->allByAssId($this->ass_id) as $entity) {
             $this->repos->gradeLevel()->save($entity->setId(0)->setAssId($new_ass_id));
         }
         foreach ($this->repos->location()->allByAssId($this->ass_id) as $entity) {
             $this->repos->location()->save($entity->setId(0)->setAssId($new_ass_id));
+        }
+
+        foreach ($this->repos->pdfConfig()->allByAssId($this->ass_id) as $entity) {
+            $this->repos->pdfConfig()->save($entity->setId(0)->setAssId($new_ass_id));
         }
 
         // clone the tasks

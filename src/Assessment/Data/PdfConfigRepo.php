@@ -9,6 +9,8 @@ interface PdfConfigRepo
     public function new(): PdfConfig;
     public function one(int $id): ?PdfConfig;
     /** @return PdfConfig[] */
+    public function allByAssId(int $ass_id): array;
+    /** @return PdfConfig[] */
     public function allByAssIdAndPurpose(int $ass_id, string $purpose): array;
     public function save(PdfConfig $entity): void;
     public function delete(int $id): void;
