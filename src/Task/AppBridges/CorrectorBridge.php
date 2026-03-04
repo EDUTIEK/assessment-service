@@ -309,13 +309,13 @@ class CorrectorBridge implements AppCorrectorBridge
                     $summary = $this->summary_service->getForAssignment($assignment);
 
                     // add a template if the correction has not yet started
-                    if ($is_corrector && !$summary->isStarted() && empty($summary->getSummaryText())) {
-                        $template = $this->template_service->getByTaskIdAndCorrectorId(
-                            $assignment->getTaskId(),
-                            $assignment->getCorrectorId()
-                        );
-                        $summary->setSummaryText($template->getContent());
-                    }
+//                    if ($is_corrector && !$summary->isStarted() && empty($summary->getSummaryText())) {
+//                        $template = $this->template_service->getByTaskIdAndCorrectorId(
+//                            $assignment->getTaskId(),
+//                            $assignment->getCorrectorId()
+//                        );
+//                        $summary->setSummaryText($template->getContent());
+//                    }
 
                     // Content of other corrections should only be shown if they are authorized
                     if ($is_corrector || $summary->isAuthorized()) {
