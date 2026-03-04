@@ -16,6 +16,8 @@ use Edutiek\AssessmentService\System\File\Disposition;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
 use Edutiek\AssessmentService\System\File\Delivery as FileDelivery;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
+use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Data\ExportSettings;
 
 class Service implements FullService
 {
@@ -23,6 +25,8 @@ class Service implements FullService
     private ?array $writer_ids = null;
 
     public function __construct(
+        private int $ass_id,
+        private Repositories $repos,
         private PdfCreation $pdf,
         private BackgroundTaskService $background_tasks,
         private PropertiesService $properties,
@@ -62,8 +66,8 @@ class Service implements FullService
             $temp_file,
             Disposition::ATTACHMENT,
             $this->storage->newInfo()
-            ->setFileName($this->buildFilename($writings, PdfPurpose::WRITING))
-            ->setMimeType('application/pdf')
+                          ->setFileName($this->buildFilename($writings, PdfPurpose::WRITING))
+                          ->setMimeType('application/pdf')
         );
 
         return false;
@@ -92,7 +96,6 @@ class Service implements FullService
             $anonymous_corrector
         );
 
-
         $temp_file = $this->storage->copyAsTempFile($file_id);
 
         $this->storage->deleteFile($file_id);
@@ -100,8 +103,8 @@ class Service implements FullService
             $temp_file,
             Disposition::ATTACHMENT,
             $this->storage->newInfo()
-            ->setFileName($this->buildFilename($writings, PdfPurpose::CORRECTION))
-            ->setMimeType('application/pdf')
+                          ->setFileName($this->buildFilename($writings, PdfPurpose::CORRECTION))
+                          ->setMimeType('application/pdf')
         );
 
         return false;
@@ -114,10 +117,12 @@ class Service implements FullService
     {
         if (count($writings) > 1) {
             $filename = $this->properties->get()->getTitle()
-                . ' - ' . $this->lang->txt(match($purpose) {
-                    PdfPurpose::WRITING => 'writings',
-                    PdfPurpose::CORRECTION => 'corrections',
-                })
+                . ' - ' . $this->lang->txt(
+                    match ($purpose) {
+                        PdfPurpose::WRITING => 'writings',
+                        PdfPurpose::CORRECTION => 'corrections',
+                    }
+                )
                 . '.zip';
         } else {
             $wt = reset($writings);
@@ -127,13 +132,25 @@ class Service implements FullService
             $filename = $this->properties->get()->getTitle()
                 . ($this->tasks->count() > 1 ? ' - ' . $this->tasks->one($wt->getTaskId())->getTitle() : '')
                 . ' - ' . $writer->getPseudonym()
-                . ' - ' . $this->lang->txt(match($purpose) {
-                    PdfPurpose::WRITING => 'writing',
-                    PdfPurpose::CORRECTION => 'correction',
-                })
+                . ' - ' . $this->lang->txt(
+                    match ($purpose) {
+                        PdfPurpose::WRITING => 'writing',
+                        PdfPurpose::CORRECTION => 'correction',
+                    }
+                )
                 . '.pdf';
         }
 
         return $this->storage->asciiFilename($filename);
+    }
+
+    public function getSettings(): ExportSettings
+    {
+        return $this->repos->exportSettings()->one($this->ass_id) ?? $this->repos->exportSettings()->new()->setAssId($this->ass_id);
+    }
+
+    public function saveSettings(ExportSettings $settings)
+    {
+        $this->repos->exportSettings()->save($settings);
     }
 }

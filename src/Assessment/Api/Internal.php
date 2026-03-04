@@ -497,6 +497,8 @@ class Internal implements ComponentApi, ComponentApiFactory
     public function export(int $ass_id, int $context_id, int $user_id): ExportService
     {
         return $this->instances[ExportService::class][$ass_id][$context_id][$user_id] ??= new ExportService(
+            $ass_id,
+            $this->dependencies->repositories(),
             $this->pdfCreation($ass_id, $context_id, $user_id),
             $this->backgroundTasks($ass_id, $context_id, $user_id),
             $this->properties($ass_id),
