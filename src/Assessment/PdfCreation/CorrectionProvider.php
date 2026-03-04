@@ -120,6 +120,7 @@ readonly class CorrectionProvider implements PdfPartProvider
             'pseudonym' => $writer?->getPseudonym(),
             'firstname' => $user?->getFirstname(),
             'lastname' => $user?->getLastname(),
+            'listname' => $user?->getListname(false),
             'fullname' => $user?->getFullname(false) ?? $writer?->getPseudonym(),
             'login' => $user?->getLogin(),
             'matriculation' => $user?->getMatriculation(),
