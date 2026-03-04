@@ -56,8 +56,8 @@ readonly class CorrectionProvider implements PdfPartProvider
     public function getAvailableParts(): array
     {
         $parts = [];
-        foreach ([self::PART_SUMMARY, self::PART_REVISION, self::PART_CRITERIA] as $type) {
-            foreach ([self::CORRECTOR_1, self::CORRECTOR_2, self::CORRECTOR_3] as $corrector) {
+        foreach ([self::CORRECTOR_1, self::CORRECTOR_2, self::CORRECTOR_3] as $corrector) {
+            foreach ([self::PART_CRITERIA, self::PART_SUMMARY, self::PART_REVISION] as $type) {
                 if ($this->isPartAvailable($type, $corrector)) {
                     $parts[] = new PdfConfigPart(
                         "Task",
