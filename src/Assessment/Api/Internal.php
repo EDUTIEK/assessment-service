@@ -48,6 +48,7 @@ use Slim\Factory\AppFactory;
 use Edutiek\AssessmentService\Assessment\PdfCreation\CorrectionProvider;
 use Edutiek\AssessmentService\Assessment\Apps\AppWriter;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
+use Edutiek\AssessmentService\Assessment\Export\ResultsExport;
 
 class Internal implements ComponentApi, ComponentApiFactory
 {
@@ -267,6 +268,16 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
+
+    public function resultsExport(int $ass_id, int $user_id): ResultsExport
+    {
+        return $this->instances[ResultsExport::class][$ass_id][$user_id] ??= new ResultsExport(
+            $ass_id,
+            $user_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->spreadsheet(false)
+        );
+    }
 
     /**
      * Configured slim app instance
@@ -506,7 +517,9 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->writer($ass_id, $user_id),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->fileDelivery(),
-            $this->language($user_id)
+            $this->language($user_id),
+            $this->resultsExport($ass_id, $user_id),
+            $this->logEntry($ass_id)
         );
     }
 

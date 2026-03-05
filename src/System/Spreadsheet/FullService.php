@@ -6,7 +6,7 @@ interface FullService
 {
     public function getNewSheet(?string $title, array $header, array $rows): Sheet;
 
-    public function sheetsToFile(array $sheets, ExportType $type): string;
+    public function sheetsToFile(array $sheets, ExportType $type, ?string $title = null): string;
 
     /**
      * Get the data from a file as an array
@@ -17,7 +17,8 @@ interface FullService
      * Export data to a file
      * @param array<string, string> $header key/values of the header row
      * @param array<array<string, mixed>> $rows arrays of key/value of the content rows
+     * @param string $filename title of the file
      * @return string id of the stored file
      */
-    public function dataToFile(array $header, array $rows, ExportType $type, string $title = null): string;
+    public function dataToFile(array $header, array $rows, ExportType $type, ?string $title = null): string;
 }

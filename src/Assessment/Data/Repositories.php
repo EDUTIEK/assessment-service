@@ -13,6 +13,8 @@ interface Repositories
     public function properties(): PropertiesRepo;
     public function correctionSettings(): CorrectionSettingsRepo;
     public function corrector(): CorrectorRepo;
+    public function exportSettings(): ExportSettingsRepo;
+    public function exportFile(): ExportFileRepo;
     public function gradeLevel(): GradeLevelRepo;
     public function orgaSettings(): OrgaSettingsRepo;
     public function contextInfo(): ContextInfoRepo;

@@ -79,7 +79,7 @@ class Service implements FullService
         return $this->repos->logEntry()->allByAssId($this->ass_id);
     }
 
-    public function export(ExportType $type): string
+    public function export(ExportType $type = ExportType::CSV): string
     {
         $header = [
             'log_time' => $this->lang->txt('log_time'),

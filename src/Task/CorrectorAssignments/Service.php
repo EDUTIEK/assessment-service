@@ -59,7 +59,7 @@ readonly class Service implements FullService
         $required = $this->correction_settings->getRequiredCorrectors();
         $count_assignments = [];
         array_map(
-            fn (CorrectorAssignment $x) => $count_assignments[$x->getWriterId()] = 1 + $count_assignments[$x->getWriterId()] ?? 0,
+            fn(CorrectorAssignment $x) => $count_assignments[$x->getWriterId()] = 1 + $count_assignments[$x->getWriterId()] ?? 0,
             $this->repos->correctorAssignment()->allByAssId($this->ass_id)
         );
 
@@ -82,7 +82,7 @@ readonly class Service implements FullService
             $writer_ids = $this->writer_service->correctableIds();
             return array_filter(
                 $assignments,
-                fn (CorrectorAssignment $assignment) => in_array($assignment->getWriterId(), $writer_ids)
+                fn(CorrectorAssignment $assignment) => in_array($assignment->getWriterId(), $writer_ids)
             );
         }
         return $assignments;
@@ -106,7 +106,7 @@ readonly class Service implements FullService
         $prefs->setFilterGradingStatus(
             $grading_status === null ? null : implode(
                 ',',
-                array_map(fn ($status) => $status->value, $grading_status)
+                array_map(fn($status) => $status->value, $grading_status)
             )
         );
 
@@ -165,7 +165,7 @@ readonly class Service implements FullService
         $writer_ids = $this->writer_service->correctableIds();
         return array_filter(
             $assignments,
-            fn (CorrectorAssignment $assignment) => in_array($assignment->getWriterId(), $writer_ids)
+            fn(CorrectorAssignment $assignment) => in_array($assignment->getWriterId(), $writer_ids)
         );
     }
 
@@ -333,15 +333,13 @@ readonly class Service implements FullService
             $ea->correctorBody()
         );
 
-        $file_id = $this->spreadsheet_service->sheetsToFile([$writer_sheet, $corrector_sheet], ExportType::EXCEL);
-
-        $this->delivery->sendFile(
-            $file_id,
-            Disposition::ATTACHMENT,
-            $this->storage->newInfo()
-                          ->setFileName("corrector_assignment" . ExportType::EXCEL->extension())
-                          ->setMimeType(ExportType::EXCEL->mimetype())
+        $file_id = $this->spreadsheet_service->sheetsToFile(
+            [$writer_sheet, $corrector_sheet],
+            ExportType::EXCEL,
+            "corrector_assignment"
         );
+
+        $this->delivery->sendFile($file_id, Disposition::ATTACHMENT);
         $this->storage->deleteFile($file_id);
     }
 

@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropertiesSer
 use Edutiek\AssessmentService\Assessment\PdfCreation\FullService as PdfCreation;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager;
+use Edutiek\AssessmentService\Assessment\LogEntry\FullService as LogEntryService;
 use Edutiek\AssessmentService\System\Data\FileInfo;
 use Edutiek\AssessmentService\System\File\Disposition;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
@@ -18,6 +19,9 @@ use Edutiek\AssessmentService\System\File\Delivery as FileDelivery;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\ExportSettings;
+use Edutiek\AssessmentService\Assessment\Data\ExportType;
+use Edutiek\AssessmentService\Assessment\Data\ExportFile;
+use SplFileInfo;
 
 class Service implements FullService
 {
@@ -35,6 +39,8 @@ class Service implements FullService
         private FileStorage $storage,
         private FileDelivery $delivery,
         private Language $lang,
+        private ResultsExport $results,
+        private LogEntryService $log
     ) {
     }
 
@@ -47,7 +53,7 @@ class Service implements FullService
             $this->background_tasks->downloadWritings(
                 $writings,
                 $anonymous,
-                $this->buildFilename($writings, PdfPurpose::WRITING)
+                $this->buildPdfFilename($writings, PdfPurpose::WRITING)
             );
             return true;
         }
@@ -66,7 +72,7 @@ class Service implements FullService
             $temp_file,
             Disposition::ATTACHMENT,
             $this->storage->newInfo()
-                          ->setFileName($this->buildFilename($writings, PdfPurpose::WRITING))
+                          ->setFileName($this->buildPdfFilename($writings, PdfPurpose::WRITING))
                           ->setMimeType('application/pdf')
         );
 
@@ -83,7 +89,7 @@ class Service implements FullService
                 $writings,
                 $anonymous_writer,
                 $anonymous_corrector,
-                $this->buildFilename($writings, PdfPurpose::CORRECTION)
+                $this->buildPdfFilename($writings, PdfPurpose::CORRECTION)
             );
             return true;
         }
@@ -103,7 +109,7 @@ class Service implements FullService
             $temp_file,
             Disposition::ATTACHMENT,
             $this->storage->newInfo()
-                          ->setFileName($this->buildFilename($writings, PdfPurpose::CORRECTION))
+                          ->setFileName($this->buildPdfFilename($writings, PdfPurpose::CORRECTION))
                           ->setMimeType('application/pdf')
         );
 
@@ -113,7 +119,7 @@ class Service implements FullService
     /**
      * @param WritingTask[] $writings
      */
-    private function buildFilename($writings, PdfPurpose $purpose): string
+    private function buildPdfFilename($writings, PdfPurpose $purpose): string
     {
         if (count($writings) > 1) {
             $filename = $this->properties->get()->getTitle()
@@ -152,5 +158,81 @@ class Service implements FullService
     public function saveSettings(ExportSettings $settings)
     {
         $this->repos->exportSettings()->save($settings);
+    }
+
+    public function createFile(ExportType $type): bool
+    {
+        $file_id = '';
+        switch ($type) {
+            case ExportType::DOCUMENTATION:
+                return true;
+
+            case ExportType::RESULTS:
+                $file_id = $this->results->create();
+                break;
+
+            case ExportType::LOG:
+                $file_id = $this->log->export();
+                break;
+
+            case ExportType::REPORTS:
+                return false;
+        }
+
+        $file = $this->repos->exportFile()->new()
+                            ->setAssId($this->ass_id)
+                            ->setFileId($file_id)
+                            ->setType($type);
+        $this->repos->exportFile()->save($file);
+
+        return false;
+    }
+
+    public function getFiles(): array
+    {
+        return $this->repos->exportFile()->allByAssId($this->ass_id);
+    }
+
+    public function getFilesByIds(array $file_ids): array
+    {
+        return $this->repos->exportFile()->allByAssIdAndFileIds($this->ass_id, $file_ids);
+    }
+
+    /**
+     * @param string[] $file_ids
+     * @return \SplFileInfo[]
+     */
+    public function getFilesInfos(array $file_ids): array
+    {
+        $infos = [];
+        foreach ($this->getFilesByIds($file_ids) as $file) {
+            $infos[] = new SplFileInfo($this->storage->getReadablePath($file->getFileId()));
+        }
+        return $infos;
+    }
+
+
+    public function addFile(string $file_id, ExportType $type): void
+    {
+        $file = $this->repos->exportFile()->new()
+            ->setAssId($this->ass_id)
+            ->setFileId($file_id)
+            ->setType($type);
+        $this->repos->exportFile()->save($file);
+    }
+
+    public function deleteFile(ExportFile $file): void
+    {
+        if ($this->repos->exportFile()->hasByAssIdAndFileId($this->ass_id, $file->getFileId())) {
+            $this->repos->exportFile()->delete($file->getId());
+            $this->storage->deleteFile($file->getFileId());
+        }
+    }
+
+    public function downloadFile(ExportFile $file): void
+    {
+        if ($this->repos->exportFile()->hasByAssIdAndFileId($this->ass_id, $file->getFileId())) {
+            $this->delivery->sendFile($file->getFileId(), Disposition::ATTACHMENT);
+        }
     }
 }

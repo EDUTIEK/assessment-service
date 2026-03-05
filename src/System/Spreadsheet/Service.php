@@ -49,7 +49,7 @@ readonly class Service implements FullService
         if ($path) {
             $spreadsheet = IOFactory::load($path);
 
-            if($select_sheet !== null) {
+            if ($select_sheet !== null) {
                 $spreadsheet->setActiveSheetIndexByName($select_sheet);
             }
 
@@ -69,18 +69,18 @@ readonly class Service implements FullService
      * @param array<array<string, mixed>> $rows arrays of key/value of the content rows
      * @return string id of the stored file
      */
-    public function dataToFile(array $header, array $rows, ExportType $type, string $title = null): string
+    public function dataToFile(array $header, array $rows, ExportType $type, ?string $title = null): string
     {
-        return $this->sheetsToFile([$this->getNewSheet($title, $header, $rows)], $type);
+        return $this->sheetsToFile([$this->getNewSheet($title, $header, $rows)], $type, $title);
     }
 
-    public function sheetsToFile(array $sheets, ExportType $type): string
+    public function sheetsToFile(array $sheets, ExportType $type, ?string $title = null): string
     {
         $workbook = new Spreadsheet();
         $first = true;
 
         foreach ($sheets as $data) {
-            if($first) {
+            if ($first) {
                 $sheet = $workbook->getActiveSheet();
                 $first = false;
             } else {
@@ -94,9 +94,9 @@ readonly class Service implements FullService
             $c = $r = 1;
             $columns = [];
 
-            foreach ($data->getHeader() as $key => $title) {
+            foreach ($data->getHeader() as $key => $value) {
                 $columns[] = $key;
-                $sheet->setCellValue($this->cellAddress($r, $c++), $this->cellValue($title));
+                $sheet->setCellValue($this->cellAddress($r, $c++), $this->cellValue($value));
             }
 
             foreach ($data->getRows() as $row) {
@@ -129,7 +129,7 @@ readonly class Service implements FullService
         $info = $this->store->saveFile(
             $fp,
             $this->store->newInfo()
-                        ->setFileName($this->store->asciiFilename($title) . $type->extension())
+                        ->setFileName($this->store->asciiFilename($title ?? 'data') . $type->extension())
                         ->setMimeType($type->mimetype())
         );
         unlink($file);
