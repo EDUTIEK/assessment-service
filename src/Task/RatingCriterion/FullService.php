@@ -23,6 +23,8 @@ interface FullService
      */
     public function allForCorrector(int $corrector_id): array;
 
+    public function copyFromCorrector(int $task_id, int $to_corrector_id, ?int $from_corrector_id);
+    public function copyFromTask(int $to_task_id, int $from_task_id);
     public function one(int $criterion_id): ?RatingCriterion;
     public function new(): RatingCriterion;
     public function save(RatingCriterion $criterion);

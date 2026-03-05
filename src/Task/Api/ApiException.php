@@ -18,4 +18,7 @@ class ApiException extends Exception
      * The operation os not allowed due to the correction status
      */
     public const CORRECTION_STATUS = 1;
+
+    public const CRITERION_COPY_DISABLED = 2;
+    public const CRITERION_COPY_PERMISSION = 3;
 }

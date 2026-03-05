@@ -6,6 +6,8 @@ namespace Edutiek\AssessmentService\Task\Data;
 
 abstract class CorrectorTaskPrefs implements TaskEntity
 {
+    abstract public function getId(): int;
+    abstract public function setId(int $id): self;
     abstract public function getCorrectorId(): int;
     abstract public function setCorrectorId(int $corrector_id): self;
     abstract public function getTaskId(): int;

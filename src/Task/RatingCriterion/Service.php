@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Task\Api\ApiException;
 use Edutiek\AssessmentService\Task\Data\CriteriaMode;
 use Edutiek\AssessmentService\Task\CorrectionSettings\ReadService as SettingsService;
 use ILIAS\Rating;
+use Edutiek\AssessmentService\Task\Api\Dependencies;
 
 readonly class Service implements FullService
 {
@@ -72,5 +73,48 @@ readonly class Service implements FullService
     {
         $this->checkScope($criterion);
         $this->repos->ratingCriterion()->delete($criterion->getId());
+    }
+
+    public function copyFromTask(int $to_task_id, int $from_task_id)
+    {
+        $origin_criteria = $this->repos->ratingCriterion()->allByTaskIdAndCorrectorId($from_task_id, null);
+        $this->repos->ratingCriterion()->deleteByTaskId($to_task_id);
+
+        foreach ($origin_criteria as $criterion) {
+            $new = clone $criterion;
+            $new->setId(0);
+            $new->setCorrectorId(null);
+            $new->setTaskId($to_task_id);
+            $this->repos->ratingCriterion()->save($new);
+        }
+    }
+
+    public function copyFromCorrector(int $task_id, int $to_corrector_id, ?int $from_corrector_id)
+    {
+        if( $from_corrector_id !== null) {
+            $prefs = $this->repos->correctorTaskPrefs()->oneByCorrectorIdAndTaskId($from_corrector_id, $task_id);
+
+            if(!($prefs?->getCriterionCopy()??false)) {
+                throw new ApiException("criterion copy is not enabled", ApiException::CRITERION_COPY_DISABLED);
+            }
+        }
+        $origin_criteria = $this->repos->ratingCriterion()->allByTaskIdAndCorrectorId($task_id, $from_corrector_id);
+        $this->repos->ratingCriterion()->deleteByCorrectorId($to_corrector_id);
+        $has_comment_criterion = false;
+
+        foreach ($origin_criteria as $criterion) {
+            $new = clone $criterion;
+            if (!$new->getGeneral()) {
+                $has_comment_criterion = true;
+            }
+            $new->setId(0);
+            $new->setCorrectorId($to_corrector_id);
+            $new->setTaskId($task_id);
+            $this->repos->ratingCriterion()->save($new);
+        }
+
+        if ($has_comment_criterion) {
+            $this->repos->correctorPoints()->deleteWithoutCriteria($task_id, $to_corrector_id);
+        }
     }
 }

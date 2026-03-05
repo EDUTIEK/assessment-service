@@ -26,6 +26,7 @@ use Edutiek\AssessmentService\Task\Settings\Service as SettingsService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Task\PdfCreation\CorrectionProvider;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ExcelAssignmentData;
+use Edutiek\AssessmentService\Task\CorrectorTaskPrefs\Service as CorrectorTaskPrefsService;
 
 class Internal implements RatingCriterionServiceFactory
 {
@@ -272,6 +273,13 @@ class Internal implements RatingCriterionServiceFactory
             $this->dependencies->systemApi()->htmlProcessing(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->language($user_id),
+        );
+    }
+
+    public function correctorTaskPrefs() : CorrectorTaskPrefsService
+    {
+        return $this->instances[CorrectorTaskPrefsService::class] ??= new CorrectorTaskPrefsService(
+            $this->dependencies->repositories()
         );
     }
 }

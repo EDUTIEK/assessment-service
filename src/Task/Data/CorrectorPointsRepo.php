@@ -22,4 +22,5 @@ interface CorrectorPointsRepo
     public function deleteByTaskIdAndWriterId(int $task_id, int $writer_id): void;
     public function deleteByCorrectorId(int $corrector_id): void;
     public function deleteByTaskIdAndWriterIdAndCorrectorId(int $task_id, int $writer_id, int $corrector_id): void;
+    public function deleteWithoutCriteria(int $task_id, int $corrector_id): void;
 }

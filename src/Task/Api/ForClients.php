@@ -15,6 +15,7 @@ use Edutiek\AssessmentService\Task\Format\FullService as FormatFullService;
 use Edutiek\AssessmentService\Task\RatingCriterion\FullService as RatingCriterionFullService;
 use Edutiek\AssessmentService\Task\Resource\FullService as ResourceFullService;
 use Edutiek\AssessmentService\Task\Settings\FullService as SettingsFullService;
+use Edutiek\AssessmentService\Task\CorrectorTaskPrefs\FullService as CorrectorTaskPrefsFullService;
 
 readonly class ForClients
 {
@@ -78,5 +79,10 @@ readonly class ForClients
     public function correctionProcess(): CorrectionProcessFullService
     {
         return $this->internal->correctionProcess($this->ass_id, $this->user_id);
+    }
+
+    public function correctorTaskPrefs(): CorrectorTaskPrefsFullService
+    {
+        return $this->internal->correctorTaskPrefs();
     }
 }
