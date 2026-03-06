@@ -5,7 +5,7 @@ return [
     'by_csv_alloc_time' => 'Allozierte Zeit',
     'by_csv_used_time' => 'Eingereichte Zeit',
     'by_csv_logged_in' => 'Prüfling eingelogged?',
-    'by_csv_given_up' => 'Prüfling abgegeben?',
+    'by_csv_submitted' => 'Prüfling abgegeben?',
     'by_csv_pdf_hash' => 'Hash-wert',
     'essay_import_column_file' => 'Datei',
     'essay_import_column_id' => 'Prüflings-ID',

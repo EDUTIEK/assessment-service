@@ -53,6 +53,8 @@ abstract class Writer implements AssessmentEntity, IndividualWorkingTime
     abstract public function setReviewNotification(int $review_notification): self;
     abstract public function getFinalizedFromStatus(): ?CorrectionStatus;
     abstract public function setFinalizedFromStatus(?CorrectionStatus $finalized_from_status): self;
+    abstract public function getImportedStatus(): ?string;
+    abstract public function setImportedStatus(?string $imported_status): self;
 
     public function getWritingStatus(): WritingStatus
     {

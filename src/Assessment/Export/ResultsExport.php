@@ -200,7 +200,7 @@ readonly class ResultsExport
                 'assessment' => $props->getTitle(),
                 'participant' => $user?->getFirstname(),
                 'points' => $writer->getFinalPoints(),
-                'status' => null, // save imported draft status to writer
+                'status' => $writer->getImportedStatus(),
                 'id' => $stitch_user?->getMatriculation()
             ];
 

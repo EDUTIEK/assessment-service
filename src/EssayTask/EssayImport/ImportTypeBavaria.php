@@ -36,7 +36,7 @@ readonly class ImportTypeBavaria implements ImportType
         'alloc_time' => 'by_csv_alloc_time',
         'used_time' => 'by_csv_used_time',
         'logged_in' => 'by_csv_logged_in',
-        'given_up' => 'by_csv_given_up',
+        'submitted' => 'by_csv_submitted',
         'pdf_hash' => 'by_csv_pdf_hash',
     ];
 
@@ -79,6 +79,7 @@ readonly class ImportTypeBavaria implements ImportType
                 $file->setRelevant(true)
                     ->setId($id)
                     ->setLogin($login)
+                    ->setImportedStatus($data['submitted'] ?? null)
                     ->setHashOk($file->getHash() === ($data['pdf_hash'] ?? ''));
 
                 if (!$file->isHashOk()) {

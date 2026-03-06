@@ -19,6 +19,7 @@ class ImportFile
     private bool $hash_ok = false;
     private bool $relevant = false;
     private bool $existing = false;
+    private ?string $imported_status = null;
     private ?int $user_id = null;
 
     // messages
@@ -167,5 +168,16 @@ class ImportFile
     public function isImportPossible(): bool
     {
         return $this->isRelevant() && empty($this->errors);
+    }
+
+    public function getImportedStatus(): ?string
+    {
+        return $this->imported_status;
+    }
+
+    public function setImportedStatus(?string $imported_status): self
+    {
+        $this->imported_status = $imported_status;
+        return $this;
     }
 }
