@@ -269,10 +269,11 @@ class Internal implements ComponentApi, ComponentApiFactory
     }
 
 
-    public function resultsExport(int $ass_id, int $user_id): ResultsExport
+    public function resultsExport(int $ass_id, int $context_id, int $user_id): ResultsExport
     {
-        return $this->instances[ResultsExport::class][$ass_id][$user_id] ??= new ResultsExport(
+        return $this->instances[ResultsExport::class][$ass_id][$context_id][$user_id] ??= new ResultsExport(
             $ass_id,
+            $context_id,
             $user_id,
             $this->dependencies->repositories(),
             $this->correctionSettings($ass_id, $user_id)->get(),
@@ -528,7 +529,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->fileDelivery(),
             $this->language($user_id),
-            $this->resultsExport($ass_id, $user_id),
+            $this->resultsExport($ass_id, $context_id, $user_id),
             $this->logEntry($ass_id)
         );
     }

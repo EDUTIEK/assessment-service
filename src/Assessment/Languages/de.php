@@ -96,4 +96,12 @@ return [
     'export_yes' => 'ja',
     'export_no' => 'nein',
     'export_corrector_task_x' => 'Korrektur Aufgabe {pos}',
+    'result_export_filename' => 'Ergebnisse',
+    'justa_period' => 'Prüfungstermin',
+    'justa_assessment' => 'Aufgabe',
+    'justa_participant' => 'Prüfungsnummer',
+    'justa_points' => 'Punktzahl',
+    'justa_status' => 'Status',
+    'justa_id' => 'JUSTA-ID',
+    'justa_filename' => 'Ergebnisse'
 ];

@@ -26,6 +26,7 @@ readonly class ResultsExport
 {
     public function __construct(
         private int $ass_id,
+        private int $context_id,
         private int $user_id,
         private Repositories $repos,
         private CorrectionSettings $correction_settings,
@@ -60,6 +61,7 @@ readonly class ResultsExport
     private function createEdutiekExport(): string
     {
         $tasks = $this->tasks->all();
+        $props = $this->repos->properties()->one($this->ass_id);
 
         $header = [
             'login' => $this->lang->txt('export_login'),
@@ -105,7 +107,6 @@ readonly class ResultsExport
             array_map(fn(Writer $writer) => $writer->getUserId(), $writers),
             array_map(fn(Corrector $corrector) => $corrector->getUserId(), $correctors)
         ));
-
         $users = $this->users->getUsersByIds($user_ids);
 
         $rows = [];
@@ -157,13 +158,63 @@ readonly class ResultsExport
             $rows[] = $row;
         }
 
-        return $this->spreadsheets->dataToFile($header, $rows, ExportType::CSV, 'Ergebnisse');
+        $title = $this->lang->txt('result_export_filename');
+        if (!empty($props->getTitle())) {
+            $title .= " " . $props->getTitle();
+        }
+
+        return $this->spreadsheets->dataToFile($header, $rows, ExportType::CSV, $title);
     }
 
     private function createJustaExport()
     {
-        return $this->createEdutiekExport();
+        $task = $this->tasks->first();
+        $context = $this->repos->contextInfo()->get($this->context_id);
+        $props = $this->repos->properties()->one($this->ass_id);
+
+        $header = [
+            'period' => $this->lang->txt('justa_period'),
+            'assessment' => $this->lang->txt('justa_assessment'),
+            'participant' => $this->lang->txt('justa_participant'),
+            'points' => $this->lang->txt('justa_points'),
+            'status' => $this->lang->txt('justa_status'),
+            'id' => $this->lang->txt('justa_id'),
+        ];
+
+        $writers = $this->writers->all();
+        $user_ids = array_map(fn(Writer $writer) => $writer->getUserId(), $writers);
+        $users = $this->users->getUsersByIds($user_ids);
+
+        foreach ($writers as $writer) {
+            $user = $users[$writer->getUserId()] ?? null;
+            $gradings = $this->grading->gradingsForTaskAndWriter($task->getId(), $writer->getId());
+            $stitch = $gradings[GradingPosition::STITCH->value];
+            $sitch_user = null;
+            if ($stitch !== null) {
+                $stitch_corrector = $this->correctors->oneById($stitch->getCorrectorId());
+                $stitch_user = $this->users->getUser($stitch_corrector?->getUserId());
+            }
+
+            $row = [
+                'period' => $context->getParentTitle(),
+                'assessment' => $props->getTitle(),
+                'participant' => $user?->getFirstname(),
+                'points' => $writer->getFinalPoints(),
+                'status' => null, // save imported draft status to writer
+                'id' => $stitch_user?->getMatriculation()
+            ];
+
+            $rows[] = $row;
+        }
+
+        $title = $this->lang->txt('justa_filename');
+        if (!empty($props->getDescription())) {
+            $title .= " " . $props->getDescription();
+        }
+
+        return $this->spreadsheets->dataToFile($header, $rows, ExportType::CSV, $title);
     }
+
 
     private function createExamisExport()
     {
