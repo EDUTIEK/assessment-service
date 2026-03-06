@@ -58,7 +58,8 @@ readonly class Grading
 
     public function isAuthorized(): bool
     {
-        return $this->status === GradingStatus::AUTHORIZED ;
+        return $this->status === GradingStatus::AUTHORIZED
+            || $this->status === GradingStatus::REVISED;
     }
 
     public function isRevised(): bool

@@ -172,7 +172,7 @@ readonly class CorrectionProvider implements PdfPartProvider
                 $user = $anonymous_corrector ? null : $this->users->getUser($corrector?->getUserId() ?? 0);
                 $level = $this->assessment_grading->getGradLevelForPoints($grading->getPoints());
 
-                $show_grading = $grading->isAuthorized() || $grading->isRevised() || $corrector?->getUserId() == $this->user_id;
+                $show_grading = $grading->isAuthorized() || $corrector?->getUserId() == $this->user_id;
 
                 $data['correctors'][] = $data[$corrector_key] = [
                     'anonymous' => $anonymous_corrector,

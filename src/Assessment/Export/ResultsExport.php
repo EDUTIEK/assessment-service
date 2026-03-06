@@ -119,9 +119,9 @@ readonly class ResultsExport
                 'lastname' => $user?->getLastname(),
                 'matriculation' => $user?->getMatriculation(),
                 'writing_status' => $this->format->writingStatus($writer),
-                'writing_authorized' => $this->sys_format->date($writer->getWritingAuthorized()),
+                'writing_authorized' => $this->sys_format->logDate($writer->getWritingAuthorized()),
                 'correction_status' => $this->lang->txt($writer->getCorrectionStatus()->languageVariable()),
-                'correction_finalized' => $this->sys_format->date($writer->getCorrectionFinalized()),
+                'correction_finalized' => $this->sys_format->logDate($writer->getCorrectionFinalized()),
                 'points' => $writer->isCorrectionFinalized() ? $writer->getFinalPoints() : null,
                 'grade' => $level?->getGrade(),
                 'grade_code' => $level?->getCode(),
@@ -130,7 +130,7 @@ readonly class ResultsExport
 
             if ($this->correction_settings->hasMultipleCorrectors()) {
                 foreach ($this->grading->gradingsForTaskAndWriter(reset($tasks)->getId(), $writer->getId()) as $pos => $grading) {
-                    if ($grading?->isAuthorized() || $grading?->isRevised()) {
+                    if ($grading?->isAuthorized()) {
                         $pos = $grading->getPosition();
                         $corrector = $correctors[$grading->getCorrectorId()] ?? null;
                         $user = $users[$corrector?->getUserId() ?? 0] ?? null;
@@ -142,12 +142,12 @@ readonly class ResultsExport
             } else {
                 foreach ($tasks as $task_pos => $task) {
                     foreach ($this->grading->gradingsForTaskAndWriter($task->getId(), $writer->getId()) as $grading) {
-                        if ($grading->isAuthorized() || $grading?->isRevised()) {
+                        if ($grading?->isAuthorized()) {
                             $corrector = $correctors[$grading->getCorrectorId()] ?? null;
                             $user = $users[$corrector?->getUserId() ?? 0] ?? null;
-                            $header['corrector_' . $task_pos . '_login'] = $user?->getLogin();
-                            $header['corrector_' . $task_pos . '_name'] = $user?->getListname(false);
-                            $header['corrector_' . $task_pos . '_points'] = $grading->getPoints();
+                            $row['corrector_' . $task_pos . '_login'] = $user?->getLogin();
+                            $row['corrector_' . $task_pos . '_name'] = $user?->getListname(false);
+                            $row['corrector_' . $task_pos . '_points'] = $grading->getPoints();
                         }
                         break;
                     }

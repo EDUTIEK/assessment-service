@@ -80,13 +80,13 @@ class Service implements FullService
                     $sum_of_weights += $task->getWeight();
                     break;
             }
+        }
 
-            // all tasks are finalized, calculate the final points
-            if ($sum_of_weights > 0) {
-                $writer->setFinalPoints($sum_of_points / $sum_of_weights);
-                $this->repos->writer()->save($writer);
-                $this->writer_service->changeCorrectionStatus($writer, $status, $this->user_id);
-            }
+        // all tasks are finalized, calculate the final points
+        if ($sum_of_weights > 0) {
+            $writer->setFinalPoints($sum_of_points / $sum_of_weights);
+            $this->repos->writer()->save($writer);
+            $this->writer_service->changeCorrectionStatus($writer, $status, $this->user_id);
         }
     }
 
