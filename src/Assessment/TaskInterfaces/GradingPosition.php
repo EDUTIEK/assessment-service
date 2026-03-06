@@ -21,6 +21,15 @@ enum GradingPosition: int
      */
     case STITCH = 2;
 
+    public static function all()
+    {
+        return [
+            GradingPosition::FIRST,
+            GradingPosition::SECOND,
+            GradingPosition::STITCH
+        ];
+    }
+
     public function languageVariable(): string
     {
         return match ($this) {
