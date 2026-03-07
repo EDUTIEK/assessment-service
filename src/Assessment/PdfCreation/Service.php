@@ -9,10 +9,12 @@ use Edutiek\AssessmentService\Assessment\Data\PdfConfig;
 use Edutiek\AssessmentService\Assessment\Data\PdfFormat;
 use Edutiek\AssessmentService\Assessment\Data\PdfSettings;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Data\WritingTask;
 use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropetiesReadService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
+use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingService;
 use Edutiek\AssessmentService\System\User\ReadService as UserService;
@@ -32,6 +34,7 @@ class Service implements FullService
         private PdfProcessingService $processor,
         private ConfigService $config,
         private FileStorage $storage,
+        private Language $lang,
         private UserService $users,
         private TasksReadService $tasks,
         private PropetiesReadService $properties,
@@ -250,6 +253,41 @@ class Service implements FullService
         unlink($zipfile);
         return $info->getId();
     }
+
+    /**
+     * @param WritingTask[] $writings
+     */
+    public function buildPdfFilename($writings, PdfPurpose $purpose): string
+    {
+        if (count($writings) > 1) {
+            $filename = $this->properties->get()->getTitle()
+                . ' - ' . $this->lang->txt(
+                    match ($purpose) {
+                        PdfPurpose::WRITING => 'writings',
+                        PdfPurpose::CORRECTION => 'corrections',
+                    }
+                )
+                . '.zip';
+        } else {
+            $wt = reset($writings);
+            $task = $this->tasks->one($wt->getTaskId());
+            $writer = $this->writers->oneByWriterId($wt->getWriterId());
+
+            $filename = $this->properties->get()->getTitle()
+                . ($this->tasks->count() > 1 ? ' - ' . $this->tasks->one($wt->getTaskId())->getTitle() : '')
+                . ' - ' . $writer->getPseudonym()
+                . ' - ' . $this->lang->txt(
+                    match ($purpose) {
+                        PdfPurpose::WRITING => 'writing',
+                        PdfPurpose::CORRECTION => 'correction',
+                    }
+                )
+                . '.pdf';
+        }
+
+        return $this->storage->asciiFilename($filename);
+    }
+
 
     private function getProvider(string $component, PdfPurpose $purpose): ?PdfPartProvider
     {

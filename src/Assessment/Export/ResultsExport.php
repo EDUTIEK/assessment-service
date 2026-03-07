@@ -43,7 +43,10 @@ readonly class ResultsExport
     ) {
     }
 
-
+    /**
+     * Create a results export file
+     * @return string storage file_id
+     */
     public function create(): string
     {
         $settings = $this->repos->exportSettings()->one($this->ass_id) ?? $this->repos->exportSettings()->new();

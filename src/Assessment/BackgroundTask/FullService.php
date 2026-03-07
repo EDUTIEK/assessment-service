@@ -8,6 +8,8 @@ use Edutiek\AssessmentService\Assessment\Data\WritingTask;
 
 interface FullService
 {
+    public function createDocumentation(): void;
+
     /**
      * @param WritingTask[] $writings
      */

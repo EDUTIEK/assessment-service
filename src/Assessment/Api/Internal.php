@@ -22,6 +22,7 @@ use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\DisabledGroup\Service as DisabledGroupService;
 use Edutiek\AssessmentService\Assessment\EventHandling\AssessmentObserver as AssessmentObserver;
 use Edutiek\AssessmentService\Assessment\EventHandling\SystemObserver as SystemObserver;
+use Edutiek\AssessmentService\Assessment\Export\DocumentationExport;
 use Edutiek\AssessmentService\Assessment\Export\Service as ExportService;
 use Edutiek\AssessmentService\Assessment\Format\FullService as FormatInterface;
 use Edutiek\AssessmentService\Assessment\Format\Service as Format;
@@ -268,6 +269,25 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
+    public function documentationExport(int $ass_id, int $context_id, int $user_id): DocumentationExport
+    {
+        return $this->instances[DocumentationExport::class][$ass_id][$context_id][$user_id] ??= new DocumentationExport(
+            $ass_id,
+            $this->dependencies->repositories(),
+            $this->properties($ass_id),
+            $this->writer($ass_id, $user_id),
+            $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
+            $this->pdfCreation($ass_id, $context_id, $user_id),
+            $this->writingTask($ass_id, $user_id),
+            $this->logEntry($ass_id),
+            $this->resultsExport($ass_id, $context_id, $user_id),
+            $this->language($user_id),
+            $this->dependencies->systemApi()->config(),
+            $this->dependencies->systemApi()->spreadsheet(false),
+            $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->systemApi()->user(),
+        );
+    }
 
     public function resultsExport(int $ass_id, int $context_id, int $user_id): ResultsExport
     {
@@ -447,6 +467,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->systemApi()->pdfProcessing(),
             $this->dependencies->systemApi()->config(),
             $this->dependencies->systemApi()->fileStorage(),
+            $this->language($user_id),
             $this->dependencies->systemApi()->user(),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->properties($ass_id)
@@ -523,12 +544,8 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->repositories(),
             $this->pdfCreation($ass_id, $context_id, $user_id),
             $this->backgroundTasks($ass_id, $context_id, $user_id),
-            $this->properties($ass_id),
-            $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
-            $this->writer($ass_id, $user_id),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->fileDelivery(),
-            $this->language($user_id),
             $this->resultsExport($ass_id, $context_id, $user_id),
             $this->logEntry($ass_id)
         );

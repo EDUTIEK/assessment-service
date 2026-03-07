@@ -78,6 +78,7 @@ return [
     'correction_status_consulting' => 'im Beratungsverfahren',
     'correction_status_stitch' => 'im Stichentscheid',
     'correction_status_finalized' => 'abgeschlossen',
+    'create_documentation' => 'Dokumentation {title}',
     'download_corrections' => 'Korrekturen {title}',
     'download_writings' => 'Abgaben {title}',
     'export_login' => 'Anmeldename',
@@ -108,5 +109,6 @@ return [
     'examis_code_number' => 'KENNZIFFER',
     'examis_corrector_x_id' => 'KORREKTORID{x}',
     'examis_corrector_x_grade' => 'NOTE{x}',
-    'examis_filename' => 'Ergebnisse'
+    'examis_filename' => 'Ergebnisse',
+    'documentation_filename' => 'Dokumentation'
 ];

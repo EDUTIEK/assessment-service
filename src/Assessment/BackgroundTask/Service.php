@@ -27,6 +27,15 @@ readonly class Service implements ComponentManager, FullService
     ) {
     }
 
+    public function createDocumentation(): void
+    {
+        $this->create(
+            $this->language->txt('create_documentation', ['title' => $this->properties->get()->getTitle()]),
+            CreateDocumentation::class,
+            []
+        );
+    }
+
     /**
      * @param WritingTask[] $writings
      */
@@ -74,6 +83,10 @@ readonly class Service implements ComponentManager, FullService
     private function getJob(string $job): ?ComponentJob
     {
         switch ($job) {
+            case CreateDocumentation::class:
+                return new CreateDocumentation(
+                    $this->internal->documentationExport($this->ass_id, $this->context_id, $this->user_id)
+                );
 
             case DownloadWritings::class:
                 return new DownloadWritings(
