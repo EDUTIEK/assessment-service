@@ -103,5 +103,10 @@ return [
     'justa_points' => 'Punktzahl',
     'justa_status' => 'Status',
     'justa_id' => 'JUSTA-ID',
-    'justa_filename' => 'Ergebnisse'
+    'justa_filename' => 'Ergebnisse',
+    'examis_participant_id' => 'TEILNAHMEID',
+    'examis_code_number' => 'KENNZIFFER',
+    'examis_corrector_x_id' => 'KORREKTORID{x}',
+    'examis_corrector_x_grade' => 'NOTE{x}',
+    'examis_filename' => 'Ergebnisse'
 ];

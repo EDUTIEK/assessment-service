@@ -189,7 +189,7 @@ readonly class ResultsExport
             $user = $users[$writer->getUserId()] ?? null;
             $gradings = $this->grading->gradingsForTaskAndWriter($task->getId(), $writer->getId());
             $stitch = $gradings[GradingPosition::STITCH->value];
-            $sitch_user = null;
+            $stitch_user = null;
             if ($stitch !== null) {
                 $stitch_corrector = $this->correctors->oneById($stitch->getCorrectorId());
                 $stitch_user = $this->users->getUser($stitch_corrector?->getUserId());
@@ -215,9 +215,84 @@ readonly class ResultsExport
         return $this->spreadsheets->dataToFile($header, $rows, ExportType::CSV, $title);
     }
 
-
     private function createExamisExport()
     {
-        return $this->createEdutiekExport();
+        $tasks = $this->tasks->all();
+        $props = $this->repos->properties()->one($this->ass_id);
+
+        $header = [
+            'participant_id' => $this->lang->txt('examis_participant_id'),
+            'code_number' => $this->lang->txt('examis_code_number'),
+        ];
+
+        if ($this->correction_settings->hasMultipleCorrectors()) {
+            foreach (GradingPosition::all() as $pos) {
+                $header['corrector_' . $pos->value . '_id'] = $this->lang->txt('examis_corrector_x_id', ['x' => $pos->value + 1]);
+                $header['corrector_' . $pos->value . '_grade'] = $this->lang->txt('examis_corrector_x_grade', ['x' => $pos->value + 1]);
+            }
+        } else {
+            foreach ($tasks as $task_pos => $task) {
+                $pos = (int) $task->getPosition();
+                $header['corrector_' . $task_pos . '_id'] = $this->lang->txt('examis_corrector_x_id', ['x' => $task_pos + 1]);
+                $header['corrector_' . $task_pos . '_grade'] = $this->lang->txt('examis_corrector_x_grade', ['x' => $task_pos + 1]);
+            }
+        }
+
+        $writers = $this->writers->all();
+        $correctors = [];
+        foreach ($this->correctors->all() as $corrector) {
+            $correctors[$corrector->getId()] = $corrector;
+        }
+
+        $user_ids = array_unique(array_merge(
+            array_map(fn(Writer $writer) => $writer->getUserId(), $writers),
+            array_map(fn(Corrector $corrector) => $corrector->getUserId(), $correctors)
+        ));
+        $users = $this->users->getUsersByIds($user_ids);
+
+        $rows = [];
+        foreach ($writers as $writer) {
+            $user = $users[$writer->getUserId()] ?? null;
+
+            $row = [
+                'participant_id' => $user?->getMatriculation(),
+                'code_number' => $user?->getLogin(),
+            ];
+
+            if ($this->correction_settings->hasMultipleCorrectors()) {
+                foreach ($this->grading->gradingsForTaskAndWriter(reset($tasks)->getId(), $writer->getId()) as $pos => $grading) {
+                    if ($grading?->isAuthorized()) {
+                        $level = $this->grades->getGradLevelForPoints($grading->getPoints());
+                        $pos = $grading->getPosition();
+                        $corrector = $correctors[$grading->getCorrectorId()] ?? null;
+                        $user = $users[$corrector?->getUserId() ?? 0] ?? null;
+                        $row['corrector_' . $pos->value . '_id'] = $user?->getLogin();
+                        $row['corrector_' . $pos->value . '_grade'] = $level?->getGrade();
+                    }
+                }
+            } else {
+                foreach ($tasks as $task_pos => $task) {
+                    foreach ($this->grading->gradingsForTaskAndWriter($task->getId(), $writer->getId()) as $grading) {
+                        if ($grading?->isAuthorized()) {
+                            $level = $this->grades->getGradLevelForPoints($grading->getPoints());
+                            $corrector = $correctors[$grading->getCorrectorId()] ?? null;
+                            $user = $users[$corrector?->getUserId() ?? 0] ?? null;
+                            $row['corrector_' . $task_pos . '_id'] = $user?->getLogin();
+                            $row['corrector_' . $task_pos . '_grade'] = $level?->getGrade();
+                        }
+                        break;
+                    }
+                }
+            }
+
+            $rows[] = $row;
+        }
+
+        $title = $this->lang->txt('examis_filename');
+        if (!empty($props->getTitle())) {
+            $title .= " " . $props->getTitle();
+        }
+
+        return $this->spreadsheets->dataToFile($header, $rows, ExportType::CSV, $title);
     }
 }
