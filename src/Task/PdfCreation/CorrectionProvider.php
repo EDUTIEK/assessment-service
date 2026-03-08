@@ -272,7 +272,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         $data = [
             'title' => $title,
             'content' => $this->html_processing->addContentStyles(
-                $content ?? '',
+                $this->html_processing->secureContent($content ?? ''),
                 false,
                 HeadlineScheme::THREE
             ),
