@@ -19,6 +19,7 @@ use Edutiek\AssessmentService\System\Spreadsheet\ExportType as SpreadsheetExport
 use Edutiek\AssessmentService\System\Spreadsheet\FullService as Spreadsheets;
 use Edutiek\AssessmentService\System\User\ReadService as UserService;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
+use Edutiek\AssessmentService\System\Format\FullService as FormatService;
 use ZipArchive;
 
 class DocumentationExport
@@ -37,7 +38,8 @@ class DocumentationExport
         private Config $config,
         private Spreadsheets $spreadsheets,
         private FileStorage $storage,
-        private UserService $users
+        private UserService $users,
+        private FormatService $format
     ) {
     }
 
@@ -66,6 +68,9 @@ class DocumentationExport
             $writings_by_ids[$writing->getWriterId()][$writing->getTaskId()] = $writing;
         }
 
+        $hashes = [];
+        $hash_algo = $this->config->getConfig()->getHashAlgo();
+
         $zipfile = $this->config->getSetup()->getAbsoluteTempPath()
             . uniqid('', true) . '.zip';
         $zip = new ZipArchive();
@@ -80,46 +85,79 @@ class DocumentationExport
 
             foreach ($writings as $task_id => $writing) {
                 $temp_files[] = $writing_pdf = $this->pdf->createWritingPdf($task_id, $writer_id, false);
-                $zip->addFile(
-                    $this->storage->getReadablePath($writing_pdf),
-                    $writer_dir . '/' . $this->pdf->buildPdfFilename([$writing], PdfPurpose::WRITING)
-                );
+                $source = $this->storage->getReadablePath($writing_pdf);
+                $dest = $writer_dir . '/' . $this->pdf->buildPdfFilename([$writing], PdfPurpose::WRITING);
+                $zip->addFile($source, $dest);
+                $hashes[$dest] = hash($hash_algo, file_get_contents($source));
 
                 $temp_files[] = $correction_pdf = $this->pdf->createCorrectionPdf($task_id, $writer_id, false, false);
-                $zip->addFile(
-                    $this->storage->getReadablePath($correction_pdf),
-                    $writer_dir . '/' . $this->pdf->buildPdfFilename([$writing], PdfPurpose::CORRECTION)
-                );
+                $source = $this->storage->getReadablePath($correction_pdf);
+                $dest = $writer_dir . '/' . $this->pdf->buildPdfFilename([$writing], PdfPurpose::CORRECTION);
+                $zip->addFile($source, $dest);
+                $hashes[$dest] = hash($hash_algo, file_get_contents($source));
             }
         }
 
         $temp_files[] = $results = $this->results_export->create();
-        $zip->addFile($this->storage->getReadablePath($results), $this->lang->txt('result_export_filename') . '.csv');
+        $source = $this->storage->getReadablePath($results);
+        $dest = $this->storage->asciiFilename($this->lang->txt('result_export_filename') . '.csv');
+        $zip->addFile($source, $dest);
+        $hashes[$dest] = hash($hash_algo, file_get_contents($source));
 
         $temp_files[] = $log = $this->log->export(SpreadsheetExportType::CSV);
-        $zip->addFile($this->storage->getReadablePath($log), $this->lang->txt('log_filename') . '.csv');
+        $source = $this->storage->getReadablePath($log);
+        $dest = $this->storage->asciiFilename($this->lang->txt('log_filename') . '.csv');
+        $zip->addFile($source, $dest);
+        $hashes[$dest] = hash($hash_algo, file_get_contents($source));
 
         $zip->close();
         foreach ($temp_files as $id) {
             $this->storage->deleteFile($id);
         }
 
+        $suffix = $this->format->logDate(new \DateTime());
+
         $fp = fopen($zipfile, 'r');
+        $zip_name = $this->storage->asciiFilename($this->lang->txt('documentation_filename')
+            . ' ' . $this->properties->get()->getTitle() . ' ' . $suffix);
         $info = $this->storage->saveFile(
             $fp,
             $this->storage->newInfo()
             ->setMimeType('application/zip')
-            ->setFileName($this->storage->asciiFilename(
-                $this->lang->txt('documentation_filename') . ' ' . $this->properties->get()->getTitle()
-            ))
+            ->setFileName($zip_name)
         );
+        $hashes[$zip_name] = hash($hash_algo, file_get_contents($zipfile));
         unlink($zipfile);
 
-        $file = $this->repos->exportFile()->new()
+
+        $header = [
+            'file' => $this->lang->txt('file'),
+            'hash' => $this->lang->txt('hash') . ' (' . $hash_algo . ')',
+        ];
+        $rows = [];
+        ksort($hashes);
+        foreach ($hashes as $file => $hash) {
+            $rows[] = [
+                'file' => $file,
+                'hash' => $hash,
+            ];
+        }
+        $hash_id = $this->spreadsheets->dataToFile(
+            $header,
+            $rows,
+            SpreadsheetExportType::CSV,
+            $this->lang->txt('hash_filename') . ' ' . $suffix
+        );
+
+        $this->repos->exportFile()->save($this->repos->exportFile()->new()
             ->setAssId($this->ass_id)
             ->setFileId($info->getId())
-            ->setType(ExportType::DOCUMENTATION);
-        $this->repos->exportFile()->save($file);
+            ->setType(ExportType::DOCUMENTATION));
+
+        $this->repos->exportFile()->save($this->repos->exportFile()->new()
+            ->setAssId($this->ass_id)
+            ->setFileId($hash_id)
+            ->setType(ExportType::HASHES));
 
         return $info->getId();
     }

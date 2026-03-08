@@ -110,5 +110,8 @@ return [
     'examis_corrector_x_id' => 'KORREKTORID{x}',
     'examis_corrector_x_grade' => 'NOTE{x}',
     'examis_filename' => 'Ergebnisse',
-    'documentation_filename' => 'Dokumentation'
+    'documentation_filename' => 'Dokumentation',
+    'hash_filename' => 'Prüfsummen',
+    'file' => 'Datei',
+    'hash' => 'Prüfsumme',
 ];

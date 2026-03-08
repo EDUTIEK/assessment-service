@@ -10,4 +10,5 @@ enum ExportType: string
     case DOCUMENTATION = 'documentation';
     case REPORTS = 'reports';
     case LOG = 'log';
+    case HASHES = 'hashes';
 }

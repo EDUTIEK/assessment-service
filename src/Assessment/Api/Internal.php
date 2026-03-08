@@ -286,6 +286,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->systemApi()->spreadsheet(false),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->user(),
+            $this->dependencies->systemApi()->format($user_id)
         );
     }
 
