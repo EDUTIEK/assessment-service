@@ -30,14 +30,16 @@ class Service implements FullService
     {
         $shapes = [];
         foreach ($infos as $info) {
-            $marks = CorrectionMark::multiFromArray((array) json_decode($info->getComment()->getMarks()));
-            if ($info->getComment()->getParentNumber() == $page_number && !empty($marks)) {
-                foreach ($marks as $mark) {
-                    $filled = in_array($mark->getShape(), CorrectionMark::FILLED_SHAPES);
-                    if ($filled) {
-                        $shapes[] = $this->getShapeFromMark($mark, $info->getLabel(), $this->getMarkFillColor($info));
-                    } else {
-                        $shapes[] = $this->getShapeFromMark($mark, $info->getLabel(), $this->getMarkBorderColor($info));
+            if ($info->getComment()->getMarks() !== null) {
+                $marks = CorrectionMark::multiFromArray((array) json_decode($info->getComment()->getMarks()));
+                if ($info->getComment()->getParentNumber() == $page_number && !empty($marks)) {
+                    foreach ($marks as $mark) {
+                        $filled = in_array($mark->getShape(), CorrectionMark::FILLED_SHAPES);
+                        if ($filled) {
+                            $shapes[] = $this->getShapeFromMark($mark, $info->getLabel(), $this->getMarkFillColor($info));
+                        } else {
+                            $shapes[] = $this->getShapeFromMark($mark, $info->getLabel(), $this->getMarkBorderColor($info));
+                        }
                     }
                 }
             }
