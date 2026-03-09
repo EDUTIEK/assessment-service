@@ -35,7 +35,7 @@ class Service implements FullService
         fwrite($stream, $this->pdf_creator->createPdf($html, $options));
         $file_id = $this->saveFile($stream);
         return $file_id;
-   }
+    }
 
     public function split(string $pdf_id, ?int $from = null, ?int $to = null): Generator
     {
@@ -55,15 +55,8 @@ class Service implements FullService
         }
     }
 
-    /**
-     * Todo: this might create character corruption in the second joined pdf
-     */
     public function join(array $pdf_ids): string
     {
-//            // debugging: don't join, use the last created PDF - this looks ok
-//            $pdf_ids = array_reverse($pdf_ids);
-//            return reset($pdf_ids);
-
         $target = $this->saveFile(fopen('php://memory', 'w+'));
         $this->exec(sprintf(
             '%s -sDEVICE=pdfwrite -dNOPAUSE -dBATCH -dSAFER -sOutputFile=%s %s',
