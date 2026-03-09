@@ -97,7 +97,7 @@ class Service implements FullService
         }
 
         $filenames = [];
-        for ($i = 0; $i < $zip->numFiles - 1; $i++) {
+        for ($i = 0; $i <= $zip->numFiles - 1; $i++) {
             $stat = $zip->statIndex($i);
             if (($stat['encryption_method'] ?? false) && $password === null) {
                 return $result->add(false, $this->lng->txt('import_no_passwort_given'));
