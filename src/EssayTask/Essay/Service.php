@@ -144,16 +144,16 @@ readonly class Service implements ClientService, EventService
         }
 
         $file_id = $this->pdf_provider->renderWrittenText($essay, true, new Options());
-        $this->updatePdf($essay, $file_id, true);
+        $this->updatePdf($essay, $file_id, true, null);
     }
 
-    public function replacePdf(Essay $essay, string $file_id): void
+    public function replacePdf(Essay $essay, string $file_id, ?string $hash): void
     {
         $result = $this->canChange($essay);
         if ($result->status() == ResultStatus::BLOCK) {
             throw new ApiException(implode("/n", $result->messages()), ApiException::CONSTRAINT);
         }
-        $this->updatePdf($essay, $file_id, false);
+        $this->updatePdf($essay, $file_id, false, $hash);
     }
 
     public function deletePdf(Essay $essay): void
@@ -162,10 +162,10 @@ readonly class Service implements ClientService, EventService
         if ($result->status() == ResultStatus::BLOCK) {
             throw new ApiException(implode("/n", $result->messages()), ApiException::CONSTRAINT);
         }
-        $this->updatePdf($essay, null, false);
+        $this->updatePdf($essay, null, false, null);
     }
 
-    private function updatePdf(Essay $essay, ?string $file_id, bool $from_text = false): void
+    private function updatePdf(Essay $essay, ?string $file_id, bool $from_text = false, ?string $hash = null): void
     {
         $this->storage->deleteFile($essay->getPdfVersion());
         $this->essay_image->deleteByEssayId($essay->getId());
@@ -173,6 +173,7 @@ readonly class Service implements ClientService, EventService
         $this->repos->essay()->save($essay
             ->setPdfVersion($file_id)
             ->setPdfFromWrittenText($from_text)
+            ->setPdfHash($hash)
             ->touch());
 
         $this->events->dispatchEvent(new WritingContentChanged(

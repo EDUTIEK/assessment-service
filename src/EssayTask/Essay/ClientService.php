@@ -41,6 +41,6 @@ interface ClientService
     public function canChange(Essay $essay): ConstraintResult;
 
     public function textToPdf(Essay $essay): void;
-    public function replacePdf(Essay $essay, string $file_id): void;
+    public function replacePdf(Essay $essay, string $file_id, ?string $hash): void;
     public function deletePdf(Essay $essay): void;
 }

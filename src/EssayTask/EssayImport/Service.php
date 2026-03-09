@@ -198,7 +198,7 @@ class Service implements FullService
                 $essay = $this->essay_service->getByWriterIdAndTaskId($writer->getId(), $this->task_id);
                 if ($essay->getPdfVersion() === null || $overwrite_existing) {
                     $info = $this->perm_store->saveFile($this->temp_store->getFileStream($file->getTempId()));
-                    $this->essay_service->replacePdf($essay, $info->getId());
+                    $this->essay_service->replacePdf($essay, $info->getId(), $file->getHash());
                     $this->writer_service->save($writer->setImportedStatus($file->getImportedStatus()));
                     $this->writer_service->authorizeWriting($writer, true);
                     $imported++;

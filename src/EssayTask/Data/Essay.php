@@ -32,6 +32,8 @@ abstract class Essay implements EssayTaskEntity
     abstract public function setFirstChange(?DateTimeImmutable $first_change): self;
     abstract public function hasPdfFromWrittenText(): bool;
     abstract public function setPdfFromWrittenText(bool $pdf_from_written_text): self;
+    abstract public function getPdfHash(): ?string;
+    abstract public function setPdfHash(?string $pdf_hash): self;
 
     public function getWordCount(): int
     {
