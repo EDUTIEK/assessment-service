@@ -8,6 +8,7 @@ use Edutiek\AssessmentService\Assessment\Data\Properties;
 abstract class StatisticView
 {
     abstract public function getCount(): int;
+    abstract public function getFinalized(): int;
     abstract public function getPassed(): int;
     abstract public function getNotPassed(): int;
     abstract public function getAttended(): int;

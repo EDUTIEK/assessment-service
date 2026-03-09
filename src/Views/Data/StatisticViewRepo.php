@@ -14,6 +14,6 @@ interface StatisticViewRepo
      * @param array $filter
      * @return StatisticView
      */
-    public function someCorrections(array $filter): StatisticView;
+    public function someCorrections(array $filter, bool $include_pre_graded = false): StatisticView;
 
 }
