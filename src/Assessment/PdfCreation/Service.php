@@ -178,13 +178,15 @@ class Service implements FullService
     private function buildTitle(int $task_id, int $writer_id, bool $anonymous_writer)
     {
         $writer = $this->writers->oneByWriterId($writer_id);
+        $user = $this->users->getUser($writer?->getUserId() ?? 0);
         $properties = $this->properties->get();
 
         if ($anonymous_writer) {
             $writer_name = $writer->getPseudonym();
+        } elseif ($this->pdf_settings->getFormat() == PdfFormat::BY) {
+            $writer_name = $user?->getLastname() . ' ' . $user?->getFirstname();
         } else {
-            $user = $this->users->getUser($writer?->getUserId() ?? 0);
-            $writer_name = $user->getFullname(false);
+            $writer_name = $user?->getFullname(false);
         }
 
         switch ($this->pdf_settings->getFormat()) {
