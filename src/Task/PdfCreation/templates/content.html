@@ -1,10 +1,14 @@
+{{#title}}
 <div class="xlas-part-title">
     {{title}}
 </div>
+{{/title}}
 
 {{{content}}}
 
+{{#points}}
 <div class="xlas-grading">
     <p><strong>{{label_points}}</strong>: {{points}} {{#grade}}({{.}}){{/grade}}</p>
     <p>{{statement}}</p>
 </div>
+{{/points}}

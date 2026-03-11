@@ -166,17 +166,20 @@ readonly class CorrectionProvider implements PdfPartProvider
             return null;
         }
 
-        $pdf = $this->renderContent(
-            $title,
-            $summary->hasPdf() ? $this->language->txt('pdf_summary_follows') : $summary->getSummaryText(),
-            $summary->getPoints(),
-            $options
-        );
-
         if ($summary->hasPdf()) {
-            $joined = $this->pdf_processing->join([$pdf, $summary->getSummaryPdf()]);
-            $this->pdf_processing->cleanup([$pdf]);
+            $pdf1 = $this->renderContent($title, $this->language->txt('pdf_summary_follows'), null, $options);
+            $pdf2 = $this->renderContent(null, null, $summary->getPoints(), $options);
+
+            $joined = $this->pdf_processing->join([$pdf1, $summary->getSummaryPdf(), $pdf2]);
+            $this->pdf_processing->cleanup([$pdf1, $pdf2]);
             return $joined;
+        } else {
+            $pdf = $this->renderContent(
+                $title,
+                $summary->getSummaryText(),
+                $summary->getPoints(),
+                $options
+            );
         }
 
         return $pdf;
@@ -266,7 +269,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         return $this->pdf_processing->create($html, $options);
     }
 
-    private function renderContent(string $title, ?string $content, ?float $points, Options $options): ?string
+    private function renderContent(?string $title, ?string $content, ?float $points, Options $options): ?string
     {
         $level = $this->grading->getGradLevelForPoints($points);
         $data = [
@@ -276,10 +279,12 @@ readonly class CorrectionProvider implements PdfPartProvider
                 false,
                 HeadlineScheme::THREE
             ),
-            'label_points' => $this->language->txt('pdf_label_points'),
-            'points' => $points,
-            'grade' => $level?->getGrade(),
-            'statement' => $level?->getStatement(),
+            'points' => $points ? [
+                'label_points' => $this->language->txt('pdf_label_points'),
+                'points' => $points,
+                'grade' => $level?->getGrade(),
+                'statement' => $level?->getStatement(),
+            ] : null
         ];
 
         $html = $this->html_processing->fillTemplate(__DIR__ . '/templates/content.html', $data);
