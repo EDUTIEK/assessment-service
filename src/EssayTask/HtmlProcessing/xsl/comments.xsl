@@ -17,7 +17,7 @@
     <!-- put content and comments beneth each other -->
     <xsl:template match="div[@class='xlas-block']">
         <xsl:variable name="counter" select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::initCurrentComments', string(@data-p))" />
-        <div class="xlas-block">
+        <div class="xlas-block xlas-comments-container">
             <div class="xlas-comments-left">
                 <xsl:apply-templates select="node()" />
             </div>

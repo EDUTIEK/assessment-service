@@ -53,14 +53,18 @@ Specific styles for the correction output
     padding: 5px;
 }
 
-
-.xlas-block {
-    clear:both;
-}
-
 .xlas-image {
     height: 100%;
     width: 100%;
+}
+
+.xlas-comments-container {
+    clear: both;
+}
+
+.xlas-comments-main {
+    width: 50%;
+    float: left;
 }
 
 .xlas-comments-left {
@@ -70,10 +74,9 @@ Specific styles for the correction output
 
 .xlas-comments-right {
     width: 45%;
-    float: left;
+    float: right;
     font-family: sans-serif;
     font-size: 10px;
-    margin-left: 5%;
 }
 
 .xlas-label {
