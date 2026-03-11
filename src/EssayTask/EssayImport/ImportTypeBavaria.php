@@ -25,8 +25,8 @@ use Edutiek\AssessmentService\System\Spreadsheet\FullService as Spreadsheet;
 
 readonly class ImportTypeBavaria implements ImportType
 {
-    private const FILE_PATTERN = '/^(draft-)?([[:alnum:]]+-\d+_\d+)_.*.pdf$/';
-    private const PROTOCOL_FILE_NAME = 'Abgabe-Protokoll_München.xlsx';
+    private const FILE_PATTERN = '/^(draft-)?([[:alnum:]]+-\d+)_([EZ])-(\d+)_([[:alnum:]]+)\.pdf$/';
+    private const PROTOCOL_FILE_PATTERN = '/^([[:alnum:]]+-\d+)_Abgabe-Protokoll_([[:alnum:]]+)_([[:alnum:]]+)\.xlsx$/';
 
     /**
      * column key => header langguage variable
@@ -48,7 +48,10 @@ readonly class ImportTypeBavaria implements ImportType
 
     public function detectByFilenames(array $filenames): bool
     {
-        return in_array(self::PROTOCOL_FILE_NAME, $filenames)
+        return !empty(array_filter(
+            $filenames,
+            fn($file) => preg_match(self::PROTOCOL_FILE_PATTERN, $file)
+        ))
             && !empty(array_filter(
                 $filenames,
                 fn($file) => preg_match(self::FILE_PATTERN, $file)
@@ -57,17 +60,27 @@ readonly class ImportTypeBavaria implements ImportType
 
     public function assignFiles(array $files): ImportResult
     {
-        $found = array_filter($files, fn($file) => $file->getFileName() == self::PROTOCOL_FILE_NAME);
-        $protocol = $this->readProtocol(current($found)->getTempId() ?? '');
+        $found = array_filter($files, fn($file) => preg_match(self::PROTOCOL_FILE_PATTERN, $file->getFileName()));
+        $protocol = $this->readProtocol(reset($found)->getTempId() ?? '');
 
         $assigned_ids = [];
         foreach ($files as $file) {
-            $login = preg_match(self::FILE_PATTERN, $file->getFileName(), $matches) ? $matches[2] : null;
-            if (empty($login)) {
+            // e.g. ZJS2026-2
+            $course = preg_match(self::FILE_PATTERN, $file->getFileName(), $matches) ? $matches[2] : null;
+            // e.g. Z
+            $letter = preg_match(self::FILE_PATTERN, $file->getFileName(), $matches) ? $matches[3] : null;
+            // e.g. 0016
+            $number = preg_match(self::FILE_PATTERN, $file->getFileName(), $matches) ? $matches[4] : null;
+
+            if (empty($course) || (empty($number))) {
                 continue;
             }
-            $num = (int) substr($login, strpos($login, '_') + 1);
-            $id = "Z " . $num;
+
+            // e.g. ZJS2026-2_0016
+            $login = $course . '_' . $number;
+
+            // e.g. Z 16
+            $id = $letter . ' ' . (string) (int) $number;
 
             $data = $protocol[$id] ?? null;
             if ($data) {

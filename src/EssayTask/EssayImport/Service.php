@@ -109,6 +109,7 @@ class Service implements FullService
         foreach ($this->types as $type) {
             if ($type->detectByFilenames($filenames)) {
                 $import_type = $type;
+                break;
             }
         }
 

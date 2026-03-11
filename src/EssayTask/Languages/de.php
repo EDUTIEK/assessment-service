@@ -13,6 +13,7 @@ return [
     'essay_import_column_import_possible' => 'Importierbar',
     'essay_import_column_comments' => 'Bemerkungen',
     'essay_import_column_hash_ok' => 'Hash ok',
+    'import_invalid_zip_format' => 'Das Format der im ZIP-Datei wurde nicht erkannt.',
     'import_hash_mismatch' => 'Die hochgeladene Datei hat nicht den erforderlichen Hash-Wert',
     'import_file_missing' => 'Datei fehlt',
     'import_user_not_existing' => 'User existiert nicht',
