@@ -18,6 +18,7 @@ interface FullService extends ReadService
     public function save(Writer $writer): void;
     public function validate(Writer $writer): Result;
 
+    public function setWorkingStart(Writer $writer): void;
     public function authorizeWriting(Writer $writer, bool $as_admin): Result;
     public function removeWritingAuthorization(Writer $writer): Result;
 

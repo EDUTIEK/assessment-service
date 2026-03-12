@@ -101,8 +101,7 @@ abstract class Writer implements AssessmentEntity, IndividualWorkingTime
 
     public function canGetUnauthorized(): bool
     {
-        return $this->getWorkingStart() !== null
-            && $this->getWritingAuthorized() !== null
+        return $this->getWritingAuthorized() !== null
             && $this->getCorrectionStatus() == CorrectionStatus::OPEN;
     }
 

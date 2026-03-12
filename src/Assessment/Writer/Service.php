@@ -99,6 +99,14 @@ readonly class Service implements ReadService, FullService
         $this->repos->writer()->save($writer);
     }
 
+    public function setWorkingStart(Writer $writer): void
+    {
+        if ($writer->getWorkingStart() === null) {
+            $writer->setWorkingStart(new DateTimeImmutable());
+            $this->save($writer);
+        }
+    }
+
     public function authorizeWriting(Writer $writer, bool $as_admin): Result
     {
         $now = new DateTimeImmutable();
@@ -144,7 +152,7 @@ readonly class Service implements ReadService, FullService
 
     public function setUnsubmittedAsGraded(Writer $writer): bool
     {
-        if(!$writer->canFinalizedUnsubmitted()) {
+        if (!$writer->canFinalizedUnsubmitted()) {
             return false;
         }
 
