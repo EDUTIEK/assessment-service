@@ -8,10 +8,11 @@ class CorrectorCorrectionSummary
         private int $corrector_id,
         private int $first_corrections,
         private int $second_corrections,
-        private int $not_started,
-        private int $authorized,
+        private int $stitch_corrections,
+        private int $authorized_corrections,
         private int $open_corrections
-    ){}
+    ) {
+    }
 
     public function getCorrectorId(): int
     {
@@ -28,14 +29,14 @@ class CorrectorCorrectionSummary
         return $this->second_corrections;
     }
 
-    public function getNotStarted(): int
+    public function getStitchCorrections(): int
     {
-        return $this->not_started;
+        return $this->stitch_corrections;
     }
 
-    public function getAuthorized(): int
+    public function getAuthorizedCorrections(): int
     {
-        return $this->authorized;
+        return $this->authorized_corrections;
     }
 
     public function getOpenCorrections(): int

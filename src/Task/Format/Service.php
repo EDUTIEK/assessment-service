@@ -3,59 +3,88 @@
 namespace Edutiek\AssessmentService\Task\Format;
 
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as GradingService;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionProcedure;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 
-class Service implements FullService
+readonly class Service implements FullService
 {
     public function __construct(
-        private LanguageService $language,
-        private GradingService $grade_level_service
+        private LanguageService $lang,
+        private GradingService $grade_level_service,
+        private CorrectionSettings $settings
     ) {
     }
 
-    public function correctionResult(
-        ?CorrectorSummary $summary,
-        bool $onlyStatus = false,
-        $onlyAuthorizedGrades = false
-    ): string {
-        if (empty($summary) || empty($summary->getLastChange())) {
-            return $this->language->txt('grading_not_started');
-        }
-        // todo: improve
-        if (!$summary->isAuthorized()) {
-            $onlyStatus = true;
+    public function correctionResult(?CorrectorSummary $summary, bool $is_own): string
+    {
+        $status = $this->gradingStatus($summary?->getGradingStatus(), $is_own);
+
+        $grade = null;
+        $points = null;
+
+        if ($is_own || $summary?->isAuthorized()) {
+            $points = $summary?->getEffectivePoints();
+            if ($points !== null) {
+                $grade = $this->grade_level_service->getGradLevelForPoints($points)?->getGrade();
+                $points = $points . ' ' . $this->lang->txt($points == 1 ? 'point' : 'points');
+            }
         }
 
-        $grade = function ($text) use ($summary) {
-            $grade = null;
-            $points = null;
+        if ($grade !== null) {
+            return "$status - $grade ($points)";
+        } elseif ($points !== null) {
+            return "$status - $points";
+        } else {
+            return "$status";
+        }
+    }
 
-            if ($level = $this->grade_level_service->getGradLevelForPoints($summary->getEffectivePoints())) {
-                $grade = $level->getGrade();
-            }
-            if ($summary->getEffectivePoints() !== null) {
-                $points = ($grade ? " (" : "(") . $summary->getEffectivePoints() . ' ' . $this->language->txt('points') . ')';
-            }
-            return ($grade || $points) ? "$text - $grade$points" : $text;
+    public function gradingStatus(?GradingStatus $status, $is_own): string
+    {
+        $instant = $is_own || $this->settings->getInstantStatus();
+
+        return match($status) {
+            GradingStatus::PRE_GRADED => $instant
+                ? $this->lang->txt('grading_pre_graded')
+                : $this->lang->txt('grading_open'),
+            GradingStatus::OPEN => $this->lang->txt('grading_open'),
+            GradingStatus::AUTHORIZED => $this->lang->txt('grading_authorized'),
+            GradingStatus::REVISED => match ($this->settings->getProcedure()) {
+                CorrectionProcedure::APPROXIMATION => $this->lang->txt('grading_approximated'),
+                CorrectionProcedure::CONSULTING => $this->lang->txt('grading_consulted'),
+                CorrectionProcedure::NONE => $this->lang->txt('grading_revised'),
+            },
+            default => $instant
+                ? $this->lang->txt('grading_not_started')
+                : $this->lang->txt('grading_open'),
         };
+    }
 
-        if (empty($summary->getCorrectionAuthorized())) {
-            $text = $this->language->txt('grading_open');
+    public function gradingStatusOptions(): array
+    {
+        return [
+            GradingStatus::NOT_STARTED->value => $this->lang->txt('grading_not_started'),
+            GradingStatus::OPEN->value => $this->lang->txt('grading_open'),
+            GradingStatus::PRE_GRADED->value => $this->lang->txt('grading_pre_graded'),
+            GradingStatus::AUTHORIZED->value => $this->lang->txt('grading_authorized'),
+            GradingStatus::REVISED->value => match($this->settings->getProcedure()) {
+                CorrectionProcedure::APPROXIMATION => $this->lang->txt('grading_approximated'),
+                CorrectionProcedure::CONSULTING => $this->lang->txt('grading_consulted'),
+                CorrectionProcedure::NONE => $this->lang->txt('grading_revised'),
+            },
+        ];
+    }
 
-            if ($onlyStatus || $onlyAuthorizedGrades) {
-                return  $text;
-            }
-
-            return $grade($text);
-        }
-
-        $text = $this->language->txt('grading_authorized');
-
-        if ($onlyStatus) {
-            return $text;
-        }
-
-        return $grade($text);
+    public function gradingPositionOptions(): array
+    {
+        return [
+            (string) GradingPosition::FIRST->value => $this->lang->txt('grading_pos_first'),
+            (string) GradingPosition::SECOND->value => $this->lang->txt('grading_pos_second'),
+            (string) GradingPosition::STITCH->value => $this->lang->txt('grading_pos_stitch'),
+        ];
     }
 }

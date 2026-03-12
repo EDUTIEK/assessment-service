@@ -41,7 +41,8 @@ class Internal implements RatingCriterionServiceFactory
     {
         return $this->instances[FormatService::class][$ass_id][$user_id] ??= new FormatService(
             $this->language($user_id),
-            $this->dependencies->assessmentApi($ass_id, $user_id)->assessmentGrading()
+            $this->dependencies->assessmentApi($ass_id, $user_id)->assessmentGrading(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get()
         );
     }
 
@@ -276,7 +277,7 @@ class Internal implements RatingCriterionServiceFactory
         );
     }
 
-    public function correctorTaskPrefs() : CorrectorTaskPrefsService
+    public function correctorTaskPrefs(): CorrectorTaskPrefsService
     {
         return $this->instances[CorrectorTaskPrefsService::class] ??= new CorrectorTaskPrefsService(
             $this->dependencies->repositories()

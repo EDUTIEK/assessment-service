@@ -122,13 +122,22 @@ readonly class Service implements FullService
      */
     private function getCorrectorCorrectionSummary(int $corrector_id, array $corrector_assignments, array $corrector_summaries): CorrectorCorrectionSummary
     {
+        $assigned = count($corrector_assignments);
+        $first = count(array_filter($corrector_assignments, fn(CorrectorAssignment $ass) => $ass->getPosition() === GradingPosition::FIRST));
+        $second = count(array_filter($corrector_assignments, fn(CorrectorAssignment $ass) => $ass->getPosition() === GradingPosition::SECOND));
+        $stitch = count(array_filter($corrector_assignments, fn(CorrectorAssignment $ass) => $ass->getPosition() === GradingPosition::STITCH));
+
+        $started = count(array_filter($corrector_summaries, fn(CorrectorSummary $sum) => $sum->isStarted()));
+        $authorized = count(array_filter($corrector_summaries, fn(CorrectorSummary $sum) => $sum->isAuthorized()));
+        $open = $assigned - $authorized;
+
         return new CorrectorCorrectionSummary(
             $corrector_id,
-            count(array_filter($corrector_assignments, fn(CorrectorAssignment $ass) => $ass->getPosition() === GradingPosition::FIRST)),
-            count(array_filter($corrector_assignments, fn(CorrectorAssignment $ass) => $ass->getPosition() === GradingPosition::SECOND)),
-            count($corrector_assignments) - count($corrector_summaries),
-            $authorized = count(array_filter($corrector_summaries, fn(CorrectorSummary $sum) => $sum->getCorrectionAuthorized() !== null)),
-            count($corrector_summaries) - $authorized
+            $first,
+            $second,
+            $stitch,
+            $authorized,
+            $open
         );
     }
 
