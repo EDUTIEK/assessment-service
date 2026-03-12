@@ -33,13 +33,8 @@ class CanChangeWritingContent implements Constraint
     {
         $writer = $this->writer_service->oneByWriterId($action->getWriterId());
         if ($writer->isAuthorized()) {
-            $results->add(new ConstraintResult($action->isAdmin() ? ResultStatus::ASK : ResultStatus::BLOCK, [
+            $results->add(new ConstraintResult(ResultStatus::BLOCK, [
                 $this->language->txt('writing_is_already_authorized')
-            ]));
-        }
-        if ($writer->isCorrectionFinalized()) {
-            $results->add(new ConstraintResult($action->isAdmin() ? ResultStatus::ASK : ResultStatus::BLOCK, [
-                $this->language->txt('correction_is_already_finalized')
             ]));
         }
     }

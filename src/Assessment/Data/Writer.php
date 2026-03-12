@@ -102,7 +102,8 @@ abstract class Writer implements AssessmentEntity, IndividualWorkingTime
     public function canGetUnauthorized(): bool
     {
         return $this->getWorkingStart() !== null
-            && $this->getWritingAuthorized() !== null;
+            && $this->getWritingAuthorized() !== null
+            && $this->getCorrectionStatus() == CorrectionStatus::OPEN;
     }
 
     public function hasChangedTimeLimit(): bool
@@ -175,6 +176,11 @@ abstract class Writer implements AssessmentEntity, IndividualWorkingTime
             return $this->getCorrectionStatusChangedBy();
         }
         return null;
+    }
+
+    public function isCorrectionOpen(): bool
+    {
+        return $this->getCorrectionStatus() === CorrectionStatus::OPEN;
     }
 
     public function isCorrectionFinalized(): bool
