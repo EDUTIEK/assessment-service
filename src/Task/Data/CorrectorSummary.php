@@ -137,6 +137,11 @@ abstract class CorrectorSummary implements TaskEntity
         return !empty($this->getSummaryPdf());
     }
 
+    public function isStored(): bool
+    {
+        return !empty($this->getId());
+    }
+
     public function isComplete(): bool
     {
         return $this->getPoints() !== null && !(empty($this->getSummaryText()) && empty($this->getSummaryPdf()));
