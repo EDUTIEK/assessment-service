@@ -24,14 +24,14 @@ interface FullService
     public function gradingStatus(?GradingStatus $status, $is_own): string;
 
     /**
-     * Get the available options for a grading status
-     * @return array<GradingStatus, string>
+     * Get the available options for a grading status indexed by backed status valued
+     * @return array<string, string>
      */
     public function gradingStatusOptions(): array;
 
     /**
-     * Get the available options for a grading position
-     * @return array<GradingPosition, string>
+     * Get the available options for a grading position, indexed by backt position values
+     * @return array<int, string>
      */
     public function gradingPositionOptions(): array;
 }

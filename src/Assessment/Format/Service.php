@@ -13,6 +13,7 @@ use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as GradingService;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
 use Edutiek\AssessmentService\Assessment\Data\WritingStatus;
+use Edutiek\AssessmentService\Assessment\Data\CombinedStatus;
 
 readonly class Service implements FullService
 {
@@ -75,7 +76,7 @@ readonly class Service implements FullService
         };
     }
 
-    public function writingStatus(Writer $writer): ?string
+    public function writingStatus(Writer $writer): string
     {
         $txt = $this->language->txt(...);
 
@@ -92,6 +93,51 @@ readonly class Service implements FullService
                     $this->system_user->getUser($writer->getWritingAuthorizedBy() ?? 0)?->getFullname(false)
                         ?? $txt('unknown'))
         };
+    }
+
+    public function writingStatusOptions(): array
+    {
+        $txt = $this->language->txt(...);
+
+        return [
+            WritingStatus::NOT_STARTED->value => $txt("writing_status_not_started"),
+            WritingStatus::STARTED->value => $txt("writing_status_started"),
+            WritingStatus::EXCLUDED->value => $txt("writing_status_excluded"),
+            WritingStatus::AUTHORIZED->value => $txt("writing_status_authorized")
+        ];
+    }
+
+    public function combinedStatus(Writer $writer): ?string
+    {
+        $txt = $this->language->txt(...);
+
+        return match ($writer->getCombinedStatus()) {
+            CombinedStatus::WRITING_EXCLUDED => $txt('combined_status_writing_excluded'),
+            CombinedStatus::WRITING_NOT_STARTED => $txt('combined_status_writing_not_started'),
+            CombinedStatus::WRITING_STARTED => $txt('combined_status_writing_started'),
+            CombinedStatus::WRITING_AUTHORIZED => $txt('combined_status_open'), // no extra status
+            CombinedStatus::OPEN => $txt('combined_status_open'),
+            CombinedStatus::STITCH_NEEDED => $txt('combined_status_stitch'),
+            CombinedStatus::FINALIZED => $txt('combined_status_finalized'),
+            CombinedStatus::APPROXIMATION => $txt('combined_status_approximation'),
+            CombinedStatus::CONSULTING => $txt('combined_status_consulting'),
+        };
+    }
+
+    public function combinedStatusOptions(): array
+    {
+        $txt = $this->language->txt(...);
+
+        return [
+            CombinedStatus::WRITING_EXCLUDED->value => $txt('combined_status_writing_excluded'),
+            CombinedStatus::WRITING_NOT_STARTED->value => $txt('combined_status_writing_not_started'),
+            CombinedStatus::WRITING_STARTED->value => $txt('combined_status_writing_started'),
+            CombinedStatus::OPEN->value => $txt('combined_status_open'),
+            CombinedStatus::STITCH_NEEDED->value => $txt('combined_status_stitch'),
+            CombinedStatus::FINALIZED->value => $txt('combined_status_finalized'),
+            CombinedStatus::APPROXIMATION->value => $txt('combined_status_approximation'),
+            CombinedStatus::CONSULTING->value => $txt('combined_status_consulting'),
+        ];
     }
 
 }

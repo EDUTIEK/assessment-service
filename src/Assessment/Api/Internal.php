@@ -304,7 +304,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->dependencies->taskApi()->gradingProvider($ass_id, $user_id),
             $this->language($user_id),
-            $this->format($this->orgaSettings($ass_id, $user_id)->get(), $ass_id, $user_id),
+            $this->format($ass_id, $user_id),
             $this->dependencies->systemApi()->spreadsheet(false),
             $this->dependencies->systemApi()->user(),
             $this->dependencies->systemApi()->format($user_id),
@@ -483,14 +483,14 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    public function format(OrgaSettings $orga, int $ass_id, int $user_id): FormatInterface
+    public function format(int $ass_id, int $user_id): FormatInterface
     {
-        return new Format(
+        return $this->instances[Format::class][$ass_id][$user_id] = new Format(
             $this->language($user_id),
             $this->dependencies->systemApi()->user(),
             $this->dependencies->systemApi()->format($user_id),
             $this->assessmentGrading($ass_id),
-            $orga
+            $this->orgaSettings($ass_id, $user_id)->get()
         );
     }
 

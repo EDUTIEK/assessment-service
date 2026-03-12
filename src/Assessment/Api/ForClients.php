@@ -104,9 +104,9 @@ readonly class ForClients
         return $this->internal->writer($this->ass_id, $this->user_id);
     }
 
-    public function format(OrgaSettings $orga): FormatInterface
+    public function format(): FormatInterface
     {
-        return $this->internal->format($orga, $this->ass_id, $this->user_id);
+        return $this->internal->format($this->ass_id, $this->user_id);
     }
 
     public function workingTime(?IndividualWorkingTime $writer = null): WorkingTimeService
