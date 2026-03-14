@@ -178,10 +178,10 @@ readonly class Service implements FullService
     {
         $changed = false;
 
-        if ($writer->getCorrectionStatus() === CorrectionStatus::STITCH ||
-            $writer->isCorrectionFinalized() && $writer->getFinalizedFromStatus() === CorrectionStatus::STITCH) {
-            return new Result(false, $this->language->txt('authorization_not_removable'));
-        }
+//        if ($writer->getCorrectionStatus() === CorrectionStatus::STITCH ||
+//            $writer->isCorrectionFinalized() && $writer->getFinalizedFromStatus() === CorrectionStatus::STITCH) {
+//            return new Result(false, $this->language->txt('authorization_not_removable'));
+//        }
 
         // remove authorizations
         foreach ($this->repos->correctorSummary()->allByTaskIdAndWriterId($task_id, $writer->getId()) as $summary) {
