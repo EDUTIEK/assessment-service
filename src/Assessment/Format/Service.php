@@ -57,8 +57,9 @@ readonly class Service implements FullService
             $text .= ' (' . $writer->getFinalPoints() . ' ' . $this->language->txt('points') . ')';
         }
 
-        if ($writer->getStitchComment()) {
-            $text .= ' ' . $this->language->txt('via_stitch_decision');
+        $from = $this->finalizedFromStatus($writer);
+        if ($from !== null) {
+            $text .= ' ' . $from;
         }
 
         return $text;

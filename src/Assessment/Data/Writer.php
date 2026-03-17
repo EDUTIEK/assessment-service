@@ -45,8 +45,6 @@ abstract class Writer implements AssessmentEntity, IndividualWorkingTime
     abstract public function setCorrectionStatusChanged(DateTimeImmutable $correction_status_changed): self;
     abstract public function getCorrectionStatusChangedBy(): ?int;
     abstract public function setCorrectionStatusChangedBy(?int $correction_status_changed_by): self;
-    abstract public function getStitchComment(): ?string;
-    abstract public function setStitchComment(?string $stitch_comment): self;
     abstract public function getLocation(): ?int;
     abstract public function setLocation(?int $location): self;
     abstract public function getReviewNotification(): int;
