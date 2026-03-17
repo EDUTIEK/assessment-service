@@ -115,7 +115,7 @@ class DocumentationExport
             $this->storage->deleteFile($id);
         }
 
-        $suffix = $this->format->logDate(new \DateTime());
+        $suffix = $this->format->logDate(new \DateTime()) . '.zip';
 
         $fp = fopen($zipfile, 'r');
         $zip_name = $this->storage->asciiFilename($this->lang->txt('documentation_filename')
