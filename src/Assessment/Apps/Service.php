@@ -100,7 +100,8 @@ class Service implements OpenService, RestService
         } catch (RestException $e) {
             $this->context->sendResponse($e->getCode(), $e->getMessage());
         } catch (Throwable $e) {
-            $this->context->sendResponse(RestException::INTERNAL_SERVER_ERROR, $e->getMessage());
+            $this->context->sendResponse(RestException::INTERNAL_SERVER_ERROR,
+                $e->getMessage() . "\n". $e->getTraceAsString());
         }
         exit;
     }
