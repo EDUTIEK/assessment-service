@@ -50,6 +50,7 @@ use Edutiek\AssessmentService\Assessment\PdfCreation\CorrectionProvider;
 use Edutiek\AssessmentService\Assessment\Apps\AppWriter;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 use Edutiek\AssessmentService\Assessment\Export\ResultsExport;
+use Edutiek\AssessmentService\Assessment\Apps\SlimLogger;
 
 class Internal implements ComponentApi, ComponentApiFactory
 {
@@ -319,7 +320,8 @@ class Internal implements ComponentApi, ComponentApiFactory
     {
         $app = AppFactory::create();
         $app->addRoutingMiddleware();
-        $app->addErrorMiddleware(true, true, true);
+        $app->addErrorMiddleware(true, true, true,
+        new SlimLogger($this->dependencies->systemApi()->log()));
         $app->setBasePath(dirname(parse_url(
             $this->dependencies->systemApi()->config()->getSetup()->getBackendUrl(),
             PHP_URL_PATH
