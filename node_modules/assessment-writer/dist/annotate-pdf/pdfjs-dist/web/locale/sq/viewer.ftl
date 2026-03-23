@@ -103,6 +103,14 @@ pdfjs-document-properties-size-kb = { NUMBER($kb, maximumSignificantDigits: 3) }
 #   $mb (Number) - the PDF file size in megabytes
 #   $b (Number) - the PDF file size in bytes
 pdfjs-document-properties-size-mb = { NUMBER($mb, maximumSignificantDigits: 3) } MB ({ $b } bajte)
+# Variables:
+#   $size_kb (Number) - the PDF file size in kilobytes
+#   $size_b (Number) - the PDF file size in bytes
+pdfjs-document-properties-kb = { $size_kb } KB ({ $size_b } bajte)
+# Variables:
+#   $size_mb (Number) - the PDF file size in megabytes
+#   $size_b (Number) - the PDF file size in bytes
+pdfjs-document-properties-mb = { $size_mb } MB ({ $size_b } bajte)
 pdfjs-document-properties-title = Titull:
 pdfjs-document-properties-author = Autor:
 pdfjs-document-properties-subject = Subjekt:
@@ -112,6 +120,10 @@ pdfjs-document-properties-modification-date = Datë Ndryshimi:
 # Variables:
 #   $dateObj (Date) - the creation/modification date and time of the PDF file
 pdfjs-document-properties-date-time-string = { DATETIME($dateObj, dateStyle: "short", timeStyle: "medium") }
+# Variables:
+#   $date (Date) - the creation/modification date of the PDF file
+#   $time (Time) - the creation/modification time of the PDF file
+pdfjs-document-properties-date-string = { $date }, { $time }
 pdfjs-document-properties-creator = Krijues:
 pdfjs-document-properties-producer = Prodhues PDF-je:
 pdfjs-document-properties-version = Version PDF-je:
@@ -254,6 +266,10 @@ pdfjs-rendering-error = Ndodhi një gabim gjatë riprodhimit të faqes.
 
 ## Annotations
 
+# Variables:
+#   $date (Date) - the modification date of the annotation
+#   $time (Time) - the modification time of the annotation
+pdfjs-annotation-date-string = { $date }, { $time }
 # .alt: This is used as a tooltip.
 # Variables:
 #   $type (String) - an annotation type from a list defined in the PDF spec
@@ -277,13 +293,9 @@ pdfjs-web-fonts-disabled = Shkronjat Web janë të çaktivizuara: s’arrihet t�
 
 pdfjs-editor-free-text-button =
     .title = Tekst
-pdfjs-editor-color-picker-free-text-input =
-    .title = Ndryshoni ngjyrë teksti
 pdfjs-editor-free-text-button-label = Tekst
 pdfjs-editor-ink-button =
     .title = Vizatoni
-pdfjs-editor-color-picker-ink-input =
-    .title = Ndryshoni ngjyrë vizatimi
 pdfjs-editor-ink-button-label = Vizatoni
 pdfjs-editor-stamp-button =
     .title = Shtoni ose përpunoni figura
@@ -295,33 +307,6 @@ pdfjs-highlight-floating-button1 =
     .title = Theksim
     .aria-label = Theksim
 pdfjs-highlight-floating-button-label = Theksim
-pdfjs-comment-floating-button =
-    .title = Komentoni
-    .aria-label = Komentoni
-pdfjs-comment-floating-button-label = Komentoni
-pdfjs-editor-comment-button =
-    .title = Koment
-    .aria-label = Koment
-pdfjs-editor-comment-button-label = Komentoni
-pdfjs-editor-signature-button =
-    .title = Shtoni nënshkrim
-pdfjs-editor-signature-button-label = Shtoni nënshkrim
-
-## Default editor aria labels
-
-# “Highlight” is a noun, the string is used on the editor for highlights.
-pdfjs-editor-highlight-editor =
-    .aria-label = Përpunues theksimesh
-# “Drawing” is a noun, the string is used on the editor for drawings.
-pdfjs-editor-ink-editor =
-    .aria-label = Përpunues vizatimesh
-# Used when a signature editor is selected/hovered.
-# Variables:
-#   $description (String) - a string describing/labeling the signature.
-pdfjs-editor-signature-editor1 =
-    .aria-description = Përpunues nënshkrimesh: { $description }
-pdfjs-editor-stamp-editor =
-    .aria-label = Përpunues figurash
 
 ## Remove button for the various kind of editor.
 
@@ -333,8 +318,6 @@ pdfjs-editor-remove-stamp-button =
     .title = Hiq figurë
 pdfjs-editor-remove-highlight-button =
     .title = Hiqe theksimin
-pdfjs-editor-remove-signature-button =
-    .title = Hiqe nënshkrimin
 
 ##
 
@@ -351,41 +334,24 @@ pdfjs-editor-stamp-add-image-button-label = Shtoni figurë
 pdfjs-editor-free-highlight-thickness-input = Trashësi
 pdfjs-editor-free-highlight-thickness-title =
     .title = Ndryshoni trashësinë kur theksoni objekte tjetër nga tekst
-pdfjs-editor-add-signature-container =
-    .aria-label = Kontrolle nënshkrimesh dhe nënshkrime të ruajtur
-pdfjs-editor-signature-add-signature-button =
-    .title = Shtoni nënshkrim të ri
-pdfjs-editor-signature-add-signature-button-label = Shtoni nënshkrim të ri
-# Used on the button to use an already saved signature.
-# Variables:
-#   $description (String) - a string describing/labeling the signature.
-pdfjs-editor-add-saved-signature-button =
-    .title = Nënshkrim i ruajtur: { $description }
 # .default-content is used as a placeholder in an empty text editor.
 pdfjs-free-text2 =
     .aria-label = Përpunues Tekstesh
     .default-content = Filloni të shtypni…
-# Used to show how many comments are present in the pdf file.
-# Variables:
-#   $count (Number) - the number of comments.
-pdfjs-editor-comments-sidebar-title =
-    { $count ->
-        [one] Koment
-       *[other] Komente
-    }
-pdfjs-editor-comments-sidebar-close-button =
-    .title = Mbylleni anështyllën
-    .aria-label = Mbylleni anështyllën
-pdfjs-editor-comments-sidebar-close-button-label = Mbylleni anështyllën
-# Instructional copy to add a comment by selecting text or an annotations.
-pdfjs-editor-comments-sidebar-no-comments1 = Shihni diçka që ia vlen. Theksojeni dhe lini një koment.
-pdfjs-editor-comments-sidebar-no-comments-link = Mësoni më tepër
+pdfjs-free-text =
+    .aria-label = Përpunues Tekstesh
+pdfjs-free-text-default-content = Filloni të shtypni…
+pdfjs-ink =
+    .aria-label = Përpunues Vizatimesh
+pdfjs-ink-canvas =
+    .aria-label = Figurë e krijuar nga përdoruesi
 
 ## Alt-text dialog
 
 pdfjs-editor-alt-text-button-label = Tekst alternativ
 pdfjs-editor-alt-text-edit-button =
     .aria-label = Përpunoni tekst alternativ
+pdfjs-editor-alt-text-edit-button-label = Përpunoni tekst alternativ
 pdfjs-editor-alt-text-dialog-label = Zgjidhni një mundësi
 pdfjs-editor-alt-text-dialog-description = Teksti alt (tekst alternativ) vjen në ndihmë kur njerëzit s’mund të shohin figurën, ose kur ajo nuk ngarkohet.
 pdfjs-editor-alt-text-add-description-label = Shtoni një përshkrim
@@ -405,6 +371,14 @@ pdfjs-editor-alt-text-button =
 ## Editor resizers
 ## This is used in an aria label to help to understand the role of the resizer.
 
+pdfjs-editor-resizer-label-top-left = Cepi i sipërm majtas — ripërmasojeni
+pdfjs-editor-resizer-label-top-middle = Mesi i pjesës sipër — ripërmasojeni
+pdfjs-editor-resizer-label-top-right = Cepi i sipërm djathtas — ripërmasojeni
+pdfjs-editor-resizer-label-middle-right = Djathtas në mes — ripërmasojeni
+pdfjs-editor-resizer-label-bottom-right = Cepi i poshtëm djathtas — ripërmasojeni
+pdfjs-editor-resizer-label-bottom-middle = Mesi i pjesës poshtë — ripërmasojeni
+pdfjs-editor-resizer-label-bottom-left = Cepi i poshtëm — ripërmasojeni
+pdfjs-editor-resizer-label-middle-left = Majtas në mes — ripërmasojeni
 pdfjs-editor-resizer-top-left =
     .aria-label = Cepi i sipërm majtas — ripërmasojeni
 pdfjs-editor-resizer-top-middle =
@@ -470,6 +444,7 @@ pdfjs-editor-new-alt-text-error-close-button = Mbylle
 # Variables:
 #   $totalSize (Number) - the total size (in MB) of the AI model.
 #   $downloadedSize (Number) - the downloaded size (in MB) of the AI model.
+#   $percent (Number) - the percentage of the downloaded size.
 pdfjs-editor-new-alt-text-ai-model-downloading-progress = Po shkarkohet model IA teksti alternativ ({ $downloadedSize } nga { $totalSize } MB)
     .aria-valuetext = Po shkarkohet model IA teksti alternativ ({ $downloadedSize } nga { $totalSize } MB)
 # This is a button that users can click to edit the alt text they have already added.
@@ -510,21 +485,12 @@ pdfjs-editor-alt-text-settings-show-dialog-button-label = Shfaq menjëherë për
 pdfjs-editor-alt-text-settings-show-dialog-description = Ju ndihmon të siguroheni se krejt figurat tuaja kanë tekst alternativ.
 pdfjs-editor-alt-text-settings-close-button = Mbylle
 
-## Accessibility labels (announced by screen readers) for objects added to the editor.
-
-pdfjs-editor-highlight-added-alert = U shtua theksim
-pdfjs-editor-freetext-added-alert = U shtua tekst
-pdfjs-editor-ink-added-alert = U shtua vizatim
-pdfjs-editor-stamp-added-alert = U shtua figurë
-pdfjs-editor-signature-added-alert = U shtua nënshkrim
-
 ## "Annotations removed" bar
 
 pdfjs-editor-undo-bar-message-highlight = U hoq theksimi
 pdfjs-editor-undo-bar-message-freetext = U hoq tekst
 pdfjs-editor-undo-bar-message-ink = U hoq vizatim
 pdfjs-editor-undo-bar-message-stamp = U hoq figurë
-pdfjs-editor-undo-bar-message-signature = Nënshkrimi u hoq
 # Variables:
 #   $count (Number) - the number of removed annotations.
 pdfjs-editor-undo-bar-message-multiple =
@@ -538,102 +504,3 @@ pdfjs-editor-undo-bar-undo-button-label = Zhbëje
 pdfjs-editor-undo-bar-close-button =
     .title = Mbylle
 pdfjs-editor-undo-bar-close-button-label = Mbylle
-
-## Add a signature dialog
-
-pdfjs-editor-add-signature-dialog-label = Kjo dritare modale i lejon përdoruesit të krijojë një nënshkrim për ta shtuar te një dokument PDF. Përdoruesi mund të përpunojë emrin (i cili shërben edhe si tekst alternativ) dhe, nëse do, ta ruajë nënshkrimin, për ta përdorur prapë.
-pdfjs-editor-add-signature-dialog-title = Shtoni një nënshkrim
-
-## Tab names
-
-# Type is a verb (you can type your name as signature)
-pdfjs-editor-add-signature-type-button = Lloj
-    .title = Lloj
-# Draw is a verb (you can draw your signature)
-pdfjs-editor-add-signature-draw-button = Vizatoni
-    .title = Vizatoni
-pdfjs-editor-add-signature-image-button = Figurë
-    .title = Figurë
-
-## Tab panels
-
-pdfjs-editor-add-signature-type-input =
-    .aria-label = Shtypni nënshkrimin tuaj
-    .placeholder = Shtypni nënshkrimin tuaj
-pdfjs-editor-add-signature-draw-placeholder = Vizatoni nënshkrimin tuaj
-pdfjs-editor-add-signature-draw-thickness-range-label = Trashësi
-# Variables:
-#   $thickness (Number) - the thickness (in pixels) of the line used to draw a signature.
-pdfjs-editor-add-signature-draw-thickness-range =
-    .title = Trashësi vizatimi: { $thickness }
-pdfjs-editor-add-signature-image-placeholder = Tërhiqni këtu një kartelë për ngarkim
-pdfjs-editor-add-signature-image-browse-link =
-    { PLATFORM() ->
-        [macos] Ose zgjidhni kartelë figure
-       *[other] Ose zgjidhni kartelë figure
-    }
-
-## Controls
-
-pdfjs-editor-add-signature-description-label = Përshkrim (tekst alternativ)
-pdfjs-editor-add-signature-description-input =
-    .title = Përshkrim (tekst alternativ)
-pdfjs-editor-add-signature-description-default-when-drawing = Nënshkrim
-pdfjs-editor-add-signature-clear-button-label = Spastroje nënshkrimin
-pdfjs-editor-add-signature-clear-button =
-    .title = Spastroje nënshkrimin
-pdfjs-editor-add-signature-save-checkbox = Ruaje nënshkrimin
-pdfjs-editor-add-signature-save-warning-message = Keni mbërritur në kufirin e 5 nënshkrimeve të ruajtura. Që të ruani tjetër, hiqni një.
-pdfjs-editor-add-signature-image-upload-error-title = S’u ngarkua dot figurë
-pdfjs-editor-add-signature-image-upload-error-description = Kontrolloni lidhjen tuaj në rrjet, ose provoni figurë tjetër.
-pdfjs-editor-add-signature-image-no-data-error-title = S’shndërrohet dot kjo figurë në një nënshkrim
-pdfjs-editor-add-signature-image-no-data-error-description = Ju lutemi, provoni të ngarkoni një figurë tjetër.
-pdfjs-editor-add-signature-error-close-button = Mbylle
-
-## Dialog buttons
-
-pdfjs-editor-add-signature-cancel-button = Anuloje
-pdfjs-editor-add-signature-add-button = Shtoje
-pdfjs-editor-edit-signature-update-button = Përditësoje
-
-## Comment popup
-
-pdfjs-editor-edit-comment-popup-button-label = Përpunoni koment
-pdfjs-editor-edit-comment-popup-button =
-    .title = Përpunoni koment
-pdfjs-editor-delete-comment-popup-button-label = Hiqe komentin
-pdfjs-editor-delete-comment-popup-button =
-    .title = Hiqe komentin
-pdfjs-show-comment-button =
-    .title = Shfaqe komentin
-
-##  Edit a comment dialog
-
-# An existing comment is edited
-pdfjs-editor-edit-comment-dialog-title-when-editing = Përpunoni koment
-pdfjs-editor-edit-comment-dialog-save-button-when-editing = Përditësojeni
-# No existing comment
-pdfjs-editor-edit-comment-dialog-title-when-adding = Shtoni koment
-pdfjs-editor-edit-comment-dialog-save-button-when-adding = Shtoje
-pdfjs-editor-edit-comment-dialog-text-input =
-    .placeholder = Filloni të shtypni…
-pdfjs-editor-edit-comment-dialog-cancel-button = Anuloje
-
-## Edit a comment button in the editor toolbar
-
-pdfjs-editor-add-comment-button =
-    .title = Shtoni koment
-
-## Main menu for adding/removing signatures
-
-pdfjs-editor-delete-signature-button1 =
-    .title = Hiqe nënshkrimin e ruajtur
-pdfjs-editor-delete-signature-button-label1 = Hiqe nënshkrimin e ruajtur
-
-## Editor toolbar
-
-pdfjs-editor-add-signature-edit-button-label = Përpunoni përshkrimin
-
-## Edit signature description dialog
-
-pdfjs-editor-edit-signature-dialog-title = Përpunoni përshkrimin

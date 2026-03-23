@@ -92,12 +92,24 @@ pdfjs-document-properties-button =
 pdfjs-document-properties-button-label = Փաստաթղթի յատկութիւնները…
 pdfjs-document-properties-file-name = Նիշքի անունը․
 pdfjs-document-properties-file-size = Նիշք չափը.
+# Variables:
+#   $size_kb (Number) - the PDF file size in kilobytes
+#   $size_b (Number) - the PDF file size in bytes
+pdfjs-document-properties-kb = { $size_kb } ԿԲ ({ $size_b } բայթ)
+# Variables:
+#   $size_mb (Number) - the PDF file size in megabytes
+#   $size_b (Number) - the PDF file size in bytes
+pdfjs-document-properties-mb = { $size_mb } ՄԲ ({ $size_b } բայթ)
 pdfjs-document-properties-title = Վերնագիր
 pdfjs-document-properties-author = Հեղինակ․
 pdfjs-document-properties-subject = առարկայ
 pdfjs-document-properties-keywords = Հիմնաբառեր
 pdfjs-document-properties-creation-date = Ստեղծման ամսաթիւ
 pdfjs-document-properties-modification-date = Փոփոխութեան ամսաթիւ.
+# Variables:
+#   $date (Date) - the creation/modification date of the PDF file
+#   $time (Time) - the creation/modification time of the PDF file
+pdfjs-document-properties-date-string = { $date }, { $time }
 pdfjs-document-properties-creator = Ստեղծող
 pdfjs-document-properties-producer = PDF-ի Արտադրողը.
 pdfjs-document-properties-version = PDF-ի տարբերակը.
@@ -225,6 +237,10 @@ pdfjs-rendering-error = Սխալ է տեղի ունեցել էջի մեկնաբ�
 
 ## Annotations
 
+# Variables:
+#   $date (Date) - the modification date of the annotation
+#   $time (Time) - the modification time of the annotation
+pdfjs-annotation-date-string = { $date }, { $time }
 # .alt: This is used as a tooltip.
 # Variables:
 #   $type (String) - an annotation type from a list defined in the PDF spec
@@ -240,3 +256,13 @@ pdfjs-password-invalid = Գաղտնաբառը սխալ է: Կրկին փորձէ
 pdfjs-password-ok-button = Լաւ
 pdfjs-password-cancel-button = Չեղարկել
 pdfjs-web-fonts-disabled = Վեբ-տառատեսակները անջատուած են. հնարաւոր չէ աւգտագործել ներկառուցուած PDF տառատեսակները։
+
+## Editing
+
+
+## Alt-text dialog
+
+
+## Editor resizers
+## This is used in an aria label to help to understand the role of the resizer.
+
