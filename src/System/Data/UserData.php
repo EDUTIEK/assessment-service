@@ -103,10 +103,10 @@ abstract class UserData implements SystemEntity
     public function getInitials(): string
     {
         if ($this->getFirstname() !== '' && $this->getLastname() !== '') {
-            return ucfirst(substr($this->getFirstname(), 0, 1))
-                . ucfirst(substr($this->getLastname(), 0, 1));
+            return mb_strtoupper(mb_substr($this->getFirstname(), 0, 1))
+                . mb_strtoupper(mb_substr($this->getLastname(), 0, 1));
         } else {
-            return strtoupper(substr($this->getLogin(), 0, 2));
+            return mb_strtoupper(mb_substr($this->getLogin(), 0, 2));
         }
     }
 }
