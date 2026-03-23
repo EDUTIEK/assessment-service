@@ -124,7 +124,7 @@ readonly class RestHelper
             ->withHeader('Content-Type', 'application/json')
             ->withHeader('xlasTime', (string) time())
             ->withStatus($status);
-        $response->getBody()->write(json_encode($data));
+        $response->getBody()->write((string) json_encode($data));
         return $response;
     }
 
