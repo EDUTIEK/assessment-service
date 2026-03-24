@@ -27,4 +27,6 @@ interface FullService
      * Human-readable file size
      */
     public function fileSize(int $size = 0, string $unit = ""): string;
+
+    public function number(float $number): string;
 }

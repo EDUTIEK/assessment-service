@@ -126,7 +126,7 @@ readonly class ResultsExport
                 'writing_authorized' => $this->sys_format->logDate($writer->getWritingAuthorized()),
                 'correction_status' => $this->lang->txt($writer->getCorrectionStatus()->languageVariable()),
                 'correction_finalized' => $this->sys_format->logDate($writer->getCorrectionFinalized()),
-                'points' => $writer->isCorrectionFinalized() ? $writer->getFinalPoints() : null,
+                'points' => $writer->isCorrectionFinalized() ? $this->sys_format->number($writer->getFinalPoints() ?? 0) : null,
                 'grade' => $level?->getGrade(),
                 'grade_code' => $level?->getCode(),
                 'passed' => $level?->getPassed() ? $this->lang->txt('export_yes') : $this->lang->txt('export_no')
@@ -140,7 +140,7 @@ readonly class ResultsExport
                         $user = $users[$corrector?->getUserId() ?? 0] ?? null;
                         $row['corrector_' . $pos->value . '_login'] = $user?->getLogin();
                         $row['corrector_' . $pos->value . '_name'] = $user?->getListname(false);
-                        $row['corrector_' . $pos->value . '_points'] = $grading->getPoints();
+                        $row['corrector_' . $pos->value . '_points'] = $this->sys_format->number($grading->getPoints() ?? 0);
                     }
                 }
             } else {
@@ -151,7 +151,7 @@ readonly class ResultsExport
                             $user = $users[$corrector?->getUserId() ?? 0] ?? null;
                             $row['corrector_' . $task_pos . '_login'] = $user?->getLogin();
                             $row['corrector_' . $task_pos . '_name'] = $user?->getListname(false);
-                            $row['corrector_' . $task_pos . '_points'] = $grading->getPoints();
+                            $row['corrector_' . $task_pos . '_points'] = $this->sys_format->number($grading->getPoints() ?? 0);
                         }
                         break;
                     }

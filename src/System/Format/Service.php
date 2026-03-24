@@ -101,4 +101,18 @@ readonly class Service implements FullService
 
         return implode(' ', $parts);
     }
+
+    public function number(float $number): string
+    {
+        $d = $this->txtOr('decimal_separator', '.');
+        $t = $this->txtOr('thousands_separator', ',');
+
+        return trim(number_format($number, 2, $d, $t), '0');
+    }
+
+    private function txtOr(string $key, string $fallback): string
+    {
+        $l = $this->language->txt($key);
+        return $l === $key ? $fallback : $l;
+    }
 }
