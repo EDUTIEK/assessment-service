@@ -118,6 +118,7 @@ class Internal
             fn() => new Dompdf([
                 'chroot' => $this->dependencies->tempStorage()->getReadableRoot()
             ]),
+            $this->config()->getSetup()
         );
     }
 

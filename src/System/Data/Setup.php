@@ -36,8 +36,16 @@ abstract readonly class Setup
     /**
      * Get the absolute path for temp files
      * It must be without a trailing slash
+     * Used by ZIPArchive, PHPSpreadsheet, Ghostscript
      */
     abstract public function getAbsoluteTempPath(): string;
+
+    /**
+     * Get the absolute path for artifacts written by the service
+     * It must be without a trailing slash
+     * Used by Dompdf for fonts
+     */
+    abstract public function getAbsoluteArtifactsPath(): string;
 
     /**
      * Get the default path of the ghostscript executable

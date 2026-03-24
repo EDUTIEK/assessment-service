@@ -9,6 +9,10 @@ use Closure;
 use Dompdf\Dompdf;
 use Dompdf\Canvas;
 use Dompdf\FontMetrics;
+use ILIAS\AdvancedMetaData\Services\ObjectModes\Custom\Set;
+use Edutiek\AssessmentService\System\Data\Setup;
+
+use function PHPUnit\Framework\directoryExists;
 
 class Service implements FullService
 {
@@ -31,7 +35,8 @@ class Service implements FullService
      * @param Closure(): Dompdf $dom_pdf
      */
     public function __construct(
-        private Closure $dom_pdf
+        private Closure $dom_pdf,
+        private Setup $setup
     ) {
     }
 
@@ -40,12 +45,14 @@ class Service implements FullService
         $pdf = $this->initPdf($options);
 
         $header = $options->getPrintHeader() ? ('<header> ' . $options->getTitle() . '</header>') : '';
-        $pdf->loadHtml(sprintf(
-            '<!DOCTYPE html><html><head><meta charset="utf-8"/><style>%s</style></head><body>%s%s</body></html>',
-            $this->css($options),
-            $header,
-            $html,
-        ));
+        $pdf->loadHtml(
+            sprintf(
+                '<!DOCTYPE html><html><head><meta charset="utf-8"/><style>%s</style></head><body>%s%s</body></html>',
+                $this->css($options),
+                $header,
+                $html,
+            )
+        );
 
         $pdf->render();
 
@@ -146,7 +153,11 @@ header
     {
         $right = $options->getRightMargin();
         $bot = $options->getFooterMargin();
-        return function (int $page, int $max_pages, Canvas $canvas, FontMetrics $font_metrics) use ($options, $right, $bot): void {
+        return function (int $page, int $max_pages, Canvas $canvas, FontMetrics $font_metrics) use (
+            $options,
+            $right,
+            $bot
+        ): void {
             $text = (string) ($page + $options->getStartPageNumber() - 1);
             $font = $font_metrics->getFont($this->footer_font);
             $w = $font_metrics->getTextWidth($text, $font, $this->footer_font_size);
@@ -169,10 +180,10 @@ header
         $options = $pdf->getOptions();
         $options->set('isPdfAEnabled', true);
         $options->set('defaultFont', $this->main_font);
-        // $options->setDpi(150);
-        // $options->set('fontDir', $tmp);
-        // $options->set('fontCache', $tmp);
-        // $options->set('tempDir', $tmp);
+        $options->setDpi(150);
+        $options->set('fontDir', $this->getFontDir());
+        $options->set('fontCache', $this->getFontCache());
+        $options->set('tempDir', $this->getTempDir());
         $pdf->setOptions($options);
         $this->setupFonts($pdf);
 
@@ -190,5 +201,32 @@ header
         $font_metrics->setFontFamily('serif', $font_metrics->getFamily('DejaVu Serif'));
         $font_metrics->setFontFamily('times', $font_metrics->getFamily('DejaVu Serif'));
         $font_metrics->setFontFamily('times-roman', $font_metrics->getFamily('DejaVu Serif'));
+    }
+
+    private function getFontDir(): string
+    {
+        $path = $this->setup->getAbsoluteArtifactsPath() . '/dompdf/fonts';
+        if (!is_dir($path)) {
+            mkdir($path, 0777, true);
+        }
+        return $path;
+    }
+
+    private function getFontCache(): string
+    {
+        $path = $this->setup->getAbsoluteArtifactsPath() . '/dompdf/cache';
+        if (!is_dir($path)) {
+            mkdir($path, 0777, true);
+        }
+        return $path;
+    }
+
+    private function getTempDir(): string
+    {
+        $path = $this->setup->getAbsoluteTempPath() . '/xlas/dompdf';
+        if (!is_dir($path)) {
+            mkdir($path, 0777, true);
+        }
+        return $path;
     }
 }
