@@ -10,6 +10,8 @@ interface FullService
 {
     /** @return Alert[] */
     public function all(): array;
+    /** @return Alert[] */
+    public function forWriter(int $writer_id): array;
     public function new(): Alert;
     public function one(int $id): ?Alert;
     public function create(Alert $alert);

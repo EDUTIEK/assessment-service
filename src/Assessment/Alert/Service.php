@@ -21,6 +21,12 @@ readonly class Service implements FullService
         return $this->repos->alert()->allByAssId($this->ass_id);
     }
 
+    public function forWriter(int $writer_id): array
+    {
+        return array_filter($this->repos->alert()->allByAssId($this->ass_id),
+            fn($alert) => $alert->getWriterId() === null | $alert->getWriterId() === $writer_id);
+    }
+
     public function new(): Alert
     {
         return $this->repos->alert()->new()->setAssId($this->ass_id);

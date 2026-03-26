@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
+use Edutiek\AssessmentService\Assessment\Alert\FullService as AlertService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\Data\Config;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
@@ -26,6 +27,7 @@ class WriterBridge implements AppBridge
         private readonly int $user_id,
         private readonly WorkingTimeFactory $working_time_factory,
         private readonly WriterService $writer_service,
+        private readonly AlertService $alert_service,
         private readonly ConfigService $config,
         private readonly EntityService $entity,
         private readonly Repositories $repos,
@@ -61,7 +63,7 @@ class WriterBridge implements AppBridge
                'is_excluded' => $this->writer->isExcluded(),
             ]);
 
-            foreach ($this->repos->alert()->allByAssIdAndWriterId($this->ass_id, $this->writer->getId()) as $alert) {
+            foreach ($this->alert_service->forWriter($this->writer->getId()) as $alert) {
                 $data['Alerts'][] = $this->entity->arrayToPrimitives([
                     'id' => $alert->getId(),
                     'time' => $alert->getShownFrom(),

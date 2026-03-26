@@ -336,6 +336,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $user_id,
             $this->workingTimeFactory($user_id),
             $this->writer($ass_id, $user_id),
+            $this->alert($ass_id),
             $this->dependencies->systemApi()->config(),
             $this->dependencies->systemApi()->entity(),
             $this->dependencies->repositories(),
