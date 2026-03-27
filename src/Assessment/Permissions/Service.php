@@ -101,6 +101,21 @@ class Service implements ReadService
         return $working_time->isNowInAllowedTime();
     }
 
+    public function canViewInstructions(): bool
+    {
+        if (!$this->canViewWriterScreen()) {
+            return false;
+        }
+
+        $writer = $this->getWriter();
+        if ($writer === null || $writer->getWritingExcluded() !== null) {
+            return false;
+        }
+
+        $working_time = $this->working_time_factory->workingTime($this->orga_settings, $writer);
+        return $working_time->isStarted();
+    }
+
     public function canViewSolution(): bool
     {
         if (!$this->canViewWriterScreen() || !$this->orga_settings->getSolutionAvailable()) {

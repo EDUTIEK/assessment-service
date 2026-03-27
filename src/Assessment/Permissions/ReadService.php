@@ -63,6 +63,11 @@ interface ReadService
     public function canWrite(): bool;
 
     /**
+     *  Check if the current writer can view the instructions
+     */
+    public function canViewInstructions(): bool;
+
+    /**
      *  Check if the current user can view the solution
      */
     public function canViewSolution(): bool;
