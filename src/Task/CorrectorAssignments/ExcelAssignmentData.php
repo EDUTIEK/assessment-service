@@ -63,6 +63,7 @@ class ExcelAssignmentData
     private array $correctors_by_user = [];
 
     public function __construct(
+        private bool $only_authorized,
         private CorrectionSettings $correction_settings,
         private OrgaSettings $orga_settings,
         array $tasks,
@@ -77,12 +78,14 @@ class ExcelAssignmentData
         $this->needed_correctors = $this->correction_settings->getRequiredCorrectors() + ($this->correction_settings->isStitchPossible() ? 1 : 0);
 
         foreach ($writer_service->all() as $writer) {
-            $this->writers[$writer->getId()] = $writer;
-            $this->writers_by_user[$writer->getUserId()] = $writer;
-            $this->assignments[$writer->getId()] = [];
+            if ($writer->isAuthorized() || !$this->only_authorized) {
+                $this->writers[$writer->getId()] = $writer;
+                $this->writers_by_user[$writer->getUserId()] = $writer;
+                $this->assignments[$writer->getId()] = [];
+            }
         }
 
-        usort($tasks, fn (Settings $a, Settings $b) => $a->getPosition() <=> $b->getPosition());
+        usort($tasks, fn(Settings $a, Settings $b) => $a->getPosition() <=> $b->getPosition());
         foreach ($tasks as $task) {
             $this->tasks[$task->getTaskId()] = $task;
         }
@@ -91,8 +94,8 @@ class ExcelAssignmentData
             $this->correctors[$c->getId()] = $c;
             $this->correctors_by_user[$c->getUserId()] = $c;
         }
-        $user_ids = array_map(fn (Corrector $x) => $x->getUserId(), $this->correctors);
-        $user_ids += array_map(fn (Writer $x) => $x->getUserId(), $this->writers);
+        $user_ids = array_map(fn(Corrector $x) => $x->getUserId(), $this->correctors);
+        $user_ids += array_map(fn(Writer $x) => $x->getUserId(), $this->writers);
 
         foreach ($user_service->getUsersByIds($user_ids) as $user) {
             $this->users_by_id[$user->getId()] = $user;
@@ -110,7 +113,7 @@ class ExcelAssignmentData
 
     public function filterWriter(bool $authorized = true): void
     {
-        $this->writers = array_filter($this->writers, fn (Writer $w) => $authorized ? $w->getWritingAuthorized() !== null : true);
+        $this->writers = array_filter($this->writers, fn(Writer $w) => $authorized ? $w->getWritingAuthorized() !== null : true);
     }
 
     /**
@@ -200,7 +203,7 @@ class ExcelAssignmentData
             $std_value = '';
 
             if ($this->multi_task) {
-                $ass_by_task = array_map(fn ($x) => $x, array_map(fn (CorrectorAssignment $x) => $x->getTaskId(), $ass), $ass);
+                $ass_by_task = array_map(fn($x) => $x, array_map(fn(CorrectorAssignment $x) => $x->getTaskId(), $ass), $ass);
                 foreach ($this->tasks as $task) {
                     $value = $std_value;
                     if (isset($ass_by_task[$task->getTaskId()]) && isset($this->correctors[$ass_by_task[$task->getTaskId()]])) {
@@ -239,16 +242,16 @@ class ExcelAssignmentData
 
         foreach ($data as $row_id => $row) {
             if ($first) {
-                $writer_login_index = $this->findKey($row, fn ($x) => $x === $this->lng->txt('login') || $x === "Login"); // Login for backwards compatibility
+                $writer_login_index = $this->findKey($row, fn($x) => $x === $this->lng->txt('login') || $x === "Login"); // Login for backwards compatibility
                 if ($this->multi_task) {
                     foreach ($this->tasks as $task) {
-                        $corrector_login_index[$task->getTitle()] = $this->findKey($row, fn ($x) => $x === $task->getTitle());
+                        $corrector_login_index[$task->getTitle()] = $this->findKey($row, fn($x) => $x === $task->getTitle());
                     }
                 } else {
                     foreach (range(0, $this->needed_correctors - 1) as $pos) {
                         $corrector_login_index[$pos] = $this->findKey(
                             $row,
-                            fn ($x) => $x === $this->lng->txt('corrector') . ' ' . ($pos + 1) ||
+                            fn($x) => $x === $this->lng->txt('corrector') . ' ' . ($pos + 1) ||
                                        $x === 'Corrector ' . ($pos + 1)// Corrector for backwards compatibility
                         );
                     }
@@ -261,7 +264,7 @@ class ExcelAssignmentData
             $writer_id = $this->getWriterByLogin($writer_login)?->getId();
 
             if ($writer_id === null) {
-                $this->errors[] = ["writer_not_found", [$row_id+1, $writer_login]];
+                $this->errors[] = ["writer_not_found", [$row_id + 1, $writer_login]];
                 continue;
             }
 
@@ -272,7 +275,7 @@ class ExcelAssignmentData
                     $corrector_id = $this->getCorrectorByLogin($login)?->getId();
 
                     if (!empty($login) && $corrector_id === null) {
-                        $this->errors[] = ["corrector_not_found_task", [$row_id+1, $login, $task->getTitle()]];
+                        $this->errors[] = ["corrector_not_found_task", [$row_id + 1, $login, $task->getTitle()]];
                         continue;
                     } elseif (empty($login)) {
                         $corrector_id = Service::BLANK_CORRECTOR_ASSIGNMENT;
@@ -286,7 +289,7 @@ class ExcelAssignmentData
                     $corrector_id = $this->getCorrectorByLogin($login)?->getId();
 
                     if (!empty($login) && $corrector_id === null) {
-                        $this->errors[] = ["corrector_not_found_pos", [$row_id+1, $login, $pos + 1]];
+                        $this->errors[] = ["corrector_not_found_pos", [$row_id + 1, $login, $pos + 1]];
                         continue;
                     } elseif (empty($login)) {
                         $corrector_id = Service::BLANK_CORRECTOR_ASSIGNMENT;
@@ -303,7 +306,7 @@ class ExcelAssignmentData
 
     public function getErrors(): array
     {
-        return array_map(fn ($e) => sprintf($this->lng->txt($e[0]), ...$e[1]), $this->errors);
+        return array_map(fn($e) => sprintf($this->lng->txt($e[0]), ...$e[1]), $this->errors);
     }
 
     public function isMultiTask(): bool
@@ -318,7 +321,7 @@ class ExcelAssignmentData
 
     private function getUserByLogin(string $login): ?UserData
     {
-        $user_data =  $this->users_by_login[$login] ?? null;
+        $user_data = $this->users_by_login[$login] ?? null;
 
         if ($user_data === null) {
             $user_id = $this->user_service->getUserIdByLogin($login);

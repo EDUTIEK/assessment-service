@@ -94,9 +94,10 @@ class Internal implements RatingCriterionServiceFactory
         );
     }
 
-    public function excelAssignmentData(int $ass_id, int $user_id): ExcelAssignmentData
+    public function excelAssignmentData(int $ass_id, int $user_id, bool $only_authorized = false): ExcelAssignmentData
     {
-        return $this->instances[ExcelAssignmentData::class][$ass_id][$user_id] ??= new ExcelAssignmentData(
+        return $this->instances[ExcelAssignmentData::class][$ass_id][$user_id][$only_authorized] ??= new ExcelAssignmentData(
+            $only_authorized,
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->orgaSettings()->get(),
             $this->dependencies->repositories()->settings()->allByAssId($ass_id),

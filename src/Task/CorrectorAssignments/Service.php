@@ -320,7 +320,7 @@ readonly class Service implements FullService
 
     public function exportAssignmentSpreadsheet(bool $only_authorized): void
     {
-        $ea = $this->internal->excelAssignmentData($this->ass_id, $this->user_id);
+        $ea = $this->internal->excelAssignmentData($this->ass_id, $this->user_id, $only_authorized);
 
         $writer_sheet = $this->spreadsheet_service->getNewSheet(
             $this->lang->txt('writer'),
@@ -345,7 +345,7 @@ readonly class Service implements FullService
 
     public function importSpreadsheet(string $file_id): array
     {
-        $ea = $this->internal->excelAssignmentData($this->ass_id, $this->user_id);
+        $ea = $this->internal->excelAssignmentData($this->ass_id, $this->user_id, false);
 
         $data = $this->spreadsheet_service->dataFromFile($file_id, $this->lang->txt('writer'));
         return $assignments = $ea->importAssignments($data);
@@ -354,7 +354,7 @@ readonly class Service implements FullService
     public function assignSpreadsheetData(array $data, bool $dry_run = false): array
     {
         $errors = [];
-        $ea = $this->internal->excelAssignmentData($this->ass_id, $this->user_id);
+        $ea = $this->internal->excelAssignmentData($this->ass_id, $this->user_id, false);
 
         if ($ea->isMultiTask()) {
             foreach ($data as $writer_id => $task_assignments) {
