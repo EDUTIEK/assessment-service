@@ -275,8 +275,9 @@ readonly class Service implements FullService
         }
 
         if ($this->correction_settings->getNoManualDecimals()
-            && (floor($summary->getPoints() ?? 0) < $summary->getPoints() ?? 0)
-                || floor($summary->getRevisionPoints() ?? 0) < $summary->getRevisionPoints() ?? 0) {
+            && (floor($summary->getPoints() ?? 0) < $summary->getPoints() ?? 0 ||
+                floor($summary->getRevisionPoints() ?? 0) < $summary->getRevisionPoints() ?? 0)
+            ) {
             $result->addFailure($this->language->txt('points_must_not_have_decimals'));
         }
 
