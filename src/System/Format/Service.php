@@ -102,8 +102,12 @@ readonly class Service implements FullService
         return implode(' ', $parts);
     }
 
-    public function number(float $number, ?int $decimals = null): string
+    public function number(?float $number, ?int $decimals = null): string
     {
+        if ($number === null) {
+            return '';
+        }
+
         $d = $this->txtOr('decimal_separator', ',');
         $t = $this->txtOr('thousands_separator', '.');
 
