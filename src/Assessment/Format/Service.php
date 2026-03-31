@@ -54,7 +54,7 @@ readonly class Service implements FullService
         }
 
         if ($writer->getFinalPoints()) {
-            $text .= ' (' . $writer->getFinalPoints() . ' ' . $this->language->txt('points') . ')';
+            $text .= ' (' . $this->system_format->number($writer->getFinalPoints()) . ' ' . $this->language->txt('points') . ')';
         }
 
         $from = $this->finalizedFromStatus($writer);

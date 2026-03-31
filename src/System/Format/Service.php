@@ -102,12 +102,17 @@ readonly class Service implements FullService
         return implode(' ', $parts);
     }
 
-    public function number(float $number): string
+    public function number(float $number, ?int $decimals = null): string
     {
-        $d = $this->txtOr('decimal_separator', '.');
-        $t = $this->txtOr('thousands_separator', ',');
+        $d = $this->txtOr('decimal_separator', ',');
+        $t = $this->txtOr('thousands_separator', '.');
 
-        return trim(number_format($number, 2, $d, $t), '0');
+        $string = number_format($number, $decimals ?? 2, $d, $t);
+
+        if ($decimals === null) {
+            $string = rtrim($string, '0');
+        }
+        return rtrim($string, $d);
     }
 
     private function txtOr(string $key, string $fallback): string

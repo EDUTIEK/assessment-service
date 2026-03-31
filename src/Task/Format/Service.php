@@ -5,6 +5,7 @@ namespace Edutiek\AssessmentService\Task\Format;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
+use Edutiek\AssessmentService\System\Format\FullService as FormatService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\ReadService as GradingService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionProcedure;
@@ -14,6 +15,7 @@ readonly class Service implements FullService
 {
     public function __construct(
         private LanguageService $lang,
+        private FormatService $format,
         private GradingService $grade_level_service,
         private CorrectionSettings $settings
     ) {
@@ -30,7 +32,7 @@ readonly class Service implements FullService
             $points = $summary?->getEffectivePoints();
             if ($points !== null) {
                 $grade = $this->grade_level_service->getGradLevelForPoints($points)?->getGrade();
-                $points = $points . ' ' . $this->lang->txt($points == 1 ? 'point' : 'points');
+                $points = $this->format->number($points) . ' ' . $this->lang->txt($points == 1 ? 'point' : 'points');
             }
         }
 

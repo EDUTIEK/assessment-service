@@ -41,6 +41,7 @@ class Internal implements RatingCriterionServiceFactory
     {
         return $this->instances[FormatService::class][$ass_id][$user_id] ??= new FormatService(
             $this->language($user_id),
+            $this->dependencies->systemApi()->format($user_id),
             $this->dependencies->assessmentApi($ass_id, $user_id)->assessmentGrading(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get()
         );
