@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Data;
 
+use Edutiek\AssessmentService\System\Api\HasHtml;
+
 abstract class Corrector implements AssessmentEntity
 {
     abstract public function getId(): int;
     abstract public function setId(int $id): self;
     abstract public function getUserId(): int;
     abstract public function setUserId(int $user_id): self;
+    #[HasHtml]
     abstract public function getCorrectionReport(): ?string;
     abstract public function setCorrectionReport(?string $correction_report): self;
     abstract public function getAssId(): int;

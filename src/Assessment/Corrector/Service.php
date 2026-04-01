@@ -78,4 +78,10 @@ class Service implements FullService
         }
         return $corrector;
     }
+
+    public function save(Corrector $corrector): void
+    {
+        $this->checkScope($corrector);
+        $this->repos->corrector()->save($corrector);
+    }
 }
