@@ -31,6 +31,7 @@ use Edutiek\AssessmentService\Assessment\Location\Service as LocationService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 use Edutiek\AssessmentService\Assessment\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\Service as OrgaSettingsService;
+use Edutiek\AssessmentService\Assessment\PdfCreation\CorrectionReport;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\PdfCreation\Service as PdfCreationService;
 use Edutiek\AssessmentService\Assessment\PdfSettings\Service as PdfSettingsService;
@@ -280,6 +281,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->pdfCreation($ass_id, $context_id, $user_id),
             $this->writingTask($ass_id, $user_id),
+            $this->correctionSettings($ass_id, $user_id),
             $this->logEntry($ass_id),
             $this->resultsExport($ass_id, $context_id, $user_id),
             $this->language($user_id),
@@ -320,8 +322,12 @@ class Internal implements ComponentApi, ComponentApiFactory
     {
         $app = AppFactory::create();
         $app->addRoutingMiddleware();
-        $app->addErrorMiddleware(true, true, true,
-        new SlimLogger($this->dependencies->systemApi()->log()));
+        $app->addErrorMiddleware(
+            true,
+            true,
+            true,
+            new SlimLogger($this->dependencies->systemApi()->log())
+        );
         $app->setBasePath(dirname(parse_url(
             $this->dependencies->systemApi()->config()->getSetup()->getBackendUrl(),
             PHP_URL_PATH
@@ -422,6 +428,17 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
+    public function correctionReport(int $ass_id, int $user_id): CorrectionReport
+    {
+        return $this->instances[CorrectionReport::class][$ass_id][$user_id] ?? new CorrectionReport(
+            $ass_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->htmlProcessing(),
+            $this->dependencies->systemApi()->pdfProcessing(),
+            $this->language($user_id),
+        );
+    }
+
     public function gradeLevel(int $ass_id): GradeLevelService
     {
         return $this->instances[GradeLevelService::class][$ass_id] = new GradeLevelService(
@@ -474,7 +491,8 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->language($user_id),
             $this->dependencies->systemApi()->user(),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
-            $this->properties($ass_id)
+            $this->properties($ass_id),
+            $this->correctionReport($ass_id, $user_id)
         );
     }
 

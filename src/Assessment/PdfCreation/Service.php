@@ -38,6 +38,7 @@ class Service implements FullService
         private UserService $users,
         private TasksReadService $tasks,
         private PropetiesReadService $properties,
+        private CorrectionReport $correction_report
     ) {
     }
 
@@ -131,11 +132,23 @@ class Service implements FullService
         );
     }
 
-
-    public function createCorrectionReport(int $ass_id): string
+    public function createCorrectionReport(): string
     {
-        // TODO: Implement createCorrectionReport() method.
-        return '';
+        $properties = $this->properties->get();
+
+        switch ($this->pdf_settings->getFormat()) {
+            case PdfFormat::BY:
+                $title = $properties->getDescription();
+
+                // no break
+            case PdfFormat::NRW:
+            default:
+                $title = $properties->getTitle();
+        }
+
+        $options = (new Options())->withTitle($title . ' | ' . $this->lang->txt('correction_reports'));
+
+        return $this->correction_report->render($options);
     }
 
     private function createPdfFile(PdfPurpose $purpose, int $task_id, int $writer_id, bool $anonymous_writer, bool $anonymous_corrector): string
@@ -254,6 +267,11 @@ class Service implements FullService
 
         unlink($zipfile);
         return $info->getId();
+    }
+
+    public function buildReportFilename(): string
+    {
+        return $this->properties->get()->getTitle() . ' - ' . $this->lang->txt('correction_reports');
     }
 
     /**

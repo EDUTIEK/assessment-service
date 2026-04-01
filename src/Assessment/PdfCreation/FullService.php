@@ -51,5 +51,5 @@ interface FullService
     /**
      * Create a PDF with the collected correction reports of all correctors
      */
-    public function createCorrectionReport(int $ass_id): string;
+    public function createCorrectionReport(): string;
 }

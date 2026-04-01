@@ -124,4 +124,6 @@ return [
     'combined_status_finalized' => 'Korrektur abgeschlossen',
     'combined_status_stitch_needed' => 'Stichentscheid notwendig',
     'combined_status_finished' => 'abgeschlossen',
+    'correction_reports' => 'Korrekturberichte',
+    'corrector' => 'Korrektor'
 ];

@@ -238,7 +238,8 @@ class Service implements ReadService
             return false;
         }
 
-        return $this->correction_settings->getReportsAvailableStart()?->getTimestamp() >= time();
+        return $this->correction_settings->getReportsAvailableStart() === null ||
+            $this->correction_settings->getReportsAvailableStart()?->getTimestamp() >= time();
     }
 
     public function canDoRestCall(): bool

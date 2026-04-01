@@ -13,6 +13,7 @@ use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPurpose;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
 use Edutiek\AssessmentService\Assessment\WritingTask\ReadService as WritingTasks;
+use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettings;
 use Edutiek\AssessmentService\System\Config\ReadService as Config;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
 use Edutiek\AssessmentService\System\Spreadsheet\ExportType as SpreadsheetExportType;
@@ -32,6 +33,7 @@ class DocumentationExport
         private TaskManager $tasks,
         private PdfService $pdf,
         private WritingTasks $writing_tasks,
+        private CorrectionSettings $correction_settings,
         private LogEntry $log,
         private ResultsExport $results_export,
         private Language $lang,
@@ -96,6 +98,14 @@ class DocumentationExport
                 $zip->addFile($source, $dest);
                 $hashes[$dest] = hash($hash_algo, file_get_contents($source));
             }
+        }
+
+        if ($this->correction_settings->get()->getReportsEnabled()) {
+            $temp_files[] = $report = $this->pdf->createCorrectionReport();
+            $source = $this->storage->getReadablePath($report);
+            $dest = $this->storage->asciiFilename($this->lang->txt('correction_reports') . '.pdf');
+            $zip->addFile($source, $dest);
+            $hashes[$dest] = hash($hash_algo, file_get_contents($source));
         }
 
         $temp_files[] = $results = $this->results_export->create();

@@ -112,6 +112,21 @@ class Service implements FullService
         return false;
     }
 
+    public function downloadReport(): void
+    {
+        $file_id = $this->pdf->createCorrectionReport();
+        $temp_file = $this->storage->copyAsTempFile($file_id);
+        $this->storage->deleteFile($file_id);
+
+        $this->delivery->sendTempFile(
+            $temp_file,
+            Disposition::ATTACHMENT,
+            $this->storage->newInfo()
+                ->setFileName($this->pdf->buildReportFilename())
+                ->setMimeType('application/pdf')
+        );
+    }
+
     public function getSettings(): ExportSettings
     {
         return $this->repos->exportSettings()->one($this->ass_id) ?? $this->repos->exportSettings()->new()->setAssId($this->ass_id);
@@ -139,7 +154,11 @@ class Service implements FullService
                 break;
 
             case ExportType::REPORTS:
-                return false;
+                $file_id = $this->pdf->createCorrectionReport();
+                $this->storage->updateFileInfo($this->storage->getFileInfo($file_id)
+                    ->setFileName($this->pdf->buildReportFilename() . '.pdf')
+                    ->setMimeType('application/pdf'));
+                break;
         }
 
         $file = $this->repos->exportFile()->new()
