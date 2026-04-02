@@ -141,7 +141,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         $data['multi_tasks'] = $this->orga_settings->getMultiTasks();
         if ($this->orga_settings->getMultiTasks()) {
             foreach ($this->task_manager->all() as $task) {
-                $gradings = $this->gradings->gradingsForTaskAndWriter($task_id, $writer_id);
+                $gradings = $this->gradings->gradingsForTaskAndWriter($task->getId(), $writer_id);
                 $grading = reset($gradings);
                 $data['tasks'][] = [
                     'title' => $task->getTitle(),
