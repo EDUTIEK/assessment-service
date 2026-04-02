@@ -19,6 +19,7 @@ use Edutiek\AssessmentService\Assessment\GradeLevel\FullService as gradeLevelFul
 use Edutiek\AssessmentService\Assessment\Location\FullService as LocationFullService;
 use Edutiek\AssessmentService\Assessment\LogEntry\FullService as FullLogEntryService;
 use Edutiek\AssessmentService\Assessment\Manager\FullService as ManagerFullService;
+use Edutiek\AssessmentService\Assessment\Notification\FullService as NotificationFullService;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\FullService as OrgaSettingsFullService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\FullService as PdfCreationService;
 use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
@@ -67,6 +68,11 @@ readonly class ForClients
     public function location(): LocationFullService
     {
         return $this->internal->location($this->ass_id);
+    }
+
+    public function norification(): NotificationFullService
+    {
+        return $this->internal->notification($this->ass_id, $this->user_id);
     }
 
     public function orgaSettings(): OrgaSettingsFullService

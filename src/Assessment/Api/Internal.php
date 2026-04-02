@@ -30,6 +30,7 @@ use Edutiek\AssessmentService\Assessment\GradeLevel\Service as GradeLevelService
 use Edutiek\AssessmentService\Assessment\Location\Service as LocationService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 use Edutiek\AssessmentService\Assessment\Manager\Service as ManagerService;
+use Edutiek\AssessmentService\Assessment\Notification\Service as NotificationService;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\Service as OrgaSettingsService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\CorrectionReport;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
@@ -462,6 +463,15 @@ class Internal implements ComponentApi, ComponentApiFactory
         return $this->instances[LocationService::class][$ass_id] = new LocationService(
             $ass_id,
             $this->dependencies->repositories()
+        );
+    }
+
+    public function notification(int $ass_id, int $user_id): NotificationService
+    {
+        return $this->instances[NotificationService::class][$ass_id][$user_id] = new NotificationService(
+            $ass_id,
+            $this->dependencies->repositories(),
+            $this->language($user_id)
         );
     }
 

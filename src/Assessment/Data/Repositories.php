@@ -23,4 +23,7 @@ interface Repositories
     public function token(): TokenRepo;
     public function writer(): WriterRepo;
     public function disabledGroup(): DisabledGroupRepo;
+    public function notificationSettings(): NotificationSettingsRepo;
+    public function notificationUser(): NotificationUserRepo;
+    public function notificationQueue(): NotificationQueueRepo;
 }

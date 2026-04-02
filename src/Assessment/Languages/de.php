@@ -125,5 +125,8 @@ return [
     'combined_status_stitch_needed' => 'Stichentscheid notwendig',
     'combined_status_finished' => 'abgeschlossen',
     'correction_reports' => 'Korrekturberichte',
-    'corrector' => 'Korrektor'
+    'corrector' => 'Korrektor',
+    'notification_title_writer_correction_finalized' => 'Korrektur verfügbar',
+    'notification_info_writer_correction_finalized' => 'Wird an einen Teilnehmer gesendet, wenn die Koreektur seiner Abgabe fertig und der Einsichtnahmezeitraum erreicht ist.',
+    'notification_subject_writer_correction_finalized' => 'Korrektur Ihrer Abgabe verfügbar',
 ];
