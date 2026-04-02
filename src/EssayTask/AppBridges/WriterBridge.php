@@ -86,7 +86,8 @@ class WriterBridge implements AppBridge
                     'id' => $essay->getId(),
                     'task_id' => $task->getId(),
                     'content' => $essay->getWrittenText(),
-                    'hash' => $essay->getRawTextHash()
+                    'hash' => $essay->getRawTextHash(),
+                    'last_change' => $essay->getLastChange(),
                 ]);
 
                 foreach ($this->repos->writerNotice()->allByEssayId($essay->getId()) as $notice) {
