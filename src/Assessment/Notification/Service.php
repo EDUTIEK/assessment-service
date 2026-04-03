@@ -22,22 +22,23 @@ readonly class Service implements FullService
 
     private function defaultTemplate(NotificationType $type)
     {
-        if (file_exists(__DIR__ . '/' . $type->value . '.txt')) {
-            return file_get_contents(__DIR__ . '/' . $type->value . '.txt');
+        if (file_exists(__DIR__ . '/templates/' . $type->value . '.txt')) {
+            return file_get_contents(__DIR__ . '/templates/' . $type->value . '.txt');
         }
         return null;
     }
 
     public function getSettings(NotificationType $type): NotificationSettings
     {
-        return
-            $this->repos->notificationSettings()->oneByAssIdAndType($this->ass_id, $type)
-                ?? $this->repos->notificationSettings()->new()
-                    ->setAssId($this->ass_id)
-                    ->setType($type)
-                    ->setActive(false)
-                    ->setSubject($this->lang->txt($type->subjectLangVar()))
-                    ->setBody($this->defaultTemplate($type));
+        // use clone because a save chechs the sttings before
+        return clone($this->repos->notificationSettings()->oneByAssIdAndType($this->ass_id, $type)
+            ?? $this->repos->notificationSettings()->new()
+                ->setAssId($this->ass_id)
+                ->setType($type)
+                ->setActive(false)
+                ->setSubject($this->lang->txt($type->subjectLangVar()))
+                ->setBody($this->defaultTemplate($type))
+        );
     }
 
     public function allSettings(): array
@@ -47,6 +48,16 @@ readonly class Service implements FullService
             $settings[$type->value] = $this->getSettings($type);
         }
         return $settings;
+    }
+
+    public function saveSettings(NotificationSettings $settings): void
+    {
+        $existing = $this->getSettings($settings->getType());
+        $this->repos->notificationSettings()->save($settings);
+
+        if ($existing->isActive() && !$settings->isActive()) {
+            $this->repos->notificationQueue()->deleteByAssIdAndType($this->ass_id, $settings->getType());
+        }
     }
 
     public function usersByType(NotificationType $type): array
@@ -94,11 +105,22 @@ readonly class Service implements FullService
     }
 
     /**
-     * @return array placeholder => description
+     * @return array placeholder => lang var
      */
     public function getPlaceholders(): array
     {
-        return [];
+        return [
+            'link' => 'notification_var_link'
+        ];
+    }
+
+    public function getPlaceholderInfo(): string
+    {
+        $lines = [];
+        foreach ($this->getPlaceholders() as $key => $var) {
+            $lines[] = '<strong>[' . $key . ']</strong>: ' . $this->lang->txt($var);
+        }
+        return implode("\n", $lines);
     }
 
     private function fillPlaceholders(string $template, int $user_id, int $writer_id): string

@@ -20,6 +20,8 @@ interface FullService
     /** @return NotificationQueue[] */
     public function queueByType(NotificationType $type): array;
 
+    public function saveSettings(NotificationSettings $settings): void;
+
     /** @param int[] $user_ids */
     public function saveUsers(NotificationType $type, array $user_ids): void;
 
@@ -27,4 +29,10 @@ interface FullService
     public function saveQueue(NotificationType $type, array $user_ids): void;
 
     public function sendFor(NotificationType $type, int $writer_id): void;
+
+    /** @return array placeholder => lang var */
+    public function getPlaceholders(): array;
+
+    public function getPlaceholderInfo(): string;
+
 }

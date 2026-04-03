@@ -30,6 +30,7 @@ use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as WorkingTimeS
 use Edutiek\AssessmentService\Assessment\WorkingTime\IndividualWorkingTime;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterFullService;
 use Edutiek\AssessmentService\Assessment\WritingTask\ReadService as WritingTaskReadService;
+use Edutiek\AssessmentService\System\Language\ReadService as LanguageService;
 
 readonly class ForClients
 {
@@ -70,7 +71,7 @@ readonly class ForClients
         return $this->internal->location($this->ass_id);
     }
 
-    public function norification(): NotificationFullService
+    public function notification(): NotificationFullService
     {
         return $this->internal->notification($this->ass_id, $this->user_id);
     }
@@ -156,5 +157,10 @@ readonly class ForClients
     public function export(int $context_id): ExportFullService
     {
         return $this->internal->export($this->ass_id, $context_id, $this->user_id);
+    }
+
+    public function language(int $user_id)
+    {
+        return $this->internal->language($user_id);
     }
 }

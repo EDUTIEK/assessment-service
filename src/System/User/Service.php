@@ -46,4 +46,9 @@ readonly class Service implements ReadService
     {
         return $this->user_repo->idByLogin($login);
     }
+
+    public function getLoginByUserId(int $id): string
+    {
+        return $this->user_repo->loginById($id);
+    }
 }

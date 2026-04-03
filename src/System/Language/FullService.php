@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Language;
 
-interface FullService
+interface FullService extends ReadService
 {
     /**
      * Add the translations of a language
@@ -24,15 +24,4 @@ interface FullService
      * @param string $code 2-letter language code, e.g. 'en'
      */
     public function setDefaultLanguage(string $code): self;
-
-    /**
-     * Retrun all texts defined for a language as a key/value array
-     */
-    public function all(): array;
-
-    /**
-     * Returns a translated text identified by its key
-     * either in preferred language, in default language or in its original
-     */
-    public function txt(string $key, array $variables = []): string;
 }

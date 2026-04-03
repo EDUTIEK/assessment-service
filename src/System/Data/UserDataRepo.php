@@ -26,5 +26,15 @@ interface UserDataRepo
      */
     public function current(): ?UserData;
 
+    /**
+     * Get a user id by login
+     * A non-existing user returns 0
+     */
     public function idByLogin(string $login): int;
+
+    /**
+     * Get the login by user_id
+     * A non-existing user returns '
+     */
+    public function loginById(int $id): string;
 }

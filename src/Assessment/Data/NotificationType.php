@@ -14,22 +14,31 @@ enum NotificationType: string
     public static function availableTypes(): array
     {
         return  [
-            self::WRITER_CORRECTION_FINALIZED
+            self::WRITER_CORRECTION_FINALIZED,
+            self::ADMIN_STITCH_NEEDED,
         ];
+    }
+
+    public function hasConfiguredUsers(): bool
+    {
+        return in_array($this, [
+           self::ADMIN_STITCH_NEEDED,
+           self::ADMIN_WRITING_AUTHORIZED,
+        ]);
     }
 
     public function titleLangVar(): string
     {
-        return 'notification_title_' . $this->value;
+        return 'notification_' . $this->value . '_title';
     }
 
     public function descriptionLangVar(): string
     {
-        return 'notification_info_' . $this->value;
+        return 'notification_' . $this->value . '_info';
     }
 
     public function subjectLangVar(): string
     {
-        return 'notification_subject_' . $this->value;
+        return 'notification_' . $this->value . '_subject';
     }
 }

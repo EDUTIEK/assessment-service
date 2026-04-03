@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Language;
 
-use Edutiek\AssessmentService\System\Language\FullService;
-
-class Service implements FullService
+class Service implements ReadService, FullService
 {
     private array $texts = [];
     private string $language = '';

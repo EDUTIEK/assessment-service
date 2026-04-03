@@ -23,5 +23,15 @@ interface ReadService
 
     public function getUserDisplaysByIds(array $ids, ?string $back_link): array;
 
+    /**
+     * Get a user id by login
+     * A non-existing user returns 0
+     */
     public function getUserIdByLogin(string $login): int;
+
+    /**
+     * Get the login by user_id
+     * A non-existing user returns ''
+     */
+    public function getLoginByUserId(int $id): string;
 }
