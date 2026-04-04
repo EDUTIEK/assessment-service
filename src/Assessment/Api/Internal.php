@@ -30,6 +30,7 @@ use Edutiek\AssessmentService\Assessment\GradeLevel\Service as GradeLevelService
 use Edutiek\AssessmentService\Assessment\Location\Service as LocationService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 use Edutiek\AssessmentService\Assessment\Manager\Service as ManagerService;
+use Edutiek\AssessmentService\Assessment\Notification\ReviewNotificationsHandler;
 use Edutiek\AssessmentService\Assessment\Notification\Service as NotificationService;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\Service as OrgaSettingsService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\CorrectionReport;
@@ -224,6 +225,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->repositories(),
             $this->workingTimeFactory($user_id),
             $this->logEntry($ass_id),
+            $this->notification($ass_id, $user_id),
             $this->pseudonym($ass_id),
             $this->dependencies->eventDispatcher($ass_id, $user_id),
         );
@@ -471,7 +473,20 @@ class Internal implements ComponentApi, ComponentApiFactory
         return $this->instances[NotificationService::class][$ass_id][$user_id] = new NotificationService(
             $ass_id,
             $this->dependencies->repositories(),
-            $this->language($user_id)
+            $this->orgaSettings($ass_id, $user_id),
+            $this->language($user_id),
+            $this->dependencies->systemApi()->mailDelivery(),
+            $this->dependencies->systemApi()->config(),
+            $this->dependencies->systemApi()->user()
+        );
+    }
+
+    public function reviewNotificationHandler(int $user_id): CronHandler
+    {
+        return $this->instances[ReviewNotificationsHandler::class][$user_id] = new ReviewNotificationsHandler(
+            $user_id,
+            $this,
+            $this->dependencies->repositories(),
         );
     }
 

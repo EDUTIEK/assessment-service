@@ -7,11 +7,13 @@ namespace Edutiek\AssessmentService\Assessment\Writer;
 use DateTimeImmutable;
 use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
+use Edutiek\AssessmentService\Assessment\Data\NotificationType;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\LogEntry\FullService as LogEntryService;
 use Edutiek\AssessmentService\Assessment\LogEntry\MentionUser as LogEntryMention;
 use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
+use Edutiek\AssessmentService\Assessment\Notification\FullService as NotificationService;
 use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\System\Data\Result;
@@ -29,6 +31,7 @@ readonly class Service implements ReadService, FullService
         private Repositories $repos,
         private WorkingTimeFactory $working_time_factory,
         private LogEntryService $log_entry_service,
+        private NotificationService $notification_service,
         private PseudonymService $pseudonym_service,
         private Dispatcher $events
     ) {
@@ -127,6 +130,9 @@ readonly class Service implements ReadService, FullService
                     LogEntryMention::fromWriter($writer)
                 );
             }
+            if (!$was_authorized) {
+//                $this->notification_service->createFor(NotificationType::ADMIN_WRITING_AUTHORIZED, $writer);
+            }
         }
         return $result;
     }
@@ -188,6 +194,12 @@ readonly class Service implements ReadService, FullService
                 LogEntryMention::fromSystem($by_user_id),
                 LogEntryMention::fromWriter($writer)
             );
+        }
+        if ($status === CorrectionStatus::FINALIZED && $old_status !== CorrectionStatus::FINALIZED) {
+//            $this->notification_service->createFor(NotificationType::WRITER_CORRECTION_FINALIZED, $writer);
+        }
+        if ($status === CorrectionStatus::STITCH && $old_status !== CorrectionStatus::STITCH) {
+//            $this->notification_service->createFor(NotificationType::ADMIN_STITCH_NEEDED, $writer);
         }
     }
 

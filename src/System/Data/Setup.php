@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\System\Data;
 
 use DateTimeZone;
+use Edutiek\AssessmentService\System\Config\CronJobId;
 
 /**
  * Setup of the hosting system and the inclusion of the assessment-service
@@ -62,4 +63,9 @@ abstract readonly class Setup
      * Get the default time zone for documentations
      */
     abstract public function getDefaultTimezone(): DateTimeZone;
+
+    /**
+     * Get if a cron job is active
+     */
+    abstract public function isCronJobActive(CronJobId $job_id): bool;
 }

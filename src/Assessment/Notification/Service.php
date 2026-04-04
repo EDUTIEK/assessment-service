@@ -7,16 +7,27 @@ namespace Edutiek\AssessmentService\Assessment\Notification;
 use DateTimeImmutable;
 use Edutiek\AssessmentService\Assessment\Data\NotificationSettings;
 use Edutiek\AssessmentService\Assessment\Data\NotificationType;
+use Edutiek\AssessmentService\Assessment\Data\NotificationUser;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Api\ApiException;
+use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Assessment\OrgaSettings\ReadService as OrgaSettings;
+use Edutiek\AssessmentService\System\Config\CronJobId;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
+use Edutiek\AssessmentService\System\Mail\Delivery as MailDelivery;
+use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
+use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 
 readonly class Service implements FullService
 {
     public function __construct(
         private int $ass_id,
         private Repositories $repos,
+        private OrgaSettings $orga,
         private LanguageService $lang,
+        private MailDelivery $mail,
+        private ConfigService $config,
+        private UserReadService $users,
     ) {
     }
 
@@ -99,32 +110,93 @@ readonly class Service implements FullService
         }
     }
 
-    public function sendFor(NotificationType $type, int $writer_id): void
+    public function createFor(NotificationType $type, ?Writer $writer): void
     {
-        // TODO: Implement sendFor() method.
+        $setting = $this->getSettings($type);
+        if (!$setting->isActive()) {
+            return;
+        }
+
+        $to_ids = [];
+        switch ($type) {
+            case NotificationType::WRITER_CORRECTION_FINALIZED:
+                if ($writer !== null) {
+                    if ($this->orga->reviewPossible()) {
+                        $to_ids[] = $writer->getUserId();
+                    } elseif ($this->orga->get()->getReviewEnabled()) {
+                        if ($this->config->getSetup()->isCronJobActive(CronJobId::REVIEW_NOTIFICATION)) {
+                            $queue = $this->repos->notificationQueue()->new()
+                                ->setAssId($this->ass_id)
+                                ->setType(NotificationType::WRITER_CORRECTION_FINALIZED)
+                                ->setUserId($writer->getUserId())
+                                ->setAdded(new DateTimeImmutable());
+                            $this->repos->notificationQueue()->save($queue);
+                            return;
+                        }
+                    }
+                }
+                break;
+            case NotificationType::ADMIN_STITCH_NEEDED:
+            case NotificationType::ADMIN_WRITING_AUTHORIZED:
+                $to_ids = array_map(
+                    fn(NotificationUser $user) => $user->getUserId(),
+                    $this->repos->notificationUser()->allByAssIdAndType($this->ass_id, $type)
+                );
+        }
+
+        $this->sendDirect($type, $to_ids, $writer);
     }
 
     /**
-     * @return array placeholder => lang var
+     * @param int[] $to_ids
      */
-    public function getPlaceholders(): array
+    public function sendDirect(NotificationType $type, array $to_ids, ?Writer $writer): void
     {
-        return [
-            'link' => 'notification_var_link'
-        ];
+        $setting = $this->getSettings($type);
+
+        foreach ($to_ids as $to_id) {
+            $subject = $this->fillPlaceholders($setting->getSubject(), $type, $to_id, $writer);
+            $body = $this->fillPlaceholders($setting->getBody(), $type, $to_id, $writer);
+            $this->mail->deliver($subject, $body, [$to_id]);
+        }
     }
 
-    public function getPlaceholderInfo(): string
+    /**
+     * Get the info about available placeholders for the given type
+     * @param NotificationType $type
+     * @return string
+     */
+    public function getPlaceholderInfo(NotificationType $type): string
     {
         $lines = [];
-        foreach ($this->getPlaceholders() as $key => $var) {
+        foreach ($type->placeholders() as $key => $var) {
             $lines[] = '<strong>[' . $key . ']</strong>: ' . $this->lang->txt($var);
         }
         return implode("\n", $lines);
     }
 
-    private function fillPlaceholders(string $template, int $user_id, int $writer_id): string
+    private function fillPlaceholders(string $template, NotificationType $type, int $user_id, ?Writer $writer): string
     {
+        $user_data = $this->users->getUser($user_id);
+        $writer_data = $this->users->getUser($writer?->getUserId() ?? 0);
+
+        foreach ($type->placeholders() as $key => $var) {
+            $search = '[' . $key . ']';
+            $replace = match($key) {
+                'title' => $user_data?->getTitle(),
+                'lastname' => $user_data?->getLastname(),
+                'firstname' => $user_data?->getFirstname(),
+                'fullname' => $user_data?->getFullname(false),
+                'writer_login' => $writer_data?->getLogin(),
+                'writer_name' => $writer_data?->getFullname(false),
+                'writer_pseudonym' => $writer->getPseudonym(),
+                'assessment_title' => $this->repos->properties()->one($this->ass_id)?->getTitle(),
+                'assessment_link' => $this->repos->contextInfo()->link($this->ass_id, $user_id),
+            };
+
+            $template = str_replace($search, $replace ?? $search, $template);
+        }
+
         return $template;
     }
 }

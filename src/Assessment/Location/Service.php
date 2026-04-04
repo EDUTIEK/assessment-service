@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Location;
 
@@ -19,9 +19,11 @@ readonly class Service implements FullService
 
     public function one(int $id): ?Location
     {
-       $location = $this->repos->location()->one($id);
-       $this->checkScope($location);
-       return $location;
+        $location = $this->repos->location()->one($id);
+        if ($location !== null) {
+            $this->checkScope($location);
+        }
+        return $location;
     }
 
     public function all(): array
@@ -34,7 +36,7 @@ readonly class Service implements FullService
         return $this->repos->location()->new()->setAssId($this->ass_id);
     }
 
-    public function save(Location $location) : void
+    public function save(Location $location): void
     {
         $this->checkScope($location);
         $this->repos->location()->save($location);
@@ -52,29 +54,30 @@ readonly class Service implements FullService
         return $this->repos->location()->examples();
     }
 
-    public function allTitles() : array
+    public function allTitles(): array
     {
         $titles = [];
-        foreach($this->repos->location()->allByAssId($this->ass_id) as $location) {
+        foreach ($this->repos->location()->allByAssId($this->ass_id) as $location) {
             $titles[$location->getId()] = $location->getTitle();
         }
         sort($titles);
         return array_unique($titles);
     }
 
-    public function saveTitles(array $titles) : void
+    public function saveTitles(array $titles): void
     {
         $existing = [];
-        foreach($this->repos->location()->allByAssId($this->ass_id) as $location) {
+        foreach ($this->repos->location()->allByAssId($this->ass_id) as $location) {
             if (!in_array($location->getTitle(), $titles)) {
                 $this->repos->location()->delete($location->getId());
             } else {
-              $existing[] = $location->getTitle();
+                $existing[] = $location->getTitle();
             }
         }
         foreach ($titles as $title) {
             if (!in_array($title, $existing)) {
-                $this->repos->location()->save($this->repos->location()->new()
+                $this->repos->location()->save(
+                    $this->repos->location()->new()
                 ->setAssId($this->ass_id)
                 ->setTitle($title)
                 );

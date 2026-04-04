@@ -1,2 +1,2 @@
-Die Korrektur Ihrere Abgabe kann eingesehen werden.
-[link]
+Die Korrektur Ihrer Abgabe kann eingesehen werden.
+[assessment_link]

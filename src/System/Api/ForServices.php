@@ -15,6 +15,7 @@ use Edutiek\AssessmentService\System\ImageSketch\FullService as ImageSketchFullS
 use Edutiek\AssessmentService\System\ImageSketch\ImageMagick\Sketch;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageFullService;
 use Edutiek\AssessmentService\System\Log\FullService as LogService;
+use Edutiek\AssessmentService\System\Mail\Delivery as MailDelivery;
 use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverterFullService;
 use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreatorFullService;
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingService;
@@ -101,6 +102,11 @@ class ForServices
     public function log(): LogService
     {
         return $this->dependencies->log();
+    }
+
+    public function mailDelivery(): MailDelivery
+    {
+        return $this->dependencies->mailDelivery();
     }
 
     public function pdfConverter(): PdfConverterFullService

@@ -27,7 +27,23 @@ readonly class Service implements FullService
             $this->repos->orgaSettings()->new()->setAssId($this->ass_id);
     }
 
-    public function validate(OrgaSettings $settings) : Result
+    public function reviewPossible(): bool
+    {
+        $settings = $this->get();
+
+        if ($settings->getReviewStart() !== null &&
+            $settings->getReviewStart()->getTimestamp() > time()) {
+            return false;
+        }
+        if ($settings->getReviewEnd() !== null &&
+            $settings->getReviewEnd()->getTimestamp() < time()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function validate(OrgaSettings $settings): Result
     {
         $this->checkScope($settings);
         $result = new Result();

@@ -48,6 +48,18 @@ class Factory
     }
 
     /**
+     * Get the API for cron jobs
+     * @param int $user_id id of the cron job
+     */
+    public function forCron(int $user_id): ForCron
+    {
+        return $this->instances[ForEvents::class] ??= new ForCron(
+            $user_id,
+            $this->internal()
+        );
+    }
+
+    /**
      * Get the API for REST calls
      */
     public function forRest(): ForRest

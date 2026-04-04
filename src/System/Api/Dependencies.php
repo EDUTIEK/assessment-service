@@ -13,7 +13,9 @@ use Edutiek\AssessmentService\System\Data\UserDisplayRepo;
 use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Log\FullService as Logger;
+use Edutiek\AssessmentService\System\Mail\Delivery as MailDelivery;
 use Edutiek\AssessmentService\System\Session\Storage as SessionStorage;
+use ILIAS\Mail;
 
 interface Dependencies
 {
@@ -29,4 +31,5 @@ interface Dependencies
     public function backgroundTaskManager(): BackgroundTaskManager;
     public function sessionStorage(): SessionStorage;
     public function log(): Logger;
+    public function mailDelivery(): MailDelivery;
 }

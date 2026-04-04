@@ -8,6 +8,7 @@ use Edutiek\AssessmentService\Assessment\Data\NotificationSettings;
 use Edutiek\AssessmentService\Assessment\Data\NotificationType;
 use Edutiek\AssessmentService\Assessment\Data\NotificationUser;
 use Edutiek\AssessmentService\Assessment\Data\NotificationQueue;
+use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
 
 interface FullService
 {
@@ -28,11 +29,9 @@ interface FullService
     /** @param int[] $user_ids */
     public function saveQueue(NotificationType $type, array $user_ids): void;
 
-    public function sendFor(NotificationType $type, int $writer_id): void;
+    public function createFor(NotificationType $type, ?Writer $writer): void;
 
-    /** @return array placeholder => lang var */
-    public function getPlaceholders(): array;
+    public function sendDirect(NotificationType $type, array $to_ids, ?Writer $writer): void;
 
-    public function getPlaceholderInfo(): string;
-
+    public function getPlaceholderInfo(NotificationType $type): string;
 }
