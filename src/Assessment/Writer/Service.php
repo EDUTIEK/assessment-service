@@ -131,7 +131,7 @@ readonly class Service implements ReadService, FullService
                 );
             }
             if (!$was_authorized) {
-//                $this->notification_service->createFor(NotificationType::ADMIN_WRITING_AUTHORIZED, $writer);
+                $this->notification_service->createFor(NotificationType::ADMIN_WRITING_AUTHORIZED, $writer);
             }
         }
         return $result;
@@ -196,10 +196,10 @@ readonly class Service implements ReadService, FullService
             );
         }
         if ($status === CorrectionStatus::FINALIZED && $old_status !== CorrectionStatus::FINALIZED) {
-//            $this->notification_service->createFor(NotificationType::WRITER_CORRECTION_FINALIZED, $writer);
+            $this->notification_service->createFor(NotificationType::WRITER_CORRECTION_FINALIZED, $writer);
         }
         if ($status === CorrectionStatus::STITCH && $old_status !== CorrectionStatus::STITCH) {
-//            $this->notification_service->createFor(NotificationType::ADMIN_STITCH_NEEDED, $writer);
+            $this->notification_service->createFor(NotificationType::ADMIN_STITCH_NEEDED, $writer);
         }
     }
 
