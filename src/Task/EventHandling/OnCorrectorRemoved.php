@@ -28,7 +28,9 @@ readonly class OnCorrectorRemoved implements Handler
      */
     public function handle(Event $event): void
     {
+        $this->repos->correctorPrefs()->delete($event->getCorrectorId());
         $this->repos->correctorTaskPrefs()->deleteByCorrectorId($event->getCorrectorId());
+        $this->repos->correctorTemplates()->deleteByCorrectorId($event->getCorrectorId());
         $this->repos->correctorSnippets()->deleteByCorrectorId($event->getCorrectorId());
         $this->repos->ratingCriterion()->deleteByCorrectorId($event->getCorrectorId());
 

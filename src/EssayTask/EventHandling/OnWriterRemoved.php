@@ -32,7 +32,7 @@ readonly class OnWriterRemoved implements Handler
 
         // use repo, not service  for searching to prevent a scope check
         foreach ($this->repos->essay()->allByWriterId($event->getWriterId()) as $essay) {
-            //his deletes all dependent data and files
+            //this deletes all dependent data and files
             $this->essay_service->delete($essay);
         }
     }

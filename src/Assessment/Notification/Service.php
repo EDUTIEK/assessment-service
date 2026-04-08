@@ -52,6 +52,11 @@ readonly class Service implements FullService
         );
     }
 
+    public function newSettings(): NotificationSettings
+    {
+        return $this->repos->notificationSettings()->new();
+    }
+
     public function allSettings(): array
     {
         $settings = [];
@@ -66,7 +71,7 @@ readonly class Service implements FullService
         $existing = $this->getSettings($settings->getType());
         $this->repos->notificationSettings()->save($settings);
 
-        if ($existing->isActive() && !$settings->isActive()) {
+        if ($existing->getActive() && !$settings->getActive()) {
             $this->repos->notificationQueue()->deleteByAssIdAndType($this->ass_id, $settings->getType());
         }
     }
@@ -113,7 +118,7 @@ readonly class Service implements FullService
     public function createFor(NotificationType $type, ?Writer $writer): void
     {
         $setting = $this->getSettings($type);
-        if (!$setting->isActive()) {
+        if (!$setting->getActive()) {
             return;
         }
 

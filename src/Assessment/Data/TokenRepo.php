@@ -13,5 +13,6 @@ interface TokenRepo
     public function save(Token $entity): void;
     public function delete(int $id): void;
     public function deleteByAssId(int $ass_id): void;
+    public function deleteByUserId(int $user_id): void;
     public function deleteByIdsAndPurpose(int $user_id, int $ass_id, TokenPurpose $purpose): void;
 }

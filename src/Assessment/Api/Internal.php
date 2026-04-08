@@ -456,6 +456,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $ass_id,
             $this->dependencies->repositories(),
             $this->language($user_id),
+            $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id)
         );
     }

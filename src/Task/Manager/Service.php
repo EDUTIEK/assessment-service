@@ -6,13 +6,14 @@ namespace Edutiek\AssessmentService\Task\Manager;
 
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApiFactory;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Task\Api\ApiException;
+use Edutiek\AssessmentService\Task\CorrectionSettings\Service as CorrectionSettingsService;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\Settings;
-use Edutiek\AssessmentService\Task\CorrectionSettings\Service as CorrectionSettingsService;
 
 readonly class Service implements TaskManager, ReadService
 {
@@ -110,11 +111,17 @@ readonly class Service implements TaskManager, ReadService
         $this->repos->correctionSettings()->delete($this->ass_id);
         $this->repos->correctorAssignment()->deleteByTaskId($task_id);
         $this->repos->writerAnnotation()->deleteByTaskId($task_id);
-        $this->repos->correctorSummary()->deleteByTaskId($task_id);
         $this->repos->correctorComment()->deleteByTaskId($task_id);
         $this->repos->correctorPoints()->deleteByTaskId($task_id);
         $this->repos->correctorTaskPrefs()->deleteByTaskId($task_id);
         $this->repos->ratingCriterion()->deleteByTaskId($task_id);
+
+        foreach ($this->repos->correctorSummary()->allByTaskId($task_id) as $summary) {
+            if ($summary->getSummaryPdf() !== null) {
+                $this->storage->deleteFile($summary->getSummaryPdf());
+            }
+            $this->repos->correctorSummary()->delete($summary->getId());
+        }
 
         foreach ($this->repos->resource()->allByTaskId($task_id) as $resource) {
             if ($resource->getFileId() !== null) {
@@ -127,6 +134,30 @@ readonly class Service implements TaskManager, ReadService
             $this->types->api($task_type)
                 ->manager($this->ass_id, $task_id, $this->user_id)
                 ->delete();
+        }
+    }
+
+    public function deleteCommonWriterData(array $writer_ids): void
+    {
+        foreach (TaskType::all() as $task_type) {
+            $this->types->api($task_type)
+                ->manager($this->ass_id, 0, $this->user_id)
+                ->deleteCommonWriterData($writer_ids);
+        }
+    }
+
+    public function deleteCommonCorrectorData(array $corrector_ids): void
+    {
+        foreach ($corrector_ids as $id) {
+            $this->repos->correctorPrefs()->delete($id);
+            $this->repos->correctorSnippets()->deleteByCorrectorId($id);
+            $this->repos->correctorTemplates()->deleteByCorrectorId($id);
+        }
+
+        foreach (TaskType::all() as $task_type) {
+            $this->types->api($task_type)
+                ->manager($this->ass_id, 0, $this->user_id)
+                ->deleteCommonCorrectorData($corrector_ids);
         }
     }
 

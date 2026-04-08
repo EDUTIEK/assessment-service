@@ -12,6 +12,8 @@ use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
 
 interface FullService
 {
+    public function newSettings(): NotificationSettings;
+
     /** @return NotificationSettings[] */
     public function allSettings(): array;
 

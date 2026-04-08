@@ -27,6 +27,10 @@ readonly class OnUserRemoved implements Handler
      */
     public function handle(Event $event): void
     {
+        $this->repos->notificationUser()->deleteByUserId($event->getUserId());
+        $this->repos->notificationQueue()->deleteByUserId($event->getUserId());
+        $this->repos->token()->deleteByUserId($event->getUserId());
+
         foreach ($this->repos->writer()->allByUserId($event->getUserId()) as $writer) {
             $this->internal->writer($writer->getAssId(), $this->user_id)->remove($writer);
         }

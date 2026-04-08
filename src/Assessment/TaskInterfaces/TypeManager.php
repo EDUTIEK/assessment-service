@@ -20,6 +20,18 @@ interface TypeManager
     public function delete(): void;
 
     /**
+     * Delete the task-independent data of writers
+     * @param int[] $writer_ids
+     */
+    public function deleteCommonWriterData(array $writer_ids): void;
+
+    /**
+     * Delete the task-independent data of correctors
+     * @param int[] $corrector_ids
+     */
+    public function deleteCommonCorrectorData(array $corrector_ids): void;
+
+    /**
      * Clone the type specific entities to a new task
      */
     public function clone(int $new_ass_id, int $new_task_id): void;

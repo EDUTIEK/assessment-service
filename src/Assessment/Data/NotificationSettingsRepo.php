@@ -12,4 +12,6 @@ interface NotificationSettingsRepo
     public function allByAssId(int $ass_id): array;
     /** @return Alert[] */
     public function save(NotificationSettings $entity): void;
+
+    public function deleteByAssId(int $ass_id): void;
 }

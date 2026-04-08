@@ -52,6 +52,18 @@ readonly class Service implements \Edutiek\AssessmentService\Assessment\TaskInte
         }
     }
 
+    public function deleteCommonWriterData(array $writer_ids): void
+    {
+        foreach ($writer_ids as $id) {
+            $this->repos->writerPrefs()->delete($id);
+        }
+    }
+
+    public function deleteCommonCorrectorData(array $corrector_ids): void
+    {
+        // nothing to delete
+    }
+
     public function clone(int $new_ass_id, int $new_task_id): void
     {
         // clone the task independent writing and correction settings once for an assessment

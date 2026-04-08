@@ -55,6 +55,18 @@ interface TaskManager
     public function delete(int $task_id): void;
 
     /**
+     * Delete the tasl-independent data of writers
+     * @param int[] $writer_ids
+     */
+    public function deleteCommonWriterData(array $writer_ids): void;
+
+    /**
+     * Delete the task-independent data of correctors
+     * @param int[] $corrector_ids
+     */
+    public function deleteCommonCorrectorData(array $corrector_ids): void;
+
+    /**
      * Clone a task given by its id to a new assessment
      */
     public function clone(int $task_id, int $new_ass_id): void;

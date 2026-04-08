@@ -12,7 +12,7 @@ abstract class NotificationSettings implements AssessmentEntity
     abstract public function setAssId(int $ass_id): self;
     abstract public function getType(): NotificationType;
     abstract public function setType(NotificationType $type): self;
-    abstract public function isActive(): bool;
+    abstract public function getActive(): bool;
     abstract public function setActive(bool $active): self;
     abstract public function getSubject(): string;
     abstract public function setSubject(string $subject): self;

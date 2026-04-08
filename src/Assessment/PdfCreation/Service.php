@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\PdfCreation;
 
+use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Api\ComponentApiFactory;
 use Edutiek\AssessmentService\Assessment\Data\PdfConfig;
 use Edutiek\AssessmentService\Assessment\Data\PdfFormat;
@@ -40,6 +41,24 @@ class Service implements FullService
         private PropetiesReadService $properties,
         private CorrectionReport $correction_report
     ) {
+    }
+
+    public function newConfig(): PdfConfig
+    {
+        return $this->repos->pdfConfig()->new();
+    }
+
+    public function getAllConfig(): array
+    {
+        return $this->repos->pdfConfig()->allByAssId($this->ass_id);
+    }
+
+    public function saveConfig(PdfConfig $config): void
+    {
+        if ($config->getAssId() !== $this->ass_id) {
+            throw new ApiException("wrong ass_id", ApiException::ID_SCOPE);
+        }
+        $this->repos->pdfConfig()->save($config);
     }
 
     public function getSortedParts(PdfPurpose $purpose): array

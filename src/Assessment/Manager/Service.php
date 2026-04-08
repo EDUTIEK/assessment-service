@@ -9,6 +9,7 @@ use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
+use Edutiek\AssessmentService\System\File\Storage as FileStorage;
 
 readonly class Service implements FullService
 {
@@ -16,6 +17,7 @@ readonly class Service implements FullService
         private int $ass_id,
         private Repositories $repos,
         private LanguageService $language,
+        private FileStorage $storage,
         private TaskManager $tasks
     ) {
     }
@@ -62,17 +64,29 @@ readonly class Service implements FullService
             $this->tasks->delete($task->getId());
         }
 
+        $this->tasks->deleteCommonWriterData($this->repos->writer()->idsByAssId($this->ass_id));
+        $this->tasks->deleteCommonCorrectorData($this->repos->corrector()->idsByAssId($this->ass_id));
+
         $this->repos->orgaSettings()->delete($this->ass_id);
         $this->repos->correctionSettings()->delete($this->ass_id);
         $this->repos->pdfSettings()->delete($this->ass_id);
-
+        $this->repos->exportSettings()->delete($this->ass_id);
         $this->repos->alert()->deleteByAssId($this->ass_id);
         $this->repos->corrector()->deleteByAssId($this->ass_id);
+        $this->repos->disabledGroup()->deleteByAssId($this->ass_id);
         $this->repos->gradeLevel()->deleteByAssId($this->ass_id);
         $this->repos->location()->deleteByAssId($this->ass_id);
         $this->repos->logEntry()->deleteByAssId($this->ass_id);
+        $this->repos->notificationSettings()->deleteByAssId($this->ass_id);
+        $this->repos->notificationUser()->deleteByAssId($this->ass_id);
+        $this->repos->notificationQueue()->deleteByAssId($this->ass_id);
+        $this->repos->pdfConfig()->deleteByAssId($this->ass_id);
         $this->repos->token()->deleteByAssId($this->ass_id);
         $this->repos->writer()->deleteByAssId($this->ass_id);
+        foreach ($this->repos->exportFile()->allByAssId($this->ass_id) as $file) {
+            $this->storage->deleteFile($file->getFileId());
+        }
+        $this->repos->exportFile()->deleteByAssId($this->ass_id);
     }
 
     /**
@@ -94,11 +108,20 @@ readonly class Service implements FullService
                 ->setAssId($new_ass_id)
         );
 
+        $this->repos->exportSettings()->save(
+            ($this->repos->exportSettings()->one($this->ass_id) ?? $this->repos->exportSettings()->new())
+                ->setAssId($new_ass_id)
+        );
+
         foreach ($this->repos->disabledGroup()->allByAssId($this->ass_id) as $entity) {
             $this->repos->disabledGroup()->save($entity->setAssId($new_ass_id));
         }
 
         // clone data that is not user-related
+        foreach ($this->repos->notificationSettings()->allByAssId($this->ass_id) as $entity) {
+            $this->repos->notificationSettings()->save($entity->setId(0)->setAssId($new_ass_id));
+        }
+
         foreach ($this->repos->gradeLevel()->allByAssId($this->ass_id) as $entity) {
             $this->repos->gradeLevel()->save($entity->setId(0)->setAssId($new_ass_id));
         }

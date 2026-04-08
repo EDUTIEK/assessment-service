@@ -4,10 +4,27 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\PdfCreation;
 
+use Edutiek\AssessmentService\Assessment\Data\PdfConfig;
 use Edutiek\AssessmentService\Assessment\Data\WritingTask;
 
 interface FullService
 {
+    /**
+     * Get a new PDF configuration entry (for import))
+     */
+    public function newConfig(): PdfConfig;
+
+    /**
+     * Get all PDF configuration entries (for export)
+     * @return PdfConfig[]
+     */
+    public function getAllConfig(): array;
+
+    /**
+     * Save a PDF configuration entry (for import)
+     */
+    public function saveConfig(PdfConfig $config): void;
+
     /**
      * Get the parts for PDF generation, sorted by their position
      * @return PdfConfigPart[]
