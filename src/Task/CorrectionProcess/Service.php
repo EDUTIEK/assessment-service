@@ -11,24 +11,31 @@ use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\LogEntry\MentionUser;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
+use Edutiek\AssessmentService\Assessment\Notification\DeliverService as NotificationService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
+use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorService;
 use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
+use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as AssignmentsService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\ReadService as SummaryService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Edutiek\AssessmentService\Task\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Data\NotificationType;
 
 readonly class Service implements FullService
 {
     public function __construct(
         private int $user_id,
         private Repositories $repos,
+        private AssignmentsService $assignments,
         private WriterService $writer_service,
+        private CorrectorService $corrector_service,
         private WholeProcessService $whole_process,
         private LogEntryService $log_entry,
+        private NotificationService $notification_service,
         private CorrectionSettings $correction_settings,
         private SummaryService $summary_service,
         private LanguageService $language,
@@ -178,10 +185,10 @@ readonly class Service implements FullService
     {
         $changed = false;
 
-//        if ($writer->getCorrectionStatus() === CorrectionStatus::STITCH ||
-//            $writer->isCorrectionFinalized() && $writer->getFinalizedFromStatus() === CorrectionStatus::STITCH) {
-//            return new Result(false, $this->language->txt('authorization_not_removable'));
-//        }
+        //        if ($writer->getCorrectionStatus() === CorrectionStatus::STITCH ||
+        //            $writer->isCorrectionFinalized() && $writer->getFinalizedFromStatus() === CorrectionStatus::STITCH) {
+        //            return new Result(false, $this->language->txt('authorization_not_removable'));
+        //        }
 
         // remove authorizations
         foreach ($this->repos->correctorSummary()->allByTaskIdAndWriterId($task_id, $writer->getId()) as $summary) {
@@ -277,7 +284,7 @@ readonly class Service implements FullService
         if ($this->correction_settings->getNoManualDecimals()
             && (floor($summary->getPoints() ?? 0) < $summary->getPoints() ?? 0 ||
                 floor($summary->getRevisionPoints() ?? 0) < $summary->getRevisionPoints() ?? 0)
-            ) {
+        ) {
             $result->addFailure($this->language->txt('points_must_not_have_decimals'));
         }
 
@@ -295,7 +302,19 @@ readonly class Service implements FullService
             );
         }
 
-        $this->whole_process->updateStatus($writer);
+        $status = $this->whole_process->updateStatus($writer);
+
+        if ($status === CorrectionStatus::APPROXIMATION || $status === CorrectionStatus::CONSULTING) {
+            if (!$old->isRevised() && $summary->isRevised() && $summary->getRequireOtherRevision()) {
+                foreach ($this->assignments->allByTaskIdAndWriterId($summary->getTaskId(), $summary->getWriterId()) as $assignment) {
+                    if ($assignment->getPosition() === GradingPosition::SECOND) {
+                        $corrector = $this->corrector_service->oneById($assignment->getCorrectorId());
+                        $this->notification_service->createFor(NotificationType::CORRECTOR_PROCEDURE_STARTED, $writer, $corrector);
+                    }
+                }
+            }
+        }
+
         return $result;
     }
 }

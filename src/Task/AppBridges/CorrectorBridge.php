@@ -616,7 +616,8 @@ class CorrectorBridge implements AppCorrectorBridge
             return $change->toResponse(false, 'wrong scope');
         }
 
-        $summary = $this->summary_service->getForAssignment($assignment);
+        // clone to allow old/new comparison in checkAndSaveSummary
+        $summary = clone($this->summary_service->getForAssignment($assignment));
 
         $this->entity->fromPrimitives([
             'task_id' => $data['task_id'] ?? null,

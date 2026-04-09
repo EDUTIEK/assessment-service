@@ -11,12 +11,15 @@ use Edutiek\AssessmentService\Assessment\Data\NotificationUser;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\ReadService as OrgaSettings;
+use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettings;
 use Edutiek\AssessmentService\System\Config\CronJobId;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\System\Mail\Delivery as MailDelivery;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionProcedure;
 
 readonly class Service implements FullService
 {
@@ -24,6 +27,7 @@ readonly class Service implements FullService
         private int $ass_id,
         private Repositories $repos,
         private OrgaSettings $orga,
+        private CorrectionSettings $correction,
         private LanguageService $lang,
         private MailDelivery $mail,
         private ConfigService $config,
@@ -31,10 +35,19 @@ readonly class Service implements FullService
     ) {
     }
 
-    private function defaultTemplate(NotificationType $type)
+    private function defaultTemplate(NotificationType $type, ?CorrectionProcedure $procedure = null)
     {
-        if (file_exists(__DIR__ . '/templates/' . $type->value . '.txt')) {
-            return file_get_contents(__DIR__ . '/templates/' . $type->value . '.txt');
+        if ($type === NotificationType::CORRECTOR_PROCEDURE_STARTED) {
+            $file = match($procedure) {
+                CorrectionProcedure::APPROXIMATION => 'corrector_approximation_started.txt',
+                CorrectionProcedure::CONSULTING => 'corrector_consulting_started.txt',
+                default => $type->value . '.txt',
+            };
+        } else {
+            $file = $type->value . '.txt';
+        }
+        if (file_exists(__DIR__ . '/templates/' . $file)) {
+            return file_get_contents(__DIR__ . '/templates/' . $file);
         }
         return null;
     }
@@ -46,9 +59,9 @@ readonly class Service implements FullService
             $settings = $this->repos->notificationSettings()->new()
                         ->setAssId($this->ass_id)
                         ->setType($type)
-                        ->setActive(false)
-                        ->setSubject($this->lang->txt($type->subjectLangVar()))
-                        ->setBody($this->defaultTemplate($type));
+                        ->setActive($type->defaultActive())
+                        ->setSubject($this->lang->txt($type->subjectLangVar($this->correction->get()->getProcedure())))
+                        ->setBody($this->defaultTemplate($type, $this->correction->get()->getProcedure()));
             // this is needed to get a valid id in the settings
             $this->repos->notificationSettings()->save($settings);
         }
@@ -125,7 +138,7 @@ readonly class Service implements FullService
         }
     }
 
-    public function createFor(NotificationType $type, ?Writer $writer): void
+    public function createFor(NotificationType $type, ?Writer $writer = null, ?Corrector $corrector = null): void
     {
         $setting = $this->getSettings($type);
         if (!$setting->getActive()) {
@@ -157,6 +170,15 @@ readonly class Service implements FullService
                     fn(NotificationUser $user) => $user->getUserId(),
                     $this->repos->notificationUser()->allByAssIdAndType($this->ass_id, $type)
                 );
+                break;
+
+            case NotificationType::CORRECTOR_WRITING_CHANGED:
+            case NotificationType::CORRECTOR_PROCEDURE_STARTED:
+            case NotificationType::CORRECTOR_AUTHORIZATION_REMOVED:
+                if ($corrector !== null) {
+                    $to_ids[] = $corrector->getUserId();
+                }
+                break;
         }
 
         $this->sendDirect($type, $to_ids, $writer);

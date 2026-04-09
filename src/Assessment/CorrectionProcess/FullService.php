@@ -3,6 +3,7 @@
 namespace Edutiek\AssessmentService\Assessment\CorrectionProcess;
 
 use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
 
 interface FullService
 {
@@ -11,5 +12,5 @@ interface FullService
     /**
      * Update the writer's correction status when a corrector summary is changed
      */
-    public function updateStatus(Writer $writer);
+    public function updateStatus(Writer $writer): CorrectionStatus;
 }

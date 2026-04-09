@@ -1,2 +1,3 @@
 Die Korrektur Ihrer Abgabe kann eingesehen werden.
-[assessment_link]
+
+Link zur Aufgabe: [assessment_link]

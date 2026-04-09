@@ -1,2 +1,5 @@
 Ein Teilnehmer hat abgegeben.
-[assessment_link]
+
+Aufgabe: [assessment_title]
+Teilnehmer: [writer_name] ([writer_login])
+Link zur Aufgabe: [assessment_link]

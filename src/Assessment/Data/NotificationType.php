@@ -15,6 +15,7 @@ enum NotificationType: string
     {
         return  [
             self::WRITER_CORRECTION_FINALIZED,
+            self::CORRECTOR_PROCEDURE_STARTED,
             self::ADMIN_WRITING_AUTHORIZED,
             self::ADMIN_STITCH_NEEDED,
         ];
@@ -28,18 +29,52 @@ enum NotificationType: string
         ]);
     }
 
-    public function titleLangVar(): string
+    public function defaultActive(): bool
     {
+        return match($this) {
+            self::CORRECTOR_PROCEDURE_STARTED => true,
+            self::CORRECTOR_AUTHORIZATION_REMOVED => true,
+            self::CORRECTOR_WRITING_CHANGED => true,
+            self::WRITER_CORRECTION_FINALIZED => false,
+            self::ADMIN_STITCH_NEEDED => false,
+            self::ADMIN_WRITING_AUTHORIZED => false,
+            default => false,
+        };
+    }
+
+    public function titleLangVar(?CorrectionProcedure $procedure = null): string
+    {
+        if ($this === self::CORRECTOR_PROCEDURE_STARTED) {
+            return match($procedure) {
+                CorrectionProcedure::APPROXIMATION => 'notification_corrector_approximation_started_title',
+                CorrectionProcedure::CONSULTING => 'notification_corrector_consulting_started_title',
+                default => 'notification_' . $this->value . '_title',
+            };
+        }
         return 'notification_' . $this->value . '_title';
     }
 
-    public function descriptionLangVar(): string
+    public function descriptionLangVar(?CorrectionProcedure $procedure = null): string
     {
+        if ($this === self::CORRECTOR_PROCEDURE_STARTED) {
+            return match($procedure) {
+                CorrectionProcedure::APPROXIMATION => 'notification_corrector_approximation_started_info',
+                CorrectionProcedure::CONSULTING => 'notification_corrector_consulting_started_info',
+                default => 'notification_' . $this->value . '_info',
+            };
+        }
         return 'notification_' . $this->value . '_info';
     }
 
-    public function subjectLangVar(): string
+    public function subjectLangVar(?CorrectionProcedure $procedure = null): string
     {
+        if ($this === self::CORRECTOR_PROCEDURE_STARTED) {
+            return match($procedure) {
+                CorrectionProcedure::APPROXIMATION => 'notification_corrector_approximation_started_subject',
+                CorrectionProcedure::CONSULTING => 'notification_corrector_consulting_started_subject',
+                default => 'notification_' . $this->value . '_subject',
+            };
+        }
         return 'notification_' . $this->value . '_subject';
     }
 

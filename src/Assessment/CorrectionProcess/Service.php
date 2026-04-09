@@ -8,6 +8,8 @@ use Edutiek\AssessmentService\Assessment\Data\CorrectionProcedure;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
+use Edutiek\AssessmentService\Assessment\Corrector\FullService as CorrectorService;
+use Edutiek\AssessmentService\Assessment\Notification\FullService as NotificationService;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
@@ -16,13 +18,14 @@ use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\Grading;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingProvider;
+use Edutiek\AssessmentService\Assessment\Data\NotificationType;
 
 /**
  * Service for managing the correction process of a writer.
  * This is used by the CorrectionProcess service of a task
  * It should not be offered to the client directly
  */
-class Service implements FullService
+readonly class Service implements FullService
 {
     public function __construct(
         private int $ass_id,
@@ -30,6 +33,8 @@ class Service implements FullService
         private Repositories $repos,
         private SettingsService $settings_service,
         private WriterService $writer_service,
+        private CorrectorService $corrector_service,
+        private NotificationService $notification_service,
         private TaskManager $task_manager,
         private GradingProvider $grading_provider
     ) {
@@ -48,10 +53,11 @@ class Service implements FullService
         }
     }
 
-    public function updateStatus(Writer $writer)
+    public function updateStatus(Writer $writer): CorrectionStatus
     {
-        if ($writer->getCorrectionStatus() === CorrectionStatus::FINALIZED) {
-            return;
+        $status = $writer->getCorrectionStatus();
+        if ($status === CorrectionStatus::FINALIZED) {
+            return $status;
         }
 
         $settings = $this->settings_service->get();
@@ -65,15 +71,23 @@ class Service implements FullService
             list($status, $points) = $this->calculateTask($writer, $settings, $gradings);
             switch ($status) {
                 case CorrectionStatus::OPEN:
-                    // whole status will not change if a partial status is open
-                    return;
+                    // the whole status will not change if a partial status is open
+                    return $status;
 
                 case CorrectionStatus::APPROXIMATION:
                 case CorrectionStatus::CONSULTING:
-                case CorrectionStatus::STITCH:
-                    // this should only happen with single task => set the status directly
+                    if ($writer->getCorrectionStatus() === CorrectionStatus::OPEN) {
+                        $first = $gradings[GradingPosition::FIRST->value] ?? null;
+                        $corrector = $this->corrector_service->oneById($first?->getCorrectorId() ?? 0);
+                        $this->notification_service->createFor(NotificationType::CORRECTOR_PROCEDURE_STARTED, $writer, $corrector);
+                    }
                     $this->writer_service->changeCorrectionStatus($writer, $status, $this->user_id);
-                    return;
+                    return $status;
+
+                case CorrectionStatus::STITCH:
+                    // this should only happen with a single task => set the status directly
+                    $this->writer_service->changeCorrectionStatus($writer, $status, $this->user_id);
+                    return $status;
 
                 case CorrectionStatus::FINALIZED:
                     $sum_of_points += $points * $task->getWeight();
@@ -83,11 +97,13 @@ class Service implements FullService
         }
 
         // all tasks are finalized, calculate the final points
-        if ($sum_of_weights > 0) {
+        if ($status === CorrectionStatus::FINALIZED && $sum_of_weights > 0) {
             $writer->setFinalPoints($sum_of_points / $sum_of_weights);
             $this->repos->writer()->save($writer);
             $this->writer_service->changeCorrectionStatus($writer, $status, $this->user_id);
         }
+
+        return $status;
     }
 
     /**
@@ -115,7 +131,7 @@ class Service implements FullService
             }
         }
 
-        // multi corectors
+        // multi correctors
         switch ($writer->getCorrectionStatus()) {
             case CorrectionStatus::OPEN:
 

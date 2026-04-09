@@ -375,6 +375,8 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->repositories(),
             $this->correctionSettings($ass_id, $user_id),
             $this->writer($ass_id, $user_id),
+            $this->corrector($ass_id, $user_id),
+            $this->notification($ass_id, $user_id),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->dependencies->taskApi()->gradingProvider($ass_id, $user_id)
         );
@@ -475,6 +477,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $ass_id,
             $this->dependencies->repositories(),
             $this->orgaSettings($ass_id, $user_id),
+            $this->correctionSettings($ass_id, $user_id),
             $this->language($user_id),
             $this->dependencies->systemApi()->mailDelivery(),
             $this->dependencies->systemApi()->config(),

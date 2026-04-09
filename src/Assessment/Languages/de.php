@@ -144,4 +144,10 @@ return [
     'notification_admin_writing_authorized_title' => 'Neue Abgabe',
     'notification_admin_writing_authorized_info' => 'Wird an ausgewählte Benutzer gesendet, wenn ein Teilnehmer abgegeben hat.',
     'notification_admin_writing_authorized_subject' => 'Neue Abgabe',
+    'notification_corrector_approximation_started_title' => 'Teilnahme am Annäherungsverfahren',
+    'notification_corrector_approximation_started_info' => 'Wird an einen Korrektoren gesendet, wenn seine Teilnahme am Annäherungsverfahren erforderlich ist.',
+    'notification_corrector_approximation_started_subject' => 'Teilnahme am Annäherungsverfahren',
+    'notification_corrector_consulting_started_title' => 'Teilnahme am Beratungsverfahren',
+    'notification_corrector_consulting_started_info' => 'Wird an einen Korrektoren gesendet, wenn seine Teilnahme am Beratungsverfahren erforderlich ist.',
+    'notification_corrector_consulting_started_subject' => 'Teilnahme am Beratungsverfahren'
 ];

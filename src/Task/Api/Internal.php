@@ -116,9 +116,12 @@ class Internal implements RatingCriterionServiceFactory
         return $this->instances[CorrectionProcessService::class][$ass_id][$user_id] ??= new CorrectionProcessService(
             $user_id,
             $this->dependencies->repositories(),
+            $this->correctorAssignments($ass_id, $user_id),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionProcess(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->logEntry(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->notification(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
             $this->correctorSummary($ass_id, $user_id),
             $this->language($user_id),

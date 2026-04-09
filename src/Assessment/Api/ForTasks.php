@@ -9,6 +9,7 @@ use Edutiek\AssessmentService\Assessment\CorrectionProcess\FullService as Correc
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
 use Edutiek\AssessmentService\Assessment\Corrector\FullService as CorrectorService;
 use Edutiek\AssessmentService\Assessment\LogEntry\TasksService as LogEntryTasksService;
+use Edutiek\AssessmentService\Assessment\Notification\DeliverService as NotificationService;
 use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsReadService;
@@ -73,5 +74,10 @@ readonly class ForTasks
     public function orgaSettings(): OrgaSettingsService
     {
         return $this->internal->orgaSettings($this->ass_id, $this->user_id);
+    }
+
+    public function notification(): NotificationService
+    {
+        return $this->internal->notification($this->ass_id, $this->user_id);
     }
 }
