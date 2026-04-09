@@ -16,6 +16,7 @@ enum NotificationType: string
         return  [
             self::WRITER_CORRECTION_FINALIZED,
             self::CORRECTOR_PROCEDURE_STARTED,
+            self::CORRECTOR_AUTHORIZATION_REMOVED,
             self::ADMIN_WRITING_AUTHORIZED,
             self::ADMIN_STITCH_NEEDED,
         ];

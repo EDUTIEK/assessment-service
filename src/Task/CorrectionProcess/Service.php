@@ -196,6 +196,11 @@ readonly class Service implements FullService
                 $summary->setGradingStatus(GradingStatus::OPEN, $this->user_id);
                 $this->repos->correctorSummary()->save($summary);
                 $changed = true;
+
+                $corrector = $this->corrector_service->oneById($summary->getCorrectorId());
+                if ($corrector !== null && $corrector->getUserId() !== $this->user_id) {
+                    $this->notification_service->createFor(NotificationType::CORRECTOR_AUTHORIZATION_REMOVED, $writer, $corrector);
+                }
             }
         }
 
