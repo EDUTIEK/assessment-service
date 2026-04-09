@@ -14,6 +14,10 @@ interface FullService
 {
     public function newSettings(): NotificationSettings;
 
+    public function settingsById(int $id): ?NotificationSettings;
+
+    public function getSettings(NotificationType $type): NotificationSettings;
+
     /** @return NotificationSettings[] */
     public function allSettings(): array;
 

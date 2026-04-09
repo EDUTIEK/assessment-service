@@ -41,20 +41,30 @@ readonly class Service implements FullService
 
     public function getSettings(NotificationType $type): NotificationSettings
     {
-        // use clone because a save chechs the sttings before
-        return clone($this->repos->notificationSettings()->oneByAssIdAndType($this->ass_id, $type)
-            ?? $this->repos->notificationSettings()->new()
-                ->setAssId($this->ass_id)
-                ->setType($type)
-                ->setActive(false)
-                ->setSubject($this->lang->txt($type->subjectLangVar()))
-                ->setBody($this->defaultTemplate($type))
-        );
+        $settings = $this->repos->notificationSettings()->oneByAssIdAndType($this->ass_id, $type);
+        if (!isset($settings)) {
+            $settings = $this->repos->notificationSettings()->new()
+                        ->setAssId($this->ass_id)
+                        ->setType($type)
+                        ->setActive(false)
+                        ->setSubject($this->lang->txt($type->subjectLangVar()))
+                        ->setBody($this->defaultTemplate($type));
+            // this is needed to get a valid id in the settings
+            $this->repos->notificationSettings()->save($settings);
+        }
+
+        // use clone because a save checks the settings before
+        return clone($settings);
     }
 
     public function newSettings(): NotificationSettings
     {
         return $this->repos->notificationSettings()->new();
+    }
+
+    public function settingsById(int $id): ?NotificationSettings
+    {
+        return $this->repos->notificationSettings()->one($id);
     }
 
     public function allSettings(): array
