@@ -5,6 +5,7 @@ namespace Edutiek\AssessmentService\Task\EventHandling;
 use Edutiek\AssessmentService\System\EventHandling\AbstractObserver;
 use Edutiek\AssessmentService\Task\Api\Internal;
 use Edutiek\AssessmentService\Task\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Api\ForTasks;
 use Edutiek\AssessmentService\System\File\Storage;
 
 class Observer extends AbstractObserver
@@ -14,11 +15,18 @@ class Observer extends AbstractObserver
         int $user_id,
         Internal $internal,
         Repositories $repos,
+        ForTasks $assessment_api,
         Storage $storage
     ) {
         $this->registerHandler(OnWriterRemoved::class, fn() => new OnWriterRemoved(
             $internal->correctorAssignments($ass_id, $user_id),
             $repos
+        ));
+
+        $this->registerHandler(OnWritingContentChanged::class, fn() => new OnWritingContentChanged(
+            $internal->correctorAssignments($ass_id, $user_id),
+            $repos,
+            $assessment_api
         ));
 
         $this->registerHandler(OnCorrectorRemoved::class, fn() => new OnCorrectorRemoved(

@@ -224,6 +224,7 @@ class Internal implements RatingCriterionServiceFactory
             $user_id,
             $this,
             $this->dependencies->repositories(),
+            $this->dependencies->assessmentApi($ass_id, $user_id),
             $this->dependencies->systemApi()->fileStorage(),
         );
     }

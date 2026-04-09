@@ -8,7 +8,9 @@ use DateTimeImmutable;
 use Edutiek\AssessmentService\System\EventHandling\Event;
 
 /**
- * This event must be raised when the content provided by a writer is changed
+ * This event is raised when the content provided by a writer is changed
+ * Currently only raised when a PDF file is uploaded
+ * Normal writing steps sent by the web app don't raise this event
  */
 readonly class WritingContentChanged implements Event
 {

@@ -28,7 +28,11 @@ readonly class OnWritingContentChanged implements Handler
     public function handle(Event $event): void
     {
         $writer = $this->writer_service->oneByWriterId($event->getWriterId());
-        $this->writer_service->removeCorrectionFinalisation($writer, $this->user_id);
-        $this->writer_service->removeWritingAuthorization($writer);
+        if ($writer->isCorrectionFinalized()) {
+            $this->writer_service->removeCorrectionFinalisation($writer, $this->user_id);
+        }
+        if ($writer->isAuthorized()) {
+            $this->writer_service->removeWritingAuthorization($writer);
+        }
     }
 }

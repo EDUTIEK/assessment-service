@@ -152,5 +152,9 @@ return [
     'notification_corrector_consulting_started_subject' => 'Teilnahme am Beratungsverfahren',
     'notification_corrector_authorization_removed_title' => 'Korrektur-Freigabe zurückgezogen',
     'notification_corrector_authorization_removed_info' => 'Wird an einen Korrektoren gesendet, wenn seine Korrektur-Freigabe durch eine andere Person zurückgezogen wurde.',
-    'notification_corrector_authorization_removed_subject' => 'Korrektur-Freigabe zurückgezogen'
+    'notification_corrector_authorization_removed_subject' => 'Korrektur-Freigabe zurückgezogen',
+    'notification_corrector_writing_changed_title' => 'Abgabe geändert',
+    'notification_corrector_writing_changed_info' => 'Wird an einen Korrektoren gesendet, wenn die Abgabe zu seine Korrektur nachträglich geändert wurde.',
+    'notification_corrector_writing_changed_subject' => 'Abgabe geändert'
+
 ];
