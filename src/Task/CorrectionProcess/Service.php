@@ -262,7 +262,8 @@ readonly class Service implements FullService
                     if ($summary->getRevisionPoints() === null) {
                         $result->addFailure($this->language->txt('points_missing'));
                     }
-                    if (empty($summary->getRevisionText())) {
+                    if (empty($summary->getRevisionText())
+                        && $assignment->getPosition()->canEnterRevisionText($this->correction_settings->getProcedure())) {
                         $result->addFailure($this->language->txt('revision_text_missing'));
                     }
                     break;

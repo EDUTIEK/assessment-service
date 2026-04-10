@@ -8,6 +8,7 @@ use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as AssessmentSettingsService;
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorReadService;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionProcedure;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings as AssesmentCorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
@@ -293,6 +294,8 @@ class CorrectorBridge implements AppCorrectorBridge
                 if ($corrector) {
                     $user = $this->user_service->getUser($corrector->getUserId());
 
+
+
                     // correctors are loaded per item, so we can add the position here
                     // a corrector with the same corrector id may be sent
                     $data['Corrections'][] = $this->entity->arrayToPrimitives([
@@ -304,6 +307,9 @@ class CorrectorBridge implements AppCorrectorBridge
                            ?? $this->language->txt($assignment->getPosition()->languageVariable()),
                        'initials' => $user->getInitials() ?? $this->language->txt($assignment->getPosition()->initialsLanguageVariable()),
                        'position' => $assignment->getPosition()->value,
+                       'can_enter_revision_text' => $assignment->getPosition()->canEnterRevisionText(
+                           $this->assessment_settings->getProcedure()
+                       ),
                     ]);
 
                     $summary = $this->summary_service->getForAssignment($assignment);

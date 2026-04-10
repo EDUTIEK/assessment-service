@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
 
+use Edutiek\AssessmentService\Assessment\Data\CorrectionProcedure;
+
 enum GradingPosition: int
 {
     /**
@@ -74,4 +76,14 @@ enum GradingPosition: int
     {
         return $this === self::STITCH;
     }
+
+    public function canEnterRevisionText(CorrectionProcedure $procedure): bool
+    {
+        return match ($procedure) {
+            CorrectionProcedure::APPROXIMATION => true,
+            CorrectionProcedure::CONSULTING => $this === self::SECOND,
+            CorrectionProcedure::NONE => false
+        };
+    }
+
 }
