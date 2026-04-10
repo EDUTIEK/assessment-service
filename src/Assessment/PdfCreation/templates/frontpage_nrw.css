@@ -1,0 +1,138 @@
+p {
+    margin-top: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.ljpa1 {
+    text-align: center;
+    font-size: 8;
+}
+
+.ljpa2 {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 2cm;
+    text-align: center;
+    font-size: 8;
+}
+
+.block1 {
+    margin-top: 1cm;
+}
+
+.fill1 {
+    font-size:12;
+    font-weight: bold;
+    position: absolute;
+    margin: 0;
+    margin-top: -0.2cm;
+    padding: 0;
+}
+
+.exam1 {
+    font-size: 12;
+    position: relative;
+    left: 6cm;
+    margin-top: 0;
+    margin-bottom: 0.5cm;
+}
+
+.label1 {
+    display: inline-block;
+    position: relative;
+    width: 4cm;
+}
+
+.underline1 {
+    display:inline-block;
+    border-bottom: 1px solid black;
+    position: relative;
+    width: 6cm;
+}
+
+.block2 {
+    left: 0;
+    right: 0;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
+    margin-top: 1.5cm;
+    padding: 0.5cm;
+    text-align: center;
+    font-size: 12;
+}
+
+.block3 {
+    margin-top: 1.5cm;
+    font-size: 10;
+}
+
+.fill3 {
+    font-size: 12;
+    font-weight: bold;
+}
+
+.box3 {
+    border: 1px solid black;
+    padding: 0.3cm;
+}
+
+.author3 {
+    margin-top: 1cm;
+    border-bottom: 1px solid black;
+    color: red;
+    width: 100%;
+}
+
+.date3 {
+    margin-top: 1cm;
+}
+
+.label3 {
+    display: inline-block;
+    width: 3cm;
+}
+
+.underline3 {
+    display: inline-block;
+    border-bottom: 1px solid black;
+    width: 4cm;
+}
+
+.block4 {
+    margin-top: 1.5cm;
+    font-size: 10;
+}
+
+.fill4 {
+    font-size: 12;
+    font-weight: bold;
+}
+
+.box4 {
+    border: 1px solid black;
+    padding: 0.3cm;
+}
+
+.corrector4 {
+    margin-top: 1cm;
+    width: 100%;
+}
+
+.label4 {
+    display: inline-block;
+    width: 3.5cm;
+}
+
+.underline4 {
+    display: inline-block;
+    border-bottom: 1px solid black;
+    width: 11.5cm;
+    color: red;
+}
+
+

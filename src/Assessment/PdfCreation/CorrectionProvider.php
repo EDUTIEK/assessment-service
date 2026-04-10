@@ -79,6 +79,17 @@ readonly class CorrectionProvider implements PdfPartProvider
                     ->withPrintFooter(false));
                 break;
 
+            case PdfFormat::NRW:
+                $html = $this->fillTemplate($data, 'frontpage_nrw.html', 'frontpage_nrw.css');
+                return $this->pdf_processing->create($html, (new Options())
+                    ->withLeftMargin(30)
+                    ->withRightMargin(20)
+                    ->withTopMargin(10)
+                    ->withBottomMargin(10)
+                    ->withPrintHeader(false)
+                    ->withPrintFooter(false));
+                break;
+
             default:
                 $html = $this->fillTemplate($data, 'frontpage_edutiek.html', 'frontpage.css');
                 return $this->pdf_processing->create($html, (new Options())
@@ -103,7 +114,8 @@ readonly class CorrectionProvider implements PdfPartProvider
         $context = $this->repos->contextInfo()->get($this->context_id);
         $data['context'] = [
             'title' => $context->getParentTitle(),
-            'description' => $context->getParentDescription()
+            'description' => $context->getParentDescription(),
+            'date' => $this->format->docDate(new \DateTimeImmutable())
         ];
 
         $properties = $this->repos->properties()->one($this->ass_id);
@@ -125,7 +137,8 @@ readonly class CorrectionProvider implements PdfPartProvider
             'login' => $user?->getLogin(),
             'matriculation' => $user?->getMatriculation(),
             'email' => $user?->getEmail(),
-            'authorization' => $this->format->date($writer?->getWritingAuthorized())
+            'start' => $this->format->docDate($writer->getWorkingStart()),
+            'authorization' => $this->format->docDate($writer?->getWritingAuthorized())
         ];
 
         $level = $this->assessment_grading->getGradLevelForPoints($writer->getFinalPoints());

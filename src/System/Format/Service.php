@@ -27,6 +27,11 @@ readonly class Service implements FullService
         return  $date ? $date->setTimezone($this->timezone)->format('Y-m-d H:i:s') : '';
     }
 
+    public function docDate(?DateTimeInterface $date): string
+    {
+        return $date ? $date->setTimezone($this->timezone)->format('d.m.Y') : '';
+    }
+
     public function date(?\DateTimeInterface $date): string
     {
         return $date ? ($this->format_date)($date) : '';

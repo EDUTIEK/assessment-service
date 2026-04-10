@@ -14,6 +14,11 @@ interface FullService
     public function logDate(?DateTimeInterface $date): string;
 
     /**
+     * Format a date for documentation (no relative dates)
+     */
+    public function docDate(?DateTimeInterface $date): string;
+
+    /**
      * Format a date for display in the user interface
      */
     public function date(?DateTimeInterface $date): string;

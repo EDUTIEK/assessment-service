@@ -1,0 +1,76 @@
+<p class="ljpa1">
+    Landesjustizprüfungsamt Nordrhein-Westfalen, Martin-Luther-Platz 40, 40212 Düsseldorf
+</p>
+
+<div class="block1">
+    <p class="fill1">
+        Ggf. vom Prüfling<br />
+        auszufüllen:
+    </p>
+
+    <p class="exam1"><span class="label1">Aufsichtsarbeit</span><span class="underline1">
+        {{#assessment}}{{title}}{{/assessment}}
+    </span></p>
+    <p class="exam1"><span class="label1">Datum</span><span class="underline1">
+        {{#writer}}{{authorization}}{{/writer}}</span></p>
+    <p class="exam1 bold"><span class="label1">Kennziffer</span><span class="underline1">
+        {{#writer}}{{login}}{{/writer}}
+        </span></p>
+</div>
+
+<div class="block2">
+    <p>In der aus der Niederschrift ersichtlichen Bearbeitungszeit <br />unter Aufsicht angefertigt.</p>
+</div>
+
+<div class="block3">
+    <p class="fill3">
+        Vom LJPA<br />
+        auszufüllen:
+    </p>
+    <div class="box3">
+        <p>Nach abgschlossener Bewetung anhand des Kennziffernverzeichnisses festgestellte/r Verfasser/in:</p>
+        <p class="author3">
+            {{#writer}}
+                {{#anonymous}}{{pseudonym}}{{/anonymous}}
+                {{^anonymous}}{{fullname}}{{/anonymous}}
+            {{/writer}}
+        </p>
+        <p class="date3">
+            <span class="label3">Düsseldorf, den</span>
+            <span class="underline3">{{#context}}{{date}}{{/context}}</span>
+        </p>
+    </div>
+</div>
+
+<div class="block4">
+    <p class="fill4">
+        Von den Prüferinnen und Prüfern<br />
+        auszufüllen:
+    </p>
+    <div class="box3">
+        <p class="corrector4">
+            <span class="label4">Erstkorrektor/in</span>
+            <span class="underline4">
+                {{#corrector1}}
+                    {{#anonymous}}{{pseudonym}}{{/anonymous}}
+                    {{^anonymous}}{{fullname}}{{/anonymous}}
+                {{/corrector1}}
+            </span>
+        </p>
+        <p class="corrector4">
+            <span class="label4">Zweitkorrektor/in</span>
+            <span class="underline4">
+                {{#corrector2}}
+                    {{#anonymous}}{{pseudonym}}{{/anonymous}}
+                    {{^anonymous}}{{fullname}}{{/anonymous}}
+                {{/corrector2}}
+            </span>
+        </p>
+    </div>
+</div>
+
+
+<p class="ljpa2">
+    Landesjustizprüfungsamt Nordrhein-Westfalen, Martin-Luther-Platz 40, 40212 Düsseldorf
+</p>
+
