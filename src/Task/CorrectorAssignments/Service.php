@@ -3,12 +3,14 @@
 namespace Edutiek\AssessmentService\Task\CorrectorAssignments;
 
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorService;
+use Edutiek\AssessmentService\Assessment\Data\AssignFilter;
 use Edutiek\AssessmentService\Assessment\Data\AssignMode;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
 use Edutiek\AssessmentService\System\EventHandling\Events\AssignmentRemoved;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
+use Edutiek\AssessmentService\Task\Api\ApiException;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
@@ -54,25 +56,17 @@ readonly class Service implements FullService
         return $this->repos->correctorAssignment()->allByTaskIdAndWriterId($task_id, $writer_id);
     }
 
-    public function countMissingCorrectors(): int
+    public function countMissingAssignments(): int
     {
-        $required = $this->correction_settings->getRequiredCorrectors();
-        $count_assignments = [];
-        array_map(
-            fn(CorrectorAssignment $x) => $count_assignments[$x->getWriterId()] = 1 + $count_assignments[$x->getWriterId()] ?? 0,
-            $this->repos->correctorAssignment()->allByAssId($this->ass_id)
-        );
+        $correctable_ids = $this->writer_service->correctableIds();
 
-        $missing = 0;
-        foreach ($this->writer_service->all() as $writer) {
-            // get only writers with authorized essays without exclusion
-            if ((empty($writer->getWritingAuthorized())) || !empty($writer->getWritingExcluded())) {
-                continue;
-            }
-            $assigned = $count_assignments[$writer->getId()] ?? 0;
-            $missing += max(0, $required - $assigned);
-        }
-        return $missing;
+        $num_tasks = $this->repos->settings()->countByAssId($this->ass_id);
+        $correctors_per_task = $this->correction_settings->getRequiredCorrectors();
+
+        $required = count($correctable_ids) * $num_tasks * $correctors_per_task;
+        $assigned = $this->repos->correctorAssignment()->countByWriterIds($correctable_ids);
+
+        return max(0, $required - $assigned);
     }
 
     public function allByCorrectorId(int $corrector_id, $only_authorized_writings = false): array
@@ -309,13 +303,26 @@ readonly class Service implements FullService
         return $result;
     }
 
-    public function assignMissing(int $task_id): int
+    public function assignMissing(AssignFilter $filter, ?int $task_id): int
     {
-        switch ($this->correction_settings->getAssignMode()) {
-            case AssignMode::RANDOM_EQUAL:
-            default:
-                return $this->assignByRandomEqualMode($task_id);
+        if ($task_id === null) {
+            $task_ids = $this->repos->settings()->idsByAssId($this->ass_id);
+        } else {
+            if (!$this->repos->settings()->has($this->ass_id, $task_id)) {
+                throw new ApiException('Wrong task_id given', ApiException::ID_SCOPE);
+            }
+            $task_ids = [$task_id];
         }
+
+        $assigned = 0;
+        foreach ($task_ids as $task_id) {
+            switch ($this->correction_settings->getAssignMode()) {
+                case AssignMode::RANDOM_EQUAL:
+                default:
+                    $assigned += $this->assignByRandomEqualMode($filter, $task_id);
+            }
+        }
+        return $assigned;
     }
 
     public function exportAssignmentSpreadsheet(bool $only_authorized): void
@@ -407,90 +414,92 @@ readonly class Service implements FullService
      * Assign correctors randomly so that they get nearly equal number of corrections
      * @return int number of new assignments
      */
-    private function assignByRandomEqualMode(int $task_id): int
+    private function assignByRandomEqualMode(AssignFilter $filter, int $task_id): int
     {
-        $required = $this->correction_settings->getRequiredCorrectors();
-        if ($required < 1) {
-            return 0;
+        if ($filter == AssignFilter::CORRECTABLE) {
+            $writer_ids = $this->writer_service->correctableIds();
+        } else {
+            $writer_ids = $this->writer_service->allIds();
         }
 
+        $position_values = array_map(
+            fn(GradingPosition $p) => $p->value,
+            GradingPosition::required($this->correction_settings->getRequiredCorrectors())
+        );
+
         $assigned = 0;
-        $writerCorrectors = [];     // writer_id => [ position => $corrector_id ]
-        $correctorWriters = [];     // corrector_id => [ writer_id => position ]
-        $correctorPosCount = [];    // corrector_id => [ position => count ]
+        $writer_correctors = [];     // writer_id => [ position => corrector_id ]
+        $corrector_writers = [];     // corrector_id => [ writer_id => position ]
+        $corrector_pos_count = [];    // corrector_id => [ position => count ]
 
         // collect assignment data
         foreach ($this->corrector_service->all() as $corrector) {
             // init list of correctors with writers
-            $correctorWriters[$corrector->getId()] = [];
-            for ($position = 0; $position < $required; $position++) {
-                $correctorPosCount[$corrector->getId()][$position] = 0;
+            $corrector_writers[$corrector->getId()] = [];
+            foreach ($position_values as $value) {
+                $corrector_pos_count[$corrector->getId()][$value] = 0;
             }
         }
-        foreach ($this->writer_service->all() as $writer) {
-
-            // get only not authorized writers not excluded
-            if (empty($writer->getWritingAuthorized()) || !empty($writer->getWritingExcluded())) {
-                continue;
-            }
+        foreach ($writer_ids as $writer_id) {
 
             // init list writers with correctors
-            $writerCorrectors[$writer->getId()] = [];
+            $writer_correctors[$writer_id] = [];
 
-            foreach ($this->repos->correctorAssignment()->allByTaskIdAndWriterId($task_id, $writer->getId()) as $assignment) {
-                // list the assigned corrector positions for each writer, give the corrector for each position
-                $writerCorrectors[$assignment->getWriterId()][$assignment->getPosition()->value] = $assignment->getCorrectorId();
-                // list the assigned writers for each corrector, give the corrector position per writer
-                $correctorWriters[$assignment->getCorrectorId()][$assignment->getWriterId()] = $assignment->getPosition();
-                // count the assignments per position for a corrector
-                $correctorPosCount[$assignment->getCorrectorId()][$assignment->getPosition()->value]++;
+            foreach ($this->repos->correctorAssignment()->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
+                if (in_array($assignment->getPosition()->value, $position_values)) {
+                    // list the assigned corrector positions for each writer, give the corrector for each position
+                    $writer_correctors[$assignment->getWriterId()][$assignment->getPosition()->value] = $assignment->getCorrectorId();
+                    // list the assigned writers for each corrector, give the corrector position per writer
+                    $corrector_writers[$assignment->getCorrectorId()][$assignment->getWriterId()] = $assignment->getPosition();
+                    // count the assignments per position for a corrector
+                    $corrector_pos_count[$assignment->getCorrectorId()][$assignment->getPosition()->value]++;
+                }
             }
         }
 
         // assign empty corrector positions
-        foreach ($writerCorrectors as $writerId => $correctorsByPos) {
-            for ($position = 0; $position < $required; $position++) {
+        foreach ($writer_correctors as $writer_id => $corrector_by_pos) {
+            foreach ($position_values as $value) {
                 // empty corrector position
-                if (!isset($correctorsByPos[$position])) {
+                if (!isset($corrector_by_pos[$value])) {
 
                     // collect the candidate corrector ids for the position
-                    $candidatesByCount = [];
-                    foreach ($correctorWriters as $correctorId => $posByWriterId) {
+                    $candidates_by_count = [];
+                    foreach ($corrector_writers as $corrector_id => $pos_by_writer_id) {
 
                         // corrector has not yet the writer assigned
-                        if (!isset($posByWriterId[$writerId])) {
+                        if (!isset($pos_by_writer_id[$writer_id])) {
                             // group the candidates by their number of existing assignments for the position
-                            $candidatesByCount[$correctorPosCount[$correctorId][$position]][] = $correctorId;
+                            $candidates_by_count[$corrector_pos_count[$corrector_id][$value]][] = $corrector_id;
                         }
                     }
-                    if (!empty($candidatesByCount)) {
+                    if (!empty($candidates_by_count)) {
 
                         // get the candidate group with the smallest number of assignments for the position
-                        ksort($candidatesByCount);
-                        reset($candidatesByCount);
-                        $candidateIds = current($candidatesByCount);
-                        $candidateIds = array_unique($candidateIds);
+                        ksort($candidates_by_count);
+                        $candidate_ids = current($candidates_by_count);
+                        $candidate_ids = array_unique($candidate_ids);
 
                         // get a random candidate id
-                        shuffle($candidateIds);
-                        $correctorId = current($candidateIds);
+                        shuffle($candidate_ids);
+                        $corrector_id = current($candidate_ids);
 
                         // assign the corrector to the writer
                         $assignment = $this->repos->correctorAssignment()->new()
                             ->setTaskId($task_id)
-                            ->setCorrectorId($correctorId)
-                            ->setWriterId($writerId)
-                            ->setPosition(GradingPosition::tryFrom($position)) ?? GradingPosition::FIRST;
+                            ->setCorrectorId($corrector_id)
+                            ->setWriterId($writer_id)
+                            ->setPosition(GradingPosition::from($value));
 
                         $this->repos->correctorAssignment()->save($assignment);
                         $assigned++;
 
                         // remember the assignment for the next candidate collection
-                        $correctorWriters[$correctorId][$writerId] = $position;
+                        $corrector_writers[$corrector_id][$writer_id] = $value;
                         // not really needed, this fills the current empty corrector position
-                        $writerCorrectors[$writerId][$position] = $correctorId;
+                        $writer_correctors[$writer_id][$value] = $corrector_id;
                         // increase the assignments per position for the corrector
-                        $correctorPosCount[$correctorId][$position]++;
+                        $corrector_pos_count[$corrector_id][$value]++;
                     }
                 }
             }

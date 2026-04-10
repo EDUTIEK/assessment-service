@@ -14,11 +14,13 @@ enum GradingPosition: int
     /**
      * SEcond Corrector
      */
+    // no break
     case SECOND = 1;
 
     /**
      * Stitch decider
      */
+    // no break
     case STITCH = 2;
 
     public static function all()
@@ -28,6 +30,21 @@ enum GradingPosition: int
             GradingPosition::SECOND,
             GradingPosition::STITCH
         ];
+    }
+
+    public static function required(int $required_correctors)
+    {
+        switch ($required_correctors) {
+            case 2:
+                return [
+                    GradingPosition::FIRST,
+                    GradingPosition::SECOND
+                ];
+            default:
+                return [
+                    GradingPosition::FIRST,
+                ];
+        }
     }
 
     public function languageVariable(): string

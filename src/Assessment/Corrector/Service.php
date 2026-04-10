@@ -40,6 +40,11 @@ class Service implements FullService
         return $this->repos->corrector()->hasByCorrectorIdAndAssId($corrector_id, $this->ass_id);
     }
 
+    public function hasAny(): bool
+    {
+        return $this->repos->corrector()->hasByAssId($this->ass_id);
+    }
+
     public function oneByUserId(int $user_id): ?Corrector
     {
         $corrector = $this->repos->corrector()->oneByUserIdAndAssId($user_id, $this->ass_id);

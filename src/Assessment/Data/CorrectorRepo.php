@@ -10,6 +10,7 @@ interface CorrectorRepo
     public function one(int $id): ?Corrector;
     public function has(int $id): bool;
     public function hasReports();
+    public function hasByAssId(int $ass_id): bool;
     public function hasByCorrectorIdAndAssId(int $corrector_id, int $ass_id): bool;
     public function oneByUserIdAndAssId(int $user_id, int $ass_id): ?Corrector;
     /** @return Corrector[] */

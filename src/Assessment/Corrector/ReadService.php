@@ -9,6 +9,7 @@ use Edutiek\AssessmentService\Assessment\Data\Corrector;
 interface ReadService
 {
     public function has(int $corrector_id): bool;
+    public function hasAny(): bool;
     public function oneByUserId(int $user_id): ?Corrector;
     /** @return Corrector[] */
     public function all(): array;

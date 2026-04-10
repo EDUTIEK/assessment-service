@@ -2,6 +2,7 @@
 
 namespace Edutiek\AssessmentService\Task\CorrectorAssignments;
 
+use Edutiek\AssessmentService\Assessment\Data\AssignFilter;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 
@@ -62,7 +63,7 @@ interface FullService extends ReadService
      * Assign correctors to empty corrector positions for the candidates
      * @return int number of new assignments
      */
-    public function assignMissing(int $task_id): int;
+    public function assignMissing(AssignFilter $filter, ?int $task_id): int;
 
     /**
      * Export file with writer and its assigned correctors
