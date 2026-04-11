@@ -67,6 +67,7 @@ return [
     'criterion_points' => 'Summe Punkte',
     'criterion_max_points' => 'Maximale Punkte',
     'pdf_summary_follows' => 'Das Gutachten finden Sie auf den folgenden Seiten.',
-    'pdf_label_points' => 'Vergebene Punktzahl'
-
+    'pdf_label_points' => 'Vergebene Punktzahl',
+    'pdf_label_points_pos0' => 'Punktzahl Erstkorrektor',
+    'pdf_label_points_pos1' => 'Punktzahl Zweitkorrektor'
 ];

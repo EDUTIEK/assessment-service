@@ -136,13 +136,12 @@ readonly class CorrectionProvider implements PdfPartProvider
             default => null
         };
 
-        $assignment = null;
+        $assignments = [];
         foreach ($this->assignments->allByTaskIdAndWriterId($task_id, $writer_id) as $ass) {
-            if ($ass->getPosition() === $position) {
-                $assignment = $ass;
-            }
+            $assignments[$ass->getPosition()->value] = $ass;
         }
 
+        $assignment = $assignments[$position->value] ?? null;
         if ($assignment !== null) {
             $summary = $this->summaries->getForAssignment($assignment);
             $is_own = $this->correctors->oneById($assignment->getCorrectorId())?->getUserId() == $this->user_id;
@@ -153,7 +152,17 @@ readonly class CorrectionProvider implements PdfPartProvider
                 case self::PART_SUMMARY:
                     return $this->renderSummary($summary, $part_title, $is_own, $options);
                 case self::PART_REVISION:
-                    return $this->renderRevision($summary, $part_title, $is_own, $options);
+                    switch ($this->assessment_settings->getProcedure()) {
+                        case CorrectionProcedure::APPROXIMATION:
+                            return $this->renderApproximation($summary, $part_title, $options);
+                        case CorrectionProcedure::CONSULTING:
+                            $assignment1 = $assignments[GradingPosition::FIRST->value] ?? null;
+                            if ($assignment1 !== null) {
+                                $summary1 = $this->summaries->getForAssignment($assignment1);
+                                $summary2 = $summary;
+                                return $this->renderConsulting($summary1, $summary2, $part_title, $options);
+                            }
+                    }
             }
         }
 
@@ -167,8 +176,8 @@ readonly class CorrectionProvider implements PdfPartProvider
         }
 
         if ($summary->hasPdf()) {
-            $pdf1 = $this->renderContent($title, $this->language->txt('pdf_summary_follows'), null, $options);
-            $pdf2 = $this->renderContent(null, null, $summary->getPoints(), $options);
+            $pdf1 = $this->renderContent($title, $this->language->txt('pdf_summary_follows'), [], $options);
+            $pdf2 = $this->renderContent(null, null, [$summary->getPoints()], $options);
 
             $joined = $this->pdf_processing->join([$pdf1, $summary->getSummaryPdf(), $pdf2]);
             $this->pdf_processing->cleanup([$pdf1, $pdf2]);
@@ -177,7 +186,7 @@ readonly class CorrectionProvider implements PdfPartProvider
             $pdf = $this->renderContent(
                 $title,
                 $summary->getSummaryText(),
-                $summary->getPoints(),
+                [$summary->getPoints()],
                 $options
             );
         }
@@ -185,24 +194,46 @@ readonly class CorrectionProvider implements PdfPartProvider
         return $pdf;
     }
 
-    private function renderRevision(CorrectorSummary $summary, string $title, bool $is_own, Options $options): ?string
+    private function renderApproximation(CorrectorSummary $summary, string $title, Options $options): ?string
     {
+        $own_corrector_id = $this->correctors->oneByUserId($this->user_id)?->getId();
         $writer = $this->writers->oneByWriterId($summary->getWriterId());
 
-        if (!$is_own && !$summary->isRevised()) {
-            return null;
+        if ($summary->isRevised() || $writer?->isRevisionNeeded() && $summary->getCorrectorId() === $own_corrector_id) {
+
+            return $this->renderContent(
+                $title,
+                $summary->getRevisionText(),
+                [$summary->getRevisionPoints()],
+                $options
+            );
         }
-        if ($is_own && !($summary->isRevised() || $writer?->isRevisionNeeded())) {
-            return null;
+        return null;
+    }
+
+    private function renderConsulting(CorrectorSummary $summary1, CorrectorSummary $summary2, string $title, Options $options): ?string
+    {
+        $own_corrector_id = $this->correctors->oneByUserId($this->user_id)?->getId();
+        $writer = $this->writers->oneByWriterId($summary1->getWriterId());
+
+        $show1 = $summary1->isRevised() || ($writer?->isRevisionNeeded() && $summary1->getCorrectorId() === $own_corrector_id);
+        $show2 = $summary2->isRevised() || ($writer?->isRevisionNeeded() && $summary2->getCorrectorId() === $own_corrector_id);
+
+        if ($show1 || $show2) {
+            return $this->renderContent(
+                $title,
+                $show2 ? $summary2->getRevisionText() : null,
+                [
+                    GradingPosition::FIRST->value => $show1 ? $summary1->getPoints() : null,
+                    GradingPosition::SECOND->value => $show2 ? $summary2->getPoints() : null,
+                ],
+                $options
+            );
         }
 
-        return $this->renderContent(
-            $title,
-            $summary->getRevisionText(),
-            $summary->getRevisionPoints(),
-            $options
-        );
+        return null;
     }
+
 
     private function renderCriteria(CorrectorSummary $summary, string $title, bool $is_own, Options $options): ?string
     {
@@ -269,9 +300,25 @@ readonly class CorrectionProvider implements PdfPartProvider
         return $this->pdf_processing->create($html, $options);
     }
 
-    private function renderContent(?string $title, ?string $content, ?float $points, Options $options): ?string
+    /**
+     * @param array<float|null> $points
+     */
+    private function renderContent(?string $title, ?string $content, array $points, Options $options): ?string
     {
-        $level = $this->grading->getGradLevelForPoints($points);
+        $data_points = [];
+        foreach ($points as $position => $value) {
+            if ($value !== null) {
+                $level = $this->grading->getGradLevelForPoints($value);
+                $label = $this->language->txt(count($points) == 1 ? 'pdf_label_points' : 'pdf_label_points_pos' . $position);
+                $data_points[] = [
+                    'label_points' => $label,
+                    'points' => $value,
+                    'grade' => $level?->getGrade(),
+                    'statement' => $level?->getStatement(),
+                ];
+            }
+        }
+
         $data = [
             'title' => $title,
             'content' => $this->html_processing->addContentStyles(
@@ -279,12 +326,7 @@ readonly class CorrectionProvider implements PdfPartProvider
                 false,
                 HeadlineScheme::THREE
             ),
-            'points' => $points ? [
-                'label_points' => $this->language->txt('pdf_label_points'),
-                'points' => $points,
-                'grade' => $level?->getGrade(),
-                'statement' => $level?->getStatement(),
-            ] : null
+            'points' => $data_points
         ];
 
         $html = $this->html_processing->fillTemplate(__DIR__ . '/templates/content.html', $data);
