@@ -76,12 +76,6 @@ abstract class OrgaSettings implements AssessmentEntity
     abstract public function getReviewEnabled(): bool;
     abstract public function setReviewEnabled(bool $review_enabled): self;
 
-    abstract public function getReviewNotification(): bool;
-    abstract public function setReviewNotification(bool $review_notification): self;
-
-    abstract public function getReviewNotifText(): ?string;
-    abstract public function setReviewNotifText(?string $review_notif_text): self;
-
     abstract public function getStatisticsAvailable(): bool;
     abstract public function setStatisticsAvailable(bool $statistics_available): self;
 
