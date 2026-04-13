@@ -26,7 +26,8 @@ interface FullService
     public function getContentForMarking(
         string $html,
         bool $add_paragraph_numbers,
-        HeadlineScheme $headline_scheme
+        HeadlineScheme $headline_scheme,
+        int $service_version = ServiceVersion::CURRENT
     ): string;
 
     /**

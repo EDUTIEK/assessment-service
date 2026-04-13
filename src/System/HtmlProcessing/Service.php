@@ -38,17 +38,17 @@ class Service implements FullService
 
     public function secureContent(string $html): string
     {
-        $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', 0);
+        $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', ServiceVersion::CURRENT);
         return $html;
     }
 
-    public function getContentForMarking(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
+    public function getContentForMarking(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme, int $service_version = ServiceVersion::CURRENT): string
     {
-        $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', 0);
+        $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', $service_version);
         $html = $this->processXslt(
             $html,
             __DIR__ . '/xsl/numbers.xsl',
-            0,
+            $service_version,
             $add_paragraph_numbers,
             $headline_scheme
         );
@@ -115,6 +115,11 @@ class Service implements FullService
         bool $add_paragraph_numbers = false,
         HeadlineScheme $headline_scheme = HeadlineScheme::NUMERIC
     ): string {
+
+        if (empty($service_version)) {
+            $service_version = ServiceVersion::CURRENT;
+        }
+
         try {
             // functions called from XSLT are static and need a static state
             self::$headlineScheme = $headline_scheme;

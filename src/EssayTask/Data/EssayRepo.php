@@ -11,6 +11,11 @@ interface EssayRepo
      * @return Essay[]
      */
     public function some(array $ids): array;
+
+    /**
+     * This should only be used by the Essay Service
+     * The service will add the a current service version
+     */
     public function new(): Essay;
     public function one(int $id): ?Essay;
     public function oneByWriterIdAndTaskId(int $writer_id, int $task_id): ?Essay;

@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
 use Edutiek\AssessmentService\System\Data\Config;
 use Edutiek\AssessmentService\System\HtmlProcessing\FullService as SystemHtmlProcessing;
 use Edutiek\AssessmentService\System\Data\Config as SystemConfig;
+use Edutiek\AssessmentService\System\HtmlProcessing\ServiceVersion;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Task\CorrectorComment\CorrectorCommentInfo;
 use Edutiek\AssessmentService\Task\CorrectorComment\InfoService as CommentsService;
@@ -50,16 +51,17 @@ class Service implements FullService
     public function getWrittenTextForCorrection(?Essay $essay): string
     {
         return $this->processor->getContentForMarking(
-            (string) $essay->getWrittenText(),
+            (string) $essay?->getWrittenText(),
             $this->writing_settings->getAddParagraphNumbers(),
-            $this->writing_settings->getHeadlineScheme()
+            $this->writing_settings->getHeadlineScheme(),
+            $essay?->getServiceVersion() ?? ServiceVersion::CURRENT
         );
     }
 
     public function getWrittenTextForPdf(?Essay $essay): string
     {
         return $this->processor->getContentForPdf(
-            (string) $essay->getWrittenText(),
+            (string) $essay?->getWrittenText(),
             $this->writing_settings->getAddParagraphNumbers(),
             $this->writing_settings->getHeadlineScheme()
         );
@@ -72,9 +74,10 @@ class Service implements FullService
         $this->current_infos = [];
 
         $html = $this->processor->getContentForMarking(
-            (string) $essay->getWrittenText(),
+            (string) $essay?->getWrittenText(),
             $this->writing_settings->getAddParagraphNumbers(),
-            $this->writing_settings->getHeadlineScheme()
+            $this->writing_settings->getHeadlineScheme(),
+            $essay?->getServiceVersion() ?? ServiceVersion::CURRENT
         );
 
         $html = $this->processor->replaceCustomMarkup($html);
@@ -82,7 +85,7 @@ class Service implements FullService
         $html = $this->processor->processXslt(
             $html,
             __DIR__ . '/xsl/comments.xsl',
-            $essay ? $essay->getServiceVersion() : 0,
+            $essay ? $essay->getServiceVersion() : ServiceVersion::CURRENT,
             $this->writing_settings->getAddParagraphNumbers(),
         );
 

@@ -75,13 +75,7 @@ class WriterBridge implements AppBridge
             ]);
 
             foreach ($this->tasks as $task) {
-                $essay = $this->repos->essay()->oneByWriterIdAndTaskId($this->writer->getId(), $task->getId());
-                if (!$essay) {
-                    $essay = $this->repos->essay()->new()
-                        ->setWriterId($this->writer->getId())
-                        ->setTaskId($task->getId());
-                    $this->repos->essay()->save($essay);
-                }
+                $essay = $this->essay_service->getByWriterIdAndTaskId($this->writer->getId(), $task->getId());
                 $data['Essays'][] = $this->entity->arrayToPrimitives([
                     'id' => $essay->getId(),
                     'task_id' => $task->getId(),

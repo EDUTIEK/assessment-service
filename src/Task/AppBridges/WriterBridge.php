@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\HtmlProcessing\FullService as HtmlProcessing;
+use Edutiek\AssessmentService\System\HtmlProcessing\ServiceVersion;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
 use Edutiek\AssessmentService\Task\Data\ResourceAvailability;
@@ -67,7 +68,8 @@ class WriterBridge implements AppBridge
                 'instructions' => $this->html->getContentForMarking(
                     (string) $task->getInstructions(),
                     false,
-                    HeadlineScheme::THREE
+                    HeadlineScheme::THREE,
+                    ServiceVersion::CURRENT
                 ),
             ]);
         }

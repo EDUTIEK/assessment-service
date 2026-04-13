@@ -17,6 +17,7 @@ use Edutiek\AssessmentService\System\ConstraintHandling\ResultStatus;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
 use Edutiek\AssessmentService\System\File\Storage;
+use Edutiek\AssessmentService\System\HtmlProcessing\ServiceVersion;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TasksReadService;
@@ -71,9 +72,7 @@ readonly class Service implements ClientService, EventService
         $this->checkTaskScope($task_id);
         $essay = $this->repos->essay()->oneByWriterIdAndTaskId($writer_id, $task_id);
         if ($essay === null) {
-            $essay = $this->repos->essay()->new()
-                ->setWriterId($writer_id)
-                ->setTaskId($task_id);
+            $essay = $this->new($writer_id, $task_id);
             $this->repos->essay()->save($essay);
         }
         return $essay;
@@ -90,7 +89,10 @@ readonly class Service implements ClientService, EventService
     {
         $this->checkWriterScope($writer_id);
         $this->checkTaskScope($task_id);
-        $essay = $this->repos->essay()->new()->setWriterId($writer_id)->setTaskId($task_id);
+        $essay = $this->repos->essay()->new()
+            ->setWriterId($writer_id)
+            ->setTaskId($task_id)
+            ->setServiceVersion(ServiceVersion::CURRENT);
         return $essay;
     }
 
