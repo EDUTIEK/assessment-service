@@ -98,6 +98,7 @@ class CorrectorBridge implements AppCorrectorBridge
         $data = [];
 
         $data['Settings'] = $this->entity->arrayToPrimitives([
+            'pdf_marking' => $this->correction_settings->getPdfMarking(),
             'positive_rating' => $this->correction_settings->getPositiveRating(),
             'negative_rating' => $this->correction_settings->getNegativeRating(),
             'enable_comments' => $this->correction_settings->getEnableComments(),

@@ -63,6 +63,7 @@ class Internal
             $this->essayImage($ass_id, $user_id),
             $this->dependencies->systemApi()->entity(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
+            $this->dependencies->taskApi($ass_id, $user_id)->correctionSettings(),
             $this->dependencies->taskApi($ass_id, $user_id)->correctorAssignments(),
             $this->dependencies->taskApi($ass_id, $user_id)->tasks(),
             $this->htmlProcessing($ass_id, $user_id)

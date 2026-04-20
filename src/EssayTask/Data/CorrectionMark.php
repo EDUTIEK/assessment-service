@@ -9,16 +9,16 @@ namespace Edutiek\AssessmentService\EssayTask\Data;
  */
 class CorrectionMark
 {
-    const SHAPE_NONE = '';
-    const SHAPE_CIRCLE = 'circle';
-    const SHAPE_RECTANGLE = 'rectangle';
-    const SHAPE_POLYGON = 'polygon';
-    const SHAPE_LINE = 'line';
-    const SHAPE_WAVE = 'wave';
+    public const SHAPE_NONE = '';
+    public const SHAPE_CIRCLE = 'circle';
+    public const SHAPE_RECTANGLE = 'rectangle';
+    public const SHAPE_POLYGON = 'polygon';
+    public const SHAPE_LINE = 'line';
+    public const SHAPE_WAVE = 'wave';
 
-    const ALLOWED_SHAPES = [self::SHAPE_CIRCLE, self::SHAPE_RECTANGLE, self::SHAPE_POLYGON, self::SHAPE_LINE, self::SHAPE_WAVE];
-    const FILLED_SHAPES = [self::SHAPE_CIRCLE, self::SHAPE_RECTANGLE, self::SHAPE_POLYGON];
-    
+    public const ALLOWED_SHAPES = [self::SHAPE_CIRCLE, self::SHAPE_RECTANGLE, self::SHAPE_POLYGON, self::SHAPE_LINE, self::SHAPE_WAVE];
+    public const FILLED_SHAPES = [self::SHAPE_CIRCLE, self::SHAPE_RECTANGLE, self::SHAPE_POLYGON];
+
     private string $key;
     private string $shape;
     private CorrectionMarkPoint $pos;
@@ -27,6 +27,7 @@ class CorrectionMark
     private int $width;
     private array $polygon;
     private string $symbol;
+    private ?string $internal;
 
     /**
      * Constructor
@@ -36,7 +37,8 @@ class CorrectionMark
      * @param CorrectionMarkPoint $end - end position on the image
      * @param int                 $height - height of the mark
      * @param int                 $width - with of the mark
-     * @param CorrectionMarkPoint[] $polygon -list of points from a polygon 
+     * @param CorrectionMarkPoint[] $polygon -list of points from a polygon
+     * @param ?string             $internal - internal data of a pdf.js annotation
      */
     public function __construct(
         string $key,
@@ -46,7 +48,8 @@ class CorrectionMark
         int $height = 0,
         int $width = 0,
         array $polygon = [],
-        string $symbol = ''
+        string $symbol = '',
+        ?string $internal = null
     ) {
         $this->key = $key;
         $this->shape = $shape;
@@ -56,6 +59,7 @@ class CorrectionMark
         $this->width = $width;
         $this->polygon = $polygon;
         $this->symbol = $symbol;
+        $this->internal = $internal;
     }
 
     /**
@@ -63,22 +67,22 @@ class CorrectionMark
      * @param array $data
      * @return static
      */
-    public static function fromArray(array $data = [])  : self
+    public static function fromArray(array $data = []): self
     {
         $key = '';
         $shape = self::SHAPE_NONE;
-        $pos = new CorrectionMarkPoint(0,0);
-        $end = new CorrectionMarkPoint(0,0);
+        $pos = new CorrectionMarkPoint(0, 0);
+        $end = new CorrectionMarkPoint(0, 0);
         $width = 0;
         $height = 0;
         $polygon = [];
         $symbol = '';
-        
-        
+        $internal = null;
+
         if (isset($data['key'])) {
             $key = (string) $data['key'];
         }
-        
+
         if (isset($data['shape'])) {
             if (in_array($data['shape'], self::ALLOWED_SHAPES)) {
                 $shape = (string) $data['shape'];
@@ -104,8 +108,11 @@ class CorrectionMark
         if (isset($data['symbol'])) {
             $symbol = (string) $data['symbol'];
         }
+        if (isset($data['internal'])) {
+            $internal = (string) $data['internal'];
+        }
 
-        return new self($key, $shape, $pos, $end, $width, $height, $polygon, $symbol);
+        return new self($key, $shape, $pos, $end, $width, $height, $polygon, $symbol, $internal);
     }
 
 
@@ -113,10 +120,10 @@ class CorrectionMark
      * Get multiple mark objects from a list of mark data
      * @return self[]
      */
-    public static function multiFromArray(array $data = []) : array 
+    public static function multiFromArray(array $data = []): array
     {
         $marks = [];
-        foreach ($data as $mark_data)  {
+        foreach ($data as $mark_data) {
             $marks[] = self::fromArray((array) $mark_data);
         }
         return $marks;
@@ -126,7 +133,7 @@ class CorrectionMark
      * Get a list of mark data from multiple mark objects
      * @param self[] $marks
      */
-    public static function multiToArray(array $marks = []) : array
+    public static function multiToArray(array $marks = []): array
     {
         $data = [];
         foreach ($marks as $mark) {
@@ -139,13 +146,13 @@ class CorrectionMark
      * Get an assoc array of mark data from the objects properties
      * @return array
      */
-    public function toArray() : array
+    public function toArray(): array
     {
         $polygon = [];
         foreach ($this->getPolygon() as $point) {
             $polygon[] = $point->toArray();
         }
-        
+
         return [
             'key' => $this->getKey(),
             'shape' => $this->getShape(),
@@ -154,10 +161,11 @@ class CorrectionMark
             'width' => $this->getWidth(),
             'height' => $this->getHeight(),
             'polygon' => $polygon,
-            'symbol' => $this->getSymbol()
+            'symbol' => $this->getSymbol(),
+            'internal' => $this->getInternal(),
         ];
     }
-    
+
 
     /**
      * Get the unique key of the mark
@@ -227,5 +235,13 @@ class CorrectionMark
     public function getSymbol(): string
     {
         return $this->symbol;
+    }
+
+    /**
+     * Get the internal data of a pdf.js annotation
+     */
+    public function getInternal(): ?string
+    {
+        return $this->internal;
     }
 }

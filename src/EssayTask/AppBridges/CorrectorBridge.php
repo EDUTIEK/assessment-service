@@ -10,14 +10,18 @@ use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
 use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImageFullService;
 use Edutiek\AssessmentService\EssayTask\HtmlProcessing\FullService as HtmlProcessing;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
+use Edutiek\AssessmentService\Task\CorrectionSettings\ReadService as TaskCorrectionSettings;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as AssignmentService;
+use Edutiek\AssessmentService\Task\Data\CorrectionSettings;
+use Edutiek\AssessmentService\Task\Data\PdfMarking;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TaskService;
 use Psr\Http\Message\UploadedFileInterface;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
     private $corrector;
-    private WritingSettings $settings;
+    private WritingSettings $writing_settings;
+    private CorrectionSettings $correction_settings;
     private bool $is_admin;
 
     public function __construct(
@@ -27,12 +31,14 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly EssayImageFullService $essay_images,
         private readonly EntityFullService $entity,
         private readonly CorrectorReadService $corrector_service,
+        private readonly TaskCorrectionSettings $task_correction_settings,
         private readonly AssignmentService $assignment_service,
         private readonly TaskService $task_service,
         private readonly HtmlProcessing $html_processing,
     ) {
         $this->corrector = $this->corrector_service->oneByUserId($this->user_id);
-        $this->settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
+        $this->writing_settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
+        $this->correction_settings = $this->task_correction_settings->get();
     }
 
     public function setAdmin(bool $is_admin): static
@@ -45,7 +51,7 @@ class CorrectorBridge implements AppCorrectorBridge
         $data = [];
 
         $data['Settings'] = $this->entity->arrayToPrimitives([
-            'headline_scheme' => $this->settings->getHeadlineScheme(),
+            'headline_scheme' => $this->writing_settings->getHeadlineScheme(),
         ]);
 
         return $data;
@@ -68,21 +74,25 @@ class CorrectorBridge implements AppCorrectorBridge
         }
 
         $data['Essay'] = $this->entity->arrayToPrimitives([
+            'id' => $essay->getId(),
+            'pdf_version' => $essay->getPdfVersion(),
             'text' => $this->html_processing->getWrittenTextForCorrection($essay),
         ]);
 
-        $pages = $this->essay_images->getByEssayId($essay->getId());
-        foreach ($pages as $page) {
-            $data['Pages'][] = $this->entity->arrayToPrimitives([
-                'id' => $page->getId(),
-                'task_id' => $essay->getTaskId(),
-                'writer_id' => $essay->getWriterId(),
-                'page_no' => $page->getPageNo(),
-                'width' => $page->getWidth(),
-                'height' => $page->getHeight(),
-                'thumb_width' => $page->getThumbWidth(),
-                'thumb_height' => $page->getThumbHeight(),
-            ]);
+        if ($this->correction_settings->getPdfMarking() === PdfMarking::IMAGES) {
+            $pages = $this->essay_images->getByEssayId($essay->getId());
+            foreach ($pages as $page) {
+                $data['Pages'][] = $this->entity->arrayToPrimitives([
+                    'id' => $page->getId(),
+                    'task_id' => $essay->getTaskId(),
+                    'writer_id' => $essay->getWriterId(),
+                    'page_no' => $page->getPageNo(),
+                    'width' => $page->getWidth(),
+                    'height' => $page->getHeight(),
+                    'thumb_width' => $page->getThumbWidth(),
+                    'thumb_height' => $page->getThumbHeight(),
+                ]);
+            }
         }
 
         return $data;
@@ -91,6 +101,10 @@ class CorrectorBridge implements AppCorrectorBridge
     public function getFileId(string $entity, int $entity_id): ?string
     {
         switch ($entity) {
+            case 'essay':
+                $essay = $this->repos->essay()->one($entity_id);
+                return $essay?->getPdfVersion();
+
             case 'image':
             case 'thumb':
                 $page = $this->repos->essayImage()->one($entity_id);
