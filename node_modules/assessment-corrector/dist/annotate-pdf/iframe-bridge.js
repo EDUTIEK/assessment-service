@@ -50,7 +50,7 @@ function setup(dispatch, ready){
             },
             add: newOne => {
                 const id = newOne.id || uuid();
-                const page = newOne.page || pdfCurrentPageIndex();
+                const page = typeof newOne.page === 'number' ? newOne.page : pdfCurrentPageIndex();
                 const entry = {
                     id,
                     page,
@@ -110,6 +110,12 @@ function setup(dispatch, ready){
             viewOnly: viewOnly => {
                 pdfSwitchToMode(viewOnly ? PDF_VIEW_MODE() : PDF_EDIT_MODE());
                 document.querySelector('#editorHighlight').classList[viewOnly ? 'add' : 'remove']('annotate-pdf-hide');
+            },
+            setDefaultColor: color => {
+                pdfjsLib.HighlightEditor.updateDefaultParams(
+                    pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR,
+                    color
+                );
             },
         };
 
@@ -210,6 +216,7 @@ function externEntry(entry)
         id: entry.id,
         page: entry.page,
         intern: entry.intern,
+        pos: {x: entry.editor.x, y: entry.editor.y},
     };
 }
 

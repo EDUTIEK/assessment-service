@@ -7,7 +7,10 @@
  *     page: {number},
  *     intern: {Object},
  *     text: {string},
+ *     pos: {{x: number, y: number}},
  * }} Annotation
+ *
+ * @typedef {string} Color // all hex forms are valid but names are not. E.g. `#FF003377` is valid but `green` is not.
  *
  * @param {string} parent   id of the parent element to add the iframe
  * @param {string} viewer   url of the viewer html (source of iframe, without parameter)
@@ -29,6 +32,7 @@
  *   destroy: {function(): void},
  *   rebuild: {function(): void},
  *   setViewOnly: {function(bool): Promise},
+ *   setDefaultColor: {function(Color): Promise},
  * }}
  */
 export default (parent, viewer, pdf, options = {}) => {
@@ -78,6 +82,7 @@ export default (parent, viewer, pdf, options = {}) => {
             parent.appendChild(frame);
         },
         setViewOnly: viewOnly => request('viewOnly', viewOnly),
+        setDefaultColor: color => request('setDefaultColor', color),
     };
 
     function request(name, ...args)

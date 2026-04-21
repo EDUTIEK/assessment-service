@@ -1,4 +1,4 @@
-#editorFreeText, #editorInk, #editorStamp, #printButton, #downloadButton, #presentationMode, #editorHighlightThickness, #editorHighlightVisibility, #secondaryOpenFile, #secondaryOpenFile + .visibleMediumView + .horizontalToolbarSeparator, #viewBookmark, #viewBookmarkSeparator, .annotate-pdf-hide
+#editorFreeText, #editorInk, #editorStamp, #printButton, #downloadButton, #presentationMode, #editorHighlightThickness, #editorHighlightVisibility, #secondaryOpenFile, #secondaryOpenFile + .visibleMediumView + .horizontalToolbarSeparator, #viewBookmark, #viewBookmarkSeparator, .annotate-pdf-hide, #editorHighlightButton, #editorHighlightParamsToolbar, .colorPicker, .colorPicker + .divider
 {
     display: none!important;
 }
