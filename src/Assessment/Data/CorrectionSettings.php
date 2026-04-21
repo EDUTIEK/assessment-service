@@ -39,6 +39,8 @@ abstract class CorrectionSettings implements AssessmentEntity
     abstract public function setStitchAfterProcedure(bool $stitch_after_procedure): self;
     abstract public function getUndoAuthorization(): bool;
     abstract public function setUndoAuthorization(bool $undo_authorization): self;
+    abstract public function getUndoFirstAuthorization(): bool;
+    abstract public function setUndoFirstAuthorization(bool $undo_first_authorization): self;
     abstract public function getInstantStatus(): bool;
     abstract public function setInstantStatus(bool $instant_status): self;
     abstract public function getPseudonymization(): Pseudonymization;

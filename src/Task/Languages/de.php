@@ -71,4 +71,5 @@ return [
     'pdf_label_points_pos0' => 'Punktzahl Erstkorrektor',
     'pdf_label_points_pos1' => 'Punktzahl Zweitkorrektor',
     'remove_authorization_not_allowed' => 'Status erlaubt keine Rücknahme der Freigabe',
+    'remove_first_authorization_not_allowed' => 'Status erlaubt keine Rücknahme der Freigabe der Erstkorrektur',
 ];

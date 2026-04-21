@@ -138,7 +138,7 @@ readonly class Service implements FullService
         }
     }
 
-    public function createFor(NotificationType $type, ?Writer $writer = null, ?Corrector $corrector = null): void
+    public function createFor(NotificationType $type, ?Writer $writer = null, ?Corrector $corrector = null, ?string $reason = null): void
     {
         $setting = $this->getSettings($type);
         if (!$setting->getActive()) {
@@ -182,19 +182,19 @@ readonly class Service implements FullService
                 break;
         }
 
-        $this->sendDirect($type, $to_ids, $writer);
+        $this->sendDirect($type, $to_ids, $writer, $reason);
     }
 
     /**
      * @param int[] $to_ids
      */
-    public function sendDirect(NotificationType $type, array $to_ids, ?Writer $writer): void
+    public function sendDirect(NotificationType $type, array $to_ids, ?Writer $writer, ?string $reason = null): void
     {
         $setting = $this->getSettings($type);
 
         foreach ($to_ids as $to_id) {
-            $subject = $this->fillPlaceholders($setting->getSubject(), $type, $to_id, $writer);
-            $body = $this->fillPlaceholders($setting->getBody(), $type, $to_id, $writer);
+            $subject = $this->fillPlaceholders($setting->getSubject(), $type, $to_id, $writer, $reason);
+            $body = $this->fillPlaceholders($setting->getBody(), $type, $to_id, $writer, $reason);
             $this->mail->deliver($subject, $body, [$to_id]);
         }
     }
@@ -213,7 +213,7 @@ readonly class Service implements FullService
         return implode("\n", $lines);
     }
 
-    private function fillPlaceholders(string $template, NotificationType $type, int $user_id, ?Writer $writer): string
+    private function fillPlaceholders(string $template, NotificationType $type, int $user_id, ?Writer $writer, ?string $reason = null): string
     {
         $user_data = $this->users->getUser($user_id);
         $writer_data = $this->users->getUser($writer?->getUserId() ?? 0);
@@ -230,6 +230,7 @@ readonly class Service implements FullService
                 'writer_pseudonym' => $writer->getPseudonym(),
                 'assessment_title' => $this->repos->properties()->one($this->ass_id)?->getTitle(),
                 'assessment_link' => $this->repos->contextInfo()->link($this->ass_id, $user_id),
+                'reason' => $reason ?? ''
             };
 
             $template = str_replace($search, $replace ?? $search, $template);

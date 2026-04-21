@@ -120,6 +120,10 @@ readonly class Service implements FullService
 
     public function canRemoveOwnAuthorization(CorrectorAssignment $assignment): bool
     {
+        if (!$this->correction_settings->getUndoAuthorization()) {
+            return false;
+        }
+
         $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
         if ($writer->getCorrectionStatus() !== CorrectionStatus::OPEN) {
             return false;
@@ -127,6 +131,35 @@ readonly class Service implements FullService
         $summary = $this->summary_service->getForAssignment($assignment);
         if (!$summary->isAuthorized()) {
             return false;
+        }
+
+        return true;
+    }
+
+    public function canRemoveFirstAuthorization(CorrectorAssignment $assignment): bool
+    {
+        if (!$this->correction_settings->getUndoFirstAuthorization()) {
+            return false;
+        }
+
+        if ($assignment->getPosition() !== GradingPosition::SECOND) {
+            return false;
+        }
+
+        $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
+        if ($writer->getCorrectionStatus() !== CorrectionStatus::OPEN) {
+            return false;
+        }
+
+        foreach ($this->assignments->allByTaskIdAndWriterId($assignment->getTaskId(), $assignment->getWriterId()) as $ass) {
+            $summary = $this->summary_service->getForAssignment($ass);
+
+            if ($ass->getPosition() === GradingPosition::FIRST && !$summary->isAuthorized()) {
+                return false;
+            }
+            if ($ass->getPosition() !== GradingPosition::FIRST && $summary->isAuthorized()) {
+                return false;
+            }
         }
 
         return true;
@@ -202,7 +235,6 @@ readonly class Service implements FullService
         }
 
         $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
-        $corrector = $this->corrector_service->oneById($assignment->getCorrectorId());
 
         $summary = $this->summary_service->getForAssignment($assignment);
         $summary->setGradingStatus(GradingStatus::OPEN, $this->user_id);
@@ -210,20 +242,42 @@ readonly class Service implements FullService
 
         // notify the second corrector about a removed authorization of the first corrector
         if ($assignment->getPosition() === GradingPosition::FIRST) {
-            foreach ($this->assignments->allByTaskIdAndWriterId($assignment->getTaskId(), $assignment->getWriterId()) as $assignment2) {
-                if ($assignment2->getPosition() === GradingPosition::SECOND) {
-                    $corrector2 = $this->corrector_service->oneById($assignment2->getCorrectorId());
+            foreach ($this->assignments->allByTaskIdAndWriterId($assignment->getTaskId(), $assignment->getWriterId()) as $ass) {
+                if ($ass->getPosition() === GradingPosition::SECOND) {
+                    $corrector2 = $this->corrector_service->oneById($ass->getCorrectorId());
                     $this->notification_service->createFor(NotificationType::CORRECTOR_FIRST_AUTHORIZATION_REMOVED, $writer, $corrector2);
                     break;
                 }
             }
         }
 
-        $this->log_entry->addEntry(
-            LogEntryType::CORRECTION_REMOVE_OWN_AUTHORIZATION,
-            MentionUser::fromCorrector($corrector),
-            MentionUser::fromWriter($writer)
-        );
+        // this should not write a log entry in version 10+
+
+        return new Result(true);
+    }
+
+    public function removeFirstAuthorization(CorrectorAssignment $assignment, string $reason): Result
+    {
+        if (!$this->canRemoveFirstAuthorization($assignment)) {
+            return new Result(false, $this->language->txt('remove_first_authorization_not_allowed'));
+        }
+
+        $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
+
+        foreach ($this->assignments->allByTaskIdAndWriterId($assignment->getTaskId(), $assignment->getWriterId()) as $ass) {
+            if ($ass->getPosition() === GradingPosition::FIRST) {
+
+                $summary = $this->summary_service->getForAssignment($ass);
+                $summary->setGradingStatus(GradingStatus::OPEN, $this->user_id);
+                $this->repos->correctorSummary()->save($summary);
+
+                $corrector1 = $this->corrector_service->oneById($ass->getCorrectorId());
+                $this->notification_service->createFor(NotificationType::CORRECTOR_AUTHORIZATION_REMOVED, $writer, $corrector1, $reason);
+                break;
+            }
+        }
+
+        // this should not write a log entry in version 10+
 
         return new Result(true);
     }

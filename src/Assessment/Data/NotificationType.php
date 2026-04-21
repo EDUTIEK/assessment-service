@@ -109,6 +109,10 @@ enum NotificationType: string
                 unset($placeholders['writer_login']);
         }
 
+        if ($this === self::CORRECTOR_AUTHORIZATION_REMOVED) {
+            $placeholders['reason'] = 'notification_var_reason';
+        }
+
         return $placeholders;
     }
 }

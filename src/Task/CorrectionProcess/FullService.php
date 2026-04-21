@@ -33,6 +33,12 @@ interface FullService
     public function canRemoveOwnAuthorization(CorrectorAssignment $assignment): bool;
 
     /**
+     * Check if a second corrector can remove the authorization of the first corrector
+     * - Check the process conditions and status
+     */
+    public function canRemoveFirstAuthorization(CorrectorAssignment $assignment): bool;
+
+    /**
      * Check if the correction of an assigned task can be revised
      */
     public function canRevise(CorrectorAssignment $assignment): bool;
@@ -46,6 +52,11 @@ interface FullService
      * Remove the authorization of an own correction
      */
     public function removeOwnAuthorization(CorrectorAssignment $assignment): Result;
+
+    /**
+     * Remove the authorization of a first corrector as a second corrector
+     */
+    public function removeFirstAuthorization(CorrectorAssignment $assignment, string $reason): Result;
 
     /**
      * Remove all correction authorizations of a writer
