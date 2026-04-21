@@ -24,7 +24,13 @@ interface FullService
      * Check if an assigned correction can be authorized by the assigned corrector
      * - Check the process conditions and status but not the summary content
      */
-    public function canAuthorize(CorrectorAssignment $assignment): bool;
+    public function canAuthorizeOwnCorrection(CorrectorAssignment $assignment): bool;
+
+    /**
+     * Check if the authorization of a correction can be removed by an assigned corrector
+     * - Check the process conditions and status
+     */
+    public function canRemoveOwnAuthorization(CorrectorAssignment $assignment): bool;
 
     /**
      * Check if the correction of an assigned task can be revised
@@ -34,7 +40,12 @@ interface FullService
     /**
      * Authorize a correction as a corrector
      */
-    public function authorizeCorrection(CorrectorAssignment $assignment): Result;
+    public function authorizeOwnCorrection(CorrectorAssignment $assignment): Result;
+
+    /**
+     * Remove the authorization of an own correction
+     */
+    public function removeOwnAuthorization(CorrectorAssignment $assignment): Result;
 
     /**
      * Remove all correction authorizations of a writer

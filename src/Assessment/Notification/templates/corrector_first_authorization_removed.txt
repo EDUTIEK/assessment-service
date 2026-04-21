@@ -1,0 +1,5 @@
+Die Freigabe der Erstkorrektur wurde zurückgezogen.
+
+Aufgabe: [assessment_title]
+Teilnehmer: [writer_pseudonym]
+Link zur Aufgabe: [assessment_link]

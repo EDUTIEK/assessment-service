@@ -85,7 +85,7 @@ readonly class Service implements FullService
         return true;
     }
 
-    public function canAuthorize(CorrectorAssignment $assignment): bool
+    public function canAuthorizeOwnCorrection(CorrectorAssignment $assignment): bool
     {
         $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
         if (!$writer->canBeCorrected()) {
@@ -112,6 +112,20 @@ readonly class Service implements FullService
 
         $summary = $this->summary_service->getForAssignment($assignment);
         if ($summary->isAuthorized()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public function canRemoveOwnAuthorization(CorrectorAssignment $assignment): bool
+    {
+        $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
+        if ($writer->getCorrectionStatus() !== CorrectionStatus::OPEN) {
+            return false;
+        }
+        $summary = $this->summary_service->getForAssignment($assignment);
+        if (!$summary->isAuthorized()) {
             return false;
         }
 
@@ -168,9 +182,9 @@ readonly class Service implements FullService
         return true;
     }
 
-    public function authorizeCorrection(CorrectorAssignment $assignment): Result
+    public function authorizeOwnCorrection(CorrectorAssignment $assignment): Result
     {
-        if (!$this->canAuthorize($assignment)) {
+        if (!$this->canAuthorizeOwnCorrection($assignment)) {
             return new Result(false, $this->language->txt('authorization_not_allowed'));
         }
 
@@ -181,14 +195,42 @@ readonly class Service implements FullService
         return $this->checkAndSaveSummary($summary);
     }
 
+    public function removeOwnAuthorization(CorrectorAssignment $assignment): Result
+    {
+        if (!$this->canRemoveOwnAuthorization($assignment)) {
+            return new Result(false, $this->language->txt('remove_authorization_not_allowed'));
+        }
+
+        $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
+        $corrector = $this->corrector_service->oneById($assignment->getCorrectorId());
+
+        $summary = $this->summary_service->getForAssignment($assignment);
+        $summary->setGradingStatus(GradingStatus::OPEN, $this->user_id);
+        $this->repos->correctorSummary()->save($summary);
+
+        // notify the second corrector about a removed authorization of the first corrector
+        if ($assignment->getPosition() === GradingPosition::FIRST) {
+            foreach ($this->assignments->allByTaskIdAndWriterId($assignment->getTaskId(), $assignment->getWriterId()) as $assignment2) {
+                if ($assignment2->getPosition() === GradingPosition::SECOND) {
+                    $corrector2 = $this->corrector_service->oneById($assignment2->getCorrectorId());
+                    $this->notification_service->createFor(NotificationType::CORRECTOR_FIRST_AUTHORIZATION_REMOVED, $writer, $corrector2);
+                    break;
+                }
+            }
+        }
+
+        $this->log_entry->addEntry(
+            LogEntryType::CORRECTION_REMOVE_OWN_AUTHORIZATION,
+            MentionUser::fromCorrector($corrector),
+            MentionUser::fromWriter($writer)
+        );
+
+        return new Result(true);
+    }
+
     public function removeAuthorizations(int $task_id, Writer $writer): Result
     {
         $changed = false;
-
-        //        if ($writer->getCorrectionStatus() === CorrectionStatus::STITCH ||
-        //            $writer->isCorrectionFinalized() && $writer->getFinalizedFromStatus() === CorrectionStatus::STITCH) {
-        //            return new Result(false, $this->language->txt('authorization_not_removable'));
-        //        }
 
         // remove authorizations
         foreach ($this->repos->correctorSummary()->allByTaskIdAndWriterId($task_id, $writer->getId()) as $summary) {
@@ -245,7 +287,7 @@ readonly class Service implements FullService
                     }
                     break;
                 case gradingStatus::AUTHORIZED:
-                    if (!$this->canAuthorize($assignment)) {
+                    if (!$this->canAuthorizeOwnCorrection($assignment)) {
                         $result->addFailure($this->language->txt('authorization_not_allowed'));
                     }
                     if ($summary->getPoints() === null) {

@@ -6,6 +6,7 @@ enum NotificationType: string
 {
     case CORRECTOR_PROCEDURE_STARTED = 'corrector_procedure_started';
     case CORRECTOR_AUTHORIZATION_REMOVED = 'corrector_authorization_removed';
+    case CORRECTOR_FIRST_AUTHORIZATION_REMOVED = 'corrector_first_authorization_removed';
     case CORRECTOR_WRITING_CHANGED = 'corrector_writing_changed';
     case WRITER_CORRECTION_FINALIZED = 'writer_correction_finalized';
     case ADMIN_STITCH_NEEDED = 'admin_stitch_needed';
@@ -17,6 +18,7 @@ enum NotificationType: string
             self::WRITER_CORRECTION_FINALIZED,
             self::CORRECTOR_PROCEDURE_STARTED,
             self::CORRECTOR_AUTHORIZATION_REMOVED,
+            self::CORRECTOR_FIRST_AUTHORIZATION_REMOVED,
             self::CORRECTOR_WRITING_CHANGED,
             self::ADMIN_WRITING_AUTHORIZED,
             self::ADMIN_STITCH_NEEDED,
@@ -36,6 +38,7 @@ enum NotificationType: string
         return match($this) {
             self::CORRECTOR_PROCEDURE_STARTED => true,
             self::CORRECTOR_AUTHORIZATION_REMOVED => true,
+            self::CORRECTOR_FIRST_AUTHORIZATION_REMOVED => true,
             self::CORRECTOR_WRITING_CHANGED => true,
             self::WRITER_CORRECTION_FINALIZED => false,
             self::ADMIN_STITCH_NEEDED => false,
@@ -100,6 +103,7 @@ enum NotificationType: string
                 // no break;
             case self::CORRECTOR_PROCEDURE_STARTED:
             case self::CORRECTOR_AUTHORIZATION_REMOVED:
+            case self::CORRECTOR_FIRST_AUTHORIZATION_REMOVED:
             case self::CORRECTOR_WRITING_CHANGED:
                 unset($placeholders['writer_name']);
                 unset($placeholders['writer_login']);

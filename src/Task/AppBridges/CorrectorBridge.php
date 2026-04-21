@@ -139,7 +139,7 @@ class CorrectorBridge implements AppCorrectorBridge
                     'correction_status' => $writer->getCorrectionStatus()->value,
                     'grading_status' => $summary->getGradingStatus(),
                     'can_correct' => $this->process_service->canCorrect($assignment),
-                    'can_authorize' => $this->process_service->canAuthorize($assignment),
+                    'can_authorize' => $this->process_service->canAuthorizeOwnCorrection($assignment),
                     'can_revise' => $this->process_service->canRevise($assignment),
                 ]);
             } elseif (!isset($added[$assignment->getTaskId()][$assignment->getWriterId()])) {
@@ -265,7 +265,7 @@ class CorrectorBridge implements AppCorrectorBridge
                 'correction_status' => $writer->getCorrectionStatus()->value,
                 'grading_status' => $summary->getGradingStatus(),
                 'can_correct' => $this->process_service->canCorrect($own_assignment),
-                'can_authorize' => $this->process_service->canAuthorize($own_assignment),
+                'can_authorize' => $this->process_service->canAuthorizeOwnCorrection($own_assignment),
                 'can_revise' => $this->process_service->canRevise($own_assignment),
             ]);
         } elseif ($this->is_admin) {

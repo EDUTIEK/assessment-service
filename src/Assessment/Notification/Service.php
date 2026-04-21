@@ -175,6 +175,7 @@ readonly class Service implements FullService
             case NotificationType::CORRECTOR_WRITING_CHANGED:
             case NotificationType::CORRECTOR_PROCEDURE_STARTED:
             case NotificationType::CORRECTOR_AUTHORIZATION_REMOVED:
+            case NotificationType::CORRECTOR_FIRST_AUTHORIZATION_REMOVED:
                 if ($corrector !== null) {
                     $to_ids[] = $corrector->getUserId();
                 }
