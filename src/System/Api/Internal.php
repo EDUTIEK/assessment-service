@@ -116,7 +116,7 @@ class Internal
     {
         return $this->instances[PdfCreatorService::class] ??= new PdfCreatorService(
             fn(array $options = []) => new Dompdf([
-                'chroot' => $this->dependencies->tempStorage()->getReadableRoot(),
+                'chroot' => realpath(__DIR__ . '/../fonts/'),
                 ...$options,
             ]),
             $this->config()->getSetup()
