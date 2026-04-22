@@ -115,8 +115,9 @@ class Internal
     public function pdfCreator(): PdfCreatorService
     {
         return $this->instances[PdfCreatorService::class] ??= new PdfCreatorService(
-            fn() => new Dompdf([
-                'chroot' => $this->dependencies->tempStorage()->getReadableRoot()
+            fn(array $options = []) => new Dompdf([
+                'chroot' => $this->dependencies->tempStorage()->getReadableRoot(),
+                ...$options,
             ]),
             $this->config()->getSetup()
         );

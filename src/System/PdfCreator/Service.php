@@ -12,8 +12,6 @@ use Dompdf\FontMetrics;
 use ILIAS\AdvancedMetaData\Services\ObjectModes\Custom\Set;
 use Edutiek\AssessmentService\System\Data\Setup;
 
-use function PHPUnit\Framework\directoryExists;
-
 class Service implements FullService
 {
     private const FONT_DIR = __DIR__ . '/../fonts';
@@ -174,17 +172,16 @@ header
 
     private function initPdf(Options $opts): Dompdf
     {
-        $pdf = ($this->dom_pdf)();
+        $pdf = ($this->dom_pdf)([
+            'isPdfAEnabled' => true,
+            'defaultFont' => $this->main_font,
+            'dpi' => 150,
+            'fontDir' => $this->getFontDir(),
+            'fontCache' => $this->getFontCache(),
+            'tempDir', $this->getTempDir(),
+        ]);
         $pdf->setPaper('A4', $opts->getPortrait() ? 'portrait' : 'landscape');
 
-        $options = $pdf->getOptions();
-        $options->set('isPdfAEnabled', true);
-        $options->set('defaultFont', $this->main_font);
-        $options->setDpi(150);
-        $options->set('fontDir', $this->getFontDir());
-        $options->set('fontCache', $this->getFontCache());
-        $options->set('tempDir', $this->getTempDir());
-        $pdf->setOptions($options);
         $this->setupFonts($pdf);
 
         return $pdf;
