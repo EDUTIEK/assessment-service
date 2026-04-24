@@ -136,7 +136,7 @@ return [
     'notification_var_pseudonym' => 'Teilnehmer-Pseudonym',
     'notification_var_reason' => 'Begründung',
     'notification_writer_correction_finalized_title' => 'Korrektur verfügbar',
-    'notification_writer_correction_finalized_info' => 'Wird an einen Teilnehmer gesendet, wenn die Korektur seiner Abgabe fertig und der Einsichtnahmezeitraum erreicht ist.',
+    'notification_writer_correction_finalized_info' => 'Wird an einen Teilnehmer gesendet, wenn die Korrektur seiner Abgabe fertig und der Einsichtnahmezeitraum erreicht ist.',
     'notification_writer_correction_finalized_subject' => 'Korrektur Ihrer Abgabe verfügbar',
     'notification_admin_stitch_needed_title' => 'Stichentscheid notwendig',
     'notification_admin_stitch_needed_info' => 'Wird an ausgewählte Benutzer gesendet, wenn ein Stichentscheid notwendig wurde.',
