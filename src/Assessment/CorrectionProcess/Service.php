@@ -40,10 +40,10 @@ readonly class Service implements FullService
     ) {
     }
 
-    public function setCorrectionOpen(Writer $writer)
+    public function resetStatus(Writer $writer, CorrectionStatus $status)
     {
-        if ($writer->getCorrectionStatus() !== CorrectionStatus::OPEN) {
-            $writer->setCorrectionStatus(CorrectionStatus::OPEN);
+        if ($writer->getCorrectionStatus() !== $status) {
+            $writer->setCorrectionStatus($status);
             $writer->setCorrectionStatusChanged(new DateTimeImmutable());
             $writer->setCorrectionStatusChangedBy($this->user_id);
             $writer->setFinalizedFromStatus(null);

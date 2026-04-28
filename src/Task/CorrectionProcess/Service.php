@@ -282,31 +282,117 @@ readonly class Service implements FullService
         return new Result(true);
     }
 
-    public function removeAuthorizations(int $task_id, Writer $writer): Result
+    public function getRemovableStepsOptions(array $writing_tasks): array
     {
-        $changed = false;
+        $multi = $this->correction_settings->hasMultipleCorrectors();
+        $procedure = $this->correction_settings->getProcedure();
 
-        // remove authorizations
-        foreach ($this->repos->correctorSummary()->allByTaskIdAndWriterId($task_id, $writer->getId()) as $summary) {
-            if ($summary->isAuthorized()) {
-                $summary->setGradingStatus(GradingStatus::OPEN, $this->user_id);
-                $this->repos->correctorSummary()->save($summary);
-                $changed = true;
-
-                $corrector = $this->corrector_service->oneById($summary->getCorrectorId());
-                if ($corrector !== null && $corrector->getUserId() !== $this->user_id) {
-                    $this->notification_service->createFor(NotificationType::CORRECTOR_AUTHORIZATION_REMOVED, $writer, $corrector);
+        $steps = [];
+        foreach ($writing_tasks as $wt) {
+            foreach ($this->assignments->allByTaskIdAndWriterId($wt->getTaskId(), $wt->getWriterId()) as $assignment) {
+                $summary = $this->summary_service->getForAssignment($assignment);
+                if ($summary->isAuthorized()) {
+                    $step = match($assignment->getPosition()) {
+                        GradingPosition::FIRST => ProcessStep::FIRST_AUTHORIZATION,
+                        GradingPosition::SECOND => ProcessStep::SECOND_AUTHORIZATION,
+                        GradingPosition::STITCH => ProcessStep::STITCH_DECISION,
+                    };
+                    $steps[$step->value] = $this->language->txt($step->langVar($multi, $procedure));
+                }
+                if ($summary->isRevised()) {
+                    $step = match($assignment->getPosition()) {
+                        GradingPosition::FIRST => ProcessStep::FIRST_REVISION,
+                        GradingPosition::SECOND => ProcessStep::SECOND_REVISION,
+                        default => null
+                    };
+                    if ($step) {
+                        $steps[$step->value] = $this->language->txt($step->langVar($multi, $procedure));
+                    }
                 }
             }
         }
 
-        if ($changed || $writer->isCorrectionFinalized()) {
-            $this->whole_process->setCorrectionOpen($writer);
+        krsort($steps);
+        return $steps;
+    }
+
+    public function removeEqualOrHigherSteps(int $task_id, Writer $writer, ProcessStep $start_step, ?string $reason): Result
+    {
+        $changed = false;
+
+        foreach ($this->assignments->allByTaskIdAndWriterId($task_id, $writer->getId()) as $assignment) {
+            $summary = $this->summary_service->getForAssignment($assignment);
+            $summary_changed = false;
+
+            if ($summary->isAuthorized()) {
+                $step = match($assignment->getPosition()) {
+                    GradingPosition::FIRST => ProcessStep::FIRST_AUTHORIZATION,
+                    GradingPosition::SECOND => ProcessStep::SECOND_AUTHORIZATION,
+                    GradingPosition::STITCH => ProcessStep::STITCH_DECISION,
+                };
+                if ($step->isHigherOrEqualThan($start_step)) {
+                    $summary->setPreGraded(new \DateTimeImmutable());
+                    $summary->setCorrectionAuthorized(null);
+                    $summary->setCorrectionAuthorizedBy(null);
+                    $summary_changed = true;
+                }
+            }
+
+            if ($summary->isRevised()) {
+                $step = match($assignment->getPosition()) {
+                    GradingPosition::FIRST => ProcessStep::FIRST_REVISION,
+                    GradingPosition::SECOND => ProcessStep::SECOND_REVISION,
+                    default => null
+                };
+                if ($step?->isHigherOrEqualThan($start_step)) {
+                    $summary->setRevised(null);
+                    $summary_changed = true;
+                }
+            }
+
+            if ($summary_changed) {
+                $this->repos->correctorSummary()->save($summary->touch());
+                $changed = true;
+
+                $corrector = $this->corrector_service->oneById($summary->getCorrectorId());
+                if ($corrector !== null && $corrector->getUserId() !== $this->user_id) {
+                    $this->notification_service->createFor(
+                        NotificationType::CORRECTOR_AUTHORIZATION_REMOVED,
+                        $writer,
+                        $corrector,
+                        $reason
+                    );
+                }
+            }
+        }
+
+        if ($changed) {
+
+            switch ($start_step) {
+                case ProcessStep::FIRST_AUTHORIZATION:
+                case ProcessStep::SECOND_AUTHORIZATION:
+                    $status = CorrectionStatus::OPEN;
+                    break;
+                case ProcessStep::FIRST_REVISION:
+                case ProcessStep::SECOND_REVISION:
+                    $status = match($this->correction_settings->getProcedure()) {
+                        CorrectionProcedure::APPROXIMATION => CorrectionStatus::APPROXIMATION,
+                        CorrectionProcedure::CONSULTING => CorrectionStatus::CONSULTING,
+                        default => CorrectionProcedure::CONSULTING
+                    };
+                    break;
+                case ProcessStep::STITCH_DECISION:
+                    $status = CorrectionStatus::STITCH;
+                    break;
+            }
+
+            $this->whole_process->resetStatus($writer, $status);
 
             $this->log_entry->addEntry(
                 LogEntryType::CORRECTION_REMOVE_AUTHORIZATION,
                 MentionUser::fromSystem($this->user_id),
-                MentionUser::fromWriter($writer)
+                MentionUser::fromWriter($writer),
+                $reason
             );
             return new Result(true);
         }

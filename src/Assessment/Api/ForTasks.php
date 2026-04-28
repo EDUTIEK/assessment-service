@@ -16,6 +16,7 @@ use Edutiek\AssessmentService\Assessment\Permissions\ReadService as PermissionsR
 use Edutiek\AssessmentService\Assessment\Location\ReadService as LocationService;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\ReadService as OrgaSettingsService;
 use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropertiesReadService;
+use Edutiek\AssessmentService\Assessment\WritingTask\ReadService as WritingTaskReadService;
 
 readonly class ForTasks
 {
@@ -79,5 +80,10 @@ readonly class ForTasks
     public function notification(): NotificationService
     {
         return $this->internal->notification($this->ass_id, $this->user_id);
+    }
+
+    public function WritingTask(): WritingTaskReadService
+    {
+        return $this->internal->writingTask($this->ass_id, $this->user_id);
     }
 }

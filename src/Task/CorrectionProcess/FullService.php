@@ -3,9 +3,10 @@
 namespace Edutiek\AssessmentService\Task\CorrectionProcess;
 
 use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\Assessment\Data\WritingTask;
 use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
-use ILIAS\Plugin\LongEssayAssessment\Task\Data\CorrectorAssignment;
+use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 
 interface FullService
 {
@@ -58,11 +59,19 @@ interface FullService
      */
     public function removeFirstAuthorization(CorrectorAssignment $assignment, string $reason): Result;
 
+
     /**
-     * Remove all correction authorizations of a writer
+     * Get a list process steps that can be removed by an administrator (in descending order)
+     * @param WritingTask[] $writing_tasks
+     * @return array<int, string> step value => step title (translated)
+     */
+    public function getRemovableStepsOptions(array $writing_tasks): array;
+
+    /**
+     * Remove authorization or revision steps that are equal or higher than the given step
      * - This must be called by an admin, not by a corrector
      */
-    public function removeAuthorizations(int $task_id, Writer $writer): Result;
+    public function removeEqualOrHigherSteps(int $task_id, Writer $writer, ProcessStep $start_step, ?string $reason): Result;
 
     /**
      * Check a summary and save it it possible as a corrector
