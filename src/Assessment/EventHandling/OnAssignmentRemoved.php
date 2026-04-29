@@ -26,10 +26,11 @@ readonly class OnAssignmentRemoved implements Handler
      */
     public function handle(Event $event): void
     {
-        $writer = $this->writer_service->oneByWriterId($event->getWriterId());
-        if ($writer !== null) {
-            $this->writer_service->removeCorrectionFinalisation($writer, $this->user_id);
+        if ($event->getResetStatus()) {
+            $writer = $this->writer_service->oneByWriterId($event->getWriterId());
+            if ($writer !== null) {
+                $this->writer_service->removeCorrectionFinalisation($writer, $this->user_id);
+            }
         }
-
     }
 }

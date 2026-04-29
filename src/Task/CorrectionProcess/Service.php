@@ -16,7 +16,7 @@ use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorService;
 use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
-use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as AssignmentsService;
+use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentsService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\ReadService as SummaryService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
@@ -490,6 +490,7 @@ readonly class Service implements FullService
             );
         }
 
+        $old_status = $writer->getCorrectionStatus();
         $status = $this->whole_process->updateStatus($writer);
 
         if ($status === CorrectionStatus::APPROXIMATION || $status === CorrectionStatus::CONSULTING) {
@@ -498,11 +499,45 @@ readonly class Service implements FullService
                     if ($assignment->getPosition() === GradingPosition::SECOND) {
                         $corrector = $this->corrector_service->oneById($assignment->getCorrectorId());
                         $this->notification_service->createFor(NotificationType::CORRECTOR_PROCEDURE_STARTED, $writer, $corrector);
+                        break;
                     }
                 }
             }
         }
 
+        if ($status === CorrectionStatus::FINALIZED && $this->correction_settings->hasMultipleCorrectors()) {
+            $this->cleanupObsoleteData($summary->getTaskId(), $summary->getWriterId(), $old_status);
+        }
+
         return $result;
+    }
+
+    /**
+     * Cleanup obsolete correction data at finalisation
+     */
+    private function cleanupObsoleteData(int $task_id, int $writer_id, CorrectionStatus $old_status): void
+    {
+        // remove obsolete revision data
+        foreach ($this->summary_service->allByTaskIdAndWriterId($task_id, $writer_id) as $summary) {
+            if (!$summary->isRevised()) {
+                $summary->setRevisionText(null);
+                $summary->setRevisionPoints(null);
+                $summary->setRequireOtherRevision(false);
+                $this->repos->correctorSummary()->save($summary);
+            }
+        }
+
+        // remove a stitch assignment if it was not used
+        if ($old_status !== CorrectionStatus::STITCH) {
+            foreach ($this->assignments->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
+                if ($assignment->getPosition() === GradingPosition::STITCH) {
+                    $summary = $this->summary_service->getForAssignment($assignment);
+                    if (!$summary?->isAuthorized()) {
+                        $this->assignments->removeAssignment($assignment);
+                    }
+                    break;
+                }
+            }
+        }
     }
 }

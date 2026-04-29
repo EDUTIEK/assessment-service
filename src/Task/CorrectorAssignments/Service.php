@@ -165,12 +165,22 @@ readonly class Service implements FullService
 
     public function removeAssignment(CorrectorAssignment $assignment): void
     {
-        // todo: check scope
-        $this->repos->correctorAssignment()->delete($assignment->getId());
-        $this->events->dispatchEvent(new AssignmentRemoved(
+        $reset_status = true;
+
+        $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
             $assignment->getTaskId(),
             $assignment->getWriterId(),
             $assignment->getCorrectorId()
+        );
+
+        // reset a writer's correction status only if an authorized correction is unassigned
+        $reset_status = $summary->isAuthorized();
+
+        $this->events->dispatchEvent(new AssignmentRemoved(
+            $assignment->getTaskId(),
+            $assignment->getWriterId(),
+            $assignment->getCorrectorId(),
+            $reset_status
         ));
     }
 
@@ -287,12 +297,7 @@ readonly class Service implements FullService
                     $this->repos->correctorAssignment()->save($new_assignment);
                 } elseif ($old_assignment !== null && $new_assignment === null
                 ) {
-                    $this->repos->correctorAssignment()->delete($old_assignment->getId());
-                    $this->events->dispatchEvent(new AssignmentRemoved(
-                        $old_assignment->getTaskId(),
-                        $old_assignment->getWriterId(),
-                        $old_assignment->getCorrectorId()
-                    ));
+                    $this->removeAssignment($old_assignment);
 
                 } elseif ($new_assignment !== null) {
                     $this->repos->correctorAssignment()->save($new_assignment);

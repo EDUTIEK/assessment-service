@@ -110,9 +110,6 @@ abstract class CorrectorSummary implements TaskEntity
                 $this->setCorrectionAuthorized(null);
                 $this->setCorrectionAuthorizedBy(null);
                 $this->setRevised(null);
-                $this->setRevisionText(null);
-                $this->setRevisionPoints(null);
-                $this->setRequireOtherRevision(false);
                 break;
 
             case GradingStatus::PRE_GRADED:
