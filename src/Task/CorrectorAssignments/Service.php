@@ -167,6 +167,8 @@ readonly class Service implements FullService
     {
         $reset_status = true;
 
+        $this->repos->correctorAssignment()->delete($assignment->getId());
+
         $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
             $assignment->getTaskId(),
             $assignment->getWriterId(),
@@ -174,7 +176,7 @@ readonly class Service implements FullService
         );
 
         // reset a writer's correction status only if an authorized correction is unassigned
-        $reset_status = $summary->isAuthorized();
+        $reset_status = $summary?->isAuthorized() ?? false;
 
         $this->events->dispatchEvent(new AssignmentRemoved(
             $assignment->getTaskId(),
