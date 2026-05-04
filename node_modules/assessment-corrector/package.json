@@ -20,7 +20,7 @@
     "@mdi/font": "7.4.47",
     "@tinymce/tinymce-vue": "^6.0.1",
     "@vitejs/plugin-vue": "^5.0.5",
-    "annotate-pdf": "github:EDUTIEK/annotate-pdf",
+    "annotate-pdf": "github:EDUTIEK/annotate-pdf#acc-annot",
     "axios": "^1.7.7",
     "diff-match-patch": "^1.0.5",
     "js-cookie": "^3.0.5",
