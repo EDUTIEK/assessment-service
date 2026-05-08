@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Task\Api;
 
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingProvider;
+use Edutiek\AssessmentService\Task\Checks\FullService as ChecksService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\ReadService as CorrectionSettingsReadService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentReadService;
 use Edutiek\AssessmentService\Task\CorrectorComment\InfoService as CorrectorCommentInfoService;
@@ -17,6 +18,11 @@ readonly class ForTypes
         private int $user_id,
         private Internal $internal
     ) {
+    }
+
+    public function checks(): ChecksService
+    {
+        return $this->internal->checks($this->ass_id, $this->user_id);
     }
 
     public function tasks(): ManagerReadService
