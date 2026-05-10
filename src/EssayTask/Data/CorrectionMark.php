@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\EssayTask\Data;
 
 /**
- * Graphical mark drawn by a corrector on the image of a written page
+ * Graphical mark drawn by a corrector on the image of a written page or in a pdf file
  */
 class CorrectionMark
 {
+    // shapes on images
     public const SHAPE_NONE = '';
     public const SHAPE_CIRCLE = 'circle';
     public const SHAPE_RECTANGLE = 'rectangle';
@@ -16,7 +17,17 @@ class CorrectionMark
     public const SHAPE_LINE = 'line';
     public const SHAPE_WAVE = 'wave';
 
-    public const ALLOWED_SHAPES = [self::SHAPE_CIRCLE, self::SHAPE_RECTANGLE, self::SHAPE_POLYGON, self::SHAPE_LINE, self::SHAPE_WAVE];
+    // shapes in pdf
+    public const SHAPE_FREE_MARKER = 'free_marker';
+    public const SHAPE_TEXT_MARKER = 'text_marker';
+    public const SHAPE_TEXT_UNDERLINE = 'text_underline';
+    public const SHAPE_TEXT_WAVE = 'text_wave';
+
+    public const ALLOWED_SHAPES = [
+        self::SHAPE_CIRCLE, self::SHAPE_RECTANGLE, self::SHAPE_POLYGON, self::SHAPE_LINE, self::SHAPE_WAVE,
+        self::SHAPE_FREE_MARKER, self::SHAPE_TEXT_MARKER, self::SHAPE_TEXT_UNDERLINE, self::SHAPE_TEXT_WAVE,
+    ];
+
     public const FILLED_SHAPES = [self::SHAPE_CIRCLE, self::SHAPE_RECTANGLE, self::SHAPE_POLYGON];
 
     private string $key;
