@@ -76,8 +76,13 @@ class AppCorrector extends BaseApp implements RestService
         }
 
         $file = $request->getUploadedFiles()['file'] ?? null;
-        if ($file?->getError() === UPLOAD_ERR_OK) {
-            $id = $bridge->processUploadedFile($file, $entity, $task_id, $writer_id);
+        if ($file?->getError() !== UPLOAD_ERR_OK) {
+            throw new RestException("Upload error" , RestException::INTERNAL_SERVER_ERROR);
+        }
+
+        $id = $bridge->processUploadedFile($file, $entity, $task_id, $writer_id);
+        if ($id === null) {
+            throw new RestException("Saving error" , RestException::INTERNAL_SERVER_ERROR);
         }
 
         $json = [

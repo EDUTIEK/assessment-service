@@ -390,11 +390,11 @@ function changeSvgToWave(editor, color)
     const lineHeight = 1 / len;
     const newPath = parts.map((part, i) => {
         const [x, y, v1, h, v2] = part.match(/([0-9.]+) +([0-9.]+) +V *([0-9.]+) +H *([0-9.]+) +V *([0-9.]+)/).slice(1).map(x => Number(x));
-        const yy = (lineHeight * i) + (lineHeight * 0.9);
+        const yy = y - pitch;
         let s = `M${x} ${yy}`;
         let dir = -1;
         let n = x;
-        while (n < h) {
+        while (n + step < h) {
             s += ` Q${n + (step / 2)} ${(yy) + (dir * pitch)} ${n + step} ${yy}`;
             n += step;
             dir = -dir;
@@ -403,7 +403,7 @@ function changeSvgToWave(editor, color)
     }).join(' ');
     pathNode.setAttribute('d', newPath);
     pathNode.setAttribute('stroke', color);
-    pathNode.setAttribute('stroke-width', '1.1');
+    pathNode.setAttribute('stroke-width', '1.4');
     pathNode.setAttribute('fill', 'transparent');
 }
 
