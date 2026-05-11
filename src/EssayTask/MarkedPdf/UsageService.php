@@ -27,11 +27,14 @@ interface UsageService
     public function sumByIds(int $task_id, int $writer_id): ?string;
 
     /**
-     * Save the file ids of marked pdf files
-     * @param string $own_id    file_id of a pdf with own marks
-     * @param string $all_id file_id of a pdf with own marks and marks all authorized previous correctors
+     * Save the file id of a pdf with own marks
      */
-    public function save(string $own_id, string $sum_id, int $task_id, int $writer_id, int $corrector_id): void;
+    public function saveOwn(string $file_id, int $task_id, int $writer_id, int $corrector_id): void;
+
+    /**
+     * Save the file id of a pdf with own marks and marks all authorized previous correctors
+     */
+    public function saveSum(string $file_id, int $task_id, int $writer_id, int $corrector_id): void;
 
     /**
      * Delete a marked pdf file

@@ -8,10 +8,13 @@ use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorReadS
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\Data\WritingSettings;
 use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImageFullService;
+use Edutiek\AssessmentService\EssayTask\MarkedPdf\UsageService as MarkedPdfService;
 use Edutiek\AssessmentService\EssayTask\HtmlProcessing\FullService as HtmlProcessing;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
+use Edutiek\AssessmentService\System\File\Storage as Storage;
 use Edutiek\AssessmentService\Task\CorrectionSettings\ReadService as TaskCorrectionSettings;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as AssignmentService;
+use Edutiek\AssessmentService\Task\CorrectionProcess\ReadService as CorrectionProcess;
 use Edutiek\AssessmentService\Task\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Task\Data\PdfMarking;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TaskService;
@@ -29,12 +32,15 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly int $user_id,
         private readonly Repositories $repos,
         private readonly EssayImageFullService $essay_images,
+        private readonly MarkedPdfService $marked_pdf,
         private readonly EntityFullService $entity,
         private readonly CorrectorReadService $corrector_service,
         private readonly TaskCorrectionSettings $task_correction_settings,
+        private readonly CorrectionProcess $process_service,
         private readonly AssignmentService $assignment_service,
         private readonly TaskService $task_service,
         private readonly HtmlProcessing $html_processing,
+        private readonly Storage $storage,
     ) {
         $this->corrector = $this->corrector_service->oneByUserId($this->user_id);
         $this->writing_settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
@@ -140,6 +146,32 @@ class CorrectorBridge implements AppCorrectorBridge
 
     public function processUploadedFile(UploadedFileInterface $file, string $entity, int $task_id, int $writer_id): ?string
     {
+        if ($entity !== 'ownpdf' && $entity !== 'sumpdf') {
+            return null;
+        }
+        if ($this->task_correction_settings->get()->getPdfMarking() !== PdfMarking::TEXT) {
+            return null;
+        }
+
+        if ($this->corrector != null) {
+            $assignment = $this->assignment_service->oneByIds($writer_id, $this->corrector->getId(), $task_id);
+            if (!$assignment || !$this->process_service->canCorrect($assignment)) {
+                return null;
+            }
+
+            $info = $this->storage->saveFile($file->getStream(), null);
+            if ($info) {
+                switch ($entity) {
+                    case 'ownpdf':
+                        $this->marked_pdf->saveOwn($info->getId(), $task_id, $writer_id, $this->corrector->getId());
+                        break;
+                    case 'sumpdf':
+                        $this->marked_pdf->saveSum($info->getId(), $task_id, $writer_id, $this->corrector->getId());
+                        break;
+                }
+                return $info->getId();
+            }
+        }
         return null;
     }
 }
