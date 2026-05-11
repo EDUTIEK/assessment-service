@@ -106,7 +106,7 @@ class CorrectorBridge implements AppCorrectorBridge
         return null;
     }
 
-    public function processUploadedFile(UploadedFileInterface $file, int $task_id, int $writer_id): ?string
+    public function processUploadedFile(UploadedFileInterface $file, string $entity, int $task_id, int $writer_id): ?string
     {
         return null;
     }

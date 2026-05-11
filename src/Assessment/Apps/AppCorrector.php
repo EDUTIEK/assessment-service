@@ -20,7 +20,7 @@ class AppCorrector extends BaseApp implements RestService
         $this->app->get('/corrector/item/{task_id}/{writer_id}', [$this,'getItem']);
         $this->app->get('/corrector/file/{component}/{entity}/{id}/{dummy}', [$this,'getFile']);
         $this->app->put('/corrector/changes', [$this, 'putChanges']);
-        $this->app->post('/corrector/upload/{task_id}/{writer_id}', [$this,'postFile']);
+        $this->app->post('/corrector/upload/{component}/{entity}/{task_id}/{writer_id}', [$this,'postFile']);
         $this->app->run();
         exit;
     }
@@ -64,21 +64,20 @@ class AppCorrector extends BaseApp implements RestService
 
         $task_id = (int) ($args['task_id'] ?? 0);
         $writer_id = (int) ($args['writer_id'] ?? 0);
-        $component = 'task';
-        $entity = 'summary';
+        $component = (string) ($args['component'] ?? null);
+        $entity = (string) ($args['entity'] ?? null);
 
         if ($entity === null) {
             throw new RestException('No entity given', RestException::NOT_FOUND);
         }
-        $bridge = $this->getBridge((string) $component);
+        $bridge = $this->getBridge($component);
         if ($bridge === null) {
             throw new RestException("Component $component not found", RestException::NOT_FOUND);
         }
 
         $file = $request->getUploadedFiles()['file'] ?? null;
         if ($file?->getError() === UPLOAD_ERR_OK) {
-            $bridge = $this->getBridge((string) $component);
-            $id = $bridge->processUploadedFile($file, $task_id, $writer_id);
+            $id = $bridge->processUploadedFile($file, $entity, $task_id, $writer_id);
         }
 
         $json = [

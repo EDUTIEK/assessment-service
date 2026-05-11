@@ -733,8 +733,12 @@ class CorrectorBridge implements AppCorrectorBridge
         return $this->criteria[$task_id][$corrector_id] ?? [];
     }
 
-    public function processUploadedFile(UploadedFileInterface $file, int $task_id, int $writer_id): ?string
+    public function processUploadedFile(UploadedFileInterface $file, string $entity, int $task_id, int $writer_id): ?string
     {
+        if ($entity !== 'summary') {
+            return null;
+        }
+
         if ($this->corrector != null) {
             $assignment = $this->assignment_service->oneByIds($writer_id, $this->corrector->getId(), $task_id);
             if (!$assignment || !$this->process_service->canCorrect($assignment)) {
