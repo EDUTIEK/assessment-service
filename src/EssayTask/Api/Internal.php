@@ -103,6 +103,7 @@ class Internal
             $this->dependencies->repositories(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->pdfSettings()->get(),
             $this->essayImage($ass_id, $user_id),
+            $this->markedPdf($ass_id, $user_id),
             $this->htmlProcessing($ass_id, $user_id),
             $this->imageProcessing(),
             $this->dependencies->systemApi()->pdfProcessing(),
