@@ -15,7 +15,8 @@ use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\EssayImage\FullService as EssayImages;
 use Edutiek\AssessmentService\EssayTask\HtmlProcessing\FullService as HtmlProcessing;
-use Edutiek\AssessmentService\EssayTask\ImageProcessing\FullService as ImageProcssing;
+use Edutiek\AssessmentService\EssayTask\ImageProcessing\FullService as ImageProcessing;
+use Edutiek\AssessmentService\EssayTask\MarkedPdf\UsageService as MarkedPdfs;
 use Edutiek\AssessmentService\System\Data\ImageDescriptor;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
@@ -26,6 +27,8 @@ use Edutiek\AssessmentService\Task\CorrectorComment\CorrectorCommentInfo;
 use Edutiek\AssessmentService\Task\CorrectorComment\InfoService as CommentsService;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings as AssessmentSettings;
 use Edutiek\AssessmentService\Task\Data\CorrectionSettings as TaskSettings;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\Grading;
+use Edutiek\AssessmentService\Task\Data\PdfMarking;
 
 readonly class CorrectionProvider implements PdfPartProvider
 {
@@ -43,8 +46,9 @@ readonly class CorrectionProvider implements PdfPartProvider
         private Repositories $repos,
         private PdfSettings $pdf_settings,
         private EssayImages $essay_images,
+        private MarkedPdfs $marked_pdfs,
         private HtmlProcessing $html_processing,
-        private ImageProcssing $image_processing,
+        private ImageProcessing $image_processing,
         private PdfProcessing $pdf_processing,
         private LanguageService $language,
         private FileStorage $file_storage,
@@ -148,10 +152,45 @@ readonly class CorrectionProvider implements PdfPartProvider
         $options = $options->withTitle($options->getTitle() . ' | ' . $this->getCorrectionTitle($key));
 
         if ($essay->hasPdfVersion()) {
-            return $this->renderFromImages($key, $essay, $infos, $anonymous_corrector, $options);
+            if ($this->task_settings->getPdfMarking() === PdfMarking::IMAGES) {
+                return $this->renderFromImages($key, $essay, $infos, $anonymous_corrector, $options);
+            }
+            if ($this->task_settings->getPdfMarking() === PdfMarking::TEXT) {
+                return $this->renderFormMarkedPdf($key, $task_id, $writer_id, $gradings, $allowed_positions);
+            }
         } else {
             return $this->renderFromText($key, $essay, $infos, $anonymous_corrector, $options);
         }
+    }
+
+    /**
+     * @param string $key
+     * @param Grading[]  $gradings
+     * @param GradingPosition[] $allowed_positions
+     * @return string|void|null
+     */
+    private function renderFormMarkedPdf(string $key, int $task_id, int $writer_id, array $gradings, array $allowed_positions)
+    {
+        switch ($key) {
+            case self::KEY_COMMENTS_ALL:
+                return $this->marked_pdfs->sumByIds($task_id, $writer_id);
+
+            case self::KEY_CORRECTOR_1:
+            case self::KEY_CORRECTOR_2:
+            case self::KEY_CORRECTOR_3:
+                $position = match($key) {
+                    self::KEY_CORRECTOR_1 => GradingPosition::FIRST,
+                    self::KEY_CORRECTOR_2 => GradingPosition::SECOND,
+                    self::KEY_CORRECTOR_3 => GradingPosition::STITCH
+                };
+                if (in_array($position, $allowed_positions)) {
+                    $grading = $gradings[$position->value];
+                    if ($grading) {
+                        return $this->marked_pdfs->ownByIds($task_id, $writer_id, $grading->getCorrectorId());
+                    }
+                }
+        }
+        return null;
     }
 
     /**
