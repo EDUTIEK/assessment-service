@@ -138,7 +138,7 @@ class CorrectorBridge implements AppCorrectorBridge
         return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'corrector not found'), $changes);
     }
 
-    public function processUploadedFile(UploadedFileInterface $file, int $task_id, int $writer_id): ?string
+    public function processUploadedFile(UploadedFileInterface $file, string $entity, int $task_id, int $writer_id): ?string
     {
         return null;
     }
