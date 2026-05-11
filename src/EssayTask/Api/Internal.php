@@ -20,6 +20,7 @@ use Edutiek\AssessmentService\EssayTask\EventHandling\Observer as EventObserver;
 use Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service as HtmlService;
 use Edutiek\AssessmentService\EssayTask\ImageProcessing\Service as ImageService;
 use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
+use Edutiek\AssessmentService\EssayTask\MarkedPdf\Service as MarkedPdfService;
 use Edutiek\AssessmentService\EssayTask\PdfCreation\CorrectionProvider;
 use Edutiek\AssessmentService\EssayTask\PdfCreation\WritingProvider;
 use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettingsService;
@@ -61,12 +62,15 @@ class Internal
             $user_id,
             $this->dependencies->repositories(),
             $this->essayImage($ass_id, $user_id),
+            $this->markedPdf($ass_id, $user_id),
             $this->dependencies->systemApi()->entity(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->taskApi($ass_id, $user_id)->correctionSettings(),
+            $this->dependencies->taskApi($ass_id, $user_id)->correctionProcess(),
             $this->dependencies->taskApi($ass_id, $user_id)->correctorAssignments(),
             $this->dependencies->taskApi($ass_id, $user_id)->tasks(),
-            $this->htmlProcessing($ass_id, $user_id)
+            $this->htmlProcessing($ass_id, $user_id),
+            $this->dependencies->systemApi()->fileStorage()
         );
     }
 
@@ -211,6 +215,16 @@ class Internal
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->taskApi($ass_id, $user_id)->tasks()
+        );
+    }
+
+    public function markedPdf(int $ass_id, int $user_id): MarkedPdfService
+    {
+        return $this->instances[MarkedPdfService::class][$ass_id][$user_id] ?? new MarkedPdfService(
+            $this->dependencies->repositories(),
+            $this->dependencies->taskApi($ass_id, $user_id)->checks(),
+            $this->dependencies->taskApi($ass_id, $user_id)->gradingProvider(),
+            $this->dependencies->systemApi()->fileStorage(),
         );
     }
 

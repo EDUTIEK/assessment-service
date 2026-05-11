@@ -53,19 +53,34 @@ class Service implements UsageService, EventService
         return null;
     }
 
-    public function save(string $own_id, string $sum_id, int $task_id, int $writer_id, int $corrector_id): void
+    public function saveOwn(string $file_id, int $task_id, int $writer_id, int $corrector_id): void
     {
         $this->checkScope($task_id, $writer_id, $corrector_id);
-        $entity = $this->repo->oneByIds($task_id, $writer_id, $corrector_id);
-        if ($entity) {
-            $this->deleteFilesAndEntity($entity);
+        $entity = $this->repo->oneByIds($task_id, $writer_id, $corrector_id) ?? (
+            $this->repo->new()
+            ->setTaskId($task_id)
+            ->setWriterId($writer_id)
+            ->setCorrectorId($corrector_id)
+        );
+        if ($entity->getOwnPdf()) {
+            $this->storage->deleteFile($entity->getOwnPdf());
         }
-        $this->repo->save($this->repo->new()
-             ->setOwnPdf($own_id)
-             ->setSumPdf($sum_id)
-             ->setTaskId($task_id)
-             ->setWriterId($writer_id)
-             ->setCorrectorId($corrector_id));
+        $this->repo->save($entity->setOwnPdf($file_id));
+    }
+
+    public function saveSum(string $file_id, int $task_id, int $writer_id, int $corrector_id): void
+    {
+        $this->checkScope($task_id, $writer_id, $corrector_id);
+        $entity = $this->repo->oneByIds($task_id, $writer_id, $corrector_id) ?? (
+            $this->repo->new()
+                   ->setTaskId($task_id)
+                   ->setWriterId($writer_id)
+                   ->setCorrectorId($corrector_id)
+        );
+        if ($entity->getSumPdf()) {
+            $this->storage->deleteFile($entity->getSumPdf());
+        }
+        $this->repo->save($entity->setSumPdf($file_id));
     }
 
     public function delete(int $task_id, int $writer_id, int $corrector_id): void

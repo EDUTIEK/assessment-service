@@ -9,6 +9,7 @@ use Edutiek\AssessmentService\Task\Checks\FullService as ChecksService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\ReadService as CorrectionSettingsReadService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\ReadService as CorrectorAssignmentReadService;
 use Edutiek\AssessmentService\Task\CorrectorComment\InfoService as CorrectorCommentInfoService;
+use Edutiek\AssessmentService\Task\CorrectionProcess\ReadService as CorrectionProcessReadService;
 use Edutiek\AssessmentService\Task\Manager\ReadService as ManagerReadService;
 
 readonly class ForTypes
@@ -38,6 +39,11 @@ readonly class ForTypes
     public function correctorComments(): CorrectorCommentInfoService
     {
         return $this->internal->correctorComment($this->ass_id, $this->user_id);
+    }
+
+    public function correctionProcess(): CorrectionProcessReadService
+    {
+        return $this->internal->correctionProcess($this->ass_id, $this->user_id);
     }
 
     public function correctionSettings(): CorrectionSettingsReadService
