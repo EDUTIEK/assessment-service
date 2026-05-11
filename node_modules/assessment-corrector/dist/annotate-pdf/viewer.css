@@ -16,7 +16,9 @@
 
 .annotation-label
 {
-    background-color: lightblue;
+    font-family: sans-serif;
+    background-color: #606060;
+    color: white;
     position: absolute;
     font-size: 12px;
     top: 0;

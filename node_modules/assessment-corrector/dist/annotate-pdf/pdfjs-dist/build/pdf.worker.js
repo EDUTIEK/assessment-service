@@ -59819,12 +59819,11 @@ class HighlightAnnotation extends MarkupAnnotation {
         let dir = 1;
         const step = 6;
         const pitch = 3;
-        while (n < x2) {
+        while (n + step < x2) {
           appearanceBuffer.push(`${numberToString(n + (step / 2))} ${numberToString(y1 + (dir * pitch))} ${numberToString(n + step)} ${numberToString(y1)} v`);
           n += step;
           dir = -dir;
         }
-        appearanceBuffer.push(`${numberToString(x2)} ${numberToString(y2)} l`);
         appearanceBuffer.push('S');
       }
       break;

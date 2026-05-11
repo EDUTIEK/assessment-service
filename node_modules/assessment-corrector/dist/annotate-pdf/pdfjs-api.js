@@ -87,7 +87,7 @@ export default (parent, viewer, pdf, options = {}) => {
         currentPage: () => requestUnsafe('currentPage'),
         destroy: () => {
             window.removeEventListener('message', dispatchOrRespond);
-            iframe.remove();
+            frame.remove();
         },
         rebuild: () => {
             window.addEventListener('message', dispatchOrRespond);
