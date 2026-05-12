@@ -225,7 +225,7 @@ class CorrectorBridge implements AppCorrectorBridge
             $data['Snippets'][] = $this->entity->arrayToPrimitives([
                 'key' => $snippet->getKey(),
                 'purpose' => $snippet->getPurpose(),
-                'title' => $snippet->getTitle(),
+                'shortcut' => $snippet->getShortcut(),
                 'text' => $snippet->getText()
             ]);
         }
@@ -693,7 +693,7 @@ class CorrectorBridge implements AppCorrectorBridge
             'corrector_id' => $this->corrector->getId(),
             'purpose' => $data['purpose'] ?? null,
             'text' => $data['text'] ?? null,
-            'title' => $data['title'] ?? null,
+            'shortcut' => $data['shortcut'] ?? null,
         ], $snippet, CorrectorSnippet::class);
 
         $this->entity->secure($snippet, CorrectorSnippet::class);
