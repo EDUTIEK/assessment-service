@@ -306,7 +306,7 @@ class CorrectorBridge implements AppCorrectorBridge
                        'user_id' => $corrector->getUserId(),
                        'title' => $user?->getListname(false)
                            ?? $this->language->txt($assignment->getPosition()->languageVariable()),
-                       'initials' => $user->getInitials() ?? $this->language->txt($assignment->getPosition()->initialsLanguageVariable()),
+                       'initials' => $this->language->txt($assignment->getPosition()->initialsLanguageVariable()),
                        'position' => $assignment->getPosition()->value,
                        'can_enter_revision_text' => $assignment->getPosition()->canEnterRevisionText(
                            $this->assessment_settings->getProcedure()
