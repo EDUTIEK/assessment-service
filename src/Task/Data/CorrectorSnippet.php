@@ -16,8 +16,8 @@ abstract class CorrectorSnippet
     abstract public function setKey(string $key): self;
     abstract public function getPurpose(): string;
     abstract public function setPurpose(string $purpose): self;
-    abstract public function getTitle(): ?string;
-    abstract public function setTitle(?string $title): self;
+    abstract public function getShortcut(): ?string;
+    abstract public function setShortcut(?string $shortcut): self;
     abstract public function getText(): ?string;
     abstract public function setText(?string $text): self;
 }
