@@ -156,40 +156,67 @@ readonly class CorrectionProvider implements PdfPartProvider
                 return $this->renderFromImages($key, $essay, $infos, $anonymous_corrector, $options);
             }
             if ($this->task_settings->getPdfMarking() === PdfMarking::TEXT) {
-                return $this->renderFormMarkedPdf($key, $task_id, $writer_id, $gradings, $allowed_positions);
+                $pdf_id = null;
+                if ($key === self::KEY_COMMENTS_ALL) {
+                    $pdf_id = $this->marked_pdfs->sumByIds($essay->getTaskId(), $essay->getWriterId());
+                } elseif (!empty($allowed_positions)) {
+                    $position = reset($allowed_positions);
+                    $grading = $gradings[$position->value];
+                    $pdf_id = $this->marked_pdfs->ownByIds($grading->getTaskId(), $grading->getWriterId(), $grading->getCorrectorId());
+                }
+
+                if ($pdf_id) {
+                    return $this->renderForMarkedPdf($key, $pdf_id, $infos, $anonymous_corrector, $options);
+                }
             }
         } else {
             return $this->renderFromText($key, $essay, $infos, $anonymous_corrector, $options);
         }
+
+        return null;
     }
 
     /**
-     * @param string $key
-     * @param Grading[]  $gradings
-     * @param GradingPosition[] $allowed_positions
-     * @return string|void|null
+     * @param CorrectorCommentInfo[] $infos
      */
-    private function renderFormMarkedPdf(string $key, int $task_id, int $writer_id, array $gradings, array $allowed_positions)
+    private function renderForMarkedPdf(string $key, string $marked_pdf_id, array $infos, bool $anonymous_corrector, Options $options)
     {
-        switch ($key) {
-            case self::KEY_COMMENTS_ALL:
-                return $this->marked_pdfs->sumByIds($task_id, $writer_id);
+        $start_page = $options->getStartPageNumber();
+        $orig_page_no = 1;
 
-            case self::KEY_CORRECTOR_1:
-            case self::KEY_CORRECTOR_2:
-            case self::KEY_CORRECTOR_3:
-                $position = match($key) {
-                    self::KEY_CORRECTOR_1 => GradingPosition::FIRST,
-                    self::KEY_CORRECTOR_2 => GradingPosition::SECOND,
-                    self::KEY_CORRECTOR_3 => GradingPosition::STITCH
-                };
-                if (in_array($position, $allowed_positions)) {
-                    $grading = $gradings[$position->value];
-                    if ($grading) {
-                        return $this->marked_pdfs->ownByIds($task_id, $writer_id, $grading->getCorrectorId());
-                    }
+        $pdf_ids = [];
+        foreach ($this->pdf_processing->split($marked_pdf_id) as $marked_page_id) {
+            $page_infos = $this->comments->filterAndLabelInfos($infos, $orig_page_no++);
+
+            $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/solo_comments.html', [
+                'partTitle' => $this->getCorrectionTitle($key),
+                'partComments' => $this->html_processing->getCommentsHtml($page_infos),
+            ]);
+            $html = $this->system_processing->addCorrectionStyles($html);
+
+            if (false && $this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
+                $comments_id = $this->pdf_processing->create($html, ($options->withStartPageNumber($start_page)));
+                $merged_id = $this->pdf_processing->nextToEachOther($marked_page_id, $comments_id);
+                $pdf_ids[] = $merged_id;
+                $start_page += $this->pdf_processing->count($merged_id);
+            } else {
+                // add the marked page
+                $pdf_ids[] = $marked_page_id;
+                $start_page++;
+
+                // followed by the comments pages
+                if (!empty($page_infos)) {
+                    $comments_id = $this->pdf_processing->create($html, ($options->withStartPageNumber($start_page)));
+                    $pdf_ids[] = $comments_id;
+                    $start_page += $this->pdf_processing->count($comments_id);
                 }
+            }
         }
+
+        $joined_id = $this->pdf_processing->join($pdf_ids);
+        $this->pdf_processing->cleanupExcept([$marked_pdf_id, $joined_id]);
+        return $joined_id;
+
         return null;
     }
 
