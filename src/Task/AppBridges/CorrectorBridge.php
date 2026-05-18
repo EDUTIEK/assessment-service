@@ -8,7 +8,6 @@ use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as AssessmentSettingsService;
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorReadService;
-use Edutiek\AssessmentService\Assessment\Data\CorrectionProcedure;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings as AssesmentCorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
@@ -21,6 +20,7 @@ use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentService;
+use Edutiek\AssessmentService\Task\CorrectorSnippets\FullService as SnippetsService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\ReadService as SummaryService;
 use Edutiek\AssessmentService\Task\CorrectorTemplate\FullService as TemplateService;
 use Edutiek\AssessmentService\Task\Data\CorrectionSettings as TaskCorrectionSettings;
@@ -29,7 +29,6 @@ use Edutiek\AssessmentService\Task\Data\CorrectorPoints;
 use Edutiek\AssessmentService\Task\Data\CorrectorPrefs;
 use Edutiek\AssessmentService\Task\Data\CorrectorSnippet;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
-use Edutiek\AssessmentService\Task\Data\CriteriaMode;
 use Edutiek\AssessmentService\Task\Data\RatingCriterion;
 use Edutiek\AssessmentService\Task\RatingCriterion\Factory as RatingCriterionServiceFactory;
 use Edutiek\AssessmentService\Task\Data\Repositories as Repositories;
@@ -38,6 +37,7 @@ use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Task\Data\Settings;
 use Psr\Http\Message\UploadedFileInterface;
 use Edutiek\AssessmentService\System\Data\FileInfo;
+use Edutiek\AssessmentService\Task\Data\CorrectorSnippetPurpose;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -71,6 +71,7 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly RatingCriterionServiceFactory $criteria_services,
         private readonly CorrectionSettingsService $correction_settings_service,
         private readonly AssignmentService $assignment_service,
+        private readonly SnippetsService $snippets_service,
         private readonly SummaryService $summary_service,
         private readonly TemplateService $template_service,
         private readonly CorrectionProcessService $process_service,
@@ -439,6 +440,15 @@ class CorrectorBridge implements AppCorrectorBridge
                     $id = $summary?->getSummaryPdf();
                     break;
                 }
+                // no break
+            case 'snippets_' . CorrectorSnippetPurpose::FOR_COMMENT->value:
+            case 'snippets_' . CorrectorSnippetPurpose::FOR_SUMMARY->value:
+                if ($this->corrector) {
+                    return $this->snippets_service->export(
+                        $this->corrector->getId(),
+                        CorrectorSnippetPurpose::from(str_replace('snippets_', '', $entity))
+                    );
+                }
         }
 
         if ($id) {
@@ -699,7 +709,7 @@ class CorrectorBridge implements AppCorrectorBridge
             'key' => $change->getKey(),
             'ass_id' => $this->ass_id,
             'corrector_id' => $this->corrector->getId(),
-            'purpose' => $data['purpose'] ?? null,
+            'purpose' => $data['purpose'] ?? CorrectorSnippetPurpose::FOR_COMMENT->value,
             'text' => $data['text'] ?? null,
             'shortcut' => $data['shortcut'] ?? null,
         ], $snippet, CorrectorSnippet::class);
