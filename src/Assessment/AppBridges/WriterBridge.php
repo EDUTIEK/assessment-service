@@ -15,6 +15,7 @@ use Edutiek\AssessmentService\Assessment\Alert\FullService as AlertService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\Data\Config;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
+use Edutiek\AssessmentService\System\Data\FileInfo;
 
 class WriterBridge implements AppBridge
 {
@@ -76,7 +77,7 @@ class WriterBridge implements AppBridge
     }
 
 
-    public function getFileId(string $entity, int $entity_id): ?string
+    public function getFileInfo(string $entity, int $entity_id): ?FileInfo
     {
         // no files handled in assessment component
         return null;
