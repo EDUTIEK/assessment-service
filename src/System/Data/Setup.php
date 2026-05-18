@@ -37,7 +37,7 @@ abstract readonly class Setup
     /**
      * Get the absolute path for temp files
      * It must be without a trailing slash
-     * Used by ZIPArchive, PHPSpreadsheet, Ghostscript
+     * Used by ZIPArchive, PHPSpreadsheet, Ghostscript, FileDelivery
      */
     abstract public function getAbsoluteTempPath(): string;
 

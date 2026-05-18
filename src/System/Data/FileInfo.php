@@ -30,4 +30,10 @@ abstract class FileInfo implements SystemEntity
      */
     abstract public function getSize(): ?int;
     abstract public function setSize(?int $size): FileInfo;
+
+    /**
+     * File can be deleted after sending
+     */
+    abstract public function getDisposable(): bool;
+    abstract public function setDisposable(bool $disposable): FileInfo;
 }

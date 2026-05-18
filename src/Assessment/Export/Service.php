@@ -55,23 +55,15 @@ class Service implements FullService
         }
 
         $wt = reset($writings);
-        $file_id = $this->pdf->createWritingPdf(
-            $wt->getTaskId(),
-            $wt->getWriterId(),
-            $anonymous
-        );
 
-        $temp_file = $this->storage->copyAsTempFile($file_id);
+        $file_id = $this->pdf->createWritingPdf($wt->getTaskId(), $wt->getWriterId(), $anonymous);
+        $file_info = $this->storage->newInfo()
+            ->setId($file_id)
+            ->setFileName($this->pdf->buildPdfFilename($writings, PdfPurpose::WRITING))
+            ->setMimeType('application/pdf')
+            ->setDisposable(true);
 
-        $this->storage->deleteFile($file_id);
-        $this->delivery->sendTempFile(
-            $temp_file,
-            Disposition::ATTACHMENT,
-            $this->storage->newInfo()
-                          ->setFileName($this->pdf->buildPdfFilename($writings, PdfPurpose::WRITING))
-                          ->setMimeType('application/pdf')
-        );
-
+        $this->delivery->sendFile($file_id, Disposition::ATTACHMENT, $file_info);
         return false;
     }
 
@@ -91,40 +83,33 @@ class Service implements FullService
         }
 
         $wt = reset($writings);
+
         $file_id = $this->pdf->createCorrectionPdf(
             $wt->getTaskId(),
             $wt->getWriterId(),
             $anonymous_writer,
             $anonymous_corrector
         );
+        $file_info = $this->storage->newInfo()
+            ->setId($file_id)
+            ->setFileName($this->pdf->buildPdfFilename($writings, PdfPurpose::WRITING))
+            ->setMimeType('application/pdf')
+            ->setDisposable(true);
 
-        $temp_file = $this->storage->copyAsTempFile($file_id);
-
-        $this->storage->deleteFile($file_id);
-        $this->delivery->sendTempFile(
-            $temp_file,
-            Disposition::ATTACHMENT,
-            $this->storage->newInfo()
-                          ->setFileName($this->pdf->buildPdfFilename($writings, PdfPurpose::CORRECTION))
-                          ->setMimeType('application/pdf')
-        );
-
+        $this->delivery->sendFile($file_id, Disposition::ATTACHMENT, $file_info);
         return false;
     }
 
     public function downloadReport(): void
     {
         $file_id = $this->pdf->createCorrectionReport();
-        $temp_file = $this->storage->copyAsTempFile($file_id);
-        $this->storage->deleteFile($file_id);
+        $file_info = $this->storage->newInfo()
+            ->setId($file_id)
+            ->setFileName($this->pdf->buildReportFilename())
+            ->setMimeType('application/pdf')
+            ->setDisposable(true);
 
-        $this->delivery->sendTempFile(
-            $temp_file,
-            Disposition::ATTACHMENT,
-            $this->storage->newInfo()
-                ->setFileName($this->pdf->buildReportFilename())
-                ->setMimeType('application/pdf')
-        );
+        $this->delivery->sendFile($file_id, Disposition::ATTACHMENT, $file_info);
     }
 
     public function getSettings(): ExportSettings
