@@ -151,9 +151,12 @@ class CorrectorBridge implements AppCorrectorBridge
         return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'corrector not found'), $changes);
     }
 
-    public function processUploadedFile(UploadedFileInterface $file, string $entity, int $task_id, int $writer_id): ?string
+    public function processUploadedFile(UploadedFileInterface $file, string $entity, ?int $task_id, ?int $writer_id): ?array
     {
         if ($entity !== 'ownpdf' && $entity !== 'sumpdf') {
+            return null;
+        }
+        if ($task_id === null || $writer_id === null) {
             return null;
         }
         if ($this->task_correction_settings->get()->getPdfMarking() !== PdfMarking::TEXT) {
@@ -176,7 +179,7 @@ class CorrectorBridge implements AppCorrectorBridge
                         $this->marked_pdf->saveSum($info->getId(), $task_id, $writer_id, $this->corrector->getId());
                         break;
                 }
-                return $info->getId();
+                return ['id' => $info->getId()];
             }
         }
         return null;

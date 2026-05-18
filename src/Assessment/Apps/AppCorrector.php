@@ -20,7 +20,7 @@ class AppCorrector extends BaseApp implements RestService
         $this->app->get('/corrector/item/{task_id}/{writer_id}', [$this,'getItem']);
         $this->app->get('/corrector/file/{component}/{entity}/{id}/{disposition}', [$this,'getFile']);
         $this->app->put('/corrector/changes', [$this, 'putChanges']);
-        $this->app->post('/corrector/upload/{component}/{entity}/{task_id}/{writer_id}', [$this,'postFile']);
+        $this->app->post('/corrector/upload/{component}/{entity}[/{task_id}[/{writer_id}]]', [$this,'postFile']);
         $this->app->run();
         exit;
     }
@@ -62,10 +62,12 @@ class AppCorrector extends BaseApp implements RestService
     {
         $this->prepare($request, $response, $args, TokenPurpose::DATA);
 
-        $task_id = (int) ($args['task_id'] ?? 0);
-        $writer_id = (int) ($args['writer_id'] ?? 0);
         $component = (string) ($args['component'] ?? null);
         $entity = (string) ($args['entity'] ?? null);
+        $task_id = $args['task_id'] ?? null;
+        $task_id = $task_id ? (int) $task_id : null;
+        $writer_id = $args['writer_id'] ?? null;
+        $writer_id = $writer_id ? (int) $writer_id : null;
 
         if ($entity === null) {
             throw new RestException('No entity given', RestException::NOT_FOUND);
@@ -80,14 +82,10 @@ class AppCorrector extends BaseApp implements RestService
             throw new RestException("Upload error", RestException::INTERNAL_SERVER_ERROR);
         }
 
-        $id = $bridge->processUploadedFile($file, $entity, $task_id, $writer_id);
-        if ($id === null) {
+        $json = $bridge->processUploadedFile($file, $entity, $task_id, $writer_id);
+        if ($json === null) {
             throw new RestException("Saving error", RestException::INTERNAL_SERVER_ERROR);
         }
-
-        $json = [
-            'id' => $id,
-        ];
 
         $this->rest_helper->setAlive();
         $this->rest_helper->extendDataToken($response);

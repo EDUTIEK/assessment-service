@@ -219,18 +219,7 @@ class CorrectorBridge implements AppCorrectorBridge
             'summary_text_zoom' => $preferences->getSummaryTextZoom(),
         ]);
 
-        $data['Snippets'] = [];
-        foreach ($this->repos->correctorSnippets()->allByCorrectorId(
-            $this->ass_id,
-            $this->corrector?->getId() ?? 0
-        ) as $snippet) {
-            $data['Snippets'][] = $this->entity->arrayToPrimitives([
-                'key' => $snippet->getKey(),
-                'purpose' => $snippet->getPurpose(),
-                'shortcut' => $snippet->getShortcut(),
-                'text' => $snippet->getText()
-            ]);
-        }
+        $data['Snippets'] = $this->snippets_service->json($this->corrector?->getId() ?? 0);
 
         return $data;
     }
@@ -426,6 +415,7 @@ class CorrectorBridge implements AppCorrectorBridge
                 $resource = $this->resources[$entity_id] ?? null;
                 $id = $resource?->getFileId();
                 break;
+
             case 'summary':
                 $summary = $this->repos->correctorSummary()->one($entity_id);
                 if (!in_array($summary?->getTaskId(), array_keys($this->tasks))) {
@@ -438,9 +428,9 @@ class CorrectorBridge implements AppCorrectorBridge
                 );
                 if ($assignment !== null || $summary->isAuthorized()) {
                     $id = $summary?->getSummaryPdf();
-                    break;
                 }
-                // no break
+                break;
+
             case 'snippets_' . CorrectorSnippetPurpose::FOR_COMMENT->value:
             case 'snippets_' . CorrectorSnippetPurpose::FOR_SUMMARY->value:
                 if ($this->corrector) {
@@ -449,6 +439,7 @@ class CorrectorBridge implements AppCorrectorBridge
                         CorrectorSnippetPurpose::from(str_replace('snippets_', '', $entity))
                     );
                 }
+                break;
         }
 
         if ($id) {
@@ -751,29 +742,47 @@ class CorrectorBridge implements AppCorrectorBridge
         return $this->criteria[$task_id][$corrector_id] ?? [];
     }
 
-    public function processUploadedFile(UploadedFileInterface $file, string $entity, int $task_id, int $writer_id): ?string
+    public function processUploadedFile(UploadedFileInterface $file, string $entity, ?int $task_id, ?int $writer_id): ?array
     {
-        if ($entity !== 'summary') {
+        if ($this->corrector === null) {
             return null;
         }
 
-        if ($this->corrector != null) {
-            $assignment = $this->assignment_service->oneByIds($writer_id, $this->corrector->getId(), $task_id);
-            if (!$assignment || !$this->process_service->canCorrect($assignment)) {
-                return null;
-            }
-            $summary = $this->summary_service->getForAssignment($assignment);
-            $info = $this->storage->saveFile($file->getStream(), null);
+        switch ($entity) {
+            case 'summary':
+                return $this->processUploadedSummary($file, $task_id, $writer_id);
 
-            if ($info) {
-                $this->storage->deleteFile($summary->getSummaryPdf());
-                $summary->setSummaryPdf(($info->getId()));
-                $this->repos->correctorSummary()->save($summary->touch());
-                return $info->getId();
-            }
-            return $summary->getSummaryPdf();
+            case 'snippets_' . CorrectorSnippetPurpose::FOR_COMMENT->value:
+            case 'snippets_' . CorrectorSnippetPurpose::FOR_SUMMARY->value:
+                return $this->snippets_service->import(
+                    $file,
+                    $this->corrector->getId(),
+                    CorrectorSnippetPurpose::from(str_replace('snippets_', '', $entity))
+                );
         }
 
         return null;
+    }
+
+    public function processUploadedSummary(UploadedFileInterface $file, ?int $task_id, ?int $writer_id): ?array
+    {
+        if ($task_id === null || $writer_id === null || $this->corrector === null) {
+            return null;
+        }
+
+        $assignment = $this->assignment_service->oneByIds($writer_id, $this->corrector->getId(), $task_id);
+        if (!$assignment || !$this->process_service->canCorrect($assignment)) {
+            return null;
+        }
+        $summary = $this->summary_service->getForAssignment($assignment);
+        $info = $this->storage->saveFile($file->getStream(), null);
+        if ($info) {
+            $this->storage->deleteFile($summary->getSummaryPdf());
+            $summary->setSummaryPdf(($info->getId()));
+            $this->repos->correctorSummary()->save($summary->touch());
+            return ['id' => $info->getId()];
+        }
+        return ['id' => $summary->getSummaryPdf()];
+
     }
 }

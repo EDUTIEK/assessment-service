@@ -10,6 +10,7 @@ interface FullService
 
     /**
      * Get the data from a file as an array
+     * @return array row => column => value
      */
     public function dataFromFile(string $id, ?string $select_sheet = null): array;
 
