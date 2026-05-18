@@ -18,7 +18,7 @@ class AppCorrector extends BaseApp implements RestService
     {
         $this->app->get('/corrector/data', [$this,'getData']);
         $this->app->get('/corrector/item/{task_id}/{writer_id}', [$this,'getItem']);
-        $this->app->get('/corrector/file/{component}/{entity}/{id}/{dummy}', [$this,'getFile']);
+        $this->app->get('/corrector/file/{component}/{entity}/{id}/{disposition}', [$this,'getFile']);
         $this->app->put('/corrector/changes', [$this, 'putChanges']);
         $this->app->post('/corrector/upload/{component}/{entity}/{task_id}/{writer_id}', [$this,'postFile']);
         $this->app->run();
@@ -77,12 +77,12 @@ class AppCorrector extends BaseApp implements RestService
 
         $file = $request->getUploadedFiles()['file'] ?? null;
         if ($file?->getError() !== UPLOAD_ERR_OK) {
-            throw new RestException("Upload error" , RestException::INTERNAL_SERVER_ERROR);
+            throw new RestException("Upload error", RestException::INTERNAL_SERVER_ERROR);
         }
 
         $id = $bridge->processUploadedFile($file, $entity, $task_id, $writer_id);
         if ($id === null) {
-            throw new RestException("Saving error" , RestException::INTERNAL_SERVER_ERROR);
+            throw new RestException("Saving error", RestException::INTERNAL_SERVER_ERROR);
         }
 
         $json = [

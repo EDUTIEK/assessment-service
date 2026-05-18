@@ -82,4 +82,5 @@ return [
     'step_first_revision' => 'Überarbeitung Erstkorrektor',
     'step_second_revision' => 'Überarbeitung Zweitkorrektor',
     'step_stitch_decision' => 'Freigabe Stichentscheid',
+    'snippets_export_filename' => 'Textbausteine'
 ];

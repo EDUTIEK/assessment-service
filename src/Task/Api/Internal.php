@@ -15,6 +15,7 @@ use Edutiek\AssessmentService\Task\CorrectionSettings\Service as CorrectionSetti
 use Edutiek\AssessmentService\Task\CorrectorAssignments\Service as CorrectorAssignmentsService;
 use Edutiek\AssessmentService\Task\CorrectorComment\Service as CorrectorCommentService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\Service as CorrectorSummaryService;
+use Edutiek\AssessmentService\Task\CorrectorSnippets\Service as CorrectorSnippetsService;
 use Edutiek\AssessmentService\Task\CorrectorTemplate\Service as CorrectorTemplateService;
 use Edutiek\AssessmentService\Task\EventHandling\Observer as EventObserver;
 use Edutiek\AssessmentService\Task\Format\Service as FormatService;
@@ -143,6 +144,7 @@ class Internal implements RatingCriterionServiceFactory
             $this,
             $this->correctionSettings($ass_id, $user_id),
             $this->correctorAssignments($ass_id, $user_id),
+            $this->correctorSnippets($ass_id, $user_id),
             $this->correctorSummary($ass_id, $user_id),
             $this->correctorTemplate($ass_id, $user_id),
             $this->correctionProcess($ass_id, $user_id),
@@ -165,6 +167,17 @@ class Internal implements RatingCriterionServiceFactory
         return $this->instances[CorrectorSummaryService::class][$ass_id][$user_id] ??= new CorrectorSummaryService(
             $this->checks($ass_id, $user_id),
             $this->dependencies->repositories()
+        );
+    }
+
+    public function correctorSnippets(int $ass_id, int $user_id): CorrectorSnippetsService
+    {
+        return $this->instances[CorrectorSnippetsService::class][$ass_id][$user_id] ??= new CorrectorSnippetsService(
+            $ass_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->spreadsheet(true),
+            $this->dependencies->systemApi()->tempStorage(),
+            $this->language($user_id)
         );
     }
 
