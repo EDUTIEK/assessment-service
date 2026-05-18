@@ -177,7 +177,8 @@ class Internal implements RatingCriterionServiceFactory
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->spreadsheet(true),
             $this->dependencies->systemApi()->tempStorage(),
-            $this->language($user_id)
+            $this->dependencies->systemApi()->entity(),
+            $this->language($user_id),
         );
     }
 

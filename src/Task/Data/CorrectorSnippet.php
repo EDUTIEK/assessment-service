@@ -20,4 +20,10 @@ abstract class CorrectorSnippet
     abstract public function setShortcut(?string $shortcut): self;
     abstract public function getText(): ?string;
     abstract public function setText(?string $text): self;
+
+    public function buildKey(): self
+    {
+        $this->setKey('SNIP_0.' . rand(0, 9999999999999999));
+        return $this;
+    }
 }
