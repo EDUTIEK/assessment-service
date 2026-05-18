@@ -18,6 +18,7 @@ use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Task\Data\WriterAnnotation;
 use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
 use Edutiek\AssessmentService\System\Data\HeadlineScheme;
+use Edutiek\AssessmentService\System\Data\FileInfo;
 
 class WriterBridge implements AppBridge
 {
@@ -113,11 +114,15 @@ class WriterBridge implements AppBridge
         return $data;
     }
 
-    public function getFileId(string $entity, int $entity_id): ?string
+    public function getFileInfo(string $entity, int $entity_id): ?FileInfo
     {
+        $id = null;
         $resource = $this->resources[$entity_id] ?? null;
         if ($resource !== null && $resource->getAvailability() !== ResourceAvailability::AFTER) {
-            return $resource->getFileId();
+            $id = $resource->getFileId();
+        }
+        if ($id) {
+            return $this->storage->getFileInfo($id);
         }
         return null;
     }

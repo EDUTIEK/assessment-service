@@ -37,6 +37,7 @@ use Edutiek\AssessmentService\Task\Data\Resource;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Task\Data\Settings;
 use Psr\Http\Message\UploadedFileInterface;
+use Edutiek\AssessmentService\System\Data\FileInfo;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -416,12 +417,14 @@ class CorrectorBridge implements AppCorrectorBridge
         return $data;
     }
 
-    public function getFileId(string $entity, int $entity_id): ?string
+    public function getFileInfo(string $entity, int $entity_id): ?FileInfo
     {
+        $id = null;
         switch ($entity) {
             case 'resource':
                 $resource = $this->resources[$entity_id] ?? null;
-                return $resource?->getFileId();
+                $id = $resource?->getFileId();
+                break;
             case 'summary':
                 $summary = $this->repos->correctorSummary()->one($entity_id);
                 if (!in_array($summary?->getTaskId(), array_keys($this->tasks))) {
@@ -433,8 +436,13 @@ class CorrectorBridge implements AppCorrectorBridge
                     (int) $summary?->getTaskId(),
                 );
                 if ($assignment !== null || $summary->isAuthorized()) {
-                    return $summary?->getSummaryPdf();
+                    $id = $summary?->getSummaryPdf();
+                    break;
                 }
+        }
+
+        if ($id) {
+            return $this->storage->getFileInfo($id);
         }
         return null;
     }

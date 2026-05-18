@@ -20,6 +20,7 @@ use Edutiek\AssessmentService\Task\Data\ResourceAvailability;
 use Edutiek\AssessmentService\Task\Data\ResourceType;
 use Edutiek\AssessmentService\Task\Data\Settings;
 use Psr\Http\Message\UploadedFileInterface;
+use Edutiek\AssessmentService\System\Data\FileInfo;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -83,7 +84,7 @@ class CorrectorBridge implements AppCorrectorBridge
         return $data;
     }
 
-    public function getFileId(string $entity, int $entity_id): ?string
+    public function getFileInfo(string $entity, int $entity_id): ?FileInfo
     {
         // no files handled in assessment component
         return null;

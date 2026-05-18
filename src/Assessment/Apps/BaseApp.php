@@ -96,7 +96,7 @@ abstract class BaseApp implements RestService
     /**
      * GET a file (will be sent with the requested disposition
      */
-    public function getFile(Request $request, Response $response, array $args): Response
+    public function getFile(Request $request, Response $response, array $args): void
     {
         $this->prepare($request, $response, $args, TokenPurpose::FILE);
 
@@ -117,12 +117,12 @@ abstract class BaseApp implements RestService
             throw new RestException("Component $component not found", RestException::NOT_FOUND);
         }
 
-        $file_id = $bridge->getFileId((string) $entity, (int) $id);
-        if ($file_id === null) {
+        $info = $bridge->getFileInfo((string) $entity, (int) $id);
+        if ($info === null) {
             throw new RestException("File for entity $entity with id $id not found", RestException::NOT_FOUND);
         }
 
-        $this->delivery->sendFile($file_id, $disposition);
+        $this->delivery->sendFile($info->getId(), $disposition, $info);
     }
 
     /**

@@ -19,6 +19,7 @@ use Edutiek\AssessmentService\Task\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Task\Data\PdfMarking;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TaskService;
 use Psr\Http\Message\UploadedFileInterface;
+use Edutiek\AssessmentService\System\Data\FileInfo;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -104,12 +105,14 @@ class CorrectorBridge implements AppCorrectorBridge
         return $data;
     }
 
-    public function getFileId(string $entity, int $entity_id): ?string
+    public function getFileInfo(string $entity, int $entity_id): ?FileInfo
     {
+        $id = null;
         switch ($entity) {
             case 'essay':
                 $essay = $this->repos->essay()->one($entity_id);
-                return $essay?->getPdfVersion();
+                $id = $essay?->getPdfVersion();
+                break;
 
             case 'image':
             case 'thumb':
@@ -128,7 +131,11 @@ class CorrectorBridge implements AppCorrectorBridge
                         return null;
                     }
                 }
-                return ($entity == 'image' ? $page->getFileId() : $page->getThumbId());
+                $id = ($entity == 'image' ? $page->getFileId() : $page->getThumbId());
+        }
+
+        if ($id) {
+            return $this->storage->getFileInfo($id);
         }
         return null;
     }

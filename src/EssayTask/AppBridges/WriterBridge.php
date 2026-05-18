@@ -20,6 +20,7 @@ use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService
 use Edutiek\AssessmentService\Task\Data\WriterAnnotation;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TasksService;
 use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
+use Edutiek\AssessmentService\System\Data\FileInfo;
 
 class WriterBridge implements AppBridge
 {
@@ -98,7 +99,7 @@ class WriterBridge implements AppBridge
         return $data;
     }
 
-    public function getFileId(string $entity, int $entity_id): ?string
+    public function getFileInfo(string $entity, int $entity_id): ?FileInfo
     {
         return null;
     }
