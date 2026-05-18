@@ -45,6 +45,7 @@ function setup(dispatch, ready){
 
         const actions = {
             getAll: () => entries.map(externEntry),
+            get: id => externEntry(entries.find(e => e.id === id)),
             setAll: newOnes => {
                 entries.forEach(x => deleteEntry(x)); // Don't pass index as enableUndo
                 entries = [];
@@ -62,11 +63,12 @@ function setup(dispatch, ready){
                     intern: newOne.intern,
                     color: newOne.color,
                     type: newOne.type || (newOne.intern.underline ? 'underline' : 'marker'),
+                    noDelete: newOne.noDelete,
+                    pos: newOne.pos,
                 };
                 entries.push(entry);
                 sync(entry, 'create', layer => {
                     return layer.deserialize(newOne.intern).then(editor => {
-                        adjustEditor(editor, entry.type, entry.color);
                         entry.editor = editor;
                         if(entry.text){
                             editor.contents = entry.text;
@@ -80,6 +82,7 @@ function setup(dispatch, ready){
                                 editor.getHightligtDiv().parentNode.appendChild(entry.labelDiv);
                             }
                         });
+                        adjustEditor(editor, entry.type, entry.color);
                     });
                 });
             },
@@ -113,6 +116,7 @@ function setup(dispatch, ready){
                     }else{
                         manager.setSelected(entry.editor);
                     }
+                    updateDeletable(entry);
                 });
                 if(entry.page !== pdfCurrentPageIndex()){
                     switchPage(entry.page);
@@ -131,11 +135,18 @@ function setup(dispatch, ready){
                     color
                 );
             },
-            buildBlob: () => new Promise(ok => {
-                const proc = data => {PDFViewerApplication.eventBus.off(proc); ok(data);};
-                PDFViewerApplication.eventBus.on('edutiekDownload', proc);
-                PDFViewerApplication.eventBus.dispatch('download');
-            }),
+            buildBlob: () => {
+                const origPage = pdfCurrentPageIndex();
+                return entries.reduce((p, entry) => {
+                    if (entry.editor) {
+                        return p;
+                    }
+                    return p.then(() => {
+                        switchPage(entry.page);
+                        return sync(entry, 'ensureRendered', Void);
+                    });
+                }, Promise.resolve()).then(() => switchPage(origPage)).then(buildBlobNoWait);
+            },
 	    enableFreeFormHighlight: bool => {
 		document.querySelector('#viewer').classList[bool ? 'remove' : 'add']('disable-freeform-highlight');
 		manager.disableFreeForm = !bool;
@@ -191,6 +202,11 @@ function setup(dispatch, ready){
                     entry.type = type;
                     adjustEditor(entry.editor, entry.type, entry.color);
                 });
+            },
+            setDeletable: (id, bool) => {
+                const entry = entries.find(e => e.id === id);
+                entry.noDelete = !bool;
+                updateDeletable(entry);
             },
         };
 
@@ -291,6 +307,9 @@ function setup(dispatch, ready){
                 if(entry || selected()){
                     selected(entry);
                     dispatch('select', entry ? externEntry(entry) : null);
+                    if (entry) {
+                        updateDeletable(entry);
+                    }
                 }
             }
         }
@@ -305,6 +324,23 @@ function setup(dispatch, ready){
             return entries.find(x => x.id === id);
         }
     });
+}
+
+function buildBlobNoWait()
+{
+    return new Promise(ok => {
+        const proc = data => {PDFViewerApplication.eventBus.off(proc); ok(data);};
+        PDFViewerApplication.eventBus.on('edutiekDownload', proc);
+        PDFViewerApplication.eventBus.dispatch('download');
+    })
+}
+
+function updateDeletable(entry)
+{
+    if (!entry.editor || !entry.editor._editToolbar) {
+        return;
+    }
+    entry.editor._editToolbar.div.classList[entry.noDelete ? 'add' : 'remove']('annotate-pdf-hide');
 }
 
 function createLabelDiv(label)
@@ -415,9 +451,10 @@ function externEntry(entry)
         intern: entry.intern,
         text: entry.text,
         label: entry.label,
-        pos: {x: entry.editor.x, y: entry.editor.y},
+        pos: entry.editor ? {x: entry.editor.x, y: entry.editor.y} : entry.pos,
         color: entry.color || ('#' + entry.intern.color.map(c => (c < 16 ? '0' : '') + c.toString(16)).join('')),
         type: entry.type,
+        noDelete: Boolean(entry.noDelete),
     };
 }
 

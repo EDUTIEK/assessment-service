@@ -11,6 +11,7 @@
  *     pos: {{x: number, y: number}},
  *     color: {Color},
  *     type: {Type},
+ *     noDelete: {bool},
  * }} Annotation
  *
  * @typedef {string} Color // all hex forms are valid but names are not. E.g. `#FF003377` is valid but `green` is not.
@@ -45,6 +46,7 @@
  *   setText: {function(string, string): Promise},
  *   setColor: {function(string, Color): Promise},
  *   setType: {function(string, Type): Promise},
+ *   setDeletable: {function(string, bool): Promise},
  * }}
  */
 export default (parent, viewer, pdf, options = {}) => {
@@ -103,6 +105,7 @@ export default (parent, viewer, pdf, options = {}) => {
         setText: (id, text) => request('setText', id, text),
         setColor: (id, color) => request('setColor', id, color),
         setType: (id, type) => request('setType', id, type),
+        setDeletable: (id, deletable) => request('setDeletable', id, deletable),
     };
 
     function request(name, ...args)
