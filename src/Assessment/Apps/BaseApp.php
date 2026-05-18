@@ -94,7 +94,7 @@ abstract class BaseApp implements RestService
     }
 
     /**
-     * GET a file (will be sent inline)
+     * GET a file (will be sent with the requested disposition
      */
     public function getFile(Request $request, Response $response, array $args): Response
     {
@@ -103,6 +103,7 @@ abstract class BaseApp implements RestService
         $component = $args['component'] ?? '';
         $entity = $args['entity'] ?? null;
         $id = $args['id'] ?? null;
+        $disposition = Disposition::tryFrom($args['disposition'] ?? '') ?? Disposition::INLINE;
 
         if ($id === null) {
             throw new RestException('No id gven', RestException::NOT_FOUND);
@@ -121,7 +122,7 @@ abstract class BaseApp implements RestService
             throw new RestException("File for entity $entity with id $id not found", RestException::NOT_FOUND);
         }
 
-        $this->delivery->sendFile($file_id, Disposition::INLINE);
+        $this->delivery->sendFile($file_id, $disposition);
     }
 
     /**
