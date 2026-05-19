@@ -13,6 +13,7 @@ class Service implements FullService
 {
     private static array $allowedStyles = [
         'background-color',
+        'background',
         'color',
         'text-align',
         'padding-left'
