@@ -270,7 +270,7 @@ function setup(dispatch, ready){
             if(!entry){
                 Promise.all(entries.filter(x => x.page === page).map(x => sync(x, 'checkCreate', Void))).then(() => {
                     if(entryByEditor(editor)){return;}
-		    adjustEditor(editor, currentMode);
+                    adjustEditor(editor, currentMode);
                     const id = lastDeleted.internId === editor.id ? lastDeleted.id : uuid();
                     const entry = {id, page, editor, intern: pdfSerializeEditor(editor), type: currentMode};
                     const extern = externEntry(entry);
@@ -389,58 +389,65 @@ function changeSvgToMarker(editor, color)
 
 function changeSvgToUnderline(editor, color)
 {
+    const rect = editor.getSvgNode().getBoundingClientRect();
     const pathNode = editor.getPathNode();
-    let newS = '';
-    let s = editor.originalPath;
-    const len = (s.split('M').length - 1);
-    let m;
-    let skip = false;
-    const startY = Number(s.match(/M *[0-9.]+ +([0-9.]+)/)[1]);
-    const shift = startY * 0.9; // 90% of original size, as this is 0 to startY.
-    while(m = s.match(/V([0-9.]+)/)){
-        if (skip) {
-            newS += s.substring(0, m.index + m[0].length);
-        } else {
-            newS += s.substring(0, m.index) + 'V' + (Number(m[1]) + shift);
-        }
-        s = s.substring(m.index + m[0].length);
-        skip = !skip;
-    }
-    pathNode.setAttribute('d', newS);
-    pathNode.removeAttribute('stroke-width');
-    pathNode.removeAttribute('stroke');
+    const v = editor.getVerticalEdges();
+    pathNode.setAttribute('d', drawSvgLines(
+        rect.height,
+        v,
+        (x1, x2, y) => `M${x1} ${y} L${x2} ${y} `
+    ));
+    pathNode.setAttribute('stroke-width', '1.4');
+    pathNode.setAttribute('stroke', color);
     pathNode.removeAttribute('fill');
 }
 
 function changeSvgToWave(editor, color)
 {
     const pathNode = editor.getPathNode();
-    const svgNode = editor.getSvgNode();
-    const width = editor.getSvgNode().getBoundingClientRect().width;
-    const origPath = editor.originalPath;
-    const startY = Number(origPath.match(/M *([0-9.]+) +([0-9.]+)/)[2]);
-    const parts = origPath.split('M').slice(1);
-    const len = parts.length;
-    const pitch = 0.15 * startY;
-    const step = (1 / width) * 7;
-    const lineHeight = 1 / len;
-    const newPath = parts.map((part, i) => {
-        const [x, y, v1, h, v2] = part.match(/([0-9.]+) +([0-9.]+) +V *([0-9.]+) +H *([0-9.]+) +V *([0-9.]+)/).slice(1).map(x => Number(x));
-        const yy = y - pitch;
-        let s = `M${x} ${yy}`;
+    const rect = editor.getSvgNode().getBoundingClientRect();
+    const v = editor.getVerticalEdges();
+    const pitch = (1 / rect.height) * 3;// lineHeight * 0.15;
+    const step = (1 / rect.width) * 7;
+    pathNode.setAttribute('d', drawSvgLines(rect.height, v, (x1, x2, y) => {
+        let path = `M${x1} ${y} `;
+        let x = x1;
         let dir = -1;
-        let n = x;
-        while (n + step < h) {
-            s += ` Q${n + (step / 2)} ${(yy) + (dir * pitch)} ${n + step} ${yy}`;
-            n += step;
+        while (x + step < x2) {
+            path += ` Q${x + (step / 2)} ${(y) + (dir * pitch)} ${x + step} ${y}`;
+            x += step;
             dir = -dir;
         }
-        return s;
-    }).join(' ');
-    pathNode.setAttribute('d', newPath);
-    pathNode.setAttribute('stroke', color);
+        return path; // + waveRest(x, x2, step, pitch, dir, y, editor.yid);
+    }));
     pathNode.setAttribute('stroke-width', '1.4');
+    pathNode.setAttribute('stroke', color);
     pathNode.setAttribute('fill', 'transparent');
+}
+
+function drawSvgLines(absHeight, v, drawLine)
+{
+    let path = '';
+    const row = (i, y) => {
+        path += drawLine(v[i][0], v[i + 1][0], y);
+    }
+    for (let i = 0; i < v.length - 2; i += 4) {
+        row(i, v[i][2]);
+    }
+    row(v.length - 2, v[v.length - 2][2] - (2/absHeight));
+    return path;
+}
+
+function waveRest(startX, endX, step, pitch, dir, y, aaa)
+{
+    const tail = (startX + step) - endX;
+    const pitch2 = pitch;// / 2;
+    const gradient = pitch2 / step;
+    const x_percent = tail / step;
+    const y_percent = gradient * 2 * (x_percent - Math.pow(x_percent, 2));
+    const ctrl_x = x_percent / 2;
+    const ctrl_y = 2 * ctrl_x * gradient;
+    return ` Q${startX + (ctrl_x * step)} ${(y) + (ctrl_y * step * dir)} ${endX} ${y + (dir * (y_percent * step))}`;
 }
 
 function externEntry(entry)

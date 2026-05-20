@@ -27446,6 +27446,11 @@ class HighlightOutliner {
     this.#firstPoint = [firstPointX, firstPointY];
     this.#lastPoint = lastPoint;
   }
+  // edutiek-patch: begin
+  getVerticalEdges() {
+    return this.#verticalEdges;
+  }
+  // edutiek-patch: end
   getOutlines() {
     this.#verticalEdges.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
     const outlineVerticalEdges = [];
@@ -27740,6 +27745,9 @@ class HighlightEditor extends AnnotationEditor {
   }
   getHightligtDiv() {
     return this.#highlightDiv;
+  }
+  getVerticalEdges() {
+    return new HighlightOutliner(this.#boxes, 0, 0, true).getVerticalEdges();
   }
   // edutiek-patch: end
   get telemetryInitialData() {
