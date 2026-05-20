@@ -59791,41 +59791,50 @@ class HighlightAnnotation extends MarkupAnnotation {
     }
     const appearanceBuffer = [`${getPdfColor(color, true)}`, "/R0 gs"];
     const buffer = [];
-    // edutiek-patch: begin
 
+    // edutiek-patch: begin
+    function drawFromQuadPoints(drawLine)
+    {
+      const yShift = 0.1; // Move line % of line height up (+) or down (-).
+      const qp = annotation.quadPoints;
+      const row = i => {
+        const y = qp[i + 5];
+        const lineHeight = (qp[i + 1] - y);
+        appearanceBuffer.push(...drawLine(qp[i + 4], qp[i + 6], y + (lineHeight * yShift)));
+      }
+      for (let i = 0; i < qp.length; i += 16) {
+        row(i);
+      }
+      row(qp.length - 8);
+    }
     switch(annotation.edutiekType){
     case 'underline':
       appearanceBuffer.push('/DeviceRGB CS');
-      for (const outline of outlines) {
-        appearanceBuffer.push(getPdfColorArray(color).join(' ') + ' SCN');
-        appearanceBuffer.push('2 w');
-        // appearanceBuffer.push('[5 5] 0 d');
-        appearanceBuffer.push(`${numberToString(outline[0])} ${numberToString(outline[1] + 2)} m`);
-        appearanceBuffer.push(`${numberToString(outline[6])} ${numberToString(outline[7] + 2)} l`);
-        appearanceBuffer.push('S');
-      }
+      appearanceBuffer.push(getPdfColorArray(color).join(' ') + ' SCN');
+      const shift = 0;
+      drawFromQuadPoints((x1, x2, y) => [
+          `${numberToString(x1)} ${numberToString(y)} m`,
+          `${numberToString(x2)} ${y} l`,
+          'S',
+        ]);
       break;
     case 'wave':
       appearanceBuffer.push('/DeviceRGB CS');
-      for (const outline of outlines) {
-        appearanceBuffer.push(getPdfColorArray(color).join(' ') + ' SCN');
-        appearanceBuffer.push('1 w');
-        const x1 = outline[0];
-        const y1 = outline[1] + 2;
-        const x2 = outline[6];
-        const y2 = outline[7] + 2;
-        appearanceBuffer.push(`${numberToString(x1)} ${numberToString(y1)} m`);
-        let n = x1;
+      drawFromQuadPoints((x1, x2, y) => {
+        const ret = [getPdfColorArray(color).join(' ') + ' SCN', '1 w'];
+        ret.push(`${numberToString(x1)} ${numberToString(y)} m`);
+        let x = x1;
         let dir = 1;
         const step = 6;
         const pitch = 3;
-        while (n + step < x2) {
-          appearanceBuffer.push(`${numberToString(n + (step / 2))} ${numberToString(y1 + (dir * pitch))} ${numberToString(n + step)} ${numberToString(y1)} v`);
-          n += step;
+        while (x + step < x2) {
+          ret.push(`${numberToString(x + (step / 2))} ${numberToString(y + (dir * pitch))} ${numberToString(x + step)} ${numberToString(y)} v`);
+          x += step;
           dir = -dir;
         }
-        appearanceBuffer.push('S');
-      }
+        ret.push('S');
+        return ret;
+      });
       break;
     default:
 	for (const outline of outlines) {
