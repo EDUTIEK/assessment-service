@@ -143,9 +143,11 @@ function setup(dispatch, ready){
                     }
                     return p.then(() => {
                         switchPage(entry.page);
-                        return sync(entry, 'ensureRendered', Void);
+                        return sync(entry, 'ensureRendered', () => true);
                     });
-                }, Promise.resolve()).then(() => switchPage(origPage)).then(buildBlobNoWait);
+                }, Promise.resolve(false))
+                    .then(pageSwitched => pageSwitched && switchPage(origPage))
+                    .then(buildBlobNoWait);
             },
 	    enableFreeFormHighlight: bool => {
 		document.querySelector('#viewer').classList[bool ? 'remove' : 'add']('disable-freeform-highlight');
@@ -354,7 +356,15 @@ function createLabelDiv(label)
 function adjustEditor(editor, mode, color)
 {
     editor.edutiekType = mode;
-    editor.originalPath ||= editor.getPathNode().getAttribute('d');
+    if (!editor.edutiekOriginalSvgData) {
+        const svg = editor.getSvgNode();
+        const path = editor.getPathNode();
+        editor.edutiekOriginalSvgData = {
+            d: path.getAttribute('d'),
+            width: parseFloat(svg.style.width),
+            height: parseFloat(svg.style.height),
+        }
+    }
     changeSvg(editor, mode, color);
 }
 
@@ -369,47 +379,59 @@ function changeSvg(editor, mode, color)
         return;
     }
 
+    resetSvg(editor);
+
     color = color || pdfjsLib.HighlightEditor._defaultColor;
     switch(mode){
-    case 'marker':    return changeSvgToMarker(editor, color);
+    case 'marker':    return; // Do nothing, done by resetSvg.
     case 'underline': return changeSvgToUnderline(editor, color);
     case 'wave':      return changeSvgToWave(editor, color);
     default:          throw new Error('Invalid type given to change SVG');
     }
 }
 
-function changeSvgToMarker(editor, color)
+function resetSvg(editor)
 {
-    const node = editor.getPathNode();
-    node.setAttribute('d', editor.originalPath);
-    node.removeAttribute('fill');
-    node.removeAttribute('stroke-width');
-    node.removeAttribute('stroke');
+    const svg = editor.getSvgNode();
+    const path = editor.getPathNode();
+    svg.setAttribute('viewBox', '0 0 1 1');
+    svg.style.width = editor.edutiekOriginalSvgData.width + '%';
+    svg.style.height = editor.edutiekOriginalSvgData.height + '%';
+    path.removeAttribute('fill');
+    path.removeAttribute('stroke-width');
+    path.removeAttribute('stroke');
+    path.setAttribute('d', editor.edutiekOriginalSvgData.d);
 }
 
 function changeSvgToUnderline(editor, color)
 {
-    const rect = editor.getSvgNode().getBoundingClientRect();
+    const svg = editor.getSvgNode();
     const pathNode = editor.getPathNode();
-    const v = editor.getVerticalEdges();
+    const height = parseFloat(svg.style.height);
+    const vh = 1 + (0.25 / height);
     pathNode.setAttribute('d', drawSvgLines(
-        rect.height,
-        v,
+        editor.getVerticalEdges(),
         (x1, x2, y) => `M${x1} ${y} L${x2} ${y} `
     ));
     pathNode.setAttribute('stroke-width', '1.4');
     pathNode.setAttribute('stroke', color);
-    pathNode.removeAttribute('fill');
+    // pathNode.removeAttribute('fill');
+    svg.setAttribute('viewBox', `0 0 1 ${vh}`);
+    svg.style.height = `${height * vh}%`;
 }
 
 function changeSvgToWave(editor, color)
 {
     const pathNode = editor.getPathNode();
-    const rect = editor.getSvgNode().getBoundingClientRect();
+    const svg = editor.getSvgNode();
+    const rect = svg.getBoundingClientRect();
+    const width = parseFloat(editor.getSvgNode().style.width);
+    const height = parseFloat(editor.getSvgNode().style.height);
     const v = editor.getVerticalEdges();
-    const pitch = (1 / rect.height) * 3;// lineHeight * 0.15;
-    const step = (1 / rect.width) * 7;
-    pathNode.setAttribute('d', drawSvgLines(rect.height, v, (x1, x2, y) => {
+    const rr = document.querySelector('.textLayer').getBoundingClientRect();
+    const pitch = (1 / height) * 0.25;
+    const step = (1 / width) * 0.5;
+    pathNode.setAttribute('d', drawSvgLines(v, (x1, x2, y) => {
         let path = `M${x1} ${y} `;
         let x = x1;
         let dir = -1;
@@ -423,18 +445,20 @@ function changeSvgToWave(editor, color)
     pathNode.setAttribute('stroke-width', '1.4');
     pathNode.setAttribute('stroke', color);
     pathNode.setAttribute('fill', 'transparent');
+    svg.setAttribute('viewBox', `0 0 1 ${1 + pitch}`);
+    svg.style.height = `${height * (1 + pitch)}%`;
 }
 
-function drawSvgLines(absHeight, v, drawLine)
+function drawSvgLines(v, drawLine)
 {
     let path = '';
-    const row = (i, y) => {
-        path += drawLine(v[i][0], v[i + 1][0], y);
+    const row = i => {
+        path += drawLine(v[i][0], v[i + 1][0], v[i][2]);
     }
     for (let i = 0; i < v.length - 2; i += 4) {
-        row(i, v[i][2]);
+        row(i);
     }
-    row(v.length - 2, v[v.length - 2][2] - (2/absHeight));
+    row(v.length - 2);
     return path;
 }
 
