@@ -59825,8 +59825,8 @@ class HighlightAnnotation extends MarkupAnnotation {
         ret.push(`${numberToString(x1)} ${numberToString(y)} m`);
         let x = x1;
         let dir = 1;
-        const step = 6;
-        const pitch = 3;
+        const step = 3;
+        const pitch = 2;
         while (x + step < x2) {
           ret.push(`${numberToString(x + (step / 2))} ${numberToString(y + (dir * pitch))} ${numberToString(x + step)} ${numberToString(y)} v`);
           x += step;
