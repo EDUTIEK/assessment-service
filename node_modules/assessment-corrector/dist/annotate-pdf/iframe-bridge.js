@@ -6,10 +6,9 @@ function run()
     window.localStorage.removeItem('pdfjs.preferences');
     setup(forwardEvent, actions => {
         window.addEventListener('message', event => {
-            then(
-                actions[event.data.name](...event.data.args),
-                value => window.parent.postMessage({response: {id: event.data.id, value}})
-            );
+            const p = then(null, () => actions[event.data.name](...event.data.args));
+            p.then(value => window.parent.postMessage({response: {id: event.data.id, value}}));
+            p.catch(error => window.parent.postMessage({response: {id: event.data.id, value: error, error: true}}));
         });
     });
     
@@ -41,6 +40,9 @@ function setup(dispatch, ready){
     uiManager(manager => {
         pdfOn('annotationeditorparamschanged', checkForChanges);
         pdfOn('switchannotationeditorparams', checkForChanges);
+        pdfOn('outlineloaded', event => event.currentOutlineItemPromise.then(enabled => {
+            document.querySelector('#viewsManagerToggleButton').disabled = !enabled;
+        }));
         pdfOnPageChanging(pageChanging);
 
         const actions = {
@@ -189,7 +191,7 @@ function setup(dispatch, ready){
                 sync(entry, 'setColor', () => {
                     entry.color = color;
                     entry.editor.updateParams(pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR, color);
-                    if (entry.type === 'wave') {
+                    if (entry.type === 'wave' || entry.type === 'underline') {
                         entry.editor.getPathNode().setAttribute('stroke', color);
                     }
                 });
@@ -215,6 +217,7 @@ function setup(dispatch, ready){
         actions.viewOnly(Boolean(new URLSearchParams(window.location.search).get('viewOnly')));
         ready(actions);
         PDFViewerApplication.viewsManager.setInitialView(0);
+        PDFViewerApplication.viewsManager.switchView(2); // Outline
         dispatch('ready');
 
         function deleteEntry(entry, enableUndo)
@@ -364,13 +367,18 @@ function adjustEditor(editor, mode, color)
             width: parseFloat(svg.style.width),
             height: parseFloat(svg.style.height),
         }
+        const orig = editor.onceAdded;
+        editor.onceAdded = focus => {
+            changeSvg(editor, editor.edutiekType, editor.color);
+            return orig.call(editor, focus);
+        }
     }
     changeSvg(editor, mode, color);
 }
 
 function validDrawTypes()
 {
-    return ['marker', 'underline', 'wave'];
+    return ['marker', 'underline', 'wave', 'vline'];
 }
 
 function changeSvg(editor, mode, color)
@@ -386,6 +394,7 @@ function changeSvg(editor, mode, color)
     case 'marker':    return; // Do nothing, done by resetSvg.
     case 'underline': return changeSvgToUnderline(editor, color);
     case 'wave':      return changeSvgToWave(editor, color);
+    case 'vline':     return changeSvgToVLine(editor, color);
     default:          throw new Error('Invalid type given to change SVG');
     }
 }
@@ -472,6 +481,17 @@ function waveRest(startX, endX, step, pitch, dir, y, aaa)
     const ctrl_x = x_percent / 2;
     const ctrl_y = 2 * ctrl_x * gradient;
     return ` Q${startX + (ctrl_x * step)} ${(y) + (ctrl_y * step * dir)} ${endX} ${y + (dir * (y_percent * step))}`;
+}
+
+function changeSvgToVLine(editor, color)
+{
+    const pathNode = editor.getPathNode();
+    const svg = editor.getSvgNode();
+    let leftAlign = parseFloat(editor.leftAlign) - 0.9;
+    svg.style.left = leftAlign + '%';
+
+    const w = (1 / svg.getBoundingClientRect().width) * 5;
+    pathNode.setAttribute('d', `M0 0 V 1 H ${w} V 0 z`);
 }
 
 function externEntry(entry)

@@ -110,15 +110,22 @@ export default (parent, viewer, pdf, options = {}) => {
 
     function request(name, ...args)
     {
-        return currentRequest = currentRequest.then(() => requestUnsafe(name, ...args));
+        // Void catch to resume new actions normally.
+        // errors are not silenced with this, as the promise was already returned by a previous call to `request`.
+        // This is only to ensure the previous promise has been processed (synchronization).
+        return currentRequest = currentRequest.catch(Void).then(() => requestUnsafe(name, ...args));
+    }
+
+    function Void()
+    {
     }
 
     function requestUnsafe(name, ...args)
     {
-        return new Promise(ret => {
+        return new Promise((ok, err) => {
             const id = nextId();
-            pending[id] = ret;
-            return ready.promise.then(() => frame.contentWindow.postMessage({id, name, args}));
+            pending[id] = {ok, err};
+            ready.promise.then(() => frame.contentWindow.postMessage({id, name, args}));
         });
     }
 
@@ -127,9 +134,9 @@ export default (parent, viewer, pdf, options = {}) => {
         if(!pending[response.id]){
             return;
         }
-        const ret = pending[response.id];
+        const {ok, err} = pending[response.id];
         delete pending[response.id];
-        ret(response.value);
+        (response.error ? err : ok)(response.value || 'aja');
     }
 
     function dispatchOrRespond(event)

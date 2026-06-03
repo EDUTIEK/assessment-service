@@ -59836,6 +59836,27 @@ class HighlightAnnotation extends MarkupAnnotation {
         return ret;
       });
       break;
+    case 'vline':
+      rect[0] = annotation.edutiekPageSize[0] * ((parseFloat(annotation.leftAlign) - 0.9) / 100);
+      // rect[0] = Math.min(rect[0], annotation.pd[0] * ((parseFloat(annotation.leftAlign) - 1.2) / 100));
+      let minY = Infinity;
+      let maxY = -Infinity;
+      outlines.forEach(outline => {
+        for (let i = outline.length - 2; i >= 0; i -= 2) {
+          minY = Math.min(minY, outline[i + 1]);
+          maxY = Math.max(maxY, outline[i + 1]);
+        }
+      });
+      const x = rect[0] + 1;
+      appearanceBuffer.push('/DeviceRGB CS');
+      appearanceBuffer.push(getPdfColorArray(color).join(' ') + ' SCN');
+      appearanceBuffer.push('2 w');
+      appearanceBuffer.push(`${numberToString(x)} ${numberToString(minY)} m`);
+      appearanceBuffer.push(`${numberToString(x)} ${numberToString(maxY)} l`);
+      // appearanceBuffer.push(`${numberToString(x)} ${numberToString(outlines[0][3])} m`);
+      // appearanceBuffer.push(`${numberToString(x)} ${numberToString(outlines[outlines.length-1][1])} l`);
+      appearanceBuffer.push('S');
+      break;
     default:
 	for (const outline of outlines) {
 	  buffer.length = 0;
