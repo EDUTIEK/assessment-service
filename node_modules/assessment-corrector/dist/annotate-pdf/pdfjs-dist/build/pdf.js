@@ -9159,6 +9159,68 @@ class AnnotationEditorUIManager {
     const isNoneMode = this.#mode === AnnotationEditorType.NONE;
     const callback = () => {
       // edutiek-patch: begin
+      function compareNodePosition(a, b)
+      {
+        if (a === b) {
+          return 0;
+        }
+        let mapA = new Map();
+        mapA.set(a, -1); // a is parent of b so a always before b.
+        for(; !a.classList.contains('page'); a = a.parentNode) {
+          mapA.set(a.parentNode, Array.from(a.parentNode.children).indexOf(a));
+        }
+        if (mapA.has(b)) {
+          return Infinity; // b is parent of a so b comes always before a
+        }
+        let child;
+        for (child = b, b = b.parentNode; !mapA.has(b); child = b, b = b.parentNode) {}
+        return mapA.get(b) - Array.from(b.children).indexOf(child);
+      }
+      function determineLeftAlign(startNode, endNode)
+      {
+        const yTolerance = 0.5;
+        let leftAlign = parseFloat(startNode.style.left);
+        let prev = startNode;
+        let node;
+        for (node = startNode.previousSibling; node; node = node.previousSibling) {
+          if (node.nodeName === 'BR') {
+            continue;
+          }
+          let nextLeft = parseFloat(node.style.left);
+          if (leftAlign < nextLeft) {
+            break;
+          }
+          if (Math.abs(parseFloat(prev.style.top) - parseFloat(node.style.top)) > yTolerance) {
+            break;
+          }
+          prev = node;
+          leftAlign = nextLeft;
+        }
+        prev = startNode;
+        for (node = startNode; node !== endNode && node !== endNode.parentNode; node = nextNode(node)) {
+          if (node.nodeName === 'BR') {
+            continue;
+          }
+          if (node.style.left) {
+            leftAlign = Math.min(leftAlign, parseFloat(node.style.left));
+          }
+          prev = node;
+        }
+        if (node.style.left) {
+          leftAlign = Math.min(leftAlign, parseFloat(node.style.left));
+        }
+        return leftAlign;
+
+        function nextNode(n)
+        {
+          let next = n;
+          for(; next.nextSibling === null; next = next.parentNode) {}
+          next = next.nextSibling;
+          for (; next.children && next.children.length; next = next.children[0]) {}
+          return next;
+        }
+      }
+      const leftAlign = determineLeftAlign(...[anchorElement, focusNode.nodeType === Node.TEXT_NODE ? focusNode.parentNode : focusNode].toSorted(compareNodePosition));
       const markedContentId = anchorElement ? (anchorElement.closest('.markedContent') || {}).id : null;
       const foundMarkedContent = (markedContentId || '').match(/^p(\d+)R_mc(\d+)$/);
       const pageAndMarkedContentId = foundMarkedContent ? {
@@ -9179,6 +9241,7 @@ class AnnotationEditorUIManager {
         // edutiek-patch: begin
         text,
         pageAndMC: pageAndMarkedContentId,
+        leftAlign,
         // edutiek-patch: end
       });
       if (isNoneMode) {
@@ -12293,8 +12356,10 @@ class AnnotationEditor {
       rect: this.getPDFRect(),
       rotation: this.rotation,
       structTreeParentId: this._structTreeParentId,
+      // edutiek-patch: begin
       popupRef: this._initialData?.popupRef || "",
       pageAndMC: this.pageAndMC,
+      // edutiek-patch: end
     };
   }
   static async deserialize(data, parent, uiManager) {
@@ -27711,6 +27776,7 @@ class HighlightEditor extends AnnotationEditor {
       ...params,
       name: "highlightEditor"
     });
+    this.leftAlign = params.leftAlign;
     this.color = params.color || HighlightEditor._defaultColor;
     this.#thickness = params.thickness || HighlightEditor._defaultThickness;
     this.opacity = params.opacity || HighlightEditor._defaultOpacity;
@@ -28434,6 +28500,7 @@ class HighlightEditor extends AnnotationEditor {
       // edutiek-patch: begin
       pageAndMC,
       edutiekType,
+      leftAlign,
       // edutiek-patch: end
     } = data;
     const editor = await super.deserialize(data, parent, uiManager);
@@ -28442,6 +28509,7 @@ class HighlightEditor extends AnnotationEditor {
     // edutiek-patch: begin
     editor.pageAndMC = pageAndMC;
     editor.edutiekType = edutiekType;
+    editor.leftAlign = leftAlign;
     // edutiek-patch: end
     if (inkLists) {
       editor.#thickness = data.thickness;
@@ -28525,6 +28593,8 @@ class HighlightEditor extends AnnotationEditor {
       contents: this.contents,
       pageAndMC: this.pageAndMC,
       edutiekType: this.edutiekType,
+      leftAlign: this.leftAlign,
+      edutiekPageSize: this.pageDimensions,
       // edutiek-patch: end
     });
     this.addComment(serialized);
@@ -32870,5 +32940,3 @@ globalThis.pdfjsLib = {
 };
 
 export { AbortException, AnnotationEditorLayer, AnnotationEditorParamsType, AnnotationEditorType, AnnotationEditorUIManager, AnnotationLayer, AnnotationMode, AnnotationType, CSSConstants, ColorPicker, DOMSVGFactory, DrawLayer, util_FeatureTest as FeatureTest, GlobalWorkerOptions, util_ImageKind as ImageKind, InvalidPDFException, MathClamp, OPS, OutputScale, PDFDataRangeTransport, PDFDateString, PDFWorker, PasswordResponses, PermissionFlag, PixelsPerInch, RenderingCancelledException, ResponseException, SignatureExtractor, SupportedImageMimeTypes, TextLayer, TouchManager, Util, VerbosityLevel, XfaLayer, applyOpacity, build, createValidAbsoluteUrl, fetchData, findContrastColor, getDocument, getFilenameFromUrl, getPdfFilenameFromUrl, getRGB, getUuid, getXfaPageViewport, isDataScheme, isPdfFile, isValidExplicitDest, noContextMenu, normalizeUnicode, renderRichText, setLayerDimensions, shadow, stopEvent, updateUrlHash, version };
-
-//# sourceMappingURL=pdf.mjs.map
