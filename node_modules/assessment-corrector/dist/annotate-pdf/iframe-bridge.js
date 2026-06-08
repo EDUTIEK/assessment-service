@@ -28,6 +28,8 @@ function setup(dispatch, ready){
     let selecting = null; // Used to streamline select when switching editor modes.
     let updating = null; // Used to streamline updating, to prevent bogus create & delete events.
     let deletedIds = []; // Used to prevent 'delete' events that are triggered manually.
+    let lastDeleted = {}; // For undo to work
+    let currentMode = 'marker';
     const selected = state(null, (oldOne, newOne) => {
         selecting = null;
         const ret = (oldOne || {}).returnPending;
@@ -44,7 +46,7 @@ function setup(dispatch, ready){
         const actions = {
             getAll: () => entries.map(externEntry),
             setAll: newOnes => {
-                entries.forEach(deleteEntry);
+                entries.forEach(x => deleteEntry(x)); // Don't pass index as enableUndo
                 entries = [];
                 newOnes.forEach(actions.add);
             },
@@ -55,24 +57,36 @@ function setup(dispatch, ready){
                     id,
                     page,
                     text: newOne.text,
+                    label: newOne.label,
                     editor: null,
-                    intern: newOne.intern
+                    intern: newOne.intern,
+                    color: newOne.color,
+                    type: newOne.type || (newOne.intern.underline ? 'underline' : 'marker'),
                 };
                 entries.push(entry);
                 sync(entry, 'create', layer => {
                     return layer.deserialize(newOne.intern).then(editor => {
+                        adjustEditor(editor, entry.type, entry.color);
                         entry.editor = editor;
                         if(entry.text){
                             editor.contents = entry.text;
                         }
-                        pdfAddEditorToLayerNoFocus(layer, entry.editor);
+                        if (entry.color) {
+                            entry.editor.updateParams(pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR, entry.color);
+                        }
+                        pdfAddEditorToLayerNoFocus(layer, entry.editor, () => {
+                            if(entry.label){
+                                entry.labelDiv = createLabelDiv(entry.label);
+                                editor.getHightligtDiv().parentNode.appendChild(entry.labelDiv);
+                            }
+                        });
                     });
                 });
             },
-            'delete': id => {
+            'delete': (id, enableUndo) => {
                 entries = entries.filter(x => {
                     if(x.id === id){
-                        deleteEntry(x);
+                        deleteEntry(x, enableUndo);
                         return false;
                     }
                     return true;
@@ -117,6 +131,67 @@ function setup(dispatch, ready){
                     color
                 );
             },
+            buildBlob: () => new Promise(ok => {
+                const proc = data => {PDFViewerApplication.eventBus.off(proc); ok(data);};
+                PDFViewerApplication.eventBus.on('edutiekDownload', proc);
+                PDFViewerApplication.eventBus.dispatch('download');
+            }),
+	    enableFreeFormHighlight: bool => {
+		document.querySelector('#viewer').classList[bool ? 'remove' : 'add']('disable-freeform-highlight');
+		manager.disableFreeForm = !bool;
+	    },
+            enableTextHighlight: bool => {
+                document.querySelector('#viewer').classList[bool ? 'remove' : 'add']('disable-text-highlight');
+		PDFViewerApplication.eventBus.disableTextHighlight = !bool;
+            },
+            setDrawMode: mode => new Promise((ok, err) => {
+                if (validDrawTypes().includes(mode)) {
+                    currentMode = mode;
+                    ok();
+                } else {
+                    err('Invalid mode given: ' + mode);
+                }
+            }),
+            setLabel: (id, label) => {
+                const entry = entries.find(e => e.id === id);
+                sync(entry, 'setLabel', () => {
+                    entry.label = label;
+                    if (entry.labelDiv) {
+                        entry.labelDiv.textContent = label;
+                    } else {
+                        entry.labelDiv = createLabelDiv(entry.label);
+                        entry.editor.getHightligtDiv().parentNode.appendChild(entry.labelDiv);
+                    }
+                });
+            },
+            setText: (id, text) => {
+                const entry = entries.find(e => e.id === id);
+                sync(entry, 'setText', () => {
+                    entry.text = text;
+                    entry.editor.contents = text;
+                });
+            },
+            setColor: (id, color) => {
+                const entry = entries.find(e => e.id === id);
+                sync(entry, 'setColor', () => {
+                    entry.color = color;
+                    entry.editor.updateParams(pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR, color);
+                    if (entry.type === 'wave') {
+                        entry.editor.getPathNode().setAttribute('stroke', color);
+                    }
+                });
+            },
+            setType: (id, type) => {
+                if (!validDrawTypes().includes(type)) {
+                    throw new Error('Invalid draw type: ' + type);
+                }
+                const entry = entries.find(e => e.id === id);
+                sync(entry, 'setType', () => {
+                    entry.editor.edutiekType = type;
+                    entry.type = type;
+                    adjustEditor(entry.editor, entry.type, entry.color);
+                });
+            },
         };
 
         actions.viewOnly(Boolean(new URLSearchParams(window.location.search).get('viewOnly')));
@@ -124,10 +199,26 @@ function setup(dispatch, ready){
         PDFViewerApplication.viewsManager.setInitialView(0);
         dispatch('ready');
 
-        function deleteEntry(entry)
+        function deleteEntry(entry, enableUndo)
         {
+            const undo = () => {
+                manager.addEditorToLayer(entry.editor);
+            };
+            const cmd = () => {
+                manager._editorUndoBar?.show(undo, entry.editor.editorType);
+                entry.editor.remove();
+            };
             deletedIds.push(entry.id);
-            entry.editor?.remove();
+            if (enableUndo && entry.editor) {
+                lastDeleted = {internId: entry.editor.id, id: entry.id};
+                manager.addCommands({
+                    cmd,
+                    undo,
+                    mustExec: true,
+                });
+            } else {
+                entry.editor?.remove();
+            }
             const ret = entry.returnPending;
             ret && ret();
         }
@@ -139,7 +230,12 @@ function setup(dispatch, ready){
             const deleted = entries.filter(x => !isUsed(x));
             entries = entries.filter(isUsed);
             updating = null;
-            deleted.forEach(x => !deletedIds.includes(x.id) && dispatch('delete', externEntry(x)));
+            deleted.forEach(x => {
+                if (!deletedIds.includes(x.id)) {
+                    lastDeleted = {internId: x.editor.id, id: x.id};
+                    dispatch('delete', externEntry(x));
+                }
+            });
             deletedIds = deletedIds.filter(id => !deleted.find(x => x.id === id));
             updateSelection();
         }
@@ -158,8 +254,9 @@ function setup(dispatch, ready){
             if(!entry){
                 Promise.all(entries.filter(x => x.page === page).map(x => sync(x, 'checkCreate', Void))).then(() => {
                     if(entryByEditor(editor)){return;}
-                    const id = uuid();
-                    const entry = {id, page, editor, intern: pdfSerializeEditor(editor)};
+		    adjustEditor(editor, currentMode);
+                    const id = lastDeleted.internId === editor.id ? lastDeleted.id : uuid();
+                    const entry = {id, page, editor, intern: pdfSerializeEditor(editor), type: currentMode};
                     const extern = externEntry(entry);
                     entries.push(entry);
                     dispatch('create', extern);
@@ -168,7 +265,7 @@ function setup(dispatch, ready){
                 });
                 return null;
             }else if(s !== JSON.stringify(entry.intern)){
-                // These are null -> NaN and rounding issues and don't need to be propagated.
+                // These are null -> NaN and rounding issues that don't need to be propagated.
                 const ignore = arrayEquals(
                     ['outlines', 'rect'],
                     Object.keys((diff(newData, entry.intern) || {}).Object || {})
@@ -210,13 +307,117 @@ function setup(dispatch, ready){
     });
 }
 
+function createLabelDiv(label)
+{
+    const d = document.createElement('div');
+    d.classList.add('annotation-label');
+    d.textContent = label;
+    return d;
+}
+
+function adjustEditor(editor, mode, color)
+{
+    editor.edutiekType = mode;
+    editor.originalPath ||= editor.getPathNode().getAttribute('d');
+    changeSvg(editor, mode, color);
+}
+
+function validDrawTypes()
+{
+    return ['marker', 'underline', 'wave'];
+}
+
+function changeSvg(editor, mode, color)
+{
+    if(!editor._mustFixPosition){ // If it is a freeform highlight.
+        return;
+    }
+
+    color = color || pdfjsLib.HighlightEditor._defaultColor;
+    switch(mode){
+    case 'marker':    return changeSvgToMarker(editor, color);
+    case 'underline': return changeSvgToUnderline(editor, color);
+    case 'wave':      return changeSvgToWave(editor, color);
+    default:          throw new Error('Invalid type given to change SVG');
+    }
+}
+
+function changeSvgToMarker(editor, color)
+{
+    const node = editor.getPathNode();
+    node.setAttribute('d', editor.originalPath);
+    node.removeAttribute('fill');
+    node.removeAttribute('stroke-width');
+    node.removeAttribute('stroke');
+}
+
+function changeSvgToUnderline(editor, color)
+{
+    const pathNode = editor.getPathNode();
+    let newS = '';
+    let s = editor.originalPath;
+    const len = (s.split('M').length - 1);
+    let m;
+    let skip = false;
+    const startY = Number(s.match(/M *[0-9.]+ +([0-9.]+)/)[1]);
+    const shift = startY * 0.9; // 90% of original size, as this is 0 to startY.
+    while(m = s.match(/V([0-9.]+)/)){
+        if (skip) {
+            newS += s.substring(0, m.index + m[0].length);
+        } else {
+            newS += s.substring(0, m.index) + 'V' + (Number(m[1]) + shift);
+        }
+        s = s.substring(m.index + m[0].length);
+        skip = !skip;
+    }
+    pathNode.setAttribute('d', newS);
+    pathNode.removeAttribute('stroke-width');
+    pathNode.removeAttribute('stroke');
+    pathNode.removeAttribute('fill');
+}
+
+function changeSvgToWave(editor, color)
+{
+    const pathNode = editor.getPathNode();
+    const svgNode = editor.getSvgNode();
+    const width = editor.getSvgNode().getBoundingClientRect().width;
+    const origPath = editor.originalPath;
+    const startY = Number(origPath.match(/M *([0-9.]+) +([0-9.]+)/)[2]);
+    const parts = origPath.split('M').slice(1);
+    const len = parts.length;
+    const pitch = 0.15 * startY;
+    const step = (1 / width) * 7;
+    const lineHeight = 1 / len;
+    const newPath = parts.map((part, i) => {
+        const [x, y, v1, h, v2] = part.match(/([0-9.]+) +([0-9.]+) +V *([0-9.]+) +H *([0-9.]+) +V *([0-9.]+)/).slice(1).map(x => Number(x));
+        const yy = y - pitch;
+        let s = `M${x} ${yy}`;
+        let dir = -1;
+        let n = x;
+        while (n + step < h) {
+            s += ` Q${n + (step / 2)} ${(yy) + (dir * pitch)} ${n + step} ${yy}`;
+            n += step;
+            dir = -dir;
+        }
+        return s;
+    }).join(' ');
+    pathNode.setAttribute('d', newPath);
+    pathNode.setAttribute('stroke', color);
+    pathNode.setAttribute('stroke-width', '1.4');
+    pathNode.setAttribute('fill', 'transparent');
+}
+
 function externEntry(entry)
 {
     return {
         id: entry.id,
         page: entry.page,
         intern: entry.intern,
+        text: entry.text,
+        label: entry.label,
         pos: {x: entry.editor.x, y: entry.editor.y},
+        color: entry.color || ('#' + entry.intern.color.map(c => (c < 16 ? '0' : '') + c.toString(16)).join('')),
+        type: entry.type,
     };
 }
 
@@ -474,13 +675,15 @@ function pdfSwitchToMode(mode, editId = null)
  * @param {AnnotationEditorLayer} layer
  * @param {HighlightEditor} editor
  */
-function pdfAddEditorToLayerNoFocus(layer, editor)
+function pdfAddEditorToLayerNoFocus(layer, editor, onRender)
 {
+    onRender ||= Void;
     // Temporary overwrite prototype chain.
     editor.render = () => {
         delete editor.render;
         const ret = editor.render();
         editor.div.focus = Void; // Same again.
+        onRender();
         return ret;
     };
     layer.add(editor);

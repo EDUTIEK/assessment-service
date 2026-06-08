@@ -56757,8 +56757,13 @@ class AnnotationFactory {
           break;
       }
     }
+    // edutiek-patch: begin
+    const newAnnotations = (await Promise.all(promises)).flat();
+    edutiek.commit(changes);
+
     return {
-      annotations: (await Promise.all(promises)).flat()
+      annotations: newAnnotations,
+      // edutiek-patch: end
     };
   }
   static async printNewAnnotations(annotationGlobals, evaluator, task, annotations, imagePromises) {
@@ -57589,10 +57594,13 @@ class MarkupAnnotation extends Annotation {
       annotationDict.set("StructParent", annotation.parentTreeId);
     }
     // edutiek-patch: begin
-    annotationDict.setIfDefined(
-        "Contents",
-      stringToAsciiOrUTF16BE(annotation.contents)
-    );
+    // Add label if set via /Contents.
+    annotationDict.setIfDefined("Contents", stringToAsciiOrUTF16BE(annotation.contents));
+    // Add annotation to struct tree.
+    const structParent = edutiek.push(xref, annotation, annotationRef, changes);
+    if (structParent !== null) {
+      annotationDict.set("StructParent", structParent);
+    }
     // edutiek-patch: end
     changes.put(annotationRef, {
       data: annotationDict
@@ -59783,15 +59791,54 @@ class HighlightAnnotation extends MarkupAnnotation {
     }
     const appearanceBuffer = [`${getPdfColor(color, true)}`, "/R0 gs"];
     const buffer = [];
-    for (const outline of outlines) {
-      buffer.length = 0;
-      buffer.push(`${numberToString(outline[0])} ${numberToString(outline[1])} m`);
-      for (let i = 2, ii = outline.length; i < ii; i += 2) {
-        buffer.push(`${numberToString(outline[i])} ${numberToString(outline[i + 1])} l`);
+    // edutiek-patch: begin
+
+    switch(annotation.edutiekType){
+    case 'underline':
+      appearanceBuffer.push('/DeviceRGB CS');
+      for (const outline of outlines) {
+        appearanceBuffer.push(getPdfColorArray(color).join(' ') + ' SCN');
+        appearanceBuffer.push('2 w');
+        // appearanceBuffer.push('[5 5] 0 d');
+        appearanceBuffer.push(`${numberToString(outline[0])} ${numberToString(outline[1] + 2)} m`);
+        appearanceBuffer.push(`${numberToString(outline[6])} ${numberToString(outline[7] + 2)} l`);
+        appearanceBuffer.push('S');
       }
-      buffer.push("h");
-      appearanceBuffer.push(buffer.join("\n"));
+      break;
+    case 'wave':
+      appearanceBuffer.push('/DeviceRGB CS');
+      for (const outline of outlines) {
+        appearanceBuffer.push(getPdfColorArray(color).join(' ') + ' SCN');
+        appearanceBuffer.push('1 w');
+        const x1 = outline[0];
+        const y1 = outline[1] + 2;
+        const x2 = outline[6];
+        const y2 = outline[7] + 2;
+        appearanceBuffer.push(`${numberToString(x1)} ${numberToString(y1)} m`);
+        let n = x1;
+        let dir = 1;
+        const step = 6;
+        const pitch = 3;
+        while (n + step < x2) {
+          appearanceBuffer.push(`${numberToString(n + (step / 2))} ${numberToString(y1 + (dir * pitch))} ${numberToString(n + step)} ${numberToString(y1)} v`);
+          n += step;
+          dir = -dir;
+        }
+        appearanceBuffer.push('S');
+      }
+      break;
+    default:
+	for (const outline of outlines) {
+	  buffer.length = 0;
+	  buffer.push(`${numberToString(outline[0])} ${numberToString(outline[1])} m`);
+	  for (let i = 2, ii = outline.length; i < ii; i += 2) {
+	    buffer.push(`${numberToString(outline[i])} ${numberToString(outline[i + 1])} l`);
+	  }
+	  buffer.push("h");
+	  appearanceBuffer.push(buffer.join("\n"));
+	}
     }
+    // edutiek-patch: end
     appearanceBuffer.push("f*");
     const appearance = appearanceBuffer.join("\n");
     const appearanceStreamDict = new Dict(xref);
@@ -67003,6 +67050,266 @@ globalThis.pdfjsWorker = {
   WorkerMessageHandler: WorkerMessageHandler
 };
 
-export { WorkerMessageHandler };
+// edutiek-patch: begin
+const edutiek = (function(){
+  let structElements = [];
+  let nextStructParentKey = null;
+  let xref = null;
+  return {push, commit};
 
-//# sourceMappingURL=pdf.worker.mjs.map
+  function push(xref_, annotation, annotationRef, changes)
+  {
+    // Add new annotation into struct tree if it has a markedcontent attached.
+    const rootRef = xref_.root.getRaw('StructTreeRoot');
+    if (!rootRef || !annotation.pageAndMC) {
+      return null;
+    }
+    const root = xref_.root.get('StructTreeRoot');
+    if (!root) {
+      return null;
+    }
+
+    if (nextStructParentKey === null) {
+      xref = xref_;
+      nextStructParentKey = findNextStructKey(root);
+    }
+
+    const structParent = xref.fetch(new Ref(annotation.pageAndMC.page, 0)).get('StructParents');
+    const found = findStructElementForAnnotation(structParent, root.get('ParentTree'), annotation);
+    if (!found) {
+      return null;
+    }
+    const [structElementRef, structElement] = found;
+    const annot = xref.getNewTemporaryRef();
+    const newStructElement = structElement.clone();
+    const kids = newStructElement.getRaw('K');
+    if (kids instanceof Ref) {
+      changes.put(kids, {data: asArray(xref.fetch(kids)).concat(annot)});
+    } else {
+      newStructElement.set('K', asArray(kids).concat([annot]));
+    }
+    const objDict = new Dict();
+    objDict.set('Obj', annotationRef);
+    objDict.set('Pg', newStructElement.getRaw('Pg'));
+    objDict.set('Type', new Name('OBJR'));
+    // newStructElement.get('K').push(objDict);
+
+    const newAnnot = new Dict();
+    newAnnot.set('S', new Name('Annot'));
+    newAnnot.set('K', [objDict]);
+    newAnnot.set('P', structElementRef);
+    if (annotation.contents) { // structElement.has('Contents')
+      newAnnot.set('Alt', annotation.contents); // structElement.get('Contents')
+    }
+
+    changes.put(annot, {data: newAnnot});
+    changes.put(structElementRef, {data: newStructElement});
+
+    // structElements.push({ref: structElementRef, data: newStructElement, key: nextStructParentKey});
+    structElements.push({ref: annot, data: newAnnot, key: nextStructParentKey});
+    return nextStructParentKey++;
+  }
+
+  function commit(changes)
+  {
+    if (structElements.length === 0) {
+      return;
+    }
+    // Add structParent to annotationRef
+    // const nextKey = insertIntoNumTree(rootRef, structElements.map(x => x.ref));
+    insertIntoNumTree(xref.root.getRaw('StructTreeRoot'), structElements.map(x => x.ref));
+    structElements.forEach(({ref, data}) => changes.put(ref, {data}));
+    applyUpdates(changes);
+    structElements = [];
+    nextStructParentKey = null;
+    xref = null;
+  }
+
+  /**
+   * Append node into last (max(key)) Leafs.
+   */
+  function insertIntoNumTree(root, refs)
+  {
+    let path = makePath(root);
+    if (has(path, 'ParentTreeNextKey')) {
+      update(path, 'ParentTreeNextKey', x => x + refs.length);
+    }
+    path = into(path, 'ParentTree');
+    while(!has(path, 'Nums')){
+      if (has(path, 'Limits')) {
+        update(path, 'Limits', arr => [arr[0], arr[1] + refs.length]);
+      }
+      const kids = get(path, 'Kids');
+      path = into(path, 'Kids', kids.length - 1);
+    }
+
+    let newKey;
+    if (has(path, 'Limits')) {
+      update(path, 'Limits', arr => {
+        newKey = arr[1] + 1;
+        return [arr[0], arr[1] + refs.length];
+      });
+    } else {
+      const nums = get(path, 'Nums');
+      newKey = nums[nums.length - 2] + 1;
+    }
+
+    update(path, 'Nums', arr => arr.concat(refs.flatMap(ref => [newKey++, ref])));
+    // return newKey - 1;
+  }
+
+  function findStructElementForAnnotation(structParent, root, annotation)
+  {
+    return walkNumTree(root, function (num, nums) {
+      if (num === structParent) {
+        for (let x of nums) {
+          const element = x instanceof Ref ? xref.fetch(x) : x;
+          if (element && element.get && element.get('K') instanceof Array) {
+            for (let y of element.get('K')) {
+              if (y === annotation.pageAndMC.mc) {
+                return [x, element];
+              }
+            }
+          }
+        }
+      }
+
+      return null;
+    });
+  }
+
+  function findNextStructKey(root)
+  {
+    if (root.has('ParentTreeNextKey')) {
+      return root.get('ParentTreeNextKey');
+    }
+    const parentTree = root.get('ParentTree');
+    let next = parentTree;
+    while(true) {
+      if (next.has('Limits')) {
+        return next.get('Limits')[1] + 1;
+      }
+      if (next.has('Nums')) {
+        const nums = next.get('Nums');
+        return nums[nums.length - 2] + 1;
+      }
+
+      const kids = next.get('Kids');
+      next = kids[kids.length - 1];
+    }
+  }
+
+  function walkNumTree(root, proc)
+  {
+    if (root.get('Nums')) {
+      const nums = root.get('Nums');
+      for (let i = 0; i < nums.length; i += 2) {
+        const ret = proc(nums[i], nums[i + 1] instanceof Ref ? xref.fetch(nums[i + 1]) : nums[i + 1]);
+        if (ret !== null) {
+          return ret;
+        }
+      }
+      return null;
+    }
+
+    for (let kid of root.get('Kids')) {
+      const ret = walkNumTree(xref.fetch(kid), proc);
+      if (ret !== null) {
+        return ret;
+      }
+    }
+    return null;
+  }
+
+  function get(path, key)
+  {
+    const v = getRaw(path, key);
+    return v instanceof Ref ? xref.fetch(v) : v;
+  }
+
+  function getRaw(path, key)
+  {
+    return path.current instanceof Array ? path.current[key] : path.current.getRaw(key);
+  }
+
+  function has(path, key)
+  {
+    return path.current instanceof Array ? key < path.current.length : path.current.has(key);
+  }
+
+  function MyMap () {}
+  function MyArray () {}
+
+  function update(path, key, proc)
+  {
+    update.refs = update.refs || {};
+    update.refs[path.root + ''] = update.refs[path.root + ''] || {};
+    let curr = update.refs[path.root + ''];
+    path.path.forEach(part => {
+      curr[part] = curr[part] || new (typeof part === 'number' ? MyArray : MyMap)();
+      curr = curr[part];
+    });
+    curr[key] = proc(get(path, key));
+  }
+
+  function applyUpdates(changes)
+  {
+    Object.entries(update.refs).forEach(([strRef, val]) => {
+      const ref = new Ref(parseInt(strRef), 0);
+      const src = xref.fetch(ref);
+      const dest = new Dict();
+      src._map.entries().forEach(([key, val]) => dest.set(key, val));
+      Object.entries(val).forEach(([key, val]) => {
+        dest.set(key, rec(val, src.get(key)));
+      });
+      changes.put(ref, {data: dest});
+    });
+    update.refs = {};
+
+    function rec(val, src)
+    {
+      if (val instanceof MyMap) {
+        const dict = new Dict();
+        Object.entries(val).forEach(([key, val]) => dict.set(key, rec(val, src.get(key))));
+        return dict;
+      } else if (val instanceof MyArray) {
+        const arr = Array.from(src);
+        Object.entries(val).forEach(([k, v]) => {arr[k] = rec(val, src[k]);});
+        return arr;
+      }
+
+      return val;
+    }
+  }
+
+  function into(path, ...keys)
+  {
+    return keys.reduce((path, key) => getRaw(path, key) instanceof Ref ? ({
+      root: getRaw(path, key),
+      path: [],
+      current: get(path, key),
+    }) : ({
+      root: path.root,
+      path: path.path.concat([key]),
+      current: getRaw(path, key),
+    }), path);
+  }
+
+  function makePath(root)
+  {
+    return {
+      root,
+      path: [],
+      current: xref.fetch(root),
+    };
+  }
+
+  function asArray(x)
+  {
+    return x instanceof Array ? x : [x];
+  }
+})();
+
+// edutiek-patch: end
+
+export { WorkerMessageHandler };

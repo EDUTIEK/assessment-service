@@ -2,3 +2,27 @@
 {
     display: none!important;
 }
+
+#viewer.disable-freeform-highlight .textLayer
+{
+    cursor: default!important;
+}
+
+#viewer.disable-text-highlight .textLayer span
+{
+    cursor: text!important;
+    /* user-select: none; */
+}
+
+.annotation-label
+{
+    font-family: sans-serif;
+    background-color: #606060;
+    color: white;
+    position: absolute;
+    font-size: 12px;
+    top: 0;
+    left: 0;
+    transform: translate(-100%, -100%);
+    padding: 1px;
+}
