@@ -67,7 +67,7 @@ class ImportTypeNrw implements ImportType
                 'file' => $file->getFileName(),
                 'id' => $file->getLogin(),
                 'import_possible' => $file->getImportPossible(),
-                'comment' => implode(', ', $file->getComments())
+                'comment' => implode(', ', array_merge($file->getErrors(), $file->getComments()))
             ]);
         };
         return $rows;

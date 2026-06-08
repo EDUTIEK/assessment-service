@@ -158,8 +158,8 @@ class Service implements FullService
             if ($user_id) {
                 $file->setUserId($user_id);
             } else {
+                $file->addError($this->lng->txt('import_user_not_existing', ['login' => $file->getLogin()]));
                 $file->setLogin('');
-                $file->addError($this->lng->txt('import_user_not_existing'));
                 continue;
             }
 

@@ -16,7 +16,7 @@ return [
     'import_invalid_zip_format' => 'Das Format der im ZIP-Datei wurde nicht erkannt.',
     'import_hash_mismatch' => 'Die hochgeladene Datei hat nicht den erforderlichen Hash-Wert',
     'import_file_missing' => 'Datei fehlt',
-    'import_user_not_existing' => 'User existiert nicht',
+    'import_user_not_existing' => 'Benutzerkonto "{login}" nicht gefunden',
     'import_same_file_exists' => 'Gleiche Datei existiert',
     'import_another_file_exists' => 'Unterschiedliche Datei existiert bereits',
     'import_unknown_error' => 'Unbekannter Fehler',

@@ -136,7 +136,7 @@ readonly class ImportTypeBavaria implements ImportType
                     'id' => $file->getId(),
                     'hash_ok' => $file->isHashOk(),
                     'import_possible' => $file->isImportPossible(),
-                    'comments' => implode(', ', $file->getComments())
+                    'comments' => implode(', ', array_merge($file->getErrors(), $file->getComments()))
                 ]);
             }
         };
