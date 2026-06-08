@@ -1,0 +1,17 @@
+{{#title}}
+<div class="xlas-part-title">
+    {{title}}
+</div>
+{{/title}}
+
+{{#points}}
+<div class="xlas-grading">
+    <p><strong>{{label_points}}</strong>: {{points}} {{#grade}}({{.}}){{/grade}}</p>
+    <p>{{statement}}</p>
+</div>
+{{/points}}
+
+<div class="xlas-part-subtitle">
+    {{label_reason}}
+</div>
+{{{reason}}}

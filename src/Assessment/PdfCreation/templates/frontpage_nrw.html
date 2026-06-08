@@ -12,9 +12,9 @@
         {{#assessment}}{{title}}{{/assessment}}
     </span></p>
     <p class="exam1"><span class="label1">Datum</span><span class="underline1">
-        {{#writer}}{{authorization}}{{/writer}}</span></p>
+        {{#assessment}}{{writing_start}}{{/assessment}}</span></p>
     <p class="exam1 bold"><span class="label1">Kennziffer</span><span class="underline1">
-        {{#writer}}{{login}}{{/writer}}
+        {{#writer}}{{pseudonym}}{{/writer}}
         </span></p>
 </div>
 
@@ -30,14 +30,10 @@
     <div class="box3">
         <p>Nach abgschlossener Bewetung anhand des Kennziffernverzeichnisses festgestellte/r Verfasser/in:</p>
         <p class="author3">
-            {{#writer}}
-                {{#anonymous}}{{pseudonym}}{{/anonymous}}
-                {{^anonymous}}{{fullname}}{{/anonymous}}
-            {{/writer}}
         </p>
         <p class="date3">
             <span class="label3">Düsseldorf, den</span>
-            <span class="underline3">{{#context}}{{date}}{{/context}}</span>
+            <span class="underline3"></span>
         </p>
     </div>
 </div>

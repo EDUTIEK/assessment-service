@@ -220,15 +220,40 @@ readonly class CorrectionProvider implements PdfPartProvider
         $show2 = $summary2->isRevised() || ($writer?->isRevisionNeeded() && $summary2->getCorrectorId() === $own_corrector_id);
 
         if ($show1 || $show2) {
-            return $this->renderContent(
-                $title,
-                $show2 ? $summary2->getRevisionText() : null,
-                [
-                    GradingPosition::FIRST->value => $show1 ? $summary1->getPoints() : null,
-                    GradingPosition::SECOND->value => $show2 ? $summary2->getPoints() : null,
-                ],
-                $options
-            );
+
+            $points = [
+                GradingPosition::FIRST->value => $show1 ? $summary1->getRevisionPoints() : null,
+                GradingPosition::SECOND->value => $show2 ? $summary2->getRevisionPoints() : null,
+            ];
+
+            $data_points = [];
+            foreach ($points as $position => $value) {
+                if ($value !== null) {
+                    $level = $this->grading->getGradLevelForPoints($value);
+                    $label = $this->language->txt(count($points) == 1 ? 'pdf_label_revision_points' : 'pdf_label_revision_points_pos' . $position);
+                    $data_points[] = [
+                        'label_points' => $label,
+                        'points' => $value,
+                        'grade' => $level?->getGrade(),
+                        'statement' => $level?->getStatement(),
+                    ];
+                }
+            }
+
+            $data = [
+                'title' => $title,
+                'reason' => $show2 ? $this->html_processing->addContentStyles(
+                    $this->html_processing->secureContent($summary2->getRevisionText() ?? ''),
+                    false,
+                    HeadlineScheme::THREE
+                ) : '',
+                'label_reason' => $this->language->txt('pdf_label_revision_reason'),
+                'points' => $data_points
+            ];
+
+            $html = $this->html_processing->fillTemplate(__DIR__ . '/templates/consulting.html', $data);
+            $html = $this->html_processing->addCorrectionStyles($html);
+            return $this->pdf_processing->create($html, $options);
         }
 
         return null;

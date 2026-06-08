@@ -119,9 +119,11 @@ readonly class CorrectionProvider implements PdfPartProvider
         ];
 
         $properties = $this->repos->properties()->one($this->ass_id);
+        $settings = $this->repos->orgaSettings()->one($this->ass_id);
         $data['assessment'] = [
             'title' => $properties?->getTitle(),
             'description' => $properties?->getDescription(),
+            'writing_start' => $this->format->docDate($settings?->getWritingStart())
         ];
 
         $writer = $this->repos->writer()->one($writer_id);
