@@ -40,7 +40,6 @@ readonly class Service implements FullService
         }
 
         $criteria = $this->repos->ratingCriterion()->allByTaskIdAndCorrectorId($this->task_id, $corrector_id);
-        usort($criteria, fn(RatingCriterion $c1, RatingCriterion $c2) => $c1->getTitle() <=> $c2->getTitle());
 
         return $criteria;
     }

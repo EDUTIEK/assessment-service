@@ -12,7 +12,7 @@ interface RatingCriterionRepo
     /**
      * Get common or individual rating criteria
      * check for common criteria  with corrector_id IS NULL if $corrector_id == null
-     * @return RatingCriterion[]
+     * @return RatingCriterion[] sorted by title
      */
     public function allByTaskIdAndCorrectorId(int $task_id, ?int $corrector_id): array;
     public function save(RatingCriterion $entity): void;
