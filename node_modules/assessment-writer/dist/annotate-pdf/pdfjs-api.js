@@ -12,7 +12,6 @@
  * @param {string} parent   id of the parent element to add the iframe
  * @param {string} viewer   url of the viewer html (source of iframe, without parameter)
  * @param {string} pdf      url of the pdf file to load
- * @param {{viewOnly: bool}} options init pdfjs in view only or not.
  *
  * @return {{
  *   on: {function(string, function(CustomEvent)): void},
@@ -27,11 +26,10 @@
  *   select: {function(string): Promise},
  *   currentPage: {function(): Promise<number>},
  *   destroy: {function(): void},
- *   rebuild: {function(): void},
- *   setViewOnly: {function(bool): Promise},
+ *   rebuild: {function(): void}
  * }}
  */
-export default (parent, viewer, pdf, options = {}) => {
+export default (parent, viewer, pdf) => {
     let currentRequest = Promise.resolve();
     const t = new EventTarget();
     const dispatch = (name, detail = null) => t.dispatchEvent(new CustomEvent(name, {detail}));
@@ -46,11 +44,7 @@ export default (parent, viewer, pdf, options = {}) => {
         });
         return ret;
     })();
-    const iframeParams = new URLSearchParams({file: pdf});
-    if (options.viewOnly) {
-        iframeParams.set('viewOnly', 'yes');
-    }
-    frame.src = viewer + '?' + iframeParams;
+    frame.src = viewer + '?file=' + encodeURIComponent(pdf);
     frame.style.width = '100%';
     frame.style.height = '100%';
     parent.appendChild(frame);
@@ -77,7 +71,6 @@ export default (parent, viewer, pdf, options = {}) => {
             window.addEventListener('message', dispatchOrRespond);
             parent.appendChild(frame);
         },
-        setViewOnly: viewOnly => request('viewOnly', viewOnly),
     };
 
     function request(name, ...args)

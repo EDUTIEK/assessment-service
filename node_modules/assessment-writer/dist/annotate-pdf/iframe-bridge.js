@@ -40,6 +40,7 @@ function setup(dispatch, ready){
         pdfOn('annotationeditorparamschanged', checkForChanges);
         pdfOn('switchannotationeditorparams', checkForChanges);
         pdfOnPageChanging(pageChanging);
+        // pdfOn('annotationeditorstateschanged', checkForChanges);
 
         const actions = {
             getAll: () => entries.map(externEntry),
@@ -95,7 +96,7 @@ function setup(dispatch, ready){
                     if(PDFViewerApplication.pdfViewer.annotationEditorMode !== PDF_EDIT_MODE()){
                         selecting = entry.editor;
                         entry.editor.annotationElementId = entry.id;
-                        actions.viewOnly(false);
+                        pdfSwitchToMode(PDF_EDIT_MODE(), entry.id);
                     }else{
                         manager.setSelected(entry.editor);
                     }
@@ -107,13 +108,9 @@ function setup(dispatch, ready){
                 return ret;
             },
             currentPage: pdfCurrentPageIndex,
-            viewOnly: viewOnly => {
-                pdfSwitchToMode(viewOnly ? PDF_VIEW_MODE() : PDF_EDIT_MODE());
-                document.querySelector('#editorHighlight').classList[viewOnly ? 'add' : 'remove']('annotate-pdf-hide');
-            },
         };
 
-        actions.viewOnly(Boolean(new URLSearchParams(window.location.search).get('viewOnly')));
+        pdfSwitchToMode(PDF_EDIT_MODE());
         ready(actions);
         PDFViewerApplication.viewsManager.setInitialView(0);
         dispatch('ready');
@@ -447,11 +444,6 @@ function pdfOff(n, f)
 function PDF_EDIT_MODE()
 {
     return 9; // view / select mode = 0
-}
-
-function PDF_VIEW_MODE()
-{
-    return 0;
 }
 
 function pdfSwitchToMode(mode, editId = null)
