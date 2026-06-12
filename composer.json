@@ -17,10 +17,14 @@
         {
             "name": "Lukas Scharmer",
             "email": "lscharmer@databay.de"
+        },
+        {
+            "name": "Fabian Wolf",
+            "email": "wolf@databay.de"
         }
     ],
     "require": {
-        "php": ">=8.2 <8.4",
+        "php": ">=8.2 <8.5",
         "ext-json": "*",
         "ext-dom": "*",
         "ext-xml": "*",
