@@ -17,8 +17,6 @@ interface ReadService
      */
     public function getUsersByIds(array $ids): array;
 
-    public function getCurrentUser(): ?UserData;
-
     public function getUserDisplay(int $id, ?string $back_link): UserDisplay;
 
     public function getUserDisplaysByIds(array $ids, ?string $back_link): array;

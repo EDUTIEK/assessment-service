@@ -21,12 +21,6 @@ interface UserDataRepo
     public function some(array $ids): array;
 
     /**
-     * Get the currently active user
-     * This might be null, e.g. in case of cron job
-     */
-    public function current(): ?UserData;
-
-    /**
      * Get a user id by login
      * A non-existing user returns 0
      */

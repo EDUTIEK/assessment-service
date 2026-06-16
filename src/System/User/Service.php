@@ -27,11 +27,6 @@ readonly class Service implements ReadService
         return $this->user_repo->some($ids);
     }
 
-    public function getCurrentUser(): ?UserData
-    {
-        return $this->user_repo->current();
-    }
-
     public function getUserDisplay(int $id, ?string $back_link): UserDisplay
     {
         return $this->user_display->one($id, $back_link);
