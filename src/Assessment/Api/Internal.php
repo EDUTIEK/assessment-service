@@ -26,6 +26,7 @@ use Edutiek\AssessmentService\Assessment\Export\DocumentationExport;
 use Edutiek\AssessmentService\Assessment\Export\Service as ExportService;
 use Edutiek\AssessmentService\Assessment\Format\FullService as FormatInterface;
 use Edutiek\AssessmentService\Assessment\Format\Service as Format;
+use Edutiek\AssessmentService\Assessment\FileUsage\Finder;
 use Edutiek\AssessmentService\Assessment\GradeLevel\Service as GradeLevelService;
 use Edutiek\AssessmentService\Assessment\Location\Service as LocationService;
 use Edutiek\AssessmentService\Assessment\LogEntry\Service as LogEntryService;
@@ -54,6 +55,8 @@ use Edutiek\AssessmentService\Assessment\Apps\AppWriter;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 use Edutiek\AssessmentService\Assessment\Export\ResultsExport;
 use Edutiek\AssessmentService\Assessment\Apps\SlimLogger;
+use Edutiek\AssessmentService\System\File\FileUsageFinder;
+use Edutiek\AssessmentService\Assessment\FileUsage\FileCleanupHandler;
 
 class Internal implements ComponentApi, ComponentApiFactory
 {
@@ -62,6 +65,15 @@ class Internal implements ComponentApi, ComponentApiFactory
     public function __construct(
         private readonly Dependencies $dependencies
     ) {
+    }
+
+    public function allComponents(): array
+    {
+        $components = ['Assessment', 'Task'];
+        foreach (TaskType::cases() as $task_type) {
+            $components[] = $task_type->component();
+        }
+        return $components;
     }
 
     public function components(int $ass_id, int $user_id): array
@@ -613,6 +625,23 @@ class Internal implements ComponentApi, ComponentApiFactory
         return  $this->instances[WritingTaskService::class][$ass_id][$user_id] = new WritingTaskService(
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->writer($ass_id, $user_id)
+        );
+    }
+
+    public function fileUsageFinder(): FileUsageFinder
+    {
+        return  $this->instances[Finder::class] = new Finder(
+            $this->dependencies->repositories()
+        );
+    }
+
+    public function fileCleanupHandler($user_id): FileCleanupHandler
+    {
+        return $this->instances[FileCleanupHandler::class] = new FileCleanupHandler(
+            $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->systemApi()->tempStorage(),
+            array_map(fn(string $component) => $this->api($component)->fileUsageFinder(), $this->allComponents()),
+            $this->language($user_id)
         );
     }
 }

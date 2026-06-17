@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingProvider;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskApi as TaskApi;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager as ManagerInterface;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
+use Edutiek\AssessmentService\System\File\FileUsageFinder;
 
 readonly class ForAssessment implements TaskApi
 {
@@ -47,5 +48,10 @@ readonly class ForAssessment implements TaskApi
     public function correctionPartProvider(int $ass_id, int $context_id, int $user_id): ?PdfPartProvider
     {
         return $this->internal->correctionPartProvider($ass_id, $user_id);
+    }
+
+    public function fileUsageFinder(): FileUsageFinder
+    {
+        return $this->internal->fileUsageFinder();
     }
 }

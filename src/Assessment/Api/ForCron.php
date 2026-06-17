@@ -16,4 +16,9 @@ readonly class ForCron
     {
         return $this->internal->reviewNotificationHandler($this->user_id);
     }
+
+    public function fileCleanupHandler(): CronHandler
+    {
+        return $this->internal->fileCleanupHandler($this->user_id);
+    }
 }

@@ -18,6 +18,11 @@ interface Storage
     public function asciiFilename(string $filename): string;
 
     /**
+     * Get a list of all files that are stored in this storage before one day
+     */
+    public function dayOldFileIds(): array;
+
+    /**
      * Check if a file with an id exists
      */
     public function hasFile(?string $id): bool;

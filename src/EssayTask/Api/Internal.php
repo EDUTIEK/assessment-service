@@ -26,6 +26,8 @@ use Edutiek\AssessmentService\EssayTask\WritingSettings\Service as WritingSettin
 use Edutiek\AssessmentService\EssayTask\WritingSteps\Service as WritingStepsService;
 use Edutiek\AssessmentService\System\BackgroundTask\ComponentJob;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
+use Edutiek\AssessmentService\System\File\FileUsageFinder;
+use Edutiek\AssessmentService\EssayTask\FileUsage\Finder;
 
 class Internal
 {
@@ -148,6 +150,13 @@ class Internal
             $ass_id,
             $user_id,
             $this,
+            $this->dependencies->repositories()
+        );
+    }
+
+    public function fileUsageFinder(): FileUsageFinder
+    {
+        return  $this->instances[Finder::class] = new Finder(
             $this->dependencies->repositories()
         );
     }

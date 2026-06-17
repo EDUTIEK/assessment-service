@@ -7,6 +7,12 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 interface ComponentApiFactory
 {
     /**
+     * Get the names of all components implementing the component api
+     * @return string[]
+     */
+    public function allComponents(): array;
+
+    /**
      * Get the names of components needed in the assessment
      * these are "Assessment", "Task" and all task types used by the assessment
      * @return string[]

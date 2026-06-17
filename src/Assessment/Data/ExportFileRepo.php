@@ -11,6 +11,9 @@ interface ExportFileRepo
 
     public function hasByAssIdAndFileId(int $ass_id, string $file_id): bool;
 
+    /** @return string[] */
+    public function allFileIds(): array;
+
     /** @return ExportFile[] */
     public function allByAssId(int $ass_id): array;
 

@@ -73,9 +73,4 @@ readonly class ForClients
     {
         return $this->internal->user();
     }
-
-    public function spreadsheet(bool $temporary): SpreadsheetService
-    {
-        return $this->internal->spreadsheet($temporary);
-    }
 }

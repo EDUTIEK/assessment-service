@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeManager as ManagerIn
 use Edutiek\AssessmentService\EssayTask\AppBridges\WriterBridge as WriterBridgeService;
 use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
+use Edutiek\AssessmentService\System\File\FileUsageFinder;
 
 readonly class ForServices implements TypeApi
 {
@@ -42,5 +43,10 @@ readonly class ForServices implements TypeApi
     public function correctionPartProvider(int $ass_id, int $context_id, int $user_id): ?PdfPartProvider
     {
         return $this->internal->correctionPartProvider($ass_id, $user_id);
+    }
+
+    public function fileUsageFinder(): FileUsageFinder
+    {
+        return $this->internal->fileUsageFinder();
     }
 }

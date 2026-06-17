@@ -7,6 +7,7 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
+use Edutiek\AssessmentService\System\File\FileUsageFinder;
 
 /**
  * Common API for components used by the Assessment component
@@ -39,4 +40,9 @@ interface ComponentApi
      * Get the provider of parts for the PDF of a correction
      */
     public function correctionPartProvider(int $ass_id, int $context_id, int $user_id): ?PdfPartProvider;
+
+    /**
+     * Get the finder for file ids which are used in this component
+     */
+    public function fileUsageFinder(): FileUsageFinder;
 }

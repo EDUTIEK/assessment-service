@@ -158,6 +158,7 @@ return [
     'notification_corrector_first_authorization_removed_subject' => 'Erstkorrektur-Freigabe zurückgezogen',
     'notification_corrector_writing_changed_title' => 'Abgabe geändert',
     'notification_corrector_writing_changed_info' => 'Wird an einen Korrektoren gesendet, wenn die Abgabe zu seine Korrektur nachträglich geändert wurde.',
-    'notification_corrector_writing_changed_subject' => 'Abgabe geändert'
+    'notification_corrector_writing_changed_subject' => 'Abgabe geändert',
+    'file_cleanup_handler_success' => 'Dateien gelöscht: {deleted}',
 
 ];

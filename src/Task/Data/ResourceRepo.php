@@ -10,6 +10,8 @@ interface ResourceRepo
     public function one(int $id): ?Resource;
     public function oneByTaskIdAndType(int $task_id, ResourceType $type): ?Resource;
     public function oneByFileId(string $file_id): ?Resource;
+    /** @return string[] */
+    public function allFileIds(): array;
     /** @return Resource[] */
     public function allByTaskId(int $task_id): array;
     public function save(Resource $entity): void;

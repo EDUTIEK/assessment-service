@@ -14,6 +14,9 @@ interface EssayImageRepo
     public function save(EssayImage $entity): void;
     public function delete(int $id): void;
 
+    /** @return string[] */
+    public function allFileIds(): array;
+
     /**
      * Get all page images of an essay
      * This should use an atomic query if possible
