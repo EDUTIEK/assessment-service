@@ -25,10 +25,8 @@ readonly class FileCleanupHandler implements CronHandler
 
     public function run(): Result
     {
-        $stored_ids = array_merge(
-            $this->temp_storage->dayOldFileIds(),
-            $this->file_storage->dayOldFileIds(),
-        );
+        $stored_ids = $this->temp_storage->dayOldFileIds();
+        $temp_ids = $this->temp_storage->dayOldFileIds();
 
         $used_ids = [];
         foreach ($this->finders as $finder) {
@@ -38,6 +36,10 @@ readonly class FileCleanupHandler implements CronHandler
         $deleted = 0;
         foreach (array_diff($stored_ids, $used_ids) as $id) {
             $this->file_storage->deleteFile($id);
+            $deleted++;
+        }
+        foreach (array_diff($temp_ids, $used_ids) as $id) {
+            $this->temp_storage->deleteFile($id);
             $deleted++;
         }
 
