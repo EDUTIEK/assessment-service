@@ -92,7 +92,7 @@ class Service implements FullService
         );
         $file_info = $this->storage->newInfo()
             ->setId($file_id)
-            ->setFileName($this->pdf->buildPdfFilename($writings, PdfPurpose::WRITING))
+            ->setFileName($this->pdf->buildPdfFilename($writings, PdfPurpose::CORRECTION))
             ->setMimeType('application/pdf')
             ->setDisposable(true);
 
