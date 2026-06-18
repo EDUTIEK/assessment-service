@@ -25,7 +25,7 @@ readonly class FileCleanupHandler implements CronHandler
 
     public function run(): Result
     {
-        $stored_ids = $this->temp_storage->dayOldFileIds();
+        $stored_ids = $this->file_storage->dayOldFileIds();
         $temp_ids = $this->temp_storage->dayOldFileIds();
 
         $used_ids = [];
