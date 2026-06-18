@@ -180,16 +180,16 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    public function logEntry(int $ass_id): LogEntryService
+    public function logEntry(int $ass_id, bool $temporary_export = true): LogEntryService
     {
-        return $this->instances[LogEntryService::class][$ass_id] ??= new LogEntryService(
+        return $this->instances[LogEntryService::class][$ass_id][$temporary_export] ??= new LogEntryService(
             $ass_id,
             $this->dependencies->repositories(),
             // set user_id 0 to use the system default language
             $this->language(0),
             $this->dependencies->systemApi()->format(0),
             $this->dependencies->systemApi()->user(),
-            $this->dependencies->systemApi()->spreadsheet(true)
+            $this->dependencies->systemApi()->spreadsheet($temporary_export)
         );
     }
 
@@ -610,7 +610,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->fileDelivery(),
             $this->resultsExport($ass_id, $context_id, $user_id),
-            $this->logEntry($ass_id)
+            $this->logEntry($ass_id, false)
         );
     }
 
