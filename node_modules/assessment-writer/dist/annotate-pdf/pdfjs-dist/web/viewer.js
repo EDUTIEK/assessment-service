@@ -10582,6 +10582,10 @@ class DownloadManager {
     return false;
   }
   download(data, url, filename) {
+    // edutiek-patch: begin
+    PDFViewerApplication.eventBus.dispatch('edutiekDownload', {source: this, data: new Blob([data], {type: 'application/pdf'})});
+    return;
+    // edutiek-patch: end
     let blobUrl;
     if (data) {
       blobUrl = URL.createObjectURL(new Blob([data], {
@@ -21408,7 +21412,9 @@ class ViewsManager extends Sidebar {
   #showUINotification() {
     this.toggleButton.setAttribute("data-l10n-id", ViewsManager.#l10nDescription.notificationButton);
     if (!this.isOpen) {
-      this.toggleButton.classList.add(UI_NOTIFICATION_CLASS);
+      // edutiek-patch: begin
+      // this.toggleButton.classList.add(UI_NOTIFICATION_CLASS);
+      // edutiek-patch: end
     }
   }
   #hideUINotification(reset = false) {

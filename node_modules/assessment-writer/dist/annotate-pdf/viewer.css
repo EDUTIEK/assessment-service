@@ -1,4 +1,109 @@
-#editorFreeText, #editorInk, #editorStamp, #printButton, #downloadButton, #presentationMode, #editorHighlightThickness, #editorHighlightVisibility, #secondaryOpenFile, #secondaryOpenFile + .visibleMediumView + .horizontalToolbarSeparator, #viewBookmark, #viewBookmarkSeparator
+#editorFreeText, #editorInk, #editorStamp, #printButton, #downloadButton, #presentationMode, #editorHighlightThickness, #editorHighlightVisibility, #secondaryOpenFile, #secondaryOpenFile + .visibleMediumView + .horizontalToolbarSeparator, #viewBookmark, #viewBookmarkSeparator, .annotate-pdf-hide, #editorHighlightButton, #editorHighlightParamsToolbar, .colorPicker, .colorPicker + .divider, #cursorToolButtons, #cursorToolButtons + .horizontalToolbarSeparator, #documentProperties, #imageAltTextSettings + .horizontalToolbarSeparator, #editorModeSeparator, #viewsManagerSelectorButton
 {
     display: none!important;
+}
+
+#viewer.disable-freeform-highlight .textLayer
+{
+    cursor: default!important;
+}
+
+#viewer.disable-text-highlight .textLayer span
+{
+    cursor: text!important;
+    /* user-select: none; */
+}
+
+.annotation-label
+{
+    font-family: sans-serif;
+    background-color: #606060;
+    color: white;
+    position: absolute;
+    font-size: 12px;
+    top: 0;
+    left: 0;
+    transform: translate(-100%, -100%);
+    padding: 1px;
+}
+
+.edutiek-button
+{
+    mask-repeat: no-repeat;
+    mask-position: center;
+    background-color: white;
+    mask-image: none;
+}
+
+.annotation-token
+{
+    position: absolute;
+    top: 0;
+    transform: translateY(-100%);
+    width: 25px;
+    height: 25px;
+    mask-position: center;
+    background-color: black;
+}
+
+.edutiek-button-wave::before
+{
+    mask-image: url(wave.svg);
+}
+
+.edutiek-button-underline::before
+{
+    mask-image: url(underline.svg);
+}
+
+.edutiek-button-vline::before
+{
+    mask-image: url(vline.svg);
+}
+
+.edutiek-button-marker::before
+{
+    mask-image: url(marker.svg);
+}
+
+.edutiek-button-question-mark::before,
+.annotation-token-question-mark
+{
+    mask-image: url(question-mark.svg);
+}
+
+.edutiek-button-exclamation-point::before,
+.annotation-token-exclamation-point
+{
+    mask-image: url(exclamation-point.svg);
+}
+
+.edutiek-button-cross::before,
+.annotation-token-cross
+{
+    mask-image: url(cross.svg);
+}
+
+.edutiek-button-check::before,
+.annotation-token-check
+{
+    mask-image: url(check.svg);
+}
+
+.edutiek-button-missing::before,
+.annotation-token-missing
+{
+    mask-image: url(missing.svg);
+}
+
+#viewer .edutiek-button-selected
+{
+    background-color: #c3c3c3;
+    cursor: default;
+    pointer-events: none;
+}
+
+#viewer .edutiek-button-selected-token
+{
+    background-color: #c3c3c3;
 }

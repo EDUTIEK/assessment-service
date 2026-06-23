@@ -12,10 +12,12 @@
  *     color: {Color},
  *     type: {Type},
  *     noDelete: {bool},
+ *     token: {Token},
  * }} Annotation
  *
  * @typedef {string} Color // all hex forms are valid but names are not. E.g. `#FF003377` is valid but `green` is not.
  * @typedef {string} Type // 'marker', 'underline' or 'wave'
+ * @typedef {string|null} Token // 'cross', 'exclamation-point', 'question-mark', 'check' or 'missing'
  *
  * @param {string} parent   id of the parent element to add the iframe
  * @param {string} viewer   url of the viewer html (source of iframe, without parameter)
@@ -47,6 +49,7 @@
  *   setColor: {function(string, Color): Promise},
  *   setType: {function(string, Type): Promise},
  *   setDeletable: {function(string, bool): Promise},
+ *   setToken: {function{string, Token}: Promise},
  * }}
  */
 export default (parent, viewer, pdf, options = {}) => {

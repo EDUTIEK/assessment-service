@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns="http://www.w3.org/2000/svg"
+   height="40"
+   width="40"
+   viewBox="0 0 40 40">
+   <!-- <rect x="0" y="0" width="40" height="40" style="stroke:#FFF;fill:#FFF;fill-opacity:0.5;"/> -->
+   <rect x="8" y="12" width="36" height="16" style="fill:black;fill-opacity:0.4;"/>
+   <!-- <path d="M 8 12 L 34 12 L 34 30 L 8 30 Z" style="fill:black;fill-opacity:0.6;"/> -->
+   <!-- <rect x="0" y="0" width="40" height="40" style="fill:#FFFFFF;fill-opacity:0.6;"/> -->
+   <text x="10" y="25" style="font-size: 12px;">Abc</text>
+</svg>

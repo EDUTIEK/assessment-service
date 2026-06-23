@@ -56720,7 +56720,12 @@ class AnnotationFactory {
           break;
         case AnnotationEditorType.HIGHLIGHT:
           if (annotation.quadPoints) {
-            promises.push(HighlightAnnotation.createNewAnnotation(xref, annotation, changes));
+            // edutiek-patch: begin
+            promises.push(HighlightAnnotation.createNewAnnotation(xref, annotation, changes, {
+              evaluator,
+              task,
+            }));
+            // edutiek-patch: end
           } else {
             promises.push(InkAnnotation.createNewAnnotation(xref, annotation, changes));
           }
@@ -56757,8 +56762,13 @@ class AnnotationFactory {
           break;
       }
     }
+    // edutiek-patch: begin
+    const newAnnotations = (await Promise.all(promises)).flat();
+    edutiek.commit(changes);
+
     return {
-      annotations: (await Promise.all(promises)).flat()
+      annotations: newAnnotations,
+      // edutiek-patch: end
     };
   }
   static async printNewAnnotations(annotationGlobals, evaluator, task, annotations, imagePromises) {
@@ -57589,10 +57599,13 @@ class MarkupAnnotation extends Annotation {
       annotationDict.set("StructParent", annotation.parentTreeId);
     }
     // edutiek-patch: begin
-    annotationDict.setIfDefined(
-        "Contents",
-      stringToAsciiOrUTF16BE(annotation.contents)
-    );
+    // Add label if set via /Contents.
+    annotationDict.setIfDefined("Contents", stringToAsciiOrUTF16BE(annotation.contents));
+    // Add annotation to struct tree.
+    const structParent = edutiek.push(xref, annotation, annotationRef, changes);
+    if (structParent !== null) {
+      annotationDict.set("StructParent", structParent);
+    }
     // edutiek-patch: end
     changes.put(annotationRef, {
       data: annotationDict
@@ -59783,16 +59796,192 @@ class HighlightAnnotation extends MarkupAnnotation {
     }
     const appearanceBuffer = [`${getPdfColor(color, true)}`, "/R0 gs"];
     const buffer = [];
-    for (const outline of outlines) {
-      buffer.length = 0;
-      buffer.push(`${numberToString(outline[0])} ${numberToString(outline[1])} m`);
-      for (let i = 2, ii = outline.length; i < ii; i += 2) {
-        buffer.push(`${numberToString(outline[i])} ${numberToString(outline[i + 1])} l`);
+
+    // edutiek-patch: begin
+    function drawFromQuadPoints(drawLine)
+    {
+      const yShift = 0.1; // Move line % of line height up (+) or down (-).
+      const qp = annotation.quadPoints;
+      const row = i => {
+        const y = qp[i + 5];
+        const lineHeight = (qp[i + 1] - y);
+        appearanceBuffer.push(...drawLine(qp[i + 4], qp[i + 6], y + (lineHeight * yShift)));
       }
-      buffer.push("h");
-      appearanceBuffer.push(buffer.join("\n"));
+      for (let i = 0; i < qp.length; i += 16) {
+        row(i);
+      }
+      row(qp.length - 8);
+    }
+    let leftPosOverwrite = false;
+    const rectBaseYTop = rect[3];
+    switch(annotation.edutiekType){
+    case 'underline':
+      appearanceBuffer.push('/DeviceRGB CS');
+      appearanceBuffer.push(getPdfColorArray(color).join(' ') + ' SCN');
+      const shift = 0;
+      drawFromQuadPoints((x1, x2, y) => [
+          `${numberToString(x1)} ${numberToString(y)} m`,
+          `${numberToString(x2)} ${y} l`,
+          'S',
+        ]);
+      break;
+    case 'wave':
+      appearanceBuffer.push('/DeviceRGB CS');
+      drawFromQuadPoints((x1, x2, y) => {
+        const ret = [getPdfColorArray(color).join(' ') + ' SCN', '1 w'];
+        ret.push(`${numberToString(x1)} ${numberToString(y)} m`);
+        let x = x1;
+        let dir = 1;
+        const step = 3;
+        const pitch = 2;
+        while (x + step < x2) {
+          ret.push(`${numberToString(x + (step / 2))} ${numberToString(y + (dir * pitch))} ${numberToString(x + step)} ${numberToString(y)} v`);
+          x += step;
+          dir = -dir;
+        }
+        ret.push('S');
+        return ret;
+      });
+      break;
+    case 'vline':
+      rect[0] = annotation.edutiekPageSize[0] * ((parseFloat(annotation.leftAlign) - 0.9) / 100);
+      leftPosOverwrite = rect[0];
+      // rect[0] = Math.min(rect[0], annotation.pd[0] * ((parseFloat(annotation.leftAlign) - 1.2) / 100));
+      let minY = Infinity;
+      let maxY = -Infinity;
+      outlines.forEach(outline => {
+        for (let i = outline.length - 2; i >= 0; i -= 2) {
+          minY = Math.min(minY, outline[i + 1]);
+          maxY = Math.max(maxY, outline[i + 1]);
+        }
+      });
+      const x = rect[0] + 1;
+      appearanceBuffer.push('/DeviceRGB CS');
+      appearanceBuffer.push(getPdfColorArray(color).join(' ') + ' SCN');
+      appearanceBuffer.push('2 w');
+      appearanceBuffer.push(`${numberToString(x)} ${numberToString(minY)} m`);
+      appearanceBuffer.push(`${numberToString(x)} ${numberToString(maxY)} l`);
+      // appearanceBuffer.push(`${numberToString(x)} ${numberToString(outlines[0][3])} m`);
+      // appearanceBuffer.push(`${numberToString(x)} ${numberToString(outlines[outlines.length-1][1])} l`);
+      appearanceBuffer.push('S');
+      break;
+    default:
+      for (const outline of outlines) {
+	buffer.length = 0;
+	buffer.push(`${numberToString(outline[0])} ${numberToString(outline[1])} m`);
+	for (let i = 2, ii = outline.length; i < ii; i += 2) {
+	  buffer.push(`${numberToString(outline[i])} ${numberToString(outline[i + 1])} l`);
+	}
+	buffer.push("h");
+	appearanceBuffer.push(buffer.join("\n"));
+      }
     }
     appearanceBuffer.push("f*");
+    const resources = new Dict(xref);
+    const extGState = new Dict(xref);
+    resources.set("ExtGState", extGState);
+    let ensureFontInResources = () => {
+      const font = new Dict(xref);
+      const baseFont = new Dict(xref);
+      baseFont.setIfName('BaseFont', 'Helvetica');
+      baseFont.setIfName('Type', 'Font');
+      baseFont.setIfName('Subtype', 'Type1');
+      baseFont.setIfName('Encoding', 'WinAnsiEncoding');
+      font.set('F1', baseFont);
+      resources.set('Font', font);
+      ensureFontInResources = () => {};
+    };
+    const getFont = fontSize => {
+      ensureFontInResources();
+      const f = WidgetAnnotation._getFontData(params.evaluator, params.task, {
+        fontName: 'F1',
+        fontSize,
+      }, resources);
+      return f;
+    };
+    const calcTextSize = (text, fontSize, f) => {
+      const scale = fontSize / 1000;
+      const width = f.charsToGlyphs(text).reduce((l, g) => g.width * scale + l, 0);
+      const height = LINE_FACTOR * fontSize;
+      return {width, height};
+    };
+    if (annotation.edutiekLabel) {
+      const f = await getFont(8.0);
+      const {width, height} = calcTextSize(annotation.edutiekLabel, 8.0, f);
+      const shift = height / 3;
+      rect[0] -= width;
+      rect[3] = Math.max(rectBaseYTop + height, rect[3]);
+      appearanceBuffer.push('/DeviceRGB cs');
+      appearanceBuffer.push('/R1 gs');
+      appearanceBuffer.push(`${getPdfColor([0x60, 0x60, 0x60], true)}`);
+      appearanceBuffer.push([
+        (leftPosOverwrite || outlines[0][0]) - width,
+        outlines[0][3] - shift,
+        width,
+        height,
+      ].map(numberToString).join(' ') + ' re f');
+      appearanceBuffer.push(`${getPdfColor([0xFF, 0xFF, 0xFF], true)}`);
+      appearanceBuffer.push(`BT ${numberToString((leftPosOverwrite || outlines[0][0]) - width)} ${numberToString(outlines[0][3])} Td /F1 8.0 Tf [(${f.encodeString(annotation.edutiekLabel).map(escapeString).join('')})] TJ ET`);
+    }
+    let f, fontSize;
+    switch (annotation.edutiekToken) {
+    case 'cross':
+      appearanceBuffer.push('/DeviceRGB cs');
+      appearanceBuffer.push('/R1 gs');
+      appearanceBuffer.push(`${getPdfColor([0, 0, 0])}`);
+      appearanceBuffer.push(`${numberToString(outlines[0][4])} ${numberToString(outlines[0][3] + 6)} m`);
+      appearanceBuffer.push(`${numberToString(outlines[0][4] + 6)} ${numberToString(outlines[0][3])} l`);
+      appearanceBuffer.push(`${numberToString(outlines[0][4] + 6)} ${numberToString(outlines[0][3] + 6)} m`);
+      appearanceBuffer.push(`${numberToString(outlines[0][4])} ${numberToString(outlines[0][3])} l`);
+      appearanceBuffer.push('S');
+      rect[2] += 20;
+      rect[3] = Math.max(rectBaseYTop + 10, rect[3]);
+      break;
+    case 'check':
+      appearanceBuffer.push('/DeviceRGB cs');
+      appearanceBuffer.push('/R1 gs');
+      appearanceBuffer.push(`${getPdfColor([0, 0, 0])}`);
+      const basePos = {x: outlines[0][4] + 4, y: outlines[0][3] + 2};
+      appearanceBuffer.push(`${numberToString(basePos.x)} ${numberToString(basePos.y)} m`);
+      appearanceBuffer.push(`${numberToString(basePos.x + 7)} ${numberToString(basePos.y + 7)} l`);
+      appearanceBuffer.push(`${numberToString(basePos.x + 0.33)} ${numberToString(basePos.y - 0.33)} m`);
+      appearanceBuffer.push(`${numberToString(basePos.x - 3)} ${numberToString(basePos.y + 3)} l`);
+      appearanceBuffer.push('S');
+      rect[2] += 20;
+      rect[3] = Math.max(rectBaseYTop + 10, rect[3]);
+      break;
+    case 'question-mark':
+      f = await getFont(8.0);
+      appearanceBuffer.push('/DeviceRGB cs');
+      appearanceBuffer.push('/R1 gs');
+      appearanceBuffer.push(`${getPdfColor([0, 0, 0], true)}`);
+      appearanceBuffer.push(`BT ${numberToString(outlines[0][4])} ${numberToString(outlines[0][3])} Td /F1 8.0 Tf [(${f.encodeString('?').map(escapeString).join('')})] TJ ET`);
+      fontSize = calcTextSize('?', 8.0, f);
+      rect[2] += fontSize.width;
+      rect[3] = Math.max(rectBaseYTop + fontSize.height, rect[3]);
+      break;
+    case 'exclamation-point':
+      f = await getFont(8.0);
+      appearanceBuffer.push('/DeviceRGB cs');
+      appearanceBuffer.push('/R1 gs');
+      appearanceBuffer.push(`${getPdfColor([0, 0, 0], true)}`);
+      appearanceBuffer.push(`BT ${numberToString(outlines[0][4])} ${numberToString(outlines[0][3])} Td /F1 8.0 Tf [(${f.encodeString('!').map(escapeString).join('')})] TJ ET`);
+      fontSize = calcTextSize('!', 8.0, f);
+      rect[2] += fontSize.width;
+      rect[3] = Math.max(rectBaseYTop + fontSize.height, rect[3]);
+      break;
+    case 'missing':
+      f = await getFont(8.0);
+      appearanceBuffer.push('/DeviceRGB cs');
+      appearanceBuffer.push('/R1 gs');
+      appearanceBuffer.push(`${getPdfColor([0, 0, 0], true)}`);
+      appearanceBuffer.push(`BT ${numberToString(outlines[0][4])} ${numberToString(outlines[0][3])} Td /F1 8.0 Tf [(${f.encodeString('fehlt!').map(escapeString).join('')})] TJ ET`);
+      fontSize = calcTextSize('fehlt!', 8.0, f);
+      rect[2] += fontSize.width;
+      rect[3] = Math.max(rectBaseYTop + fontSize.height, rect[3]);
+      break;
+    }
+    // edutiek-patch: end
     const appearance = appearanceBuffer.join("\n");
     const appearanceStreamDict = new Dict(xref);
     appearanceStreamDict.set("FormType", 1);
@@ -59800,9 +59989,8 @@ class HighlightAnnotation extends MarkupAnnotation {
     appearanceStreamDict.setIfName("Type", "XObject");
     appearanceStreamDict.set("BBox", rect);
     appearanceStreamDict.set("Length", appearance.length);
-    const resources = new Dict(xref);
-    const extGState = new Dict(xref);
-    resources.set("ExtGState", extGState);
+    // edutiek-patch: begin
+    // edutiek-patch: end
     appearanceStreamDict.set("Resources", resources);
     const r0 = new Dict(xref);
     extGState.set("R0", r0);
@@ -59811,6 +59999,11 @@ class HighlightAnnotation extends MarkupAnnotation {
       r0.set("ca", opacity);
       r0.setIfName("Type", "ExtGState");
     }
+    // edutiek-patch: begin
+    const r1 = new Dict(xref);
+    extGState.set('R1', r1);
+    r1.setIfName('BM', 'Normal'); // No transparency for the label (no blend mode = multiply)
+    // edutiek-patch: end
     const ap = new StringStream(appearance);
     ap.dict = appearanceStreamDict;
     return ap;
@@ -62665,6 +62858,9 @@ class Page {
     }
     const dict = pageDict.clone();
     dict.set("Annots", annotationsArray);
+    // edutiek-patch: begin
+    dict.set('Tabs', Name.get('S'));
+    // edutiek-patch: end
     changes.put(this.ref, {
       data: dict
     });
@@ -67003,6 +67199,266 @@ globalThis.pdfjsWorker = {
   WorkerMessageHandler: WorkerMessageHandler
 };
 
-export { WorkerMessageHandler };
+// edutiek-patch: begin
+const edutiek = (function(){
+  let structElements = [];
+  let nextStructParentKey = null;
+  let xref = null;
+  return {push, commit};
 
-//# sourceMappingURL=pdf.worker.mjs.map
+  function push(xref_, annotation, annotationRef, changes)
+  {
+    // Add new annotation into struct tree if it has a markedcontent attached.
+    const rootRef = xref_.root.getRaw('StructTreeRoot');
+    if (!rootRef || !annotation.pageAndMC) {
+      return null;
+    }
+    const root = xref_.root.get('StructTreeRoot');
+    if (!root) {
+      return null;
+    }
+
+    if (nextStructParentKey === null) {
+      xref = xref_;
+      nextStructParentKey = findNextStructKey(root);
+    }
+
+    const structParent = xref.fetch(new Ref(annotation.pageAndMC.page, 0)).get('StructParents');
+    const found = findStructElementForAnnotation(structParent, root.get('ParentTree'), annotation);
+    if (!found) {
+      return null;
+    }
+    const [structElementRef, structElement] = found;
+    const annot = xref.getNewTemporaryRef();
+    const newStructElement = structElement.clone();
+    const kids = newStructElement.getRaw('K');
+    if (kids instanceof Ref) {
+      changes.put(kids, {data: asArray(xref.fetch(kids)).concat(annot)});
+    } else {
+      newStructElement.set('K', asArray(kids).concat([annot]));
+    }
+    const objDict = new Dict();
+    objDict.set('Obj', annotationRef);
+    objDict.set('Pg', newStructElement.getRaw('Pg'));
+    objDict.set('Type', new Name('OBJR'));
+    // newStructElement.get('K').push(objDict);
+
+    const newAnnot = new Dict();
+    newAnnot.set('S', new Name('Annot'));
+    newAnnot.set('K', [objDict]);
+    newAnnot.set('P', structElementRef);
+    if (annotation.contents) { // structElement.has('Contents')
+      newAnnot.set('Alt', annotation.contents); // structElement.get('Contents')
+    }
+
+    changes.put(annot, {data: newAnnot});
+    changes.put(structElementRef, {data: newStructElement});
+
+    // structElements.push({ref: structElementRef, data: newStructElement, key: nextStructParentKey});
+    structElements.push({ref: annot, data: newAnnot, key: nextStructParentKey});
+    return nextStructParentKey++;
+  }
+
+  function commit(changes)
+  {
+    if (structElements.length === 0) {
+      return;
+    }
+    // Add structParent to annotationRef
+    // const nextKey = insertIntoNumTree(rootRef, structElements.map(x => x.ref));
+    insertIntoNumTree(xref.root.getRaw('StructTreeRoot'), structElements.map(x => x.ref));
+    structElements.forEach(({ref, data}) => changes.put(ref, {data}));
+    applyUpdates(changes);
+    structElements = [];
+    nextStructParentKey = null;
+    xref = null;
+  }
+
+  /**
+   * Append node into last (max(key)) Leafs.
+   */
+  function insertIntoNumTree(root, refs)
+  {
+    let path = makePath(root);
+    if (has(path, 'ParentTreeNextKey')) {
+      update(path, 'ParentTreeNextKey', x => x + refs.length);
+    }
+    path = into(path, 'ParentTree');
+    while(!has(path, 'Nums')){
+      if (has(path, 'Limits')) {
+        update(path, 'Limits', arr => [arr[0], arr[1] + refs.length]);
+      }
+      const kids = get(path, 'Kids');
+      path = into(path, 'Kids', kids.length - 1);
+    }
+
+    let newKey;
+    if (has(path, 'Limits')) {
+      update(path, 'Limits', arr => {
+        newKey = arr[1] + 1;
+        return [arr[0], arr[1] + refs.length];
+      });
+    } else {
+      const nums = get(path, 'Nums');
+      newKey = nums[nums.length - 2] + 1;
+    }
+
+    update(path, 'Nums', arr => arr.concat(refs.flatMap(ref => [newKey++, ref])));
+    // return newKey - 1;
+  }
+
+  function findStructElementForAnnotation(structParent, root, annotation)
+  {
+    return walkNumTree(root, function (num, nums) {
+      if (num === structParent) {
+        for (let x of nums) {
+          const element = x instanceof Ref ? xref.fetch(x) : x;
+          if (element && element.get) {
+            for (let y of asArray(element.get('K'))) {
+              if (y === annotation.pageAndMC.mc) {
+                return [x, element];
+              }
+            }
+          }
+        }
+      }
+
+      return null;
+    });
+  }
+
+  function findNextStructKey(root)
+  {
+    if (root.has('ParentTreeNextKey')) {
+      return root.get('ParentTreeNextKey');
+    }
+    const parentTree = root.get('ParentTree');
+    let next = parentTree;
+    while(true) {
+      if (next.has('Limits')) {
+        return next.get('Limits')[1] + 1;
+      }
+      if (next.has('Nums')) {
+        const nums = next.get('Nums');
+        return nums[nums.length - 2] + 1;
+      }
+
+      const kids = next.get('Kids');
+      next = kids[kids.length - 1];
+    }
+  }
+
+  function walkNumTree(root, proc)
+  {
+    if (root.get('Nums')) {
+      const nums = root.get('Nums');
+      for (let i = 0; i < nums.length; i += 2) {
+        const ret = proc(nums[i], nums[i + 1] instanceof Ref ? xref.fetch(nums[i + 1]) : nums[i + 1]);
+        if (ret !== null) {
+          return ret;
+        }
+      }
+      return null;
+    }
+
+    for (let kid of root.get('Kids')) {
+      const ret = walkNumTree(xref.fetch(kid), proc);
+      if (ret !== null) {
+        return ret;
+      }
+    }
+    return null;
+  }
+
+  function get(path, key)
+  {
+    const v = getRaw(path, key);
+    return v instanceof Ref ? xref.fetch(v) : v;
+  }
+
+  function getRaw(path, key)
+  {
+    return path.current instanceof Array ? path.current[key] : path.current.getRaw(key);
+  }
+
+  function has(path, key)
+  {
+    return path.current instanceof Array ? key < path.current.length : path.current.has(key);
+  }
+
+  function MyMap () {}
+  function MyArray () {}
+
+  function update(path, key, proc)
+  {
+    update.refs = update.refs || {};
+    update.refs[path.root + ''] = update.refs[path.root + ''] || {};
+    let curr = update.refs[path.root + ''];
+    path.path.forEach(part => {
+      curr[part] = curr[part] || new (typeof part === 'number' ? MyArray : MyMap)();
+      curr = curr[part];
+    });
+    curr[key] = proc(get(path, key));
+  }
+
+  function applyUpdates(changes)
+  {
+    Object.entries(update.refs).forEach(([strRef, val]) => {
+      const ref = new Ref(parseInt(strRef), 0);
+      const src = xref.fetch(ref);
+      const dest = new Dict();
+      src._map.entries().forEach(([key, val]) => dest.set(key, val));
+      Object.entries(val).forEach(([key, val]) => {
+        dest.set(key, rec(val, src.get(key)));
+      });
+      changes.put(ref, {data: dest});
+    });
+    update.refs = {};
+
+    function rec(val, src)
+    {
+      if (val instanceof MyMap) {
+        const dict = new Dict();
+        Object.entries(val).forEach(([key, val]) => dict.set(key, rec(val, src.get(key))));
+        return dict;
+      } else if (val instanceof MyArray) {
+        const arr = Array.from(src);
+        Object.entries(val).forEach(([k, v]) => {arr[k] = rec(val, src[k]);});
+        return arr;
+      }
+
+      return val;
+    }
+  }
+
+  function into(path, ...keys)
+  {
+    return keys.reduce((path, key) => getRaw(path, key) instanceof Ref ? ({
+      root: getRaw(path, key),
+      path: [],
+      current: get(path, key),
+    }) : ({
+      root: path.root,
+      path: path.path.concat([key]),
+      current: getRaw(path, key),
+    }), path);
+  }
+
+  function makePath(root)
+  {
+    return {
+      root,
+      path: [],
+      current: xref.fetch(root),
+    };
+  }
+
+  function asArray(x)
+  {
+    return x instanceof Array ? x : [x];
+  }
+})();
+
+// edutiek-patch: end
+
+export { WorkerMessageHandler };

@@ -8039,6 +8039,68 @@ class EditorToolbar {
     this.#altText?.shown();
     this.#comment?.shown();
   }
+  // edutiek-patch: begin
+  addEdutiekButton() {
+    const {_uiManager} = this.#editor;
+    const buttons = [];
+    ['vline', 'wave', 'underline', 'marker'].forEach(addButton.bind(this));
+    this.#editor.selectButton = selectButton;
+
+    function addButton(name)
+    {
+      const button = document.createElement('button');
+      button.classList.add('basic', 'edutiek-button', 'edutiek-button-' + name);
+      if (name === this.#editor.edutiekType) {
+        button.classList.add('edutiek-button-selected');
+      }
+      button.tabIndex = 0;
+      if (this.#addListenersToElement(button)) {
+        button.addEventListener('click', e => {
+          _uiManager._eventBus.dispatch('edutiek-button', {source: this.#editor, type: name});
+        }, {signal: _uiManager._signal});
+      }
+      this.#buttons.append(button);
+      buttons.push(button);
+    }
+
+    function selectButton(name)
+    {
+      buttons.forEach(b => b.classList.remove('edutiek-button-selected'));
+      buttons.find(b => b.classList.contains('edutiek-button-' + name)).classList.add('edutiek-button-selected');
+    }
+  }
+  addEdutiekTokenButton() {
+    const {_uiManager} = this.#editor;
+    const buttons = [];
+    ['question-mark', 'exclamation-point', 'cross', 'check', 'missing'].forEach(addButton.bind(this));
+    this.#editor.selectTokenButton = selectButton;
+    this.#buttons.append(this.#divider);
+
+    function addButton(name)
+    {
+      const button = document.createElement('button');
+      button.classList.add('basic', 'edutiek-button', 'edutiek-button-' + name);
+      if (name === this.#editor.edutiekToken) {
+        button.classList.add('edutiek-button-selected-token');
+      }
+      button.tabIndex = 0;
+      if (this.#addListenersToElement(button)) {
+        button.addEventListener('click', e => {
+          _uiManager._eventBus.dispatch('edutiek-token-button', {source: this.#editor, type: name});
+        }, {signal: _uiManager._signal});
+      }
+      this.#buttons.append(button);
+      buttons.push(button);
+    }
+
+    function selectButton(name)
+    {
+      buttons.forEach(b => b.classList.remove('edutiek-button-selected-token'));
+      const b = buttons.find(b => b.classList.contains('edutiek-button-' + name));
+      b && b.classList.add('edutiek-button-selected-token');
+    }
+  }
+  // edutiek-patch: end
   addDeleteButton() {
     const {
       editorType,
@@ -8136,6 +8198,14 @@ class EditorToolbar {
           this.addComment(tool);
         }
         break;
+      // edutiek-patch: begin
+      case 'edutiek':
+        this.addEdutiekButton();
+        break;
+      case 'edutiek-token':
+        this.addEdutiekTokenButton();
+        break;
+      // edutiek-patch: end
     }
   }
   async addButtonBefore(name, tool, beforeSelector) {
@@ -12359,6 +12429,8 @@ class AnnotationEditor {
       // edutiek-patch: begin
       popupRef: this._initialData?.popupRef || "",
       pageAndMC: this.pageAndMC,
+      edutiekLabel: this.edutiekLabel,
+      edutiekToken: this.edutiekToken,
       // edutiek-patch: end
     };
   }
@@ -28029,7 +28101,9 @@ class HighlightEditor extends AnnotationEditor {
       const colorPicker = this.#colorPicker = new ColorPicker({
         editor: this
       });
-      return [["colorPicker", colorPicker]];
+      // edutiek-patch: begin
+      return this.#isFreeHighlight ? [["colorPicker", colorPicker]] : [["colorPicker", colorPicker], ['edutiek-token'], ['edutiek']];
+      // edutiek-patch: end
     }
     return super.toolbarButtons;
   }

@@ -7,11 +7,22 @@
  *     page: {number},
  *     intern: {Object},
  *     text: {string},
+ *     label: {string},
+ *     pos: {{x: number, y: number}},
+ *     color: {Color},
+ *     type: {Type},
+ *     noDelete: {bool},
+ *     token: {Token},
  * }} Annotation
+ *
+ * @typedef {string} Color // all hex forms are valid but names are not. E.g. `#FF003377` is valid but `green` is not.
+ * @typedef {string} Type // 'marker', 'underline' or 'wave'
+ * @typedef {string|null} Token // 'cross', 'exclamation-point', 'question-mark', 'check' or 'missing'
  *
  * @param {string} parent   id of the parent element to add the iframe
  * @param {string} viewer   url of the viewer html (source of iframe, without parameter)
  * @param {string} pdf      url of the pdf file to load
+ * @param {{viewOnly: bool}} options init pdfjs in view only or not.
  *
  * @return {{
  *   on: {function(string, function(CustomEvent)): void},
@@ -21,15 +32,27 @@
  *   update: {function(string): Promise},
  *   setAll: {function(Annotation[]): Promise},
  *   add: {function(Annotation): Promise},
- *   delete: {function(string): Promise},
+ *   delete: {function(string, bool): Promise},
  *   selected: {function(): Promise<Annotation|null>},
  *   select: {function(string): Promise},
  *   currentPage: {function(): Promise<number>},
  *   destroy: {function(): void},
- *   rebuild: {function(): void}
+ *   rebuild: {function(): void},
+ *   setViewOnly: {function(bool): Promise},
+ *   setDefaultColor: {function(Color): Promise},
+ *   buildBlob: {function(): Promise<Blob>},
+ *   enableFreeFormHighlight: {function(bool): Promise},
+ *   enableTextHighlight: {function(bool): Promise},
+ *   setDrawMode: {function(Type): Promise},
+ *   setLabel: {function(string, string): Promise},
+ *   setText: {function(string, string): Promise},
+ *   setColor: {function(string, Color): Promise},
+ *   setType: {function(string, Type): Promise},
+ *   setDeletable: {function(string, bool): Promise},
+ *   setToken: {function{string, Token}: Promise},
  * }}
  */
-export default (parent, viewer, pdf) => {
+export default (parent, viewer, pdf, options = {}) => {
     let currentRequest = Promise.resolve();
     const t = new EventTarget();
     const dispatch = (name, detail = null) => t.dispatchEvent(new CustomEvent(name, {detail}));
@@ -44,7 +67,11 @@ export default (parent, viewer, pdf) => {
         });
         return ret;
     })();
-    frame.src = viewer + '?file=' + encodeURIComponent(pdf);
+    const iframeParams = new URLSearchParams({file: pdf});
+    if (options.viewOnly) {
+        iframeParams.set('viewOnly', 'yes');
+    }
+    frame.src = viewer + '?' + iframeParams;
     frame.style.width = '100%';
     frame.style.height = '100%';
     parent.appendChild(frame);
@@ -59,31 +86,49 @@ export default (parent, viewer, pdf) => {
         update: entry => request('update', entry),
         setAll: newOnes => request('setAll', newOnes),
         add: newOne => request('add', newOne),
-        'delete': id => request('delete', id),
+        'delete': (id, enableUndo) => request('delete', id, enableUndo),
         selected: () => requestUnsafe('selected'),
         select: id => requestUnsafe('select', id),
         currentPage: () => requestUnsafe('currentPage'),
         destroy: () => {
             window.removeEventListener('message', dispatchOrRespond);
-            iframe.remove();
+            frame.remove();
         },
         rebuild: () => {
             window.addEventListener('message', dispatchOrRespond);
             parent.appendChild(frame);
         },
+        setViewOnly: viewOnly => request('viewOnly', viewOnly),
+        setDefaultColor: color => request('setDefaultColor', color),
+        buildBlob: () => request('buildBlob'),
+	enableFreeFormHighlight: bool => request('enableFreeFormHighlight', bool),
+        enableTextHighlight: bool => request('enableTextHighlight', bool),
+        setDrawMode: mode => request('setDrawMode', mode),
+        setLabel: (id, label) => request('setLabel', id, label),
+        setText: (id, text) => request('setText', id, text),
+        setColor: (id, color) => request('setColor', id, color),
+        setType: (id, type) => request('setType', id, type),
+        setDeletable: (id, deletable) => request('setDeletable', id, deletable),
     };
 
     function request(name, ...args)
     {
-        return currentRequest = currentRequest.then(() => requestUnsafe(name, ...args));
+        // Void catch to resume new actions normally.
+        // errors are not silenced with this, as the promise was already returned by a previous call to `request`.
+        // This is only to ensure the previous promise has been processed (synchronization).
+        return currentRequest = currentRequest.catch(Void).then(() => requestUnsafe(name, ...args));
+    }
+
+    function Void()
+    {
     }
 
     function requestUnsafe(name, ...args)
     {
-        return new Promise(ret => {
+        return new Promise((ok, err) => {
             const id = nextId();
-            pending[id] = ret;
-            return ready.promise.then(() => frame.contentWindow.postMessage({id, name, args}));
+            pending[id] = {ok, err};
+            ready.promise.then(() => frame.contentWindow.postMessage({id, name, args}));
         });
     }
 
@@ -92,9 +137,9 @@ export default (parent, viewer, pdf) => {
         if(!pending[response.id]){
             return;
         }
-        const ret = pending[response.id];
+        const {ok, err} = pending[response.id];
         delete pending[response.id];
-        ret(response.value);
+        (response.error ? err : ok)(response.value || 'aja');
     }
 
     function dispatchOrRespond(event)

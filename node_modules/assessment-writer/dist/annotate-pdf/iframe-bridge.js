@@ -6,10 +6,9 @@ function run()
     window.localStorage.removeItem('pdfjs.preferences');
     setup(forwardEvent, actions => {
         window.addEventListener('message', event => {
-            then(
-                actions[event.data.name](...event.data.args),
-                value => window.parent.postMessage({response: {id: event.data.id, value}})
-            );
+            const p = then(null, () => actions[event.data.name](...event.data.args));
+            p.then(value => window.parent.postMessage({response: {id: event.data.id, value}}));
+            p.catch(error => window.parent.postMessage({response: {id: event.data.id, value: error, error: true}}));
         });
     });
     
@@ -28,6 +27,8 @@ function setup(dispatch, ready){
     let selecting = null; // Used to streamline select when switching editor modes.
     let updating = null; // Used to streamline updating, to prevent bogus create & delete events.
     let deletedIds = []; // Used to prevent 'delete' events that are triggered manually.
+    let lastDeleted = {}; // For undo to work
+    let currentMode = 'marker';
     const selected = state(null, (oldOne, newOne) => {
         selecting = null;
         const ret = (oldOne || {}).returnPending;
@@ -39,25 +40,44 @@ function setup(dispatch, ready){
     uiManager(manager => {
         pdfOn('annotationeditorparamschanged', checkForChanges);
         pdfOn('switchannotationeditorparams', checkForChanges);
+        pdfOn('outlineloaded', event => event.currentOutlineItemPromise.then(enabled => {
+            document.querySelector('#viewsManagerToggleButton').disabled = !enabled;
+        }));
         pdfOnPageChanging(pageChanging);
-        // pdfOn('annotationeditorstateschanged', checkForChanges);
+        pdfOn('edutiek-button', x => {
+            const entry = entryByEditor(x.source);
+            actions.setType(entry.id, x.type);
+            dispatch('update', externEntry(entry));
+        });
+        pdfOn('edutiek-token-button', x => {
+            const entry = entryByEditor(x.source);
+            actions.setToken(entry.id, x.type === entry.token ? null : x.type);
+            dispatch('update', externEntry(entry));
+        })
 
         const actions = {
             getAll: () => entries.map(externEntry),
+            get: id => externEntry(entries.find(e => e.id === id)),
             setAll: newOnes => {
-                entries.forEach(deleteEntry);
+                entries.forEach(x => deleteEntry(x)); // Don't pass index as enableUndo
                 entries = [];
                 newOnes.forEach(actions.add);
             },
             add: newOne => {
                 const id = newOne.id || uuid();
-                const page = newOne.page || pdfCurrentPageIndex();
+                const page = typeof newOne.page === 'number' ? newOne.page : pdfCurrentPageIndex();
                 const entry = {
                     id,
                     page,
                     text: newOne.text,
+                    label: newOne.label,
                     editor: null,
-                    intern: newOne.intern
+                    intern: newOne.intern,
+                    color: newOne.color,
+                    type: newOne.type || (newOne.intern.underline ? 'underline' : 'marker'),
+                    noDelete: newOne.noDelete,
+                    pos: newOne.pos,
+                    token: newOne.token,
                 };
                 entries.push(entry);
                 sync(entry, 'create', layer => {
@@ -66,14 +86,29 @@ function setup(dispatch, ready){
                         if(entry.text){
                             editor.contents = entry.text;
                         }
-                        pdfAddEditorToLayerNoFocus(layer, entry.editor);
+                        if (entry.color) {
+                            entry.editor.updateParams(pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR, entry.color);
+                        }
+                        if (entry.label) {
+                            entry.editor.edutiekLabel = entry.label;
+                        }
+                        pdfAddEditorToLayerNoFocus(layer, entry.editor, () => {
+                            if(entry.label){
+                                entry.labelDiv = createLabelDiv(entry.label);
+                                editor.getHightligtDiv().parentNode.appendChild(entry.labelDiv);
+                            }
+                            if(entry.token){
+                                adjustEntryToken(entry);
+                            }
+                        });
+                        adjustEditor(editor, entry.type, entry.color);
                     });
                 });
             },
-            'delete': id => {
+            'delete': (id, enableUndo) => {
                 entries = entries.filter(x => {
                     if(x.id === id){
-                        deleteEntry(x);
+                        deleteEntry(x, enableUndo);
                         return false;
                     }
                     return true;
@@ -96,10 +131,11 @@ function setup(dispatch, ready){
                     if(PDFViewerApplication.pdfViewer.annotationEditorMode !== PDF_EDIT_MODE()){
                         selecting = entry.editor;
                         entry.editor.annotationElementId = entry.id;
-                        pdfSwitchToMode(PDF_EDIT_MODE(), entry.id);
+                        actions.viewOnly(false);
                     }else{
                         manager.setSelected(entry.editor);
                     }
+                    updateDeletable(entry);
                 });
                 if(entry.page !== pdfCurrentPageIndex()){
                     switchPage(entry.page);
@@ -108,17 +144,135 @@ function setup(dispatch, ready){
                 return ret;
             },
             currentPage: pdfCurrentPageIndex,
+            viewOnly: viewOnly => {
+                pdfSwitchToMode(viewOnly ? PDF_VIEW_MODE() : PDF_EDIT_MODE());
+                document.querySelector('#editorHighlight').classList[viewOnly ? 'add' : 'remove']('annotate-pdf-hide');
+            },
+            setDefaultColor: color => {
+                pdfjsLib.HighlightEditor.updateDefaultParams(
+                    pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR,
+                    color
+                );
+            },
+            buildBlob: () => {
+                const origPage = pdfCurrentPageIndex();
+                return entries.reduce((p, entry) => {
+                    if (entry.editor) {
+                        return p;
+                    }
+                    return p.then(() => {
+                        switchPage(entry.page);
+                        return sync(entry, 'ensureRendered', () => true);
+                    });
+                }, Promise.resolve(false))
+                    .then(pageSwitched => pageSwitched && switchPage(origPage))
+                    .then(buildBlobNoWait);
+            },
+	    enableFreeFormHighlight: bool => {
+		document.querySelector('#viewer').classList[bool ? 'remove' : 'add']('disable-freeform-highlight');
+		manager.disableFreeForm = !bool;
+	    },
+            enableTextHighlight: bool => {
+                document.querySelector('#viewer').classList[bool ? 'remove' : 'add']('disable-text-highlight');
+		PDFViewerApplication.eventBus.disableTextHighlight = !bool;
+            },
+            setDrawMode: mode => new Promise((ok, err) => {
+                if (validDrawTypes().includes(mode)) {
+                    currentMode = mode;
+                    ok();
+                } else {
+                    err('Invalid mode given: ' + mode);
+                }
+            }),
+            setLabel: (id, label) => {
+                const entry = entries.find(e => e.id === id);
+                sync(entry, 'setLabel', () => {
+                    entry.label = label;
+                    entry.editor.edutiekLabel = entry.label;
+                    if (entry.labelDiv) {
+                        if (label) {
+                            entry.labelDiv.textContent = label;
+                        } {
+                            entry.labelDiv.remove();
+                            entry.labelDiv = null;
+                        }
+                    } else if (entry.label) {
+                        entry.labelDiv = createLabelDiv(entry.label);
+                        entry.editor.getHightligtDiv().parentNode.appendChild(entry.labelDiv);
+                    }
+                });
+            },
+            setText: (id, text) => {
+                const entry = entries.find(e => e.id === id);
+                sync(entry, 'setText', () => {
+                    entry.text = text;
+                    entry.editor.contents = text;
+                });
+            },
+            setColor: (id, color) => {
+                const entry = entries.find(e => e.id === id);
+                sync(entry, 'setColor', () => {
+                    entry.color = color;
+                    entry.editor.updateParams(pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR, color);
+                    if (entry.type === 'wave' || entry.type === 'underline') {
+                        entry.editor.getPathNode().setAttribute('stroke', color);
+                    }
+                });
+            },
+            setType: (id, type) => {
+                if (!validDrawTypes().includes(type)) {
+                    throw new Error('Invalid draw type: ' + type);
+                }
+                const entry = entries.find(e => e.id === id);
+                sync(entry, 'setType', () => {
+                    entry.editor.edutiekType = type;
+                    entry.type = type;
+                    adjustEditor(entry.editor, entry.type, entry.color);
+                });
+            },
+            setDeletable: (id, bool) => {
+                const entry = entries.find(e => e.id === id);
+                entry.noDelete = !bool;
+                updateDeletable(entry);
+            },
+            setToken: (id, token) => {
+                if (!validTokenTypes().includes(token) && token !== null) {
+                    throw new Error('Invalid token type: ' + token);
+                }
+                const entry = entries.find(e => e.id === id);
+                sync(entry, 'setToken', () => {
+                    entry.token = token;
+                    adjustEntryToken(entry);
+                });
+            }
         };
 
-        pdfSwitchToMode(PDF_EDIT_MODE());
+        actions.viewOnly(Boolean(new URLSearchParams(window.location.search).get('viewOnly')));
         ready(actions);
         PDFViewerApplication.viewsManager.setInitialView(0);
+        PDFViewerApplication.viewsManager.switchView(2); // Outline
         dispatch('ready');
 
-        function deleteEntry(entry)
+        function deleteEntry(entry, enableUndo)
         {
+            const undo = () => {
+                manager.addEditorToLayer(entry.editor);
+            };
+            const cmd = () => {
+                manager._editorUndoBar?.show(undo, entry.editor.editorType);
+                entry.editor.remove();
+            };
             deletedIds.push(entry.id);
-            entry.editor?.remove();
+            if (enableUndo && entry.editor) {
+                lastDeleted = {internId: entry.editor.id, id: entry.id};
+                manager.addCommands({
+                    cmd,
+                    undo,
+                    mustExec: true,
+                });
+            } else {
+                entry.editor?.remove();
+            }
             const ret = entry.returnPending;
             ret && ret();
         }
@@ -130,7 +284,12 @@ function setup(dispatch, ready){
             const deleted = entries.filter(x => !isUsed(x));
             entries = entries.filter(isUsed);
             updating = null;
-            deleted.forEach(x => !deletedIds.includes(x.id) && dispatch('delete', externEntry(x)));
+            deleted.forEach(x => {
+                if (!deletedIds.includes(x.id)) {
+                    lastDeleted = {internId: x.editor.id, id: x.id};
+                    dispatch('delete', externEntry(x));
+                }
+            });
             deletedIds = deletedIds.filter(id => !deleted.find(x => x.id === id));
             updateSelection();
         }
@@ -149,8 +308,9 @@ function setup(dispatch, ready){
             if(!entry){
                 Promise.all(entries.filter(x => x.page === page).map(x => sync(x, 'checkCreate', Void))).then(() => {
                     if(entryByEditor(editor)){return;}
-                    const id = uuid();
-                    const entry = {id, page, editor, intern: pdfSerializeEditor(editor)};
+                    adjustEditor(editor, currentMode);
+                    const id = lastDeleted.internId === editor.id ? lastDeleted.id : uuid();
+                    const entry = {id, page, editor, intern: pdfSerializeEditor(editor), type: currentMode};
                     const extern = externEntry(entry);
                     entries.push(entry);
                     dispatch('create', extern);
@@ -159,7 +319,7 @@ function setup(dispatch, ready){
                 });
                 return null;
             }else if(s !== JSON.stringify(entry.intern)){
-                // These are null -> NaN and rounding issues and don't need to be propagated.
+                // These are null -> NaN and rounding issues that don't need to be propagated.
                 const ignore = arrayEquals(
                     ['outlines', 'rect'],
                     Object.keys((diff(newData, entry.intern) || {}).Object || {})
@@ -185,6 +345,9 @@ function setup(dispatch, ready){
                 if(entry || selected()){
                     selected(entry);
                     dispatch('select', entry ? externEntry(entry) : null);
+                    if (entry) {
+                        updateDeletable(entry);
+                    }
                 }
             }
         }
@@ -201,12 +364,216 @@ function setup(dispatch, ready){
     });
 }
 
+function buildBlobNoWait()
+{
+    return new Promise(ok => {
+        const proc = data => {PDFViewerApplication.eventBus.off(proc); ok(data);};
+        PDFViewerApplication.eventBus.on('edutiekDownload', proc);
+        PDFViewerApplication.eventBus.dispatch('download');
+    })
+}
+
+function updateDeletable(entry)
+{
+    if (!entry.editor || !entry.editor._editToolbar) {
+        return;
+    }
+    entry.editor._editToolbar.div.classList[entry.noDelete ? 'add' : 'remove']('annotate-pdf-hide');
+}
+
+function createLabelDiv(label)
+{
+    const d = document.createElement('div');
+    d.classList.add('annotation-label');
+    d.textContent = label;
+    return d;
+}
+
+function adjustEditor(editor, mode, color)
+{
+    editor.edutiekType = mode;
+    if (!editor.edutiekOriginalSvgData) {
+        const svg = editor.getSvgNode();
+        const path = editor.getPathNode();
+        editor.edutiekOriginalSvgData = {
+            d: path.getAttribute('d'),
+            left: parseFloat(svg.style.left),
+            width: parseFloat(svg.style.width),
+            height: parseFloat(svg.style.height),
+        }
+        const orig = editor.onceAdded;
+        editor.onceAdded = focus => {
+            changeSvg(editor, editor.edutiekType, editor.color);
+            return orig.call(editor, focus);
+        }
+    }
+    changeSvg(editor, mode, color);
+    updateButtons(editor, mode);
+}
+
+function adjustEntryToken(entry)
+{
+    entry.editor.selectTokenButton && entry.editor.selectTokenButton(entry.token);
+    entry.editor.edutiekToken = entry.token;
+    if (!entry.tokenDiv) {
+        if (entry.token === null) {
+            return;
+        }
+        entry.tokenDiv = document.createElement('div');
+        entry.editor.getHightligtDiv().parentNode.appendChild(entry.tokenDiv);
+    } else if (entry.token === null) {
+        entry.tokenDiv.remove();
+        entry.tokenDiv = null;
+        return;
+    }
+    entry.tokenDiv.className = 'annotation-token annotation-token-' + entry.token;
+    requestAnimationFrame(() => {
+        entry.tokenDiv.style.left = (entry.editor.getVerticalEdges()[1][0] * entry.editor.getHightligtDiv().getBoundingClientRect().width) + 'px';
+    });
+}
+
+function updateButtons(editor, mode)
+{
+    editor.selectButton && editor.selectButton(mode);
+}
+
+function validDrawTypes()
+{
+    return ['marker', 'underline', 'wave', 'vline'];
+}
+
+function validTokenTypes()
+{
+    return ['question-mark', 'exclamation-point', 'cross', 'check', 'missing'];
+}
+
+function changeSvg(editor, mode, color)
+{
+    if(!editor._mustFixPosition){ // If it is a freeform highlight.
+        return;
+    }
+
+    resetSvg(editor);
+
+    color = color || pdfjsLib.HighlightEditor._defaultColor;
+    switch(mode){
+    case 'marker':    return; // Do nothing, done by resetSvg.
+    case 'underline': return changeSvgToUnderline(editor, color);
+    case 'wave':      return changeSvgToWave(editor, color);
+    case 'vline':     return changeSvgToVLine(editor, color);
+    default:          throw new Error('Invalid type given to change SVG');
+    }
+}
+
+function resetSvg(editor)
+{
+    const svg = editor.getSvgNode();
+    const path = editor.getPathNode();
+    svg.setAttribute('viewBox', '0 0 1 1');
+    svg.style.left = editor.edutiekOriginalSvgData.left + '%';
+    svg.style.width = editor.edutiekOriginalSvgData.width + '%';
+    svg.style.height = editor.edutiekOriginalSvgData.height + '%';
+    path.removeAttribute('fill');
+    path.removeAttribute('stroke-width');
+    path.removeAttribute('stroke');
+    path.setAttribute('d', editor.edutiekOriginalSvgData.d);
+}
+
+function changeSvgToUnderline(editor, color)
+{
+    const svg = editor.getSvgNode();
+    const pathNode = editor.getPathNode();
+    const height = parseFloat(svg.style.height);
+    const vh = 1 + (0.25 / height);
+    pathNode.setAttribute('d', drawSvgLines(
+        editor.getVerticalEdges(),
+        (x1, x2, y) => `M${x1} ${y} L${x2} ${y} `
+    ));
+    pathNode.setAttribute('stroke-width', '1.4');
+    pathNode.setAttribute('stroke', color);
+    // pathNode.removeAttribute('fill');
+    svg.setAttribute('viewBox', `0 0 1 ${vh}`);
+    svg.style.height = `${height * vh}%`;
+}
+
+function changeSvgToWave(editor, color)
+{
+    const pathNode = editor.getPathNode();
+    const svg = editor.getSvgNode();
+    const rect = svg.getBoundingClientRect();
+    const width = parseFloat(svg.style.width);
+    const height = parseFloat(svg.style.height);
+    const v = editor.getVerticalEdges();
+    const rr = document.querySelector('.textLayer').getBoundingClientRect();
+    const pitch = (1 / height) * 0.25;
+    const step = (1 / width) * 0.5;
+    pathNode.setAttribute('d', drawSvgLines(v, (x1, x2, y) => {
+        let path = `M${x1} ${y} `;
+        let x = x1;
+        let dir = -1;
+        while (x + step < x2) {
+            path += ` Q${x + (step / 2)} ${(y) + (dir * pitch)} ${x + step} ${y}`;
+            x += step;
+            dir = -dir;
+        }
+        return path; // + waveRest(x, x2, step, pitch, dir, y, editor.yid);
+    }));
+    pathNode.setAttribute('stroke-width', '1.4');
+    pathNode.setAttribute('stroke', color);
+    pathNode.setAttribute('fill', 'transparent');
+    svg.setAttribute('viewBox', `0 0 1 ${1 + pitch}`);
+    svg.style.height = `${height * (1 + pitch)}%`;
+}
+
+function drawSvgLines(v, drawLine)
+{
+    let path = '';
+    const row = i => {
+        path += drawLine(v[i][0], v[i + 1][0], v[i][2]);
+    }
+    for (let i = 0; i < v.length - 2; i += 4) {
+        row(i);
+    }
+    row(v.length - 2);
+    return path;
+}
+
+function waveRest(startX, endX, step, pitch, dir, y, aaa)
+{
+    const tail = (startX + step) - endX;
+    const pitch2 = pitch;// / 2;
+    const gradient = pitch2 / step;
+    const x_percent = tail / step;
+    const y_percent = gradient * 2 * (x_percent - Math.pow(x_percent, 2));
+    const ctrl_x = x_percent / 2;
+    const ctrl_y = 2 * ctrl_x * gradient;
+    return ` Q${startX + (ctrl_x * step)} ${(y) + (ctrl_y * step * dir)} ${endX} ${y + (dir * (y_percent * step))}`;
+}
+
+function changeSvgToVLine(editor, color)
+{
+    const pathNode = editor.getPathNode();
+    const svg = editor.getSvgNode();
+    let leftAlign = parseFloat(editor.leftAlign) - 0.9;
+    svg.style.left = leftAlign + '%';
+
+    const w = (1 / svg.getBoundingClientRect().width) * 5;
+    pathNode.setAttribute('d', `M0 0 V 1 H ${w} V 0 z`);
+}
+
 function externEntry(entry)
 {
     return {
         id: entry.id,
         page: entry.page,
         intern: entry.intern,
+        text: entry.text,
+        label: entry.label,
+        pos: entry.editor ? {x: entry.editor.x, y: entry.editor.y} : entry.pos,
+        color: entry.color || ('#' + entry.intern.color.map(c => (c < 16 ? '0' : '') + c.toString(16)).join('')),
+        type: entry.type,
+        noDelete: Boolean(entry.noDelete),
+        token: entry.token,
     };
 }
 
@@ -446,6 +813,11 @@ function PDF_EDIT_MODE()
     return 9; // view / select mode = 0
 }
 
+function PDF_VIEW_MODE()
+{
+    return 0;
+}
+
 function pdfSwitchToMode(mode, editId = null)
 {
     PDFViewerApplication.eventBus.dispatch('switchannotationeditormode', {mode, editId});
@@ -459,13 +831,15 @@ function pdfSwitchToMode(mode, editId = null)
  * @param {AnnotationEditorLayer} layer
  * @param {HighlightEditor} editor
  */
-function pdfAddEditorToLayerNoFocus(layer, editor)
+function pdfAddEditorToLayerNoFocus(layer, editor, onRender)
 {
+    onRender ||= Void;
     // Temporary overwrite prototype chain.
     editor.render = () => {
         delete editor.render;
         const ret = editor.render();
         editor.div.focus = Void; // Same again.
+        onRender();
         return ret;
     };
     layer.add(editor);

@@ -8039,6 +8039,68 @@ class EditorToolbar {
     this.#altText?.shown();
     this.#comment?.shown();
   }
+  // edutiek-patch: begin
+  addEdutiekButton() {
+    const {_uiManager} = this.#editor;
+    const buttons = [];
+    ['vline', 'wave', 'underline', 'marker'].forEach(addButton.bind(this));
+    this.#editor.selectButton = selectButton;
+
+    function addButton(name)
+    {
+      const button = document.createElement('button');
+      button.classList.add('basic', 'edutiek-button', 'edutiek-button-' + name);
+      if (name === this.#editor.edutiekType) {
+        button.classList.add('edutiek-button-selected');
+      }
+      button.tabIndex = 0;
+      if (this.#addListenersToElement(button)) {
+        button.addEventListener('click', e => {
+          _uiManager._eventBus.dispatch('edutiek-button', {source: this.#editor, type: name});
+        }, {signal: _uiManager._signal});
+      }
+      this.#buttons.append(button);
+      buttons.push(button);
+    }
+
+    function selectButton(name)
+    {
+      buttons.forEach(b => b.classList.remove('edutiek-button-selected'));
+      buttons.find(b => b.classList.contains('edutiek-button-' + name)).classList.add('edutiek-button-selected');
+    }
+  }
+  addEdutiekTokenButton() {
+    const {_uiManager} = this.#editor;
+    const buttons = [];
+    ['question-mark', 'exclamation-point', 'cross', 'check', 'missing'].forEach(addButton.bind(this));
+    this.#editor.selectTokenButton = selectButton;
+    this.#buttons.append(this.#divider);
+
+    function addButton(name)
+    {
+      const button = document.createElement('button');
+      button.classList.add('basic', 'edutiek-button', 'edutiek-button-' + name);
+      if (name === this.#editor.edutiekToken) {
+        button.classList.add('edutiek-button-selected-token');
+      }
+      button.tabIndex = 0;
+      if (this.#addListenersToElement(button)) {
+        button.addEventListener('click', e => {
+          _uiManager._eventBus.dispatch('edutiek-token-button', {source: this.#editor, type: name});
+        }, {signal: _uiManager._signal});
+      }
+      this.#buttons.append(button);
+      buttons.push(button);
+    }
+
+    function selectButton(name)
+    {
+      buttons.forEach(b => b.classList.remove('edutiek-button-selected-token'));
+      const b = buttons.find(b => b.classList.contains('edutiek-button-' + name));
+      b && b.classList.add('edutiek-button-selected-token');
+    }
+  }
+  // edutiek-patch: end
   addDeleteButton() {
     const {
       editorType,
@@ -8136,6 +8198,14 @@ class EditorToolbar {
           this.addComment(tool);
         }
         break;
+      // edutiek-patch: begin
+      case 'edutiek':
+        this.addEdutiekButton();
+        break;
+      case 'edutiek-token':
+        this.addEdutiekTokenButton();
+        break;
+      // edutiek-patch: end
     }
   }
   async addButtonBefore(name, tool, beforeSelector) {
@@ -9158,6 +9228,76 @@ class AnnotationEditorUIManager {
     const layer = this.#getLayerForTextLayer(textLayer);
     const isNoneMode = this.#mode === AnnotationEditorType.NONE;
     const callback = () => {
+      // edutiek-patch: begin
+      function compareNodePosition(a, b)
+      {
+        if (a === b) {
+          return 0;
+        }
+        let mapA = new Map();
+        mapA.set(a, -1); // a is parent of b so a always before b.
+        for(; !a.classList.contains('page'); a = a.parentNode) {
+          mapA.set(a.parentNode, Array.from(a.parentNode.children).indexOf(a));
+        }
+        if (mapA.has(b)) {
+          return Infinity; // b is parent of a so b comes always before a
+        }
+        let child;
+        for (child = b, b = b.parentNode; !mapA.has(b); child = b, b = b.parentNode) {}
+        return mapA.get(b) - Array.from(b.children).indexOf(child);
+      }
+      function determineLeftAlign(startNode, endNode)
+      {
+        const yTolerance = 0.5;
+        let leftAlign = parseFloat(startNode.style.left);
+        let prev = startNode;
+        let node;
+        for (node = startNode.previousSibling; node; node = node.previousSibling) {
+          if (node.nodeName === 'BR') {
+            continue;
+          }
+          let nextLeft = parseFloat(node.style.left);
+          if (leftAlign < nextLeft) {
+            break;
+          }
+          if (Math.abs(parseFloat(prev.style.top) - parseFloat(node.style.top)) > yTolerance) {
+            break;
+          }
+          prev = node;
+          leftAlign = nextLeft;
+        }
+        prev = startNode;
+        for (node = startNode; node !== endNode && node !== endNode.parentNode; node = nextNode(node)) {
+          if (node.nodeName === 'BR') {
+            continue;
+          }
+          if (node.style.left) {
+            leftAlign = Math.min(leftAlign, parseFloat(node.style.left));
+          }
+          prev = node;
+        }
+        if (node.style.left) {
+          leftAlign = Math.min(leftAlign, parseFloat(node.style.left));
+        }
+        return leftAlign;
+
+        function nextNode(n)
+        {
+          let next = n;
+          for(; next.nextSibling === null; next = next.parentNode) {}
+          next = next.nextSibling;
+          for (; next.children && next.children.length; next = next.children[0]) {}
+          return next;
+        }
+      }
+      const leftAlign = determineLeftAlign(...[anchorElement, focusNode.nodeType === Node.TEXT_NODE ? focusNode.parentNode : focusNode].toSorted(compareNodePosition));
+      const markedContentId = anchorElement ? (anchorElement.closest('.markedContent') || {}).id : null;
+      const foundMarkedContent = (markedContentId || '').match(/^p(\d+)R_mc(\d+)$/);
+      const pageAndMarkedContentId = foundMarkedContent ? {
+        page: parseInt(foundMarkedContent[1]),
+        mc: parseInt(foundMarkedContent[2]),
+      } : null;
+      // edutiek-patch: end
       const editor = layer?.createAndAddNewEditor({
         x: 0,
         y: 0
@@ -9168,7 +9308,11 @@ class AnnotationEditorUIManager {
         anchorOffset,
         focusNode,
         focusOffset,
-        text
+        // edutiek-patch: begin
+        text,
+        pageAndMC: pageAndMarkedContentId,
+        leftAlign,
+        // edutiek-patch: end
       });
       if (isNoneMode) {
         this.showAllEditors("highlight", true, true);
@@ -9263,7 +9407,9 @@ class AnnotationEditorUIManager {
     this.#dispatchUpdateStates({
       hasSelectedText: true
     });
-    if (this.#mode !== AnnotationEditorType.HIGHLIGHT && this.#mode !== AnnotationEditorType.NONE) {
+    // edutiek-patch: begin
+    if (this._eventBus.disableTextHighlight || this.#mode !== AnnotationEditorType.HIGHLIGHT && this.#mode !== AnnotationEditorType.NONE) {
+      // edutiek-patch: end
       return;
     }
     if (this.#mode === AnnotationEditorType.HIGHLIGHT) {
@@ -9333,6 +9479,9 @@ class AnnotationEditorUIManager {
       this.#highlightWhenShiftUp = false;
       this.#onSelectEnd("main_toolbar");
     }
+    // edutiek-patch: begin
+    return; // Prevent bogus selection when focusing in again (trying to restore last selected element).
+    // edutiek-patch: end
     if (!this.hasSelection) {
       return;
     }
@@ -9860,6 +10009,11 @@ class AnnotationEditorUIManager {
     this.removeChangedExistingAnnotation(editor);
     editor.deleted = false;
   }
+  // edutiek-patch: begin
+  addEditorToLayer(editor) {
+    this.#addEditorToLayer(editor);
+  }
+  // edutiek-patch: end
   #addEditorToLayer(editor) {
     const layer = this.#allLayers.get(editor.pageIndex);
     if (layer) {
@@ -11109,6 +11263,7 @@ class AnnotationEditor {
     this._willKeepAspectRatio = false;
     this._initialOptions.isCentered = parameters.isCentered;
     this._structTreeParentId = null;
+    this.pageAndMC = parameters.pageAndMC;
     this.annotationElementId = parameters.annotationElementId || null;
     this.creationDate = parameters.creationDate || new Date();
     this.modificationDate = parameters.modificationDate || null;
@@ -12271,7 +12426,12 @@ class AnnotationEditor {
       rect: this.getPDFRect(),
       rotation: this.rotation,
       structTreeParentId: this._structTreeParentId,
-      popupRef: this._initialData?.popupRef || ""
+      // edutiek-patch: begin
+      popupRef: this._initialData?.popupRef || "",
+      pageAndMC: this.pageAndMC,
+      edutiekLabel: this.edutiekLabel,
+      edutiekToken: this.edutiekToken,
+      // edutiek-patch: end
     };
   }
   static async deserialize(data, parent, uiManager) {
@@ -27423,6 +27583,11 @@ class HighlightOutliner {
     this.#firstPoint = [firstPointX, firstPointY];
     this.#lastPoint = lastPoint;
   }
+  // edutiek-patch: begin
+  getVerticalEdges() {
+    return this.#verticalEdges;
+  }
+  // edutiek-patch: end
   getOutlines() {
     this.#verticalEdges.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
     const outlineVerticalEdges = [];
@@ -27683,6 +27848,7 @@ class HighlightEditor extends AnnotationEditor {
       ...params,
       name: "highlightEditor"
     });
+    this.leftAlign = params.leftAlign;
     this.color = params.color || HighlightEditor._defaultColor;
     this.#thickness = params.thickness || HighlightEditor._defaultThickness;
     this.opacity = params.opacity || HighlightEditor._defaultOpacity;
@@ -27708,6 +27874,20 @@ class HighlightEditor extends AnnotationEditor {
       this._uiManager.a11yAlert("pdfjs-editor-highlight-added-alert");
     }
   }
+  // edutiek-patch: begin
+  getSvgNode() {
+    return this.parent.drawLayer.getSvgNode(this.#id);
+  }
+  getPathNode() {
+    return this.parent.drawLayer.getSvgNode(this.#id).querySelector('path');
+  }
+  getHightligtDiv() {
+    return this.#highlightDiv;
+  }
+  getVerticalEdges() {
+    return new HighlightOutliner(this.#boxes, 0, 0, true).getVerticalEdges();
+  }
+  // edutiek-patch: end
   get telemetryInitialData() {
     return {
       action: "added",
@@ -27921,7 +28101,9 @@ class HighlightEditor extends AnnotationEditor {
       const colorPicker = this.#colorPicker = new ColorPicker({
         editor: this
       });
-      return [["colorPicker", colorPicker]];
+      // edutiek-patch: begin
+      return this.#isFreeHighlight ? [["colorPicker", colorPicker]] : [["colorPicker", colorPicker], ['edutiek-token'], ['edutiek']];
+      // edutiek-patch: end
     }
     return super.toolbarButtons;
   }
@@ -28388,11 +28570,21 @@ class HighlightEditor extends AnnotationEditor {
       color,
       quadPoints,
       inkLists,
-      opacity
+      opacity,
+      // edutiek-patch: begin
+      pageAndMC,
+      edutiekType,
+      leftAlign,
+      // edutiek-patch: end
     } = data;
     const editor = await super.deserialize(data, parent, uiManager);
     editor.color = Util.makeHexColor(...color);
     editor.opacity = opacity || 1;
+    // edutiek-patch: begin
+    editor.pageAndMC = pageAndMC;
+    editor.edutiekType = edutiekType;
+    editor.leftAlign = leftAlign;
+    // edutiek-patch: end
     if (inkLists) {
       editor.#thickness = data.thickness;
     }
@@ -28473,6 +28665,10 @@ class HighlightEditor extends AnnotationEditor {
       // edutiek-patch: begin
       outlines: this.#serializeOutlines(serialized.rect),
       contents: this.contents,
+      pageAndMC: this.pageAndMC,
+      edutiekType: this.edutiekType,
+      leftAlign: this.leftAlign,
+      edutiekPageSize: this.pageDimensions,
       // edutiek-patch: end
     });
     this.addComment(serialized);
@@ -32090,7 +32286,9 @@ class AnnotationEditorLayer {
       const {
         isMac
       } = util_FeatureTest.platform;
-      if (event.button !== 0 || event.ctrlKey && isMac) {
+      // edutiek-patch: begin
+      if (this.#uiManager.disableFreeForm || event.button !== 0 || event.ctrlKey && isMac) {
+	// edutiek-patch: end
         return;
       }
       this.#uiManager.showAllEditors("highlight", true, true);
@@ -32536,6 +32734,11 @@ class DrawLayer {
   }) {
     this.pageIndex = pageIndex;
   }
+  // edutiek-patch: begin
+  getSvgNode(id) {
+    return this.#mapping.get(id);
+  }
+  // edutiek-patch: end
   setParent(parent) {
     if (!this.#parent) {
       this.#parent = parent;
@@ -32804,9 +33007,10 @@ globalThis.pdfjsLib = {
   Util: Util,
   VerbosityLevel: VerbosityLevel,
   version: version,
-  XfaLayer: XfaLayer
+  // edutiek-patch: begin
+  XfaLayer: XfaLayer,
+  HighlightEditor: HighlightEditor,
+  // edutiek-patch: end
 };
 
 export { AbortException, AnnotationEditorLayer, AnnotationEditorParamsType, AnnotationEditorType, AnnotationEditorUIManager, AnnotationLayer, AnnotationMode, AnnotationType, CSSConstants, ColorPicker, DOMSVGFactory, DrawLayer, util_FeatureTest as FeatureTest, GlobalWorkerOptions, util_ImageKind as ImageKind, InvalidPDFException, MathClamp, OPS, OutputScale, PDFDataRangeTransport, PDFDateString, PDFWorker, PasswordResponses, PermissionFlag, PixelsPerInch, RenderingCancelledException, ResponseException, SignatureExtractor, SupportedImageMimeTypes, TextLayer, TouchManager, Util, VerbosityLevel, XfaLayer, applyOpacity, build, createValidAbsoluteUrl, fetchData, findContrastColor, getDocument, getFilenameFromUrl, getPdfFilenameFromUrl, getRGB, getUuid, getXfaPageViewport, isDataScheme, isPdfFile, isValidExplicitDest, noContextMenu, normalizeUnicode, renderRichText, setLayerDimensions, shadow, stopEvent, updateUrlHash, version };
-
-//# sourceMappingURL=pdf.mjs.map

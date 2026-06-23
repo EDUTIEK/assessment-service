@@ -44,6 +44,16 @@ function setup(dispatch, ready){
             document.querySelector('#viewsManagerToggleButton').disabled = !enabled;
         }));
         pdfOnPageChanging(pageChanging);
+        pdfOn('edutiek-button', x => {
+            const entry = entryByEditor(x.source);
+            actions.setType(entry.id, x.type);
+            dispatch('update', externEntry(entry));
+        });
+        pdfOn('edutiek-token-button', x => {
+            const entry = entryByEditor(x.source);
+            actions.setToken(entry.id, x.type === entry.token ? null : x.type);
+            dispatch('update', externEntry(entry));
+        })
 
         const actions = {
             getAll: () => entries.map(externEntry),
@@ -67,6 +77,7 @@ function setup(dispatch, ready){
                     type: newOne.type || (newOne.intern.underline ? 'underline' : 'marker'),
                     noDelete: newOne.noDelete,
                     pos: newOne.pos,
+                    token: newOne.token,
                 };
                 entries.push(entry);
                 sync(entry, 'create', layer => {
@@ -78,10 +89,16 @@ function setup(dispatch, ready){
                         if (entry.color) {
                             entry.editor.updateParams(pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR, entry.color);
                         }
+                        if (entry.label) {
+                            entry.editor.edutiekLabel = entry.label;
+                        }
                         pdfAddEditorToLayerNoFocus(layer, entry.editor, () => {
                             if(entry.label){
                                 entry.labelDiv = createLabelDiv(entry.label);
                                 editor.getHightligtDiv().parentNode.appendChild(entry.labelDiv);
+                            }
+                            if(entry.token){
+                                adjustEntryToken(entry);
                             }
                         });
                         adjustEditor(editor, entry.type, entry.color);
@@ -171,9 +188,15 @@ function setup(dispatch, ready){
                 const entry = entries.find(e => e.id === id);
                 sync(entry, 'setLabel', () => {
                     entry.label = label;
+                    entry.editor.edutiekLabel = entry.label;
                     if (entry.labelDiv) {
-                        entry.labelDiv.textContent = label;
-                    } else {
+                        if (label) {
+                            entry.labelDiv.textContent = label;
+                        } {
+                            entry.labelDiv.remove();
+                            entry.labelDiv = null;
+                        }
+                    } else if (entry.label) {
                         entry.labelDiv = createLabelDiv(entry.label);
                         entry.editor.getHightligtDiv().parentNode.appendChild(entry.labelDiv);
                     }
@@ -212,6 +235,16 @@ function setup(dispatch, ready){
                 entry.noDelete = !bool;
                 updateDeletable(entry);
             },
+            setToken: (id, token) => {
+                if (!validTokenTypes().includes(token) && token !== null) {
+                    throw new Error('Invalid token type: ' + token);
+                }
+                const entry = entries.find(e => e.id === id);
+                sync(entry, 'setToken', () => {
+                    entry.token = token;
+                    adjustEntryToken(entry);
+                });
+            }
         };
 
         actions.viewOnly(Boolean(new URLSearchParams(window.location.search).get('viewOnly')));
@@ -364,6 +397,7 @@ function adjustEditor(editor, mode, color)
         const path = editor.getPathNode();
         editor.edutiekOriginalSvgData = {
             d: path.getAttribute('d'),
+            left: parseFloat(svg.style.left),
             width: parseFloat(svg.style.width),
             height: parseFloat(svg.style.height),
         }
@@ -374,11 +408,43 @@ function adjustEditor(editor, mode, color)
         }
     }
     changeSvg(editor, mode, color);
+    updateButtons(editor, mode);
+}
+
+function adjustEntryToken(entry)
+{
+    entry.editor.selectTokenButton && entry.editor.selectTokenButton(entry.token);
+    entry.editor.edutiekToken = entry.token;
+    if (!entry.tokenDiv) {
+        if (entry.token === null) {
+            return;
+        }
+        entry.tokenDiv = document.createElement('div');
+        entry.editor.getHightligtDiv().parentNode.appendChild(entry.tokenDiv);
+    } else if (entry.token === null) {
+        entry.tokenDiv.remove();
+        entry.tokenDiv = null;
+        return;
+    }
+    entry.tokenDiv.className = 'annotation-token annotation-token-' + entry.token;
+    requestAnimationFrame(() => {
+        entry.tokenDiv.style.left = (entry.editor.getVerticalEdges()[1][0] * entry.editor.getHightligtDiv().getBoundingClientRect().width) + 'px';
+    });
+}
+
+function updateButtons(editor, mode)
+{
+    editor.selectButton && editor.selectButton(mode);
 }
 
 function validDrawTypes()
 {
     return ['marker', 'underline', 'wave', 'vline'];
+}
+
+function validTokenTypes()
+{
+    return ['question-mark', 'exclamation-point', 'cross', 'check', 'missing'];
 }
 
 function changeSvg(editor, mode, color)
@@ -404,6 +470,7 @@ function resetSvg(editor)
     const svg = editor.getSvgNode();
     const path = editor.getPathNode();
     svg.setAttribute('viewBox', '0 0 1 1');
+    svg.style.left = editor.edutiekOriginalSvgData.left + '%';
     svg.style.width = editor.edutiekOriginalSvgData.width + '%';
     svg.style.height = editor.edutiekOriginalSvgData.height + '%';
     path.removeAttribute('fill');
@@ -434,8 +501,8 @@ function changeSvgToWave(editor, color)
     const pathNode = editor.getPathNode();
     const svg = editor.getSvgNode();
     const rect = svg.getBoundingClientRect();
-    const width = parseFloat(editor.getSvgNode().style.width);
-    const height = parseFloat(editor.getSvgNode().style.height);
+    const width = parseFloat(svg.style.width);
+    const height = parseFloat(svg.style.height);
     const v = editor.getVerticalEdges();
     const rr = document.querySelector('.textLayer').getBoundingClientRect();
     const pitch = (1 / height) * 0.25;
@@ -506,6 +573,7 @@ function externEntry(entry)
         color: entry.color || ('#' + entry.intern.color.map(c => (c < 16 ? '0' : '') + c.toString(16)).join('')),
         type: entry.type,
         noDelete: Boolean(entry.noDelete),
+        token: entry.token,
     };
 }
 

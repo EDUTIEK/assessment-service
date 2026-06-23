@@ -3,6 +3,6 @@
   "version": "2.0.0",
   "dependencies": {
     "assessment-corrector": "github:EDUTIEK/assessment-corrector#acc-annot",
-    "assessment-writer": "github:EDUTIEK/assessment-writer#main"
+    "assessment-writer": "github:EDUTIEK/assessment-writer#acc-annot"
   }
 }

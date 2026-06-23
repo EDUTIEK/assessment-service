@@ -56720,7 +56720,12 @@ class AnnotationFactory {
           break;
         case AnnotationEditorType.HIGHLIGHT:
           if (annotation.quadPoints) {
-            promises.push(HighlightAnnotation.createNewAnnotation(xref, annotation, changes));
+            // edutiek-patch: begin
+            promises.push(HighlightAnnotation.createNewAnnotation(xref, annotation, changes, {
+              evaluator,
+              task,
+            }));
+            // edutiek-patch: end
           } else {
             promises.push(InkAnnotation.createNewAnnotation(xref, annotation, changes));
           }
@@ -59807,6 +59812,8 @@ class HighlightAnnotation extends MarkupAnnotation {
       }
       row(qp.length - 8);
     }
+    let leftPosOverwrite = false;
+    const rectBaseYTop = rect[3];
     switch(annotation.edutiekType){
     case 'underline':
       appearanceBuffer.push('/DeviceRGB CS');
@@ -59838,6 +59845,7 @@ class HighlightAnnotation extends MarkupAnnotation {
       break;
     case 'vline':
       rect[0] = annotation.edutiekPageSize[0] * ((parseFloat(annotation.leftAlign) - 0.9) / 100);
+      leftPosOverwrite = rect[0];
       // rect[0] = Math.min(rect[0], annotation.pd[0] * ((parseFloat(annotation.leftAlign) - 1.2) / 100));
       let minY = Infinity;
       let maxY = -Infinity;
@@ -59858,18 +59866,122 @@ class HighlightAnnotation extends MarkupAnnotation {
       appearanceBuffer.push('S');
       break;
     default:
-	for (const outline of outlines) {
-	  buffer.length = 0;
-	  buffer.push(`${numberToString(outline[0])} ${numberToString(outline[1])} m`);
-	  for (let i = 2, ii = outline.length; i < ii; i += 2) {
-	    buffer.push(`${numberToString(outline[i])} ${numberToString(outline[i + 1])} l`);
-	  }
-	  buffer.push("h");
-	  appearanceBuffer.push(buffer.join("\n"));
+      for (const outline of outlines) {
+	buffer.length = 0;
+	buffer.push(`${numberToString(outline[0])} ${numberToString(outline[1])} m`);
+	for (let i = 2, ii = outline.length; i < ii; i += 2) {
+	  buffer.push(`${numberToString(outline[i])} ${numberToString(outline[i + 1])} l`);
 	}
+	buffer.push("h");
+	appearanceBuffer.push(buffer.join("\n"));
+      }
+    }
+    appearanceBuffer.push("f*");
+    const resources = new Dict(xref);
+    const extGState = new Dict(xref);
+    resources.set("ExtGState", extGState);
+    let ensureFontInResources = () => {
+      const font = new Dict(xref);
+      const baseFont = new Dict(xref);
+      baseFont.setIfName('BaseFont', 'Helvetica');
+      baseFont.setIfName('Type', 'Font');
+      baseFont.setIfName('Subtype', 'Type1');
+      baseFont.setIfName('Encoding', 'WinAnsiEncoding');
+      font.set('F1', baseFont);
+      resources.set('Font', font);
+      ensureFontInResources = () => {};
+    };
+    const getFont = fontSize => {
+      ensureFontInResources();
+      const f = WidgetAnnotation._getFontData(params.evaluator, params.task, {
+        fontName: 'F1',
+        fontSize,
+      }, resources);
+      return f;
+    };
+    const calcTextSize = (text, fontSize, f) => {
+      const scale = fontSize / 1000;
+      const width = f.charsToGlyphs(text).reduce((l, g) => g.width * scale + l, 0);
+      const height = LINE_FACTOR * fontSize;
+      return {width, height};
+    };
+    if (annotation.edutiekLabel) {
+      const f = await getFont(8.0);
+      const {width, height} = calcTextSize(annotation.edutiekLabel, 8.0, f);
+      const shift = height / 3;
+      rect[0] -= width;
+      rect[3] = Math.max(rectBaseYTop + height, rect[3]);
+      appearanceBuffer.push('/DeviceRGB cs');
+      appearanceBuffer.push('/R1 gs');
+      appearanceBuffer.push(`${getPdfColor([0x60, 0x60, 0x60], true)}`);
+      appearanceBuffer.push([
+        (leftPosOverwrite || outlines[0][0]) - width,
+        outlines[0][3] - shift,
+        width,
+        height,
+      ].map(numberToString).join(' ') + ' re f');
+      appearanceBuffer.push(`${getPdfColor([0xFF, 0xFF, 0xFF], true)}`);
+      appearanceBuffer.push(`BT ${numberToString((leftPosOverwrite || outlines[0][0]) - width)} ${numberToString(outlines[0][3])} Td /F1 8.0 Tf [(${f.encodeString(annotation.edutiekLabel).map(escapeString).join('')})] TJ ET`);
+    }
+    let f, fontSize;
+    switch (annotation.edutiekToken) {
+    case 'cross':
+      appearanceBuffer.push('/DeviceRGB cs');
+      appearanceBuffer.push('/R1 gs');
+      appearanceBuffer.push(`${getPdfColor([0, 0, 0])}`);
+      appearanceBuffer.push(`${numberToString(outlines[0][4])} ${numberToString(outlines[0][3] + 6)} m`);
+      appearanceBuffer.push(`${numberToString(outlines[0][4] + 6)} ${numberToString(outlines[0][3])} l`);
+      appearanceBuffer.push(`${numberToString(outlines[0][4] + 6)} ${numberToString(outlines[0][3] + 6)} m`);
+      appearanceBuffer.push(`${numberToString(outlines[0][4])} ${numberToString(outlines[0][3])} l`);
+      appearanceBuffer.push('S');
+      rect[2] += 20;
+      rect[3] = Math.max(rectBaseYTop + 10, rect[3]);
+      break;
+    case 'check':
+      appearanceBuffer.push('/DeviceRGB cs');
+      appearanceBuffer.push('/R1 gs');
+      appearanceBuffer.push(`${getPdfColor([0, 0, 0])}`);
+      const basePos = {x: outlines[0][4] + 4, y: outlines[0][3] + 2};
+      appearanceBuffer.push(`${numberToString(basePos.x)} ${numberToString(basePos.y)} m`);
+      appearanceBuffer.push(`${numberToString(basePos.x + 7)} ${numberToString(basePos.y + 7)} l`);
+      appearanceBuffer.push(`${numberToString(basePos.x + 0.33)} ${numberToString(basePos.y - 0.33)} m`);
+      appearanceBuffer.push(`${numberToString(basePos.x - 3)} ${numberToString(basePos.y + 3)} l`);
+      appearanceBuffer.push('S');
+      rect[2] += 20;
+      rect[3] = Math.max(rectBaseYTop + 10, rect[3]);
+      break;
+    case 'question-mark':
+      f = await getFont(8.0);
+      appearanceBuffer.push('/DeviceRGB cs');
+      appearanceBuffer.push('/R1 gs');
+      appearanceBuffer.push(`${getPdfColor([0, 0, 0], true)}`);
+      appearanceBuffer.push(`BT ${numberToString(outlines[0][4])} ${numberToString(outlines[0][3])} Td /F1 8.0 Tf [(${f.encodeString('?').map(escapeString).join('')})] TJ ET`);
+      fontSize = calcTextSize('?', 8.0, f);
+      rect[2] += fontSize.width;
+      rect[3] = Math.max(rectBaseYTop + fontSize.height, rect[3]);
+      break;
+    case 'exclamation-point':
+      f = await getFont(8.0);
+      appearanceBuffer.push('/DeviceRGB cs');
+      appearanceBuffer.push('/R1 gs');
+      appearanceBuffer.push(`${getPdfColor([0, 0, 0], true)}`);
+      appearanceBuffer.push(`BT ${numberToString(outlines[0][4])} ${numberToString(outlines[0][3])} Td /F1 8.0 Tf [(${f.encodeString('!').map(escapeString).join('')})] TJ ET`);
+      fontSize = calcTextSize('!', 8.0, f);
+      rect[2] += fontSize.width;
+      rect[3] = Math.max(rectBaseYTop + fontSize.height, rect[3]);
+      break;
+    case 'missing':
+      f = await getFont(8.0);
+      appearanceBuffer.push('/DeviceRGB cs');
+      appearanceBuffer.push('/R1 gs');
+      appearanceBuffer.push(`${getPdfColor([0, 0, 0], true)}`);
+      appearanceBuffer.push(`BT ${numberToString(outlines[0][4])} ${numberToString(outlines[0][3])} Td /F1 8.0 Tf [(${f.encodeString('fehlt!').map(escapeString).join('')})] TJ ET`);
+      fontSize = calcTextSize('fehlt!', 8.0, f);
+      rect[2] += fontSize.width;
+      rect[3] = Math.max(rectBaseYTop + fontSize.height, rect[3]);
+      break;
     }
     // edutiek-patch: end
-    appearanceBuffer.push("f*");
     const appearance = appearanceBuffer.join("\n");
     const appearanceStreamDict = new Dict(xref);
     appearanceStreamDict.set("FormType", 1);
@@ -59877,9 +59989,8 @@ class HighlightAnnotation extends MarkupAnnotation {
     appearanceStreamDict.setIfName("Type", "XObject");
     appearanceStreamDict.set("BBox", rect);
     appearanceStreamDict.set("Length", appearance.length);
-    const resources = new Dict(xref);
-    const extGState = new Dict(xref);
-    resources.set("ExtGState", extGState);
+    // edutiek-patch: begin
+    // edutiek-patch: end
     appearanceStreamDict.set("Resources", resources);
     const r0 = new Dict(xref);
     extGState.set("R0", r0);
@@ -59888,6 +59999,11 @@ class HighlightAnnotation extends MarkupAnnotation {
       r0.set("ca", opacity);
       r0.setIfName("Type", "ExtGState");
     }
+    // edutiek-patch: begin
+    const r1 = new Dict(xref);
+    extGState.set('R1', r1);
+    r1.setIfName('BM', 'Normal'); // No transparency for the label (no blend mode = multiply)
+    // edutiek-patch: end
     const ap = new StringStream(appearance);
     ap.dict = appearanceStreamDict;
     return ap;
@@ -62742,6 +62858,9 @@ class Page {
     }
     const dict = pageDict.clone();
     dict.set("Annots", annotationsArray);
+    // edutiek-patch: begin
+    dict.set('Tabs', Name.get('S'));
+    // edutiek-patch: end
     changes.put(this.ref, {
       data: dict
     });
@@ -67194,8 +67313,8 @@ const edutiek = (function(){
       if (num === structParent) {
         for (let x of nums) {
           const element = x instanceof Ref ? xref.fetch(x) : x;
-          if (element && element.get && element.get('K') instanceof Array) {
-            for (let y of element.get('K')) {
+          if (element && element.get) {
+            for (let y of asArray(element.get('K'))) {
               if (y === annotation.pageAndMC.mc) {
                 return [x, element];
               }
