@@ -8,6 +8,8 @@ interface MarkedPdfRepo
 {
     public function new(): MarkedPdf;
     public function oneByIds(int $task_id, int $writer_id, ?int $corrector_id): ?MarkedPdf;
+    /** @return string[] */
+    public function allFileIds(): array;
     /** @return MarkedPdf[] */
     public function allByTaskId(int $task_id): array;
     /** @return MarkedPdf[] */

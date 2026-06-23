@@ -18,7 +18,8 @@ readonly class Finder implements FileUsageFinder
     {
         return array_merge(
             $this->repos->essay()->allFileIds(),
-            $this->repos->essayImage()->allFileIds()
+            $this->repos->essayImage()->allFileIds(),
+            $this->repos->markedPdf()->allFileIds(),
         );
     }
 }
