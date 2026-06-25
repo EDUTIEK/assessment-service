@@ -10,6 +10,10 @@ use Edutiek\AssessmentService\System\EventHandling\Event;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\System\File\Storage;
 
+/**
+ * Handle the removal of a correction assignment
+ * - remove stored marked PDFs
+ */
 readonly class OnAssignmentRemoved implements Handler
 {
     public static function events(): array
@@ -24,8 +28,6 @@ readonly class OnAssignmentRemoved implements Handler
     }
 
     /**
-     * Remove stored marked PDFs when the assignment is removed
-     *
      * @param AssignmentRemoved $event
      */
     public function handle(Event $event): void

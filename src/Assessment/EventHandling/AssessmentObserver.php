@@ -16,6 +16,10 @@ class AssessmentObserver extends AbstractObserver
         Internal $internal,
         Repositories $repos
     ) {
+        $this->registerHandler(OnWritingAuthorizationRemoved::class, fn() => new OnWritingAuthorizationRemoved(
+            $user_id,
+            $internal->writer($ass_id, $user_id),
+        ));
         $this->registerHandler(OnWritingContentChanged::class, fn() => new OnWritingContentChanged(
             $user_id,
             $internal->writer($ass_id, $user_id),

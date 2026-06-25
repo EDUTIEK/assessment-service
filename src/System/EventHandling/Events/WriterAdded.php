@@ -5,7 +5,9 @@ namespace Edutiek\AssessmentService\System\EventHandling\Events;
 use Edutiek\AssessmentService\System\EventHandling\Event;
 
 /**
- * This event must be raised when a writer is added to an assessment
+ * This event is raised when a writer is added to an assessment
+ *
+ * - create the essay records for the writer
  */
 readonly class WriterAdded implements Event
 {

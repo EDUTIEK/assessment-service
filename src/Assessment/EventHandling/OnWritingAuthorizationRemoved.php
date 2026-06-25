@@ -7,18 +7,18 @@ namespace Edutiek\AssessmentService\Assessment\EventHandling;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
 use Edutiek\AssessmentService\System\EventHandling\Handler;
 use Edutiek\AssessmentService\System\EventHandling\Event;
-use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
+use Edutiek\AssessmentService\System\EventHandling\Events\WritingAuthorizationRemoved;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
 
 /**
  * Handle a change of writing content
  * - force a correction status OPEN
  */
-readonly class OnWritingContentChanged implements Handler
+readonly class OnWritingAuthorizationRemoved implements Handler
 {
     public static function events(): array
     {
-        return [WritingContentChanged::class];
+        return [WritingAuthorizationRemoved::class];
     }
 
     public function __construct(
@@ -28,7 +28,7 @@ readonly class OnWritingContentChanged implements Handler
     }
 
     /**
-     * @param WritingContentChanged $event
+     * @param WritingAuthorizationRemoved $event
      */
     public function handle(Event $event): void
     {

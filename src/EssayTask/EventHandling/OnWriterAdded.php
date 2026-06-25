@@ -11,6 +11,10 @@ use Edutiek\AssessmentService\EssayTask\Essay\EventService as EssayService;
 use Edutiek\AssessmentService\System\EventHandling\Events\WriterAdded;
 use Edutiek\AssessmentService\Task\Manager\ReadService as ManagerReadService;
 
+/**
+ * Handle the adding of a writer to an assessment
+ * - create the essay records for the writer
+ */
 readonly class OnWriterAdded implements Handler
 {
     public static function events(): array

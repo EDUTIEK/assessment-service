@@ -1,4 +1,4 @@
-Die Abgabe Ihrere Korrektur wurde geändert. Bitte überprüfen Sie Ihre Anmerkungen und Punkte.
+Die Abgabe Ihrer Korrektur wurde geändert. Bitte überprüfen Sie Ihre Anmerkungen und Punkte.
 
 Aufgabe: [assessment_title]
 Teilnehmer: [writer_pseudonym]

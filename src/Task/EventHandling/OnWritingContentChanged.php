@@ -13,6 +13,11 @@ use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Api\ForTasks;
 use Edutiek\AssessmentService\Assessment\Data\NotificationType;
 
+/**
+ * Handle a change of writing content
+ * - remove a pre-grading from the corrections
+ * - notify the correctors if they already have correction content
+ */
 readonly class OnWritingContentChanged implements Handler
 {
     public static function events(): array

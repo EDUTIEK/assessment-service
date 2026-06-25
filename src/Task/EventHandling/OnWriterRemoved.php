@@ -10,6 +10,11 @@ use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentsService;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 
+/**
+ * Handle the removal of a writer from an assessment
+ * - delete the writer's annotations
+ * - remove the correction assignments of the writer (triggering AssignmentRemoved)
+ */
 readonly class OnWriterRemoved implements Handler
 {
     public static function events(): array

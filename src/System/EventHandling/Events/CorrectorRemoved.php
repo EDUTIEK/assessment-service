@@ -5,7 +5,10 @@ namespace Edutiek\AssessmentService\System\EventHandling\Events;
 use Edutiek\AssessmentService\System\EventHandling\Event;
 
 /**
- * This event must be raised when a corrector is removed from an assessment
+ * This event is raised when a corrector is removed from an assessment
+ *
+ * - remove preferences, templates, snippets and criteria of the corrector
+ * - remove assignments of the corrector (triggers AssignmentRemoved)
  */
 readonly class CorrectorRemoved implements Event
 {

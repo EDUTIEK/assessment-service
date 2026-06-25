@@ -14,8 +14,8 @@ use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\System\ConstraintHandling\Actions\RemoveWritingAuthorization;
 
 /**
- * Constraint for changing the content of an essay (text or pdf)
- * It returns a ResultStatus::BLOCK if the correction is not open
+ * Check if the authorization of a writing can be removed
+ * - BLOCK if the correction process is not open
  */
 class CanRemoveWritingAuthorization implements Constraint
 {

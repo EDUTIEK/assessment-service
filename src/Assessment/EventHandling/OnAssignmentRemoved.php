@@ -9,6 +9,10 @@ use Edutiek\AssessmentService\System\EventHandling\Event;
 use Edutiek\AssessmentService\System\EventHandling\Events\AssignmentRemoved;
 use Edutiek\AssessmentService\System\EventHandling\Handler;
 
+/**
+ * Handle the removal of a correction assignment
+ * - change the correction status to OPEN or STITCH based on the removed assignment
+ */
 readonly class OnAssignmentRemoved implements Handler
 {
     public static function events(): array

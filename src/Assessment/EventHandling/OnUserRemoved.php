@@ -8,6 +8,12 @@ use Edutiek\AssessmentService\System\EventHandling\Event;
 use Edutiek\AssessmentService\System\EventHandling\Events\UserRemoved;
 use Edutiek\AssessmentService\System\EventHandling\Handler;
 
+/**
+ * Handle the removal of a user from the hosting system
+ * - remove the user from pending notifications
+ * - remove the user as writer from all assessments
+ * - remove the user as corrector from all assessments
+ */
 readonly class OnUserRemoved implements Handler
 {
     public static function events(): array

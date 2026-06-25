@@ -23,6 +23,12 @@ class Observer extends AbstractObserver
             $repos
         ));
 
+        $this->registerHandler(OnWritingAuthorizationRemoved::class, fn() => new OnWritingAuthorizationRemoved(
+            $user_id,
+            $internal->correctorAssignments($ass_id, $user_id),
+            $repos
+        ));
+
         $this->registerHandler(OnWritingContentChanged::class, fn() => new OnWritingContentChanged(
             $user_id,
             $internal->correctorAssignments($ass_id, $user_id),

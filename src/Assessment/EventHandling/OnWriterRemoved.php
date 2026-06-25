@@ -7,6 +7,10 @@ use Edutiek\AssessmentService\System\EventHandling\Event;
 use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
 use Edutiek\AssessmentService\System\EventHandling\Handler;
 
+/**
+ * Handle the removal of a writer from an assessment
+ * - delete the alerts sent the writer
+ */
 readonly class OnWriterRemoved implements Handler
 {
     public static function events(): array

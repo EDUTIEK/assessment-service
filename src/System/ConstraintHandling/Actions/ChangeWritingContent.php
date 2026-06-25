@@ -9,11 +9,10 @@ use Edutiek\AssessmentService\System\ConstraintHandling\Action;
 /**
  * This action must be checked before the content provided by a writer is changed
  *
- * It must return a ResultStatus::BLOCK if the writing is authorized.
- * If an admin wants to change writing content, the authorization must be removed first.
+ * - BLOCK if the writing is authorized
  *
- * All correction activity is based on authorized content,
- * nothing has to be checked for the correction
+ * All correction activity is based on authorized writings.
+ * If an admin wants to change writing content, the authorization must be removed first.
  *
  * @param bool $as_admin
  */

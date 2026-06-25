@@ -8,15 +8,14 @@ use DateTimeImmutable;
 use Edutiek\AssessmentService\System\EventHandling\Event;
 
 /**
- * This event is raised when the content provided by a writer is changed
+ * This event is raised when the authorization of a writing is removed
  *
- * - set correction process to OPEN and remove pregrading of correctors
- * - inform correctors that have already correction content
+ * - remove the pregrading of corrections
+ * - set the correction process status to open
  *
- *  Currently only raised when a PDF file is uploaded
- *  Normal writing steps sent by the web app don't raise this event
+ * Authorized corrections should not exist, because of the constraint contraint RemoveWritingAuthorization
  */
-readonly class WritingContentChanged implements Event
+readonly class WritingAuthorizationRemoved implements Event
 {
     public function __construct(
         private int $writer_id,

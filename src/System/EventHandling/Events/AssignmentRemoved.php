@@ -5,8 +5,9 @@ namespace Edutiek\AssessmentService\System\EventHandling\Events;
 use Edutiek\AssessmentService\System\EventHandling\Event;
 
 /**
- * This event must be raised when a corrector to writer assignment is removed
- * @param bool $reset_status The correction status sould be reset
+ * This event is raised when a corrector to writer assignment is removed
+ *
+ * - delete all dependent correction data
  */
 readonly class AssignmentRemoved implements Event
 {

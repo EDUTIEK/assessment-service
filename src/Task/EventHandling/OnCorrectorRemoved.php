@@ -10,6 +10,11 @@ use Edutiek\AssessmentService\System\EventHandling\Events\CorrectorRemoved;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentsService;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 
+/**
+ * Handle the removal of a corrector
+ * - Delete preferences, templates, snippets and criteria
+ * - Remove the assignments
+ */
 readonly class OnCorrectorRemoved implements Handler
 {
     public static function events(): array

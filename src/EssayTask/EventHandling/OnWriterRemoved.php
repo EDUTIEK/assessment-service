@@ -10,6 +10,11 @@ use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\Essay\EventService as EssayService;
 
+/**
+ * Handle the removal of a writer from an assessment
+ * - delete writers preferences
+ * - delete the essay and all related filed (pdf upload, page imagee)
+ */
 readonly class OnWriterRemoved implements Handler
 {
     public static function events(): array

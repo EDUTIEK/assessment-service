@@ -12,6 +12,11 @@ use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as Assignmen
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\System\File\Storage;
 
+/**
+ * Handle the removal of a correction assignment
+ * - remove correction comments, points and summary
+ * - delete PDF file of the summary
+ */
 readonly class OnAssignmentRemoved implements Handler
 {
     public static function events(): array

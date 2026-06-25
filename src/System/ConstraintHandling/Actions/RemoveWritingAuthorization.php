@@ -9,8 +9,8 @@ use Edutiek\AssessmentService\System\ConstraintHandling\Action;
 /**
  * This action must be checked when the authorization of a writing is removed
  *
- * It must return a ResultStatus::BLOCK if authorized corrections exist
- * It must return a ResultStatus::BLOCK if the correction status is not open
+ * - BLOCK if authorized corrections exist
+ * - BLOCK if the correction process status is not open
  *
  * @param bool $as_admin
  */
