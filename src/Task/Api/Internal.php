@@ -76,7 +76,8 @@ class Internal implements RatingCriterionServiceFactory
         return $this->instances[ConstraintProvider::class][$ass_id][$user_id] ??= new ConstraintProvider(
             $ass_id,
             $user_id,
-            $this
+            $this,
+            $this->dependencies->repositories()
         );
     }
 

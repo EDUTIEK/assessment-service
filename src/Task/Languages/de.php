@@ -86,5 +86,6 @@ return [
     'step_first_revision' => 'Überarbeitung Erstkorrektor',
     'step_second_revision' => 'Überarbeitung Zweitkorrektor',
     'step_stitch_decision' => 'Freigabe Stichentscheid',
-    'snippets_export_filename' => 'Textbausteine'
+    'snippets_export_filename' => 'Textbausteine',
+    'correction_prevents_remove_of_writing_authorization' => "Es existieren bereits freigegebene Korrekturen. Um die Freigabe der Abgabe zurückzuziehen, müssen erst die Korrektur-Freigaben zurückgenommen werden."
 ];

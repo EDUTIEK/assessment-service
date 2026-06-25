@@ -7,17 +7,14 @@ namespace Edutiek\AssessmentService\System\ConstraintHandling\Actions;
 use Edutiek\AssessmentService\System\ConstraintHandling\Action;
 
 /**
- * This action must be checked before the content provided by a writer is changed
+ * This action must be checked when the authorization of a writing is removed
  *
- * It must return a ResultStatus::BLOCK if the writing is authorized.
- * If an admin wants to change writing content, the authorization must be removed first.
- *
- * All correction activity is based on authorized content,
- * nothing has to be checked for the correction
+ * It must return a ResultStatus::BLOCK if authorized corrections exist
+ * It must return a ResultStatus::BLOCK if the correction status is not open
  *
  * @param bool $as_admin
  */
-readonly class ChangeWritingContent implements Action
+readonly class RemoveWritingAuthorization implements Action
 {
     public function __construct(
         private int $writer_id,

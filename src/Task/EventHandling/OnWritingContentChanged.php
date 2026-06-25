@@ -5,15 +5,12 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Task\EventHandling;
 
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
-use Edutiek\AssessmentService\System\EventHandling\Events\WritingAuthorizationRemoved;
 use Edutiek\AssessmentService\System\EventHandling\Handler;
 use Edutiek\AssessmentService\System\EventHandling\Event;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentsService;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Api\ForTasks;
-use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorService;
-use Edutiek\AssessmentService\Assessment\Notification\DeliverService as NotificationService;
 use Edutiek\AssessmentService\Assessment\Data\NotificationType;
 
 readonly class OnWritingContentChanged implements Handler
