@@ -37,6 +37,7 @@ interface ClientService
 
     /**
      * Check if the content of an essay can be replaced
+     * This must be checked for all changes (Writer App or PDF upload)
      */
     public function canChange(Essay $essay): ConstraintResult;
 

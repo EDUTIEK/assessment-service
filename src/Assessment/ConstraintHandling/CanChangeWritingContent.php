@@ -13,6 +13,10 @@ use Edutiek\AssessmentService\System\ConstraintHandling\ResultCollection;
 use Edutiek\AssessmentService\System\ConstraintHandling\ResultStatus;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 
+/**
+ * Constraint for changing the content of an essay (text or pdf)
+ * It returns a ResultStatus::BLOCK if the writing is already authorized
+ */
 class CanChangeWritingContent implements Constraint
 {
     public function __construct(

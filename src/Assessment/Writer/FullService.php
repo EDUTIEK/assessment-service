@@ -22,7 +22,6 @@ interface FullService extends ReadService
     public function authorizeWriting(Writer $writer, bool $as_admin): Result;
     public function removeWritingAuthorization(Writer $writer): Result;
 
-    public function removeCorrectionFinalisation(Writer $writer, int $by_user_id): void;
     public function changeCorrectionStatus(Writer $writer, CorrectionStatus $status, int $by_user_id): void;
 
     public function setUnsubmittedAsGraded(Writer $writer): bool;

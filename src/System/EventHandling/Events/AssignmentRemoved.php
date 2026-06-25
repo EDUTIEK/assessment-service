@@ -6,6 +6,7 @@ use Edutiek\AssessmentService\System\EventHandling\Event;
 
 /**
  * This event must be raised when a corrector to writer assignment is removed
+ * @param bool $reset_status The correction status sould be reset
  */
 readonly class AssignmentRemoved implements Event
 {
@@ -13,7 +14,8 @@ readonly class AssignmentRemoved implements Event
         private int $task_id,
         private int $writer_id,
         private int $corrector_id,
-        private bool $reset_status
+        private bool $was_stitch,
+        private bool $was_authorized
     ) {
     }
 
@@ -32,8 +34,13 @@ readonly class AssignmentRemoved implements Event
         return $this->corrector_id;
     }
 
-    public function getResetStatus(): bool
+    public function wasStitch(): bool
     {
-        return $this->reset_status;
+        return $this->was_stitch;
+    }
+
+    public function wasAuthorized(): bool
+    {
+        return $this->was_authorized;
     }
 }

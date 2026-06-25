@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\EventHandling;
 
+use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
 use Edutiek\AssessmentService\System\EventHandling\Handler;
 use Edutiek\AssessmentService\System\EventHandling\Event;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
@@ -28,9 +29,13 @@ readonly class OnWritingContentChanged implements Handler
     public function handle(Event $event): void
     {
         $writer = $this->writer_service->oneByWriterId($event->getWriterId());
-        if ($writer->isCorrectionFinalized()) {
-            $this->writer_service->removeCorrectionFinalisation($writer, $this->user_id);
+
+        // this should normally not happen - correction can only start if writing is authorized
+        if ($writer->getCorrectionStatus() !== CorrectionStatus::OPEN) {
+            $this->writer_service->changeCorrectionStatus($writer, CorrectionStatus::OPEN, $this->user_id);
         }
+
+        // this should normally not happen - writing content can only be changed if writing is not authorized
         if ($writer->isAuthorized()) {
             $this->writer_service->removeWritingAuthorization($writer);
         }

@@ -2,6 +2,7 @@
 
 namespace Edutiek\AssessmentService\Assessment\EventHandling;
 
+use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
 use Edutiek\AssessmentService\System\EventHandling\Event;
@@ -26,10 +27,14 @@ readonly class OnAssignmentRemoved implements Handler
      */
     public function handle(Event $event): void
     {
-        if ($event->getResetStatus()) {
+        if ($event->wasAuthorized()) {
             $writer = $this->writer_service->oneByWriterId($event->getWriterId());
             if ($writer !== null) {
-                $this->writer_service->removeCorrectionFinalisation($writer, $this->user_id);
+                $this->writer_service->changeCorrectionStatus(
+                    $writer,
+                    $event->wasStitch() ? CorrectionStatus::STITCH : CorrectionStatus::OPEN,
+                    $this->user_id
+                );
             }
         }
     }

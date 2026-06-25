@@ -166,11 +166,6 @@ readonly class Service implements ReadService, FullService
         return true;
     }
 
-    public function removeCorrectionFinalisation(Writer $writer, int $by_user_id): void
-    {
-        $this->changeCorrectionStatus($writer, CorrectionStatus::OPEN, $by_user_id);
-    }
-
     public function changeCorrectionStatus(Writer $writer, CorrectionStatus $status, int $by_user_id): void
     {
         $old_status = $writer->getCorrectionStatus();

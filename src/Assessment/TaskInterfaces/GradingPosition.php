@@ -34,6 +34,15 @@ enum GradingPosition: int
         ];
     }
 
+    /**
+     * Get the order of two grading postions
+     * @return int -1 if position1 < position2, 0 if position1 = position2, 1 if Position1 > position2
+     */
+    public static function order(GradingPosition $position1, GradingPosition $position2)
+    {
+        return $position1->value <=> $position2->value;
+    }
+
     public static function required(int $required_correctors)
     {
         switch ($required_correctors) {

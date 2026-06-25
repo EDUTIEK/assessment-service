@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Task\EventHandling;
 
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
+use Edutiek\AssessmentService\System\EventHandling\Events\WritingAuthorizationRemoved;
 use Edutiek\AssessmentService\System\EventHandling\Handler;
 use Edutiek\AssessmentService\System\EventHandling\Event;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
@@ -22,6 +24,7 @@ readonly class OnWritingContentChanged implements Handler
     }
 
     public function __construct(
+        private int $user_id,
         private AssignmentsService $assignments,
         private Repositories $repos,
         private ForTasks $assessment_api,
@@ -34,11 +37,13 @@ readonly class OnWritingContentChanged implements Handler
     public function handle(Event $event): void
     {
         foreach ($this->assignments->allByTaskIdAndWriterId($event->getTaskId(), $event->getWriterId()) as $assignment) {
-            if ($this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+            $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
                 $assignment->getTaskId(),
                 $assignment->getWriterId(),
                 $assignment->getCorrectorId()
-            )?->isStarted()
+            );
+
+            if ($summary?->isStarted()
                 || $this->repos->correctorComment()->hasByTaskIdAndWriterIdAndCorrectorId(
                     $assignment->getTaskId(),
                     $assignment->getWriterId(),
@@ -50,6 +55,13 @@ readonly class OnWritingContentChanged implements Handler
                     $assignment->getCorrectorId()
                 )
             ) {
+                // remove a pre-grading
+                // authorization should already be removed
+                if ($summary->getGradingStatus() !== GradingStatus::NOT_STARTED) {
+                    $summary->setGradingStatus(GradingStatus::OPEN, $this->user_id);
+                    $this->repos->correctorSummary()->save($summary);
+                }
+
                 $this->assessment_api->notification()->createFor(
                     NotificationType::CORRECTOR_WRITING_CHANGED,
                     $this->assessment_api->writer()->oneByWriterId($assignment->getWriterId()),

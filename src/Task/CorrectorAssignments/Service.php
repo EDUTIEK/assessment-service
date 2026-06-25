@@ -165,8 +165,6 @@ readonly class Service implements FullService
 
     public function removeAssignment(CorrectorAssignment $assignment): void
     {
-        $reset_status = true;
-
         $this->repos->correctorAssignment()->delete($assignment->getId());
 
         $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
@@ -175,14 +173,34 @@ readonly class Service implements FullService
             $assignment->getCorrectorId()
         );
 
-        // reset a writer's correction status only if an authorized correction is unassigned
-        $reset_status = $summary?->isAuthorized() ?? false;
+        // remove the authorization of all following corrector positions
+        // if an authorized correction is removed
+        if ($summary?->isAuthorized()) {
+            foreach ($this->repos->correctorAssignment()->allByTaskIdAndWriterId(
+                $assignment->getTaskId(),
+                $assignment->getWriterId()
+            ) as $other) {
+                if (GradingPosition::order($assignment->getPosition(), $other->getPosition()) > 0) {
+                    $other_summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+                        $other->getTaskId(),
+                        $other->getWriterId(),
+                        $other->getCorrectorId()
+                    );
+                    if ($other_summary?->isStarted()) {
+                        $other_summary->setGradingStatus(GradingStatus::OPEN, $this->user_id);
+                        $this->repos->correctorSummary()->save($other_summary);
+                    }
+                }
+            }
+        }
 
+        // this will remove the correction data and set the correction status
         $this->events->dispatchEvent(new AssignmentRemoved(
             $assignment->getTaskId(),
             $assignment->getWriterId(),
             $assignment->getCorrectorId(),
-            $reset_status
+            $assignment->getPosition()->isStitch(),
+            $summary?->isAuthorized()
         ));
     }
 
