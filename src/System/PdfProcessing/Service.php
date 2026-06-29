@@ -11,6 +11,8 @@ use Edutiek\AssessmentService\System\Data\ImageSizeType;
 use Exception;
 use Generator;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
+use Com\Tecnick\Pdf\Parser\Parser;
+use Edutiek\AssessmentService\System\Log\FullService as Logger;
 
 class Service implements FullService
 {
@@ -20,9 +22,9 @@ class Service implements FullService
     public function __construct(
         private readonly PdfCreator $pdf_creator,
         private readonly Storage $storage,
+        private readonly Logger $logger,
         private readonly string $ghostscript_bin,
         private readonly string $pdftk_bin,
-        private readonly string $pdflatex_bin,
         string $temp_dir
     ) {
         $this->temp_dir = rtrim($temp_dir, '/');
@@ -37,25 +39,17 @@ class Service implements FullService
         return $file_id;
     }
 
-    public function split(string $pdf_id, ?int $from = null, ?int $to = null): Generator
+    public function join(array $pdf_ids): string
     {
-        $in_file = $this->pathOfId($pdf_id);
-        foreach (range(1, $this->count($pdf_id)) as $page) {
-            $target = $this->saveFile(fopen('php://memory', 'w+'));
-            $this->exec(sprintf(
-                '%s -dNOPAUSE -dQUIET -dBATCH -sOutputFile=%s -dFirstPage=%d -dLastPage=%d -sDEVICE=pdfwrite %s',
-                escapeshellcmd($this->ghostscript_bin),
-                escapeshellarg($this->pathOfId($target)),
-                $page,
-                $page,
-                escapeshellarg($in_file)
-            ));
-
-            yield $target;
+        try {
+            return $this->joinAcc($pdf_ids);
+        } catch (\Exception $e) {
+            $this->logger->error('Falling back to GS, PDFUnite exception: ' . $e->getMessage());
+            return $this->joinGS($pdf_ids);
         }
     }
 
-    public function join(array $pdf_ids): string
+    private function joinGS(array $pdf_ids): string
     {
         $target = $this->saveFile(fopen('php://memory', 'w+'));
         $this->exec(sprintf(
@@ -64,6 +58,27 @@ class Service implements FullService
             escapeshellarg($this->pathOfId($target)),
             join(' ', array_map('escapeshellarg', array_map($this->pathOfId(...), $pdf_ids))),
         ));
+
+        return $target;
+    }
+
+    private function joinAcc(array $pdf_ids): string
+    {
+        $pdf_string = file_get_contents($this->pathOfId($pdf_ids[0]));
+        $header = PdfUnite::parseHeader($pdf_string);
+        $doc = (new Parser(['ignore_filter_errors' => true]))->parse($pdf_string);
+
+        foreach (array_slice($pdf_ids, 1) as $file_id) {
+            $src = (new Parser(['ignore_filter_errors' => true]))->parse(file_get_contents($this->pathOfId($file_id)));
+            $c = new PdfUnite($src, $doc);
+            $c->copyPages();
+            $doc = $c->writeBack();
+        }
+
+        $target = $this->saveFile(fopen('php://memory', 'w+'));
+        $fd = fopen($this->pathOfId($target), 'wb');
+        (new PdfWriter($fd))->write($header, $doc);
+        fclose($fd);
 
         return $target;
     }
@@ -85,57 +100,6 @@ class Service implements FullService
             escapeshellcmd($this->ghostscript_bin),
             $this->pathOfId($pdf_id)
         )));
-    }
-
-    public function number(string $pdf_id, int $start_page_number = 1): string
-    {
-        $keep = $this->saved_files;
-
-        $pages = [];
-        foreach ($this->split($pdf_id) as $page) {
-            $nr = $this->create('', (new Options())->withPrintFooter(true)->withPrintHeader(false)->withStartPageNumber($start_page_number));
-            $out = $this->saveFile(fopen('php://memory', 'w+'));
-            $this->exec(sprintf(
-                '%s %s stamp %s output %s 2>&1',
-                escapeshellcmd($this->pdftk_bin),
-                escapeshellarg($this->pathOfId($page)),
-                escapeshellarg($this->pathOfId($nr)),
-                escapeshellarg($this->pathOfId($out)),
-            ));
-            $start_page_number++;
-            $pages[] = $out;
-        }
-
-        $keep[] = $id = $this->join($pages);
-        $this->cleanupExcept($keep);
-
-        return $id;
-    }
-
-    public function nextToEachOther(string $pdf_left, string $pdf_right): string
-    {
-        $dir = $this->temp_dir . '/' . uniqid('edutiek-pdf-processing', true);
-        mkdir($dir, 0700);
-        $pdf_left = $this->pathOfId($pdf_left);
-        $pdf_right = $this->pathOfId($pdf_right);
-        copy($pdf_left, $dir . '/left.pdf');
-        copy($pdf_right, $dir . '/right.pdf');
-
-        $tex_filename = $dir . '/def.tex';
-        $tex_stream = fopen($tex_filename, 'w+');
-        fwrite($tex_stream, $this->template($pdf_right));
-        $this->exec(sprintf(
-            '%s -output-dir %s %s',
-            escapeshellcmd($this->pdflatex_bin),
-            escapeshellarg($dir),
-            escapeshellarg($tex_filename),
-        ));
-        $id = $this->saveFile(fopen($dir . '/def.pdf', 'rb'));
-        $delme = ['def.pdf', 'left.pdf', 'right.pdf', 'def.aux', 'def.log', 'def.out', 'def.tex', 'pdfa.xmpi'];
-        array_map(fn($f) => unlink($dir . '/' . $f), $delme);
-        rmdir($dir);
-
-        return $id;
     }
 
     public function onTopOfEachOther(string $pdf_top, string $pdf_bot): string
@@ -171,21 +135,6 @@ class Service implements FullService
             $this->storage->deleteFile($id);
         }
         $this->saved_files = array_intersect($this->saved_files, $keep_ids);
-    }
-
-    private function template(): string
-    {
-        return <<<END
-\\batchmode
-\\documentclass[a4paper,landscape]{article}
-\\usepackage[utf8]{inputenc}
-\\usepackage{pdfpages}
-\\usepackage[a-2b,mathxmp]{pdfx}
-
-\\begin{document}
-\\includepdfmerge[nup=2x1]{left.pdf,-,right.pdf,-}
-\\end{document}
-END;
     }
 
     /**

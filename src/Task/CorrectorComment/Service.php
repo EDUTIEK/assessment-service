@@ -76,11 +76,11 @@ readonly class Service implements InfoService
         return $infos;
     }
 
-    public function filterAndLabelInfos(array $infos, int $parent_no): array
+    public function filterAndLabelInfos(array $infos, ?int $parent_no): array
     {
         $sort = [];
         foreach ($infos as $info) {
-            if ($info->getComment()->getParentNumber() == $parent_no) {
+            if ($parent_no === null || $info->getComment()->getParentNumber() == $parent_no) {
                 $key = sprintf('%06d', $info->getComment()->getStartPosition()) . $info->getComment()->getKey();
                 $sort[$key] = $info;
             }

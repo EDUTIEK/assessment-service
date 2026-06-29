@@ -12,13 +12,6 @@ interface FullService
     public function create(string $html, Options $options): string;
 
     /**
-     * Split a PDF file into parts
-     * @param string $pdf_id
-     * @return Generator<string>
-     */
-    public function split(string $pdf_id, ?int $from = null, ?int $to = null): Generator;
-
-    /**
      * Join separate PDF files into one
      * @param string[] $pdf_ids
      * @return string
@@ -36,20 +29,9 @@ interface FullService
     public function count(string $pdf_id): int;
 
     /**
-     * Print two pdf files next to each other
-     */
-    public function nextToEachOther(string $pdf_left, string $pdf_right): string;
-
-    /**
      * Print two pdf files on top of each other
      */
     public function onTopOfEachOther(string $pdf_left, string $pdf_right): string;
-
-    /**
-     * Create page numbers in a pdf file
-     * @todo
-     */
-    public function number(string $pdf_id, int $start_page_number = 1): string;
 
     /**
      * Cleanup temporary files created during the processing

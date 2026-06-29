@@ -138,10 +138,9 @@ class Internal
         return $this->instances[PdfProcessing::class] ??= new PdfProcessing(
             $this->pdfCreator(),
             $this->dependencies->fileStorage(),
+            $this->dependencies->log(),
             $this->config()->getPathToGhostscript(),
             $this->config()->getPathToPdfTk(),
-            // todo: try to avoid it
-            exec('which pdflatex'),
             $this->config()->getSetup()->getAbsoluteTempPath(),
         );
     }

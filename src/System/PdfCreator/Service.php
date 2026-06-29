@@ -45,7 +45,8 @@ class Service implements FullService
         $header = $options->getPrintHeader() ? ('<header> ' . $options->getTitle() . '</header>') : '';
         $pdf->loadHtml(
             sprintf(
-                '<!DOCTYPE html><html><head><meta charset="utf-8"/><style>%s</style></head><body>%s%s</body></html>',
+                '<!DOCTYPE html><html lang="de"><head>%s<meta charset="utf-8"/><style>%s</style></head><body>%s%s</body></html>',
+                $options->getTitle() ? ('<title>' . $options->getTitle() . '</title>') : ('<title>' . 'aaaa' . '</title>'),
                 $this->css($options),
                 $header,
                 $html,
@@ -173,7 +174,7 @@ header
     private function initPdf(Options $opts): Dompdf
     {
         $pdf = ($this->dom_pdf)([
-            'isPdfAEnabled' => true,
+            'isPdfUAEnabled' => true,
             'defaultFont' => $this->main_font,
             'dpi' => 150,
             'fontDir' => $this->getFontDir(),

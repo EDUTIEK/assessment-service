@@ -182,42 +182,24 @@ readonly class CorrectionProvider implements PdfPartProvider
     private function renderForMarkedPdf(string $key, string $marked_pdf_id, array $infos, bool $anonymous_corrector, Options $options)
     {
         $start_page = $options->getStartPageNumber();
-        $orig_page_no = 1;
+        $start_page += $this->pdf_processing->count($marked_pdf_id);
 
-        $pdf_ids = [];
-        foreach ($this->pdf_processing->split($marked_pdf_id) as $marked_page_id) {
-            $page_infos = $this->comments->filterAndLabelInfos($infos, $orig_page_no++);
-
-            $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/solo_comments.html', [
-                'partTitle' => $this->getCorrectionTitle($key),
-                'partComments' => $this->html_processing->getCommentsHtml($page_infos),
-            ]);
-            $html = $this->system_processing->addCorrectionStyles($html);
-
-            if (false && $this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
-                $comments_id = $this->pdf_processing->create($html, ($options->withStartPageNumber($start_page)));
-                $merged_id = $this->pdf_processing->nextToEachOther($marked_page_id, $comments_id);
-                $pdf_ids[] = $merged_id;
-                $start_page += $this->pdf_processing->count($merged_id);
-            } else {
-                // add the marked page
-                $pdf_ids[] = $marked_page_id;
-                $start_page++;
-
-                // followed by the comments pages
-                if (!empty($page_infos)) {
-                    $comments_id = $this->pdf_processing->create($html, ($options->withStartPageNumber($start_page)));
-                    $pdf_ids[] = $comments_id;
-                    $start_page += $this->pdf_processing->count($comments_id);
-                }
-            }
+        $page_infos = $this->comments->filterAndLabelInfos($infos, null);
+        if ($page_infos === []) {
+            return $marked_pdf_id;
         }
+        $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/solo_comments.html', [
+            'partTitle' => $this->getCorrectionTitle($key),
+            'partComments' => $this->html_processing->getCommentsHtml($page_infos),
+        ]);
+        $html = $this->system_processing->addCorrectionStyles($html);
 
-        $joined_id = $this->pdf_processing->join($pdf_ids);
+        $comment_pdf = $this->pdf_processing->create($html, $options->withStartPageNumber($start_page));
+
+        $joined_id = $this->pdf_processing->join([$marked_pdf_id, $comment_pdf]);
         $this->pdf_processing->cleanupExcept([$marked_pdf_id, $joined_id]);
-        return $joined_id;
 
-        return null;
+        return $joined_id;
     }
 
     /**
