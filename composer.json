@@ -44,5 +44,6 @@
         "phpoffice/phpspreadsheet": "^2.2",
         "dompdf/dompdf": "dev-gs-font-patch",
         "tecnickcom/tc-lib-pdf-parser": "^3.0"
-    }
+    },
+    "minimum-stability": "dev"
 }
