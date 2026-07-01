@@ -59817,7 +59817,7 @@ class HighlightAnnotation extends MarkupAnnotation {
     switch(annotation.edutiekType){
     case 'underline':
       appearanceBuffer.push('/DeviceRGB CS');
-      appearanceBuffer.push(getPdfColorArray(color).join(' ') + ' SCN');
+      appearanceBuffer.push(getPdfColorArray(annotation.edutiekLineColor || color).join(' ') + ' SCN');
       const shift = 0;
       drawFromQuadPoints((x1, x2, y) => [
           `${numberToString(x1)} ${numberToString(y)} m`,
@@ -59828,7 +59828,7 @@ class HighlightAnnotation extends MarkupAnnotation {
     case 'wave':
       appearanceBuffer.push('/DeviceRGB CS');
       drawFromQuadPoints((x1, x2, y) => {
-        const ret = [getPdfColorArray(color).join(' ') + ' SCN', '1 w'];
+        const ret = [getPdfColorArray(annotation.edutiekLineColor || color).join(' ') + ' SCN', '1 w'];
         ret.push(`${numberToString(x1)} ${numberToString(y)} m`);
         let x = x1;
         let dir = 1;
@@ -59857,7 +59857,7 @@ class HighlightAnnotation extends MarkupAnnotation {
       });
       const x = rect[0] + 1;
       appearanceBuffer.push('/DeviceRGB CS');
-      appearanceBuffer.push(getPdfColorArray(color).join(' ') + ' SCN');
+      appearanceBuffer.push(getPdfColorArray(annotation.edutiekLineColor || color).join(' ') + ' SCN');
       appearanceBuffer.push('2 w');
       appearanceBuffer.push(`${numberToString(x)} ${numberToString(minY)} m`);
       appearanceBuffer.push(`${numberToString(x)} ${numberToString(maxY)} l`);
@@ -59928,7 +59928,7 @@ class HighlightAnnotation extends MarkupAnnotation {
     case 'cross':
       appearanceBuffer.push('/DeviceRGB cs');
       appearanceBuffer.push('/R1 gs');
-      appearanceBuffer.push(`${getPdfColor([0, 0, 0])}`);
+      appearanceBuffer.push(`${getPdfColor(annotation.edutiekTokenColor || color)}`);
       appearanceBuffer.push(`${numberToString(outlines[0][4])} ${numberToString(outlines[0][3] + 6)} m`);
       appearanceBuffer.push(`${numberToString(outlines[0][4] + 6)} ${numberToString(outlines[0][3])} l`);
       appearanceBuffer.push(`${numberToString(outlines[0][4] + 6)} ${numberToString(outlines[0][3] + 6)} m`);
@@ -59940,7 +59940,7 @@ class HighlightAnnotation extends MarkupAnnotation {
     case 'check':
       appearanceBuffer.push('/DeviceRGB cs');
       appearanceBuffer.push('/R1 gs');
-      appearanceBuffer.push(`${getPdfColor([0, 0, 0])}`);
+      appearanceBuffer.push(`${getPdfColor(annotation.edutiekTokenColor || color)}`);
       const basePos = {x: outlines[0][4] + 4, y: outlines[0][3] + 2};
       appearanceBuffer.push(`${numberToString(basePos.x)} ${numberToString(basePos.y)} m`);
       appearanceBuffer.push(`${numberToString(basePos.x + 7)} ${numberToString(basePos.y + 7)} l`);
@@ -59954,7 +59954,7 @@ class HighlightAnnotation extends MarkupAnnotation {
       f = await getFont(8.0);
       appearanceBuffer.push('/DeviceRGB cs');
       appearanceBuffer.push('/R1 gs');
-      appearanceBuffer.push(`${getPdfColor([0, 0, 0], true)}`);
+      appearanceBuffer.push(`${getPdfColor(annotation.edutiekTokenColor || color, true)}`);
       appearanceBuffer.push(`BT ${numberToString(outlines[0][4])} ${numberToString(outlines[0][3])} Td /F1 8.0 Tf [(${f.encodeString('?').map(escapeString).join('')})] TJ ET`);
       fontSize = calcTextSize('?', 8.0, f);
       rect[2] += fontSize.width;
@@ -59964,7 +59964,7 @@ class HighlightAnnotation extends MarkupAnnotation {
       f = await getFont(8.0);
       appearanceBuffer.push('/DeviceRGB cs');
       appearanceBuffer.push('/R1 gs');
-      appearanceBuffer.push(`${getPdfColor([0, 0, 0], true)}`);
+      appearanceBuffer.push(`${getPdfColor(annotation.edutiekTokenColor || color, true)}`);
       appearanceBuffer.push(`BT ${numberToString(outlines[0][4])} ${numberToString(outlines[0][3])} Td /F1 8.0 Tf [(${f.encodeString('!').map(escapeString).join('')})] TJ ET`);
       fontSize = calcTextSize('!', 8.0, f);
       rect[2] += fontSize.width;
@@ -59974,7 +59974,7 @@ class HighlightAnnotation extends MarkupAnnotation {
       f = await getFont(8.0);
       appearanceBuffer.push('/DeviceRGB cs');
       appearanceBuffer.push('/R1 gs');
-      appearanceBuffer.push(`${getPdfColor([0, 0, 0], true)}`);
+      appearanceBuffer.push(`${getPdfColor(annotation.edutiekTokenColor || color, true)}`);
       appearanceBuffer.push(`BT ${numberToString(outlines[0][4])} ${numberToString(outlines[0][3])} Td /F1 8.0 Tf [(${f.encodeString('fehlt!').map(escapeString).join('')})] TJ ET`);
       fontSize = calcTextSize('fehlt!', 8.0, f);
       rect[2] += fontSize.width;

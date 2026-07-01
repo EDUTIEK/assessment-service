@@ -13,6 +13,8 @@
  *     type: {Type},
  *     noDelete: {bool},
  *     token: {Token},
+ *     tokenColor: {Color},
+ *     lineColor: {Color},
  * }} Annotation
  *
  * @typedef {string} Color // all hex forms are valid but names are not. E.g. `#FF003377` is valid but `green` is not.
@@ -40,6 +42,8 @@
  *   rebuild: {function(): void},
  *   setViewOnly: {function(bool): Promise},
  *   setDefaultColor: {function(Color): Promise},
+ *   setDefaultLineColor: {function(Color): Promise},
+ *   setDefaultTokenColor: {function(Color): Promise},
  *   buildBlob: {function(): Promise<Blob>},
  *   enableFreeFormHighlight: {function(bool): Promise},
  *   enableTextHighlight: {function(bool): Promise},
@@ -47,9 +51,13 @@
  *   setLabel: {function(string, string): Promise},
  *   setText: {function(string, string): Promise},
  *   setColor: {function(string, Color): Promise},
+ *   setLineColor: {function(string, Color): Promise},
+ *   setTokenColor: {function(string, Color): Promise},
  *   setType: {function(string, Type): Promise},
  *   setDeletable: {function(string, bool): Promise},
  *   setToken: {function{string, Token}: Promise},
+ *   enableTokenButtons(bool),
+ *   enableTypeButtons(bool),
  * }}
  */
 export default (parent, viewer, pdf, options = {}) => {
@@ -100,6 +108,8 @@ export default (parent, viewer, pdf, options = {}) => {
         },
         setViewOnly: viewOnly => request('viewOnly', viewOnly),
         setDefaultColor: color => request('setDefaultColor', color),
+        setDefaultLineColor: color => request('setDefaultLineColor', color),
+        setDefaultTokenColor: color => request('setDefaultTokenColor', color),
         buildBlob: () => request('buildBlob'),
 	enableFreeFormHighlight: bool => request('enableFreeFormHighlight', bool),
         enableTextHighlight: bool => request('enableTextHighlight', bool),
@@ -107,8 +117,13 @@ export default (parent, viewer, pdf, options = {}) => {
         setLabel: (id, label) => request('setLabel', id, label),
         setText: (id, text) => request('setText', id, text),
         setColor: (id, color) => request('setColor', id, color),
+        setLineColor: (id, color) => request('setLineColor', id, color),
+        setTokenColor: (id, color) => request('setTokenColor', id, color),
         setType: (id, type) => request('setType', id, type),
         setDeletable: (id, deletable) => request('setDeletable', id, deletable),
+        setToken: (id, token) => request('setToken', id, token),
+        enableTokenButtons: bool => request('enableTokenButtons', bool),
+        enableTypeButtons: bool => request('enableTypeButtons', bool),
     };
 
     function request(name, ...args)

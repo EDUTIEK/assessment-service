@@ -29,6 +29,7 @@ function setup(dispatch, ready){
     let deletedIds = []; // Used to prevent 'delete' events that are triggered manually.
     let lastDeleted = {}; // For undo to work
     let currentMode = 'marker';
+    const defaultColors = {line: null, token: null};
     const selected = state(null, (oldOne, newOne) => {
         selecting = null;
         const ret = (oldOne || {}).returnPending;
@@ -78,6 +79,8 @@ function setup(dispatch, ready){
                     noDelete: newOne.noDelete,
                     pos: newOne.pos,
                     token: newOne.token,
+                    tokenColor: newOne.tokenColor,
+                    lineColor: newOne.lineColor,
                 };
                 entries.push(entry);
                 sync(entry, 'create', layer => {
@@ -92,6 +95,8 @@ function setup(dispatch, ready){
                         if (entry.label) {
                             entry.editor.edutiekLabel = entry.label;
                         }
+                        entry.editor.edutiekTokenColor = entry.tokenColor;
+                        entry.editor.edutiekLineColor = entry.lineColor;
                         pdfAddEditorToLayerNoFocus(layer, entry.editor, () => {
                             if(entry.label){
                                 entry.labelDiv = createLabelDiv(entry.label);
@@ -154,6 +159,12 @@ function setup(dispatch, ready){
                     color
                 );
             },
+            setDefaultLineColor: color => {
+                defaultColors.line = color;
+            },
+            setDefaultTokenColor: color => {
+                defaultColors.token = color;
+            },
             buildBlob: () => {
                 const origPage = pdfCurrentPageIndex();
                 return entries.reduce((p, entry) => {
@@ -214,9 +225,23 @@ function setup(dispatch, ready){
                 sync(entry, 'setColor', () => {
                     entry.color = color;
                     entry.editor.updateParams(pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR, color);
-                    if (entry.type === 'wave' || entry.type === 'underline') {
-                        entry.editor.getPathNode().setAttribute('stroke', color);
-                    }
+                    adjustEditor(entry.editor, entry.type, color);
+                });
+            },
+            setLineColor: (id, color) => {
+                const entry = entries.find(e => e.id === id);
+                sync(entry, 'setLineColor', () => {
+                    entry.lineColor = color;
+                    entry.editor.edutiekLineColor = color;
+                    adjustEditor(entry.editor, entry.type, entry.color);
+                });
+            },
+            setTokenColor: (id, color) => {
+                const entry = entries.find(e => e.id === id);
+                sync(entry, 'setTokenColor', () => {
+                    entry.tokenColor = color;
+                    entry.editor.edutiekTokenColor = color;
+                    adjustEntryToken(entry);
                 });
             },
             setType: (id, type) => {
@@ -244,7 +269,13 @@ function setup(dispatch, ready){
                     entry.token = token;
                     adjustEntryToken(entry);
                 });
-            }
+            },
+            enableTokenButtons: bool => {
+                document.querySelector('#viewer').classList[bool ? 'remove' : 'add']('disable-token-buttons');
+            },
+            enableTypeButtons: bool => {
+                document.querySelector('#viewer').classList[bool ? 'remove' : 'add']('disable-type-buttons');
+            },
         };
 
         actions.viewOnly(Boolean(new URLSearchParams(window.location.search).get('viewOnly')));
@@ -308,9 +339,20 @@ function setup(dispatch, ready){
             if(!entry){
                 Promise.all(entries.filter(x => x.page === page).map(x => sync(x, 'checkCreate', Void))).then(() => {
                     if(entryByEditor(editor)){return;}
+                    editor.edutiekLineColor = defaultColors.line;
+                    editor.edutiekTokenColor = defaultColors.token;
                     adjustEditor(editor, currentMode);
                     const id = lastDeleted.internId === editor.id ? lastDeleted.id : uuid();
-                    const entry = {id, page, editor, intern: pdfSerializeEditor(editor), type: currentMode};
+                    const entry = {
+                        id,
+                        page,
+                        editor,
+                        intern: pdfSerializeEditor(editor),
+                        type: currentMode,
+                        tokenColor: defaultColors.token,
+                        lineColor: defaultColors.line,
+                        color: editor.color,
+                    };
                     const extern = externEntry(entry);
                     entries.push(entry);
                     dispatch('create', extern);
@@ -416,17 +458,18 @@ function adjustEntryToken(entry)
     entry.editor.selectTokenButton && entry.editor.selectTokenButton(entry.token);
     entry.editor.edutiekToken = entry.token;
     if (!entry.tokenDiv) {
-        if (entry.token === null) {
+        if (!entry.token) {
             return;
         }
         entry.tokenDiv = document.createElement('div');
         entry.editor.getHightligtDiv().parentNode.appendChild(entry.tokenDiv);
-    } else if (entry.token === null) {
+    } else if (!entry.token) {
         entry.tokenDiv.remove();
         entry.tokenDiv = null;
         return;
     }
     entry.tokenDiv.className = 'annotation-token annotation-token-' + entry.token;
+    entry.tokenDiv.style.backgroundColor = entry.tokenColor || entry.editor.color;
     requestAnimationFrame(() => {
         entry.tokenDiv.style.left = (entry.editor.getVerticalEdges()[1][0] * entry.editor.getHightligtDiv().getBoundingClientRect().width) + 'px';
     });
@@ -477,6 +520,11 @@ function resetSvg(editor)
     path.removeAttribute('stroke-width');
     path.removeAttribute('stroke');
     path.setAttribute('d', editor.edutiekOriginalSvgData.d);
+    if (editor.edutiekSvgNodes) {
+        editor.edutiekSvgNodes.path.remove();
+        editor.edutiekSvgNodes.use.remove();
+        editor.edutiekSvgNodes = null;
+    }
 }
 
 function changeSvgToUnderline(editor, color)
@@ -485,20 +533,20 @@ function changeSvgToUnderline(editor, color)
     const pathNode = editor.getPathNode();
     const height = parseFloat(svg.style.height);
     const vh = 1 + (0.25 / height);
-    pathNode.setAttribute('d', drawSvgLines(
+    const bg = setupSvgNodes(editor);
+    editor.getPathNode().setAttribute('fill', 'transparent');
+    bg.setAttribute('d', drawSvgLines(
         editor.getVerticalEdges(),
         (x1, x2, y) => `M${x1} ${y} L${x2} ${y} `
     ));
-    pathNode.setAttribute('stroke-width', '1.4');
-    pathNode.setAttribute('stroke', color);
-    // pathNode.removeAttribute('fill');
+    bg.setAttribute('stroke-width', '1.4');
+    bg.setAttribute('stroke', editor.edutiekLineColor || color);
     svg.setAttribute('viewBox', `0 0 1 ${vh}`);
     svg.style.height = `${height * vh}%`;
 }
 
 function changeSvgToWave(editor, color)
 {
-    const pathNode = editor.getPathNode();
     const svg = editor.getSvgNode();
     const rect = svg.getBoundingClientRect();
     const width = parseFloat(svg.style.width);
@@ -507,7 +555,9 @@ function changeSvgToWave(editor, color)
     const rr = document.querySelector('.textLayer').getBoundingClientRect();
     const pitch = (1 / height) * 0.25;
     const step = (1 / width) * 0.5;
-    pathNode.setAttribute('d', drawSvgLines(v, (x1, x2, y) => {
+    const bg = setupSvgNodes(editor);
+    editor.getPathNode().setAttribute('fill', 'transparent');
+    bg.setAttribute('d', drawSvgLines(v, (x1, x2, y) => {
         let path = `M${x1} ${y} `;
         let x = x1;
         let dir = -1;
@@ -518,9 +568,9 @@ function changeSvgToWave(editor, color)
         }
         return path; // + waveRest(x, x2, step, pitch, dir, y, editor.yid);
     }));
-    pathNode.setAttribute('stroke-width', '1.4');
-    pathNode.setAttribute('stroke', color);
-    pathNode.setAttribute('fill', 'transparent');
+    bg.setAttribute('stroke-width', '1.4');
+    bg.setAttribute('stroke', editor.edutiekLineColor || color);
+    bg.setAttribute('fill', 'transparent');
     svg.setAttribute('viewBox', `0 0 1 ${1 + pitch}`);
     svg.style.height = `${height * (1 + pitch)}%`;
 }
@@ -552,13 +602,39 @@ function waveRest(startX, endX, step, pitch, dir, y, aaa)
 
 function changeSvgToVLine(editor, color)
 {
-    const pathNode = editor.getPathNode();
     const svg = editor.getSvgNode();
     let leftAlign = parseFloat(editor.leftAlign) - 0.9;
     svg.style.left = leftAlign + '%';
 
     const w = (1 / svg.getBoundingClientRect().width) * 5;
-    pathNode.setAttribute('d', `M0 0 V 1 H ${w} V 0 z`);
+    const bg = setupSvgNodes(editor);
+    bg.setAttribute('d', `M0 0 V 1 H ${w} V 0 z`);
+    editor.getPathNode().setAttribute('fill', 'transparent');
+    if (editor.edutiekLineColor) {
+        bg.setAttribute('fill', editor.edutiekLineColor);
+    }
+}
+
+function setupSvgNodes(editor)
+{
+    if (editor.edutiekSvgNodes) {
+        return editor.edutiekSvgNodes.path;
+    }
+    editor.edutiekSvgNodes = {
+        path: document.createElementNS('http://www.w3.org/2000/svg', 'path'),
+        use: document.createElementNS('http://www.w3.org/2000/svg', 'use'),
+    };
+    const pathNode = editor.getPathNode();
+    const id = pathNode.getAttribute('id') + '_rect';
+
+    editor.edutiekSvgNodes.path.setAttribute('vector-effect', 'non-scaling-stroke');
+    editor.edutiekSvgNodes.path.setAttribute('id', id);
+    editor.edutiekSvgNodes.use.setAttribute('href', '#' + id);
+
+    pathNode.parentNode.appendChild(editor.edutiekSvgNodes.path);
+    editor.getSvgNode().appendChild(editor.edutiekSvgNodes.use);
+
+    return editor.edutiekSvgNodes.path;
 }
 
 function externEntry(entry)
@@ -574,6 +650,8 @@ function externEntry(entry)
         type: entry.type,
         noDelete: Boolean(entry.noDelete),
         token: entry.token,
+        tokenColor: entry.tokenColor,
+        lineColor: entry.lineColor,
     };
 }
 
@@ -890,7 +968,7 @@ function diff(left, right)
 
     if(left instanceof Array){
         if(!(right instanceof Array)){
-            return {leftType: 'Array', rightType: right.constructor.name || 'dunno'};
+            return {leftType: 'Array', rightType: ((right || {}).constructor || {}).name || 'dunno'};
         }
         const diffs = {};
         for(let i = 0; i < Math.max(left.length, right.length); i++){
