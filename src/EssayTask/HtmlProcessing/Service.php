@@ -107,7 +107,7 @@ class Service implements FullService
             if ($info->hasDetailsToShow()) {
                 $content = $this->quote($info->getLabel());
                 if ($this->correction_settings->hasMultipleCorrectors()) {
-                    $content .= ' ' . $info->getPositionText();
+                    $content = $info->getPositionText() . ' ' . $content;
                 }
 
                 $color = $this->getTextBackgroundColor([$info]);

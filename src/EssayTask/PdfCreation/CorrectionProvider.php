@@ -181,11 +181,15 @@ readonly class CorrectionProvider implements PdfPartProvider
      */
     private function renderForMarkedPdf(string $key, string $marked_pdf_id, array $infos, bool $anonymous_corrector, Options $options)
     {
+        $page_count = $this->pdf_processing->count($marked_pdf_id);
         $start_page = $options->getStartPageNumber();
         $start_page += $this->pdf_processing->count($marked_pdf_id);
 
-        $page_infos = $this->comments->filterAndLabelInfos($infos, null);
-        if ($page_infos === []) {
+        $page_infos = [];
+        for ($parent_no = 0; $parent_no < $page_count; $parent_no++) {
+            $page_infos = array_merge($page_infos, $this->comments->filterAndLabelInfos($infos, $parent_no));
+        }
+        if (empty($page_infos)) {
             return $marked_pdf_id;
         }
         $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/solo_comments.html', [

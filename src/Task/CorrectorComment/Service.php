@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\Task\CorrectorComment;
 
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorService;
 use Edutiek\AssessmentService\EssayTask\Data\CommentRating;
+use Edutiek\AssessmentService\EssayTask\Data\CorrectionMark;
 use Edutiek\AssessmentService\Task\Data\CorrectorPoints;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Task\Data\CorrectorComment;
@@ -95,6 +96,13 @@ readonly class Service implements InfoService
             $label = '';
             if ($info->hasDetailsToShow()) {
                 $label = ($parent_no . '.' . $number++);
+                $marks = CorrectionMark::multiFromArray((array) json_decode($info->getComment()->getMarks()));
+                if (!empty($marks)) {
+                    $mark = reset($marks);
+                    if (!empty($mark->getSymbol())) {
+                        $label = $label . ': ' . $mark->getSymbol();
+                    }
+                }
             }
             $result[] = $info->withLabel($label);
         }
