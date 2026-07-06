@@ -30,7 +30,7 @@ class Service implements ReadService, FullService
 
     public function all(): array
     {
-        return $this->texts[$this->language] ?? [];
+        return $this->texts[$this->language] ?? ($this->texts[$this->default_language] ?? []);
     }
 
     /**
@@ -44,7 +44,7 @@ class Service implements ReadService, FullService
      */
     public function txt(string $key, array $variables = []): string
     {
-        $text = $this->texts[$this->language][$key] ?? $this->texts[$this->default_language][$key] ?? $key;
+        $text = $this->texts[$this->language][$key] ?? ($this->texts[$this->default_language][$key] ?? $key);
         foreach ($variables as $variable => $value) {
             $text = str_replace('{' . $variable . '}', (string) $value, $text);
         }

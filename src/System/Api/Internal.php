@@ -80,19 +80,25 @@ class Internal
     public function language(int $user_id, string $dir): LanguageService
     {
         if (!isset($this->instances[LanguageService::class][$user_id][$dir])) {
-            $default_code = $this->config()->getSetup()->getDefaultLanguage();
-            $user_code = $this->user()->getUser($user_id)?->getLanguage() ?? $default_code;
+            $default_code = 'de';
+            $system_code = $this->config()->getSetup()->getDefaultLanguage();
+            $user_code = $this->user()->getUser($user_id)?->getLanguage() ?? $system_code;
 
-            $service = (new LanguageService())
-                ->setDefaultLanguage($user_code)
-                ->setLanguage($user_code);
+            $service = (new LanguageService());
 
-            foreach (array_unique([$default_code, $user_code]) as $code) {
+            $added = [];
+            foreach (array_unique([$default_code, $system_code, $user_code]) as $code) {
                 $file = rtrim($dir, '/') . '/' . $code . '.php';
                 if (file_exists($file)) {
+                    $added[$code] = true;
                     $service->addLanguage($code, require($file));
+                } else {
+                    $added[$code] = false;
                 }
             }
+
+            $service->setLanguage($user_code);
+            $service->setDefaultLanguage($added[$system_code] ? $system_code : $default_code);
 
             $this->instances[LanguageService::class][$user_id][$dir] = $service;
         }
