@@ -96,7 +96,7 @@ readonly class Service implements InfoService
             $label = '';
             if ($info->hasDetailsToShow()) {
                 $label = ($parent_no . '.' . $number++);
-                $marks = CorrectionMark::multiFromArray((array) json_decode($info->getComment()->getMarks()));
+                $marks = CorrectionMark::multiFromArray((array) json_decode((string) $info->getComment()->getMarks()));
                 if (!empty($marks)) {
                     $mark = reset($marks);
                     if (!empty($mark->getSymbol())) {
