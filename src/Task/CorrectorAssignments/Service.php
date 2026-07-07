@@ -200,7 +200,7 @@ readonly class Service implements FullService
             $assignment->getWriterId(),
             $assignment->getCorrectorId(),
             $assignment->getPosition()->isStitch(),
-            $summary?->isAuthorized()
+            $summary?->isAuthorized() ?? false
         ));
     }
 
