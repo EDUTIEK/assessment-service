@@ -160,6 +160,7 @@ return [
     'notification_corrector_writing_changed_info' => 'Wird an einen Korrektoren gesendet, wenn die Abgabe zu seine Korrektur nachträglich geändert wurde.',
     'notification_corrector_writing_changed_subject' => 'Abgabe geändert',
     'file_cleanup_handler_success' => 'Dateien gelöscht: {deleted}',
-    'correction_prevents_remove_of_writing_authorization' => 'Der Korrekturprozess ist bereits fortgeschritten.'
-
+    'correction_prevents_remove_of_writing_authorization' => 'Der Korrekturprozess ist bereits fortgeschritten.',
+    'export_create_in_background' => 'Die Exportdatei wird im Hintergrund erstellt.',
+    'export_hash_not_single' => 'Die Prüfsummen werden mit dem Export einer Dokumentation automatisch erstellt und können nicht separat exportiert werden.',
 ];

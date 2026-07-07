@@ -8,6 +8,7 @@ use Edutiek\AssessmentService\Assessment\Data\WritingTask;
 use Edutiek\AssessmentService\Assessment\Data\ExportSettings;
 use Edutiek\AssessmentService\Assessment\Data\ExportType;
 use Edutiek\AssessmentService\Assessment\Data\ExportFile;
+use Edutiek\AssessmentService\System\Data\Result;
 
 interface FullService
 {
@@ -33,7 +34,7 @@ interface FullService
      * @param ExportType $type
      ** @return bool true, if a background task has started
      */
-    public function createFile(ExportType $type): bool;
+    public function createFile(ExportType $type): Result;
 
     /**
      * @return ExportFile[]

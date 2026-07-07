@@ -610,7 +610,8 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->fileDelivery(),
             $this->resultsExport($ass_id, $context_id, $user_id),
-            $this->logEntry($ass_id, false)
+            $this->logEntry($ass_id, false),
+            $this->language($user_id)
         );
     }
 

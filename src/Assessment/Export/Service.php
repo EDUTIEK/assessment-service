@@ -7,12 +7,8 @@ namespace Edutiek\AssessmentService\Assessment\Export;
 use Edutiek\AssessmentService\Assessment\Data\WritingTask;
 use Edutiek\AssessmentService\Assessment\BackgroundTask\FullService as BackgroundTaskService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPurpose;
-use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropertiesService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\FullService as PdfCreation;
-use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager;
 use Edutiek\AssessmentService\Assessment\LogEntry\FullService as LogEntryService;
-use Edutiek\AssessmentService\System\Data\FileInfo;
 use Edutiek\AssessmentService\System\File\Disposition;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
 use Edutiek\AssessmentService\System\File\Delivery as FileDelivery;
@@ -22,6 +18,7 @@ use Edutiek\AssessmentService\Assessment\Data\ExportSettings;
 use Edutiek\AssessmentService\Assessment\Data\ExportType;
 use Edutiek\AssessmentService\Assessment\Data\ExportFile;
 use SplFileInfo;
+use Edutiek\AssessmentService\System\Data\Result;
 
 class Service implements FullService
 {
@@ -36,7 +33,8 @@ class Service implements FullService
         private FileStorage $storage,
         private FileDelivery $delivery,
         private ResultsExport $results,
-        private LogEntryService $log
+        private LogEntryService $log,
+        private Language $language
     ) {
     }
 
@@ -122,13 +120,16 @@ class Service implements FullService
         $this->repos->exportSettings()->save($settings);
     }
 
-    public function createFile(ExportType $type): bool
+    public function createFile(ExportType $type): Result
     {
         $file_id = '';
         switch ($type) {
             case ExportType::DOCUMENTATION:
                 $this->background_tasks->createDocumentation();
-                return true;
+                return new Result(true, $this->language->txt('export_create_in_background'));
+
+            case ExportType::HASHES:
+                return new Result(false, $this->language->txt('export_hash_not_single'));
 
             case ExportType::RESULTS:
                 $file_id = $this->results->create();
@@ -146,13 +147,17 @@ class Service implements FullService
                 break;
         }
 
-        $file = $this->repos->exportFile()->new()
-                            ->setAssId($this->ass_id)
-                            ->setFileId($file_id)
-                            ->setType($type);
-        $this->repos->exportFile()->save($file);
+        if (!empty($file_id)) {
+            $file = $this->repos->exportFile()->new()
+                                ->setAssId($this->ass_id)
+                                ->setFileId($file_id)
+                                ->setType($type);
+            $this->repos->exportFile()->save($file);
 
-        return false;
+            return new Result(true);
+        }
+
+        return new Result(false);
     }
 
     public function getFiles(): array
