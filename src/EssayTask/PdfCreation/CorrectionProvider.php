@@ -177,20 +177,14 @@ readonly class CorrectionProvider implements PdfPartProvider
     }
 
     /**
+     * Render a PDF file with all comments found in the infos
      * @param CorrectorCommentInfo[] $infos
      */
-    private function renderForMarkedPdf(string $key, string $marked_pdf_id, array $infos, bool $anonymous_corrector, Options $options)
+    private function renderComments(string $key, array $infos, Options $options)
     {
-        $page_count = $this->pdf_processing->count($marked_pdf_id);
-        $start_page = $options->getStartPageNumber();
-        $start_page += $this->pdf_processing->count($marked_pdf_id);
-
-        $page_infos = [];
-        for ($parent_no = 0; $parent_no < $page_count; $parent_no++) {
-            $page_infos = array_merge($page_infos, $this->comments->filterAndLabelInfos($infos, $parent_no));
-        }
+        $page_infos = $this->comments->filterAndLabelInfos($infos, null);
         if (empty($page_infos)) {
-            return $marked_pdf_id;
+            return null;
         }
         $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/solo_comments.html', [
             'partTitle' => $this->getCorrectionTitle($key),
@@ -198,12 +192,24 @@ readonly class CorrectionProvider implements PdfPartProvider
         ]);
         $html = $this->system_processing->addCorrectionStyles($html);
 
-        $comment_pdf = $this->pdf_processing->create($html, $options->withStartPageNumber($start_page));
+        return $this->pdf_processing->create($html, $options);
+    }
 
-        $joined_id = $this->pdf_processing->join([$marked_pdf_id, $comment_pdf]);
-        $this->pdf_processing->cleanupExcept([$marked_pdf_id, $joined_id]);
+    /**
+     * @param CorrectorCommentInfo[] $infos
+     */
+    private function renderForMarkedPdf(string $key, string $marked_pdf_id, array $infos, bool $anonymous_corrector, Options $options)
+    {
+        $start_page = $options->getStartPageNumber() + $this->pdf_processing->count($marked_pdf_id);
+        $comment_pdf = $this->renderComments($key, $infos, $options->withStartPageNumber($start_page));
 
-        return $joined_id;
+        if ($comment_pdf) {
+            $joined_id = $this->pdf_processing->join([$marked_pdf_id, $comment_pdf]);
+            $this->pdf_processing->cleanup([$comment_pdf]);
+            return $joined_id;
+        }
+
+        return $marked_pdf_id;
     }
 
     /**
@@ -213,17 +219,32 @@ readonly class CorrectionProvider implements PdfPartProvider
     {
         if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
             $options = $options->withPortrait(false);
+            $data = [
+                'partTitle' => $this->getCorrectionTitle($key),
+                'partComments' => $this->html_processing->getCorrectedTextForPdf($essay, $infos)
+            ];
+
+            $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/text_comments.html', $data);
+            $html = $this->system_processing->addCorrectionStyles($html);
+
+            return $this->pdf_processing->create($html, $options);
+        } else {
+            $settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
+            $html = $this->html_processing->getWrittenTextForPdf($essay);
+
+            if ($settings->getAddCorrectionMargin()) {
+                $options = $options->withLeftMargin($options->getLeftMargin() + $settings->getLeftCorrectionMargin());
+                $options = $options->withRightMargin($options->getRightMargin() + $settings->getRightCorrectionMargin());
+            }
+
+            $text_pdf = $this->pdf_processing->create($html, $options);
+            $start_page = $options->getStartPageNumber() + $this->pdf_processing->count($text_pdf);
+            $comment_pdf = $this->renderComments($key, $infos, $options->withStartPageNumber($start_page));
+
+            $joined_id = $this->pdf_processing->join([$text_pdf, $comment_pdf]);
+            $this->pdf_processing->cleanup([$text_pdf, $comment_pdf]);
+            return $joined_id;
         }
-
-        $data = [
-            'partTitle' => $this->getCorrectionTitle($key),
-            'partComments' => $this->html_processing->getCorrectedTextForPdf($essay, $infos)
-        ];
-
-        $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/text_comments.html', $data);
-        $html = $this->system_processing->addCorrectionStyles($html);
-
-        return $this->pdf_processing->create($html, $options);
     }
 
     /**
@@ -263,7 +284,6 @@ readonly class CorrectionProvider implements PdfPartProvider
 
                 if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
                     // print image and comments beneath each other
-
                     $data['pages'][] = [
                         'partTitle' => $page_no == 1 ? $this->getCorrectionTitle($key) : '',
                         'pageBreakClass' => $page_no > 1 ? 'xlas-page-break' : '',
@@ -271,24 +291,12 @@ readonly class CorrectionProvider implements PdfPartProvider
                         'comments' => $this->html_processing->getCommentsHtml($page_infos),
                     ];
                 } else {
-                    // add comments to a separate page following the image
-
+                    // print only image
                     $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/solo_image.html', [
                         'src' => $this->temp_storage->getReadablePath($image_id),
                     ]);
-                    $pdf_ids[] = $id1 = $this->pdf_processing->create($html, $options->withStartPageNumber($start_page));
-                    $start_page += $this->pdf_processing->count($id1);
-
-                    $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/solo_comments.html', [
-                        'partTitle' => $this->getCorrectionTitle($key),
-                        'partComments' => $this->html_processing->getCommentsHtml($page_infos),
-                    ]);
-                    $html = $this->system_processing->addCorrectionStyles($html);
-
-                    if (!empty($page_infos)) {
-                        $pdf_ids[] = $id2 = $this->pdf_processing->create($html, ($options->withStartPageNumber($start_page)));
-                        $start_page += $this->pdf_processing->count($id2);
-                    }
+                    $pdf_ids[] = $id = $this->pdf_processing->create($html, $options->withStartPageNumber($start_page));
+                    $start_page += $this->pdf_processing->count($id);
                 }
             }
         }
@@ -299,6 +307,7 @@ readonly class CorrectionProvider implements PdfPartProvider
             $pdf_id = $this->pdf_processing->create($html, $options->withPortrait(false));
 
         } else {
+            $pdf_ids[] = $this->renderComments($key, $infos, $options->withStartPageNumber($start_page));
             $pdf_id = $this->pdf_processing->join($pdf_ids);
             $temp_ids = array_merge($temp_ids, $pdf_ids);
         }

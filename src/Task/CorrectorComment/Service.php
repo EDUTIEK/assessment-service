@@ -82,7 +82,12 @@ readonly class Service implements InfoService
         $sort = [];
         foreach ($infos as $info) {
             if ($parent_no === null || $info->getComment()->getParentNumber() == $parent_no) {
-                $key = sprintf('%06d', $info->getComment()->getStartPosition()) . $info->getComment()->getKey();
+                $key = sprintf(
+                    '%06d %06d %s',
+                    $info->getComment()->getParentNumber(),
+                    $info->getComment()->getStartPosition(),
+                    $info->getComment()->getKey()
+                );
                 $sort[$key] = $info;
             }
         }
@@ -95,7 +100,7 @@ readonly class Service implements InfoService
             // others are only marks in the text
             $label = '';
             if ($info->hasDetailsToShow()) {
-                $label = ($parent_no . '.' . $number++);
+                $label = ($info->getComment()->getParentNumber() . '.' . $number++);
                 $marks = CorrectionMark::multiFromArray((array) json_decode((string) $info->getComment()->getMarks()));
                 if (!empty($marks)) {
                     $mark = reset($marks);

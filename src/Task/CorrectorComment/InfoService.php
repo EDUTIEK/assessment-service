@@ -17,6 +17,7 @@ interface InfoService
 
     /**
      * @param CorrectorCommentInfo[] $infos
+     * @param ?int $parent_no  number of the parent page or paragraph, or null to not filter the infos
      * @return CorrectorCommentInfo[]
      */
     public function filterAndLabelInfos(array $infos, int $parent_no): array;
