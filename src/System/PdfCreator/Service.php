@@ -46,7 +46,7 @@ class Service implements FullService
         $pdf->loadHtml(
             sprintf(
                 '<!DOCTYPE html><html lang="de"><head>%s<meta charset="utf-8"/><style>%s</style></head><body>%s%s</body></html>',
-                $options->getTitle() ? ('<title>' . $options->getTitle() . '</title>') : ('<title>' . 'aaaa' . '</title>'),
+                $options->getTitle() ? ('<title>' . $options->getTitle() . '</title>') : '',
                 $this->css($options),
                 $header,
                 $html,
