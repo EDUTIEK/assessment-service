@@ -142,7 +142,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         $corrector = $this->correctors->oneByUserId($this->user_id);
         foreach ($positions as $position) {
             if (!empty($grading = $gradings[$position->value] ?? null)) {
-                if ($grading->isAuthorized() || $grading->getCorrectorId() === $corrector?->getId()) {
+                if ($grading->isAuthorized() || ($grading->getCorrectorId() === $corrector?->getId() && $grading->isPreGraded())) {
                     $allowed_positions[] = $position;
                 }
             }
@@ -155,13 +155,14 @@ readonly class CorrectionProvider implements PdfPartProvider
             if ($this->task_settings->getPdfMarking() === PdfMarking::IMAGES) {
                 return $this->renderFromImages($key, $essay, $infos, $anonymous_corrector, $options);
             }
-            if ($this->task_settings->getPdfMarking() === PdfMarking::TEXT) {
+            if ($this->task_settings->getPdfMarking() === PdfMarking::TEXT && !empty($allowed_positions)) {
+                $position = end($allowed_positions);
+                $grading = $gradings[$position->value];
+
                 $pdf_id = null;
                 if ($key === self::KEY_COMMENTS_ALL) {
-                    $pdf_id = $this->marked_pdfs->sumByIds($essay->getTaskId(), $essay->getWriterId());
-                } elseif (!empty($allowed_positions)) {
-                    $position = reset($allowed_positions);
-                    $grading = $gradings[$position->value];
+                    $pdf_id = $this->marked_pdfs->sumByIds($grading->getTaskId(), $grading->getWriterId(), $grading->getCorrectorId());
+                } else {
                     $pdf_id = $this->marked_pdfs->ownByIds($grading->getTaskId(), $grading->getWriterId(), $grading->getCorrectorId());
                 }
 

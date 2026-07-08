@@ -20,7 +20,6 @@ class Service implements UsageService, EventService
     public function __construct(
         private Repositories $repos,
         private ChecksService $checks,
-        private GradingProvider $gradings,
         private Storage $storage,
     ) {
         $this->repo = $this->repos->markedPdf();
@@ -33,24 +32,10 @@ class Service implements UsageService, EventService
         return $this->repo->oneByIds($task_id, $writer_id, $corrector_id)?->getOwnPdf();
     }
 
-    public function sumByIds(int $task_id, int $writer_id): ?string
+    public function sumByIds(int $task_id, int $writer_id, int $corrector_id): ?string
     {
         $this->checkScope($task_id, $writer_id);
-
-        $gradings = $this->gradings->gradingsForTaskAndWriter($task_id, $writer_id);
-        $grading = null;
-        if ($gradings[GradingPosition::STITCH->value]?->isAuthorized()) {
-            $grading = $gradings[GradingPosition::STITCH->value];
-        } elseif ($gradings[GradingPosition::SECOND->value]?->isAuthorized()) {
-            $grading = $gradings[GradingPosition::SECOND->value];
-        } elseif ($gradings[GradingPosition::FIRST->value]?->isAuthorized()) {
-            $grading = $gradings[GradingPosition::FIRST->value];
-        }
-
-        if ($grading) {
-            return $this->repo->oneByIds($grading->getTaskId(), $grading->getWriterId(), $grading->getCorrectorId())->getSumPdf();
-        }
-        return null;
+        return $this->repo->oneByIds($task_id, $writer_id, $corrector_id)?->getSumPdf();
     }
 
     public function saveOwn(string $file_id, int $task_id, int $writer_id, int $corrector_id): void

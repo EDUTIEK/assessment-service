@@ -107,16 +107,23 @@ readonly class Service implements InfoService
         ksort($sort);
 
         $result = [];
+        $current_parent = null;
         $number = 1;
         foreach ($sort as $info) {
+            $parent_no = $info->getComment()->getParentNumber();
+            if ($parent_no !== $current_parent) {
+                $current_parent = $parent_no;
+                $number = 1;
+            }
+
             // only comments with details to show should get a label
             // others are only marks in the text
             $label = '';
 
-            if (true || $info->hasDetailsToShow()) {
-                $label = ($info->getComment()->getParentNumber() . '.' . $number++);
+            if ($info->hasDetailsToShow()) {
+                $label = ($parent_no . '.' . $number++);
                 if ($info->getSymbol()) {
-                    $label = $label . '   ' . $this->getSymbolForLabel($info->getSymbol());
+                    $label = $label . ' ' . $this->getSymbolForLabel($info->getSymbol());
                 }
             }
             $result[] = $info->withLabel($label);

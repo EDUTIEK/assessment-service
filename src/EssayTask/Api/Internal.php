@@ -234,7 +234,6 @@ class Internal
         return $this->instances[MarkedPdfService::class][$ass_id][$user_id] ?? new MarkedPdfService(
             $this->dependencies->repositories(),
             $this->dependencies->taskApi($ass_id, $user_id)->checks(),
-            $this->dependencies->taskApi($ass_id, $user_id)->gradingProvider(),
             $this->dependencies->systemApi()->fileStorage(),
         );
     }

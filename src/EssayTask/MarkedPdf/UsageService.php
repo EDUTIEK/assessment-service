@@ -22,9 +22,9 @@ interface UsageService
     public function ownByIds(int $task_id, int $writer_id, int $corrector_id): ?string;
 
     /**
-     * Get the marked pdf file id with combined correction marks of all authorized corrections for a task and writer
+     * Get the marked pdf file id with combined correction marks of all corrections up to the corrector
      */
-    public function sumByIds(int $task_id, int $writer_id): ?string;
+    public function sumByIds(int $task_id, int $writer_id, int $corrector_id): ?string;
 
     /**
      * Save the file id of a pdf with own marks

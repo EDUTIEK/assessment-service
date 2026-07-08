@@ -56,6 +56,11 @@ readonly class Grading
         return $this->require_other_revision;
     }
 
+    public function isPreGraded(): bool
+    {
+        return $this->status === GradingStatus::PRE_GRADED;
+    }
+
     public function isAuthorized(): bool
     {
         return $this->status === GradingStatus::AUTHORIZED
