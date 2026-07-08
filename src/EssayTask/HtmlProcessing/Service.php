@@ -82,7 +82,7 @@ class Service implements FullService
             __DIR__ . '/xsl/comments.xsl',
             $this->writing_settings->getHeadlineScheme(),
             $essay?->getServiceVersion() ?? ServiceVersion::current(),
-            [   'add_paragraph_numbers' => (int) $this->writing_settings->getAddParagraphNumbers(),
+            [
                 'add_comments' => (int) $add_comments
             ]
         );

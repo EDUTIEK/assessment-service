@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:php="http://php.net/xsl">
     <xsl:output method="xml" version="1.0" encoding="UTF-8"/>
-    <xsl:param name="service_version" select="0"/>
-    <xsl:param name="add_paragraph_numbers" select="0"/>
+    <xsl:param name="add_comments" select="0"/>
     
     <!--  Basic rule: copy everything not specified and process the children -->
     <xsl:template match="@*|node()">
@@ -14,22 +13,34 @@
         <xsl:apply-templates select="node()" />
     </xsl:template>
 
-    <!-- put content and comments beneth each other -->
+   <!-- work through all numbered blocks -->
     <xsl:template match="div[@class='xlas-block']">
         <xsl:variable name="counter" select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::initCurrentComments', string(@data-p))" />
-        <div class="xlas-block xlas-comments-container">
-            <div class="xlas-comments-left">
-                <xsl:apply-templates select="node()" />
-            </div>
-            <div class="xlas-comments-right">
-                <xsl:for-each select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::getCurrentComments')/node()">
-                    <xsl:copy-of select="." />
-                </xsl:for-each>
-            </div>
-        </div>
+
+            <xsl:choose>
+                <!-- put marked content and comments beneth each other -->
+                <xsl:when test="$add_comments = 1">
+                    <div class="xlas-block xlas-comments-container">
+                        <div class="xlas-comments-left">
+                            <xsl:apply-templates select="node()" />
+                        </div>
+                        <div class="xlas-comments-right">
+                            <xsl:for-each select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::getCurrentComments')/node()">
+                                <xsl:copy-of select="." />
+                            </xsl:for-each>
+                        </div>
+                    </div>
+                </xsl:when>
+
+                <!-- show only marked comment-->
+                <xsl:otherwise>
+                    <xsl:apply-templates select="node()" />
+                </xsl:otherwise>
+            </xsl:choose>
+
     </xsl:template>
     
-    <!-- add the marking and label for comments -->
+    <!-- add the marking and label the the text -->
     <xsl:template match="span">
         <xsl:choose>
             <xsl:when test="@data-w">

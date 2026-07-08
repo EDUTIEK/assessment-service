@@ -217,32 +217,29 @@ readonly class CorrectionProvider implements PdfPartProvider
      */
     private function renderFromText(string $key, Essay $essay, array $infos, bool $anonymous_corrector, Options $options): ?string
     {
+        $options = $options->withPortrait($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SEQUENCE);
+        $data = [
+            'partTitle' => $this->getCorrectionTitle($key),
+            'partComments' => $this->html_processing->getCorrectedTextForPdf(
+                $essay,
+                $infos,
+                $this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE
+            )
+        ];
+
+        $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/text_comments.html', $data);
+        $html = $this->system_processing->addCorrectionStyles($html);
+
+        $marked_pdf = $this->pdf_processing->create($html, $options);
+
         if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
-            $options = $options->withPortrait(false);
-            $data = [
-                'partTitle' => $this->getCorrectionTitle($key),
-                'partComments' => $this->html_processing->getCorrectedTextForPdf($essay, $infos)
-            ];
-
-            $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/text_comments.html', $data);
-            $html = $this->system_processing->addCorrectionStyles($html);
-
-            return $this->pdf_processing->create($html, $options);
+            return $marked_pdf;
         } else {
-            $settings = $this->repos->writingSettings()->one($this->ass_id) ?? $this->repos->writingSettings()->new();
-            $html = $this->html_processing->getWrittenTextForPdf($essay);
-
-            if ($settings->getAddCorrectionMargin()) {
-                $options = $options->withLeftMargin($options->getLeftMargin() + $settings->getLeftCorrectionMargin());
-                $options = $options->withRightMargin($options->getRightMargin() + $settings->getRightCorrectionMargin());
-            }
-
-            $text_pdf = $this->pdf_processing->create($html, $options);
-            $start_page = $options->getStartPageNumber() + $this->pdf_processing->count($text_pdf);
+            $start_page = $options->getStartPageNumber() + $this->pdf_processing->count($marked_pdf);
             $comment_pdf = $this->renderComments($key, $infos, $options->withStartPageNumber($start_page));
 
-            $joined_id = $this->pdf_processing->join([$text_pdf, $comment_pdf]);
-            $this->pdf_processing->cleanup([$text_pdf, $comment_pdf]);
+            $joined_id = $this->pdf_processing->join([$marked_pdf, $comment_pdf]);
+            $this->pdf_processing->cleanup([$marked_pdf, $comment_pdf]);
             return $joined_id;
         }
     }
