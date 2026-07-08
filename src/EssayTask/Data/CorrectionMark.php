@@ -30,6 +30,12 @@ class CorrectionMark
 
     public const FILLED_SHAPES = [self::SHAPE_CIRCLE, self::SHAPE_RECTANGLE, self::SHAPE_POLYGON];
 
+    public const SYMBOL_CHECK = '✓';
+    public const SYMBOL_CROSS = '✗';
+    public const SYMBOL_QUESTION = '?';
+    public const SYMBOL_EXCLAMATION = "!";
+    public const SYMBOL_MISSING = "⌈";
+
     private string $key;
     private string $shape;
     private CorrectionMarkPoint $pos;
@@ -241,7 +247,7 @@ class CorrectionMark
     }
 
     /**
-     * Get the symbol which is shown in a circle shape
+     * Get the symbol which is shown for the mark
      */
     public function getSymbol(): string
     {

@@ -87,5 +87,10 @@ return [
     'step_second_revision' => 'Überarbeitung Zweitkorrektor',
     'step_stitch_decision' => 'Freigabe Stichentscheid',
     'snippets_export_filename' => 'Textbausteine',
-    'correction_prevents_remove_of_writing_authorization' => "Es existieren bereits freigegebene Korrekturen. Um die Freigabe der Abgabe zurückzuziehen, müssen erst die Korrektur-Freigaben zurückgenommen werden."
+    'correction_prevents_remove_of_writing_authorization' => "Es existieren bereits freigegebene Korrekturen. Um die Freigabe der Abgabe zurückzuziehen, müssen erst die Korrektur-Freigaben zurückgenommen werden.",
+    'symbol_check' => 'zutreffend',
+    'symbol_cross' => 'fehlerhaft',
+    'symbol_question' => 'unklar',
+    'symbol_exclamation' => 'heikel',
+    'symbol_missing' => 'unvollständig',
 ];

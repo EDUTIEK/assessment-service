@@ -21,4 +21,14 @@ interface InfoService
      * @return CorrectorCommentInfo[]
      */
     public function filterAndLabelInfos(array $infos, int $parent_no): array;
+
+    /**
+     * Get the Symbol that should be shown in a label
+     */
+    public function getSymbolForLabel(string $symbol): string;
+
+    /**
+     * Get the text that should be shown for a symbol
+     */
+    public function getSymbolText(string $symbol): string;
 }

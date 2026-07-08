@@ -113,12 +113,21 @@ class Service implements FullService
                 $color = $this->getTextBackgroundColor([$info]);
                 $content = '<strong style="background-color:' . $color . ';">' . $content . '</strong>';
 
+                $texts = [];
+                if ($info->getSymbol()) {
+                    $texts[] = $this->comments_service->getSymbolText($info->getSymbol());
+                }
+
                 if ($info->getRatingText()) {
-                    $content .= ' ' . $info->getRatingText();
+                    $texts[] = $info->getRatingText();
+                }
+
+                if (!empty($texts)) {
+                    $content .= ' ' . implode(',', $texts);
                 }
 
                 if (!empty($info->getComment()->getComment())) {
-                    $content .= ' ' . nl2br($this->quote($info->getComment()->getComment()), true);
+                    $content .= '<br />' . nl2br($this->quote($info->getComment()->getComment()), true);
                 }
 
                 $points = $info->getPoints();

@@ -19,6 +19,7 @@ class CorrectorCommentInfo
         private readonly CorrectorComment $comment,
         private readonly GradingPosition $position,
         private readonly float $points,
+        private readonly string $symbol,
         private readonly string $rating_text,
         private readonly string $position_text
     ) {
@@ -49,6 +50,14 @@ class CorrectorCommentInfo
     }
 
     /**
+     * Get a text for the chosen symbol
+     */
+    public function getSymbol(): string
+    {
+        return $this->symbol;
+    }
+
+    /**
      * Get the rating text that should be shown
      */
     public function getRatingText(): string
@@ -63,6 +72,7 @@ class CorrectorCommentInfo
     {
         return $this->position_text;
     }
+
 
     /**
      * Get a comment label
@@ -91,6 +101,7 @@ class CorrectorCommentInfo
     {
         return !empty($this->comment->getComment())
             || (!empty($this->getRatingText()))
+            || (!empty($this->getSymbol()))
             || (!empty($this->getPoints()));
     }
 

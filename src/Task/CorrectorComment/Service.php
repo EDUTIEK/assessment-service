@@ -55,6 +55,13 @@ readonly class Service implements InfoService
                         }
                     }
 
+                    $symbol = '';
+                    $marks = CorrectionMark::multiFromArray((array) json_decode((string) $comment->getMarks()));
+                    if (!empty($marks)) {
+                        $mark = reset($marks);
+                        $symbol = $mark->getSymbol();
+                    }
+
                     $rating_text = '';
                     if ($with_ratings && $comment->getRating() === CommentRating::EXCELLENT->value) {
                         $rating_text = $settings->getPositiveRating();
@@ -67,6 +74,7 @@ readonly class Service implements InfoService
                         $comment,
                         $assignment->getPosition(),
                         $sum_of_points,
+                        $symbol,
                         $rating_text,
                         $this->lang->txt($assignment->getPosition()->initialsLanguageVariable())
                     );
@@ -99,19 +107,52 @@ readonly class Service implements InfoService
             // only comments with details to show should get a label
             // others are only marks in the text
             $label = '';
+
             if ($info->hasDetailsToShow()) {
                 $label = ($info->getComment()->getParentNumber() . '.' . $number++);
-                $marks = CorrectionMark::multiFromArray((array) json_decode((string) $info->getComment()->getMarks()));
-                if (!empty($marks)) {
-                    $mark = reset($marks);
-                    if (!empty($mark->getSymbol())) {
-                        $label = $label . ': ' . $mark->getSymbol();
-                    }
+                if ($info->getSymbol()) {
+                    $label = $label . '   ' . $this->getSymbolForLabel($info->getSymbol());
                 }
             }
             $result[] = $info->withLabel($label);
+
         }
 
         return $result;
+    }
+
+
+    public function getSymbolForLabel(string $symbol): string
+    {
+        switch ($symbol) {
+            case CorrectionMark::SYMBOL_CHECK:
+                return '√';
+            case CorrectionMark::SYMBOL_CROSS:
+                return '×';
+            case CorrectionMark::SYMBOL_QUESTION:
+                return '?';
+            case CorrectionMark::SYMBOL_EXCLAMATION:
+                return '!';
+            case CorrectionMark::SYMBOL_MISSING:
+                return '¬';
+        }
+        return '';
+    }
+
+    public function getSymbolText(string $symbol): string
+    {
+        switch ($symbol) {
+            case CorrectionMark::SYMBOL_CHECK:
+                return $this->lang->txt('symbol_check');
+            case CorrectionMark::SYMBOL_CROSS:
+                return $this->lang->txt('symbol_cross');
+            case CorrectionMark::SYMBOL_QUESTION:
+                return $this->lang->txt('symbol_question');
+            case CorrectionMark::SYMBOL_EXCLAMATION:
+                return $this->lang->txt('symbol_exclamation');
+            case CorrectionMark::SYMBOL_MISSING:
+                return $this->lang->txt('symbol_missing');
+        }
+        return '';
     }
 }
