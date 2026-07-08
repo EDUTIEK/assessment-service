@@ -54,7 +54,7 @@ class Service implements FullService
             (string) $essay?->getWrittenText(),
             $this->writing_settings->getAddParagraphNumbers(),
             $this->writing_settings->getHeadlineScheme(),
-            $essay?->getServiceVersion() ?? ServiceVersion::CURRENT
+            $essay?->getServiceVersion() ?? ServiceVersion::current()
         );
     }
 
@@ -63,30 +63,28 @@ class Service implements FullService
         return $this->processor->getContentForPdf(
             (string) $essay?->getWrittenText(),
             $this->writing_settings->getAddParagraphNumbers(),
-            $this->writing_settings->getHeadlineScheme()
+            $this->writing_settings->getHeadlineScheme(),
+            $essay?->getServiceVersion() ?? ServiceVersion::current()
         );
     }
 
-    public function getCorrectedTextForPdf(?Essay $essay, array $infos): string
+    public function getCorrectedTextForPdf(?Essay $essay, array $infos, bool $add_comments = true): string
     {
         self::$instance = $this;
         $this->all_infos = $infos;
         $this->current_infos = [];
 
-        $html = $this->processor->getContentForMarking(
-            (string) $essay?->getWrittenText(),
-            $this->writing_settings->getAddParagraphNumbers(),
-            $this->writing_settings->getHeadlineScheme(),
-            $essay?->getServiceVersion() ?? ServiceVersion::CURRENT
-        );
+        $html = $this->getWrittenTextForCorrection($essay);
 
         $html = $this->processor->replaceCustomMarkup($html);
-
         $html = $this->processor->processXslt(
             $html,
             __DIR__ . '/xsl/comments.xsl',
-            $essay ? $essay->getServiceVersion() : ServiceVersion::CURRENT,
-            $this->writing_settings->getAddParagraphNumbers(),
+            $this->writing_settings->getHeadlineScheme(),
+            $essay?->getServiceVersion() ?? ServiceVersion::current(),
+            [   'add_paragraph_numbers' => (int) $this->writing_settings->getAddParagraphNumbers(),
+                'add_comments' => (int) $add_comments
+            ]
         );
 
         $html = $this->processor->addContentStyles(

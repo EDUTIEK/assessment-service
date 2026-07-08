@@ -27,7 +27,7 @@ interface FullService
         string $html,
         bool $add_paragraph_numbers,
         HeadlineScheme $headline_scheme,
-        int $service_version = ServiceVersion::CURRENT
+        ServiceVersion $service_version
     ): string;
 
     /**
@@ -38,7 +38,8 @@ interface FullService
     public function getContentForPdf(
         string $html,
         bool $add_paragraph_numbers,
-        HeadlineScheme $headline_scheme
+        HeadlineScheme $headline_scheme,
+        ServiceVersion $service_version
     ): string;
 
     /**
@@ -53,15 +54,15 @@ interface FullService
 
     /**
      * Get the XSLt Processor for an XSL file
-     * The process_version is a number, which can be increased with a new version of the processing
-     * This number is provided as a parameter to the XSLT processing
+     *
+     * @param array<string, mixed> $custom_parameters  will be provided for the XSL file
      */
     public function processXslt(
         string $html,
         string $xslt_file,
-        int $service_version,
-        bool $add_paragraph_numbers = false,
-        HeadlineScheme $headline_scheme = HeadlineScheme::NUMERIC
+        HeadlineScheme $headline_scheme,
+        ServiceVersion $service_version,
+        array $custom_parameters = []
     ): string;
 
     /**

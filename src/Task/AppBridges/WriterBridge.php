@@ -70,7 +70,7 @@ class WriterBridge implements AppBridge
                     (string) $task->getInstructions(),
                     false,
                     HeadlineScheme::THREE,
-                    ServiceVersion::CURRENT
+                    ServiceVersion::current()
                 ),
             ]);
         }

@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\EssayTask\Data;
 
 use DateTimeImmutable;
 use Edutiek\AssessmentService\System\Api\HasHtml;
+use Edutiek\AssessmentService\System\HtmlProcessing\ServiceVersion;
 
 abstract class Essay implements EssayTaskEntity
 {
@@ -26,8 +27,8 @@ abstract class Essay implements EssayTaskEntity
     abstract public function setPdfVersion(?string $pdf_version): self;
     abstract public function getLastChange(): ?DateTimeImmutable;
     abstract public function setLastChange(?DateTimeImmutable $last_change): self;
-    abstract public function getServiceVersion(): int;
-    abstract public function setServiceVersion(int $service_version): self;
+    abstract public function getServiceVersion(): ServiceVersion;
+    abstract public function setServiceVersion(ServiceVersion $service_version): self;
     abstract public function getFirstChange(): ?DateTimeImmutable;
     abstract public function setFirstChange(?DateTimeImmutable $first_change): self;
     abstract public function hasPdfFromWrittenText(): bool;

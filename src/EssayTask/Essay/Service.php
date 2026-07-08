@@ -92,7 +92,7 @@ readonly class Service implements ClientService, EventService
         $essay = $this->repos->essay()->new()
             ->setWriterId($writer_id)
             ->setTaskId($task_id)
-            ->setServiceVersion(ServiceVersion::CURRENT);
+            ->setServiceVersion(ServiceVersion::current());
         return $essay;
     }
 

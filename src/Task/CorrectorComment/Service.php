@@ -85,6 +85,11 @@ readonly class Service implements InfoService
         return $infos;
     }
 
+    /**
+     * @param CorrectorCommentInfo[] $infos
+     * @param ?int $parent_no  number of the parent page or paragraph, or null to not filter the infos
+     * @return CorrectorCommentInfo[]
+     */
     public function filterAndLabelInfos(array $infos, ?int $parent_no): array
     {
         $sort = [];
@@ -108,7 +113,7 @@ readonly class Service implements InfoService
             // others are only marks in the text
             $label = '';
 
-            if ($info->hasDetailsToShow()) {
+            if (true || $info->hasDetailsToShow()) {
                 $label = ($info->getComment()->getParentNumber() . '.' . $number++);
                 if ($info->getSymbol()) {
                     $label = $label . '   ' . $this->getSymbolForLabel($info->getSymbol());

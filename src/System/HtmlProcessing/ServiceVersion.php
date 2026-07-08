@@ -11,7 +11,10 @@ enum ServiceVersion: int
     /**
      * Change with every added version
      */
-    public const CURRENT = 20240052;
+    public static function current()
+    {
+        return self::V_2024_12_13;
+    }
 
     /**
      * First version of long-essay-assessment-service (initial commit date)

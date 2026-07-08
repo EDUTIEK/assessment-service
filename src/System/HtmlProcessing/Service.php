@@ -39,26 +39,36 @@ class Service implements FullService
 
     public function secureContent(string $html): string
     {
-        $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', ServiceVersion::CURRENT);
-        return $html;
-    }
-
-    public function getContentForMarking(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme, int $service_version = ServiceVersion::CURRENT): string
-    {
-        $html = $this->processXslt($html, __DIR__ . '/xsl/secure.xsl', $service_version);
         $html = $this->processXslt(
             $html,
-            __DIR__ . '/xsl/numbers.xsl',
-            $service_version,
-            $add_paragraph_numbers,
-            $headline_scheme
+            __DIR__ . '/xsl/secure.xsl',
+            HeadlineScheme::NUMERIC,
+            ServiceVersion::current()
         );
         return $html;
     }
 
-    public function getContentForPdf(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme): string
+    public function getContentForMarking(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme, ServiceVersion $service_version): string
     {
-        $html = $this->getContentForMarking($html, $add_paragraph_numbers, $headline_scheme);
+        $html = $this->processXslt(
+            $html,
+            __DIR__ . '/xsl/secure.xsl',
+            HeadlineScheme::NUMERIC,
+            $service_version
+        );
+        $html = $this->processXslt(
+            $html,
+            __DIR__ . '/xsl/numbers.xsl',
+            $headline_scheme,
+            $service_version,
+            ['add_paragraph_numbers' => (int) $add_paragraph_numbers]
+        );
+        return $html;
+    }
+
+    public function getContentForPdf(string $html, bool $add_paragraph_numbers, HeadlineScheme $headline_scheme, ServiceVersion $service_version): string
+    {
+        $html = $this->getContentForMarking($html, $add_paragraph_numbers, $headline_scheme, $service_version);
         $html = $this->removeCustomMarkup($html);
         $html = $this->addContentStyles($html, $add_paragraph_numbers, $headline_scheme);
         return $html;
@@ -112,14 +122,10 @@ class Service implements FullService
     public function processXslt(
         string $html,
         string $xslt_file,
-        int $service_version,
-        bool $add_paragraph_numbers = false,
-        HeadlineScheme $headline_scheme = HeadlineScheme::NUMERIC
+        HeadlineScheme $headline_scheme,
+        ServiceVersion $service_version,
+        array $custom_parameters = []
     ): string {
-
-        if (empty($service_version)) {
-            $service_version = ServiceVersion::CURRENT;
-        }
 
         try {
             // functions called from XSLT are static and need a static state
@@ -153,8 +159,12 @@ class Service implements FullService
             $xslt = new \XSLTProcessor();
             $xslt->registerPhpFunctions();
             $xslt->importStyleSheet($xslt_doc);
-            $xslt->setParameter('', 'service_version', $service_version);
-            $xslt->setParameter('', 'add_paragraph_numbers', (int) $add_paragraph_numbers);
+            $xslt->setParameter('', 'service_version', $service_version->value);
+
+            // Set custom parameters for the XSLT file
+            foreach ($custom_parameters as $name => $value) {
+                $xslt->setParameter('', $name, $value);
+            }
 
             // fault-tolerant HTML parsing
             // add XML encoding to properly support asian characters
