@@ -78,7 +78,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         switch ($type) {
             case self::PART_CRITERIA:
                 return $this->task_settings->getEnablePartialPoints() &&
-                    $corrector === self::CORRECTOR_1 || $this->assessment_settings->hasMultipleCorrectors();
+                    ($corrector === self::CORRECTOR_1 || $this->assessment_settings->hasMultipleCorrectors());
             case self::PART_SUMMARY:
                 return $corrector === self::CORRECTOR_1 || $this->assessment_settings->hasMultipleCorrectors();
             case self::PART_REVISION:
@@ -154,7 +154,7 @@ readonly class CorrectionProvider implements PdfPartProvider
                 case self::PART_REVISION:
                     switch ($this->assessment_settings->getProcedure()) {
                         case CorrectionProcedure::APPROXIMATION:
-                            return $this->renderApproximation($summary, $part_title, $options);
+                            return $this->renderApproximation($summary, $part_title, $is_own, $options);
                         case CorrectionProcedure::CONSULTING:
                             $assignment1 = $assignments[GradingPosition::FIRST->value] ?? null;
                             if ($assignment1 !== null) {
@@ -194,12 +194,11 @@ readonly class CorrectionProvider implements PdfPartProvider
         return $pdf;
     }
 
-    private function renderApproximation(CorrectorSummary $summary, string $title, Options $options): ?string
+    private function renderApproximation(CorrectorSummary $summary, string $title, bool $is_own, Options $options): ?string
     {
-        $own_corrector_id = $this->correctors->oneByUserId($this->user_id)?->getId();
         $writer = $this->writers->oneByWriterId($summary->getWriterId());
 
-        if ($summary->isRevised() || $writer?->isRevisionNeeded() && $summary->getCorrectorId() === $own_corrector_id) {
+        if ($summary->isRevised() || $writer?->isRevisionNeeded() && $is_own) {
 
             return $this->renderContent(
                 $title,
@@ -270,8 +269,13 @@ readonly class CorrectionProvider implements PdfPartProvider
         $sum_of_points = [];
 
         // criterion id is 0 for points without a criterion
-        foreach ($this->repos->correctorPoints()->allByTaskIdAndCorrectorId($summary->getTaskId(), $summary->getCorrectorId()) as $point) {
+        foreach ($this->repos->correctorPoints()->allByTaskIdAndWriterIdAndCorrectorId($summary->getTaskId(), $summary->getWriterId(), $summary->getCorrectorId()) as $point) {
             $sum_of_points[(int) $point->getCriterionId()] = ($sum_of_points[$point->getCriterionId()] ?? 0) + $point->getPoints();
+        }
+
+        // don't show part of partial points of no partial points are entered
+        if (array_sum($sum_of_points) == 0) {
+            return null;
         }
 
         $criteria_service = $this->criteria_services->ratingCriterion($summary->getTaskId(), $this->ass_id, $this->user_id);
