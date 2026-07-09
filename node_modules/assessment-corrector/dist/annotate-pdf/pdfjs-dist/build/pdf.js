@@ -8072,7 +8072,7 @@ class EditorToolbar {
   addEdutiekTokenButton() {
     const {_uiManager} = this.#editor;
     const buttons = [];
-    ['question-mark', 'exclamation-point', 'cross', 'check', 'missing'].forEach(addButton.bind(this));
+    ['question-mark', 'cross', 'check', 'missing'].forEach(addButton.bind(this));
     this.#editor.selectTokenButton = selectButton;
     this.#buttons.append(this.#divider);
 
@@ -9208,6 +9208,20 @@ class AnnotationEditorUIManager {
   }
   highlightSelection(methodOfCreation = "", comment = false) {
     const selection = document.getSelection();
+    // edutiek-patch: begin
+    const src = selection.direction;
+    if (this.edutiekSelectWord && 'none' !== src) {
+      const other = src === 'forward' ? 'backward' : 'forward';
+      const [a, b] = [selection.focusNode, selection.focusOffset];
+      selection.setBaseAndExtent(selection.focusNode, selection.focusOffset, selection.anchorNode, selection.anchorOffset);
+      selection.modify('extend', src, 'word');
+      selection.modify('extend', other, 'word');
+      const [c, d] = [selection.focusNode, selection.focusOffset];
+      selection.setBaseAndExtent(c, d, a, b);
+      selection.modify('extend', other, 'word');
+      selection.modify('extend', src, 'word');
+    }
+    // edutiek-patch: end
     if (!selection || selection.isCollapsed) {
       return;
     }
@@ -12419,6 +12433,18 @@ class AnnotationEditor {
       popupRef: this._initialData?.popupRef || ""
     };
   }
+  // edutiek-patch: begin
+  alphaColorOf(color) {
+    if (color.startsWith('#')) {
+      return parseInt(color.substr(7, 8) || 'FF', 16) / 0xFF;
+    } else if (color.startsWith('rgb(')) {
+      return 1.0;
+    } else if (color.startsWith('rgba(')) {
+      return color.slice(5, -1).split(',').map(x => parseFloat(x))[3];
+    }
+    return null;
+  }
+  // edutiek-patch: end
   serialize(isForCopying = false, context = null) {
     // edutiek-patch: begin
     const colorHex2Array = color => color ? [
@@ -12438,8 +12464,8 @@ class AnnotationEditor {
       pageAndMC: this.pageAndMC,
       edutiekLabel: this.edutiekLabel,
       edutiekToken: this.edutiekToken,
-      edutiekTokenColor: colorHex2Array(this.edutiekTokenColor),
       edutiekLineColor: colorHex2Array(this.edutiekLineColor),
+      edutiekLineColorAlpha: this.edutiekLineColor ? this.alphaColorOf(this.edutiekLineColor) : null,
       // edutiek-patch: end
     };
   }
@@ -28678,6 +28704,7 @@ class HighlightEditor extends AnnotationEditor {
       edutiekType: this.edutiekType,
       leftAlign: this.leftAlign,
       edutiekPageSize: this.pageDimensions,
+      edutiekColorAlpha: this.alphaColorOf(this.color),
       // edutiek-patch: end
     });
     this.addComment(serialized);

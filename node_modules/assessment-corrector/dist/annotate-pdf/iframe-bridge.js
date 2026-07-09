@@ -29,7 +29,7 @@ function setup(dispatch, ready){
     let deletedIds = []; // Used to prevent 'delete' events that are triggered manually.
     let lastDeleted = {}; // For undo to work
     let currentMode = 'marker';
-    const defaultColors = {line: null, token: null};
+    const defaultColors = {line: null};
     const selected = state(null, (oldOne, newOne) => {
         selecting = null;
         const ret = (oldOne || {}).returnPending;
@@ -79,7 +79,6 @@ function setup(dispatch, ready){
                     noDelete: newOne.noDelete,
                     pos: newOne.pos,
                     token: newOne.token,
-                    tokenColor: newOne.tokenColor,
                     lineColor: newOne.lineColor,
                 };
                 entries.push(entry);
@@ -95,18 +94,10 @@ function setup(dispatch, ready){
                         if (entry.label) {
                             entry.editor.edutiekLabel = entry.label;
                         }
-                        entry.editor.edutiekTokenColor = entry.tokenColor;
                         entry.editor.edutiekLineColor = entry.lineColor;
                         pdfAddEditorToLayerNoFocus(layer, entry.editor, () => {
-                            if(entry.label){
-                                entry.labelDiv = createLabelDiv(entry.label);
-                                editor.getHightligtDiv().parentNode.appendChild(entry.labelDiv);
-                            }
-                            if(entry.token){
-                                adjustEntryToken(entry);
-                            }
+                            adjustForType(entry);
                         });
-                        adjustEditor(editor, entry.type, entry.color);
                     });
                 });
             },
@@ -162,9 +153,6 @@ function setup(dispatch, ready){
             setDefaultLineColor: color => {
                 defaultColors.line = color;
             },
-            setDefaultTokenColor: color => {
-                defaultColors.token = color;
-            },
             buildBlob: () => {
                 const origPage = pdfCurrentPageIndex();
                 return entries.reduce((p, entry) => {
@@ -199,18 +187,7 @@ function setup(dispatch, ready){
                 const entry = entries.find(e => e.id === id);
                 sync(entry, 'setLabel', () => {
                     entry.label = label;
-                    entry.editor.edutiekLabel = entry.label;
-                    if (entry.labelDiv) {
-                        if (label) {
-                            entry.labelDiv.textContent = label;
-                        } {
-                            entry.labelDiv.remove();
-                            entry.labelDiv = null;
-                        }
-                    } else if (entry.label) {
-                        entry.labelDiv = createLabelDiv(entry.label);
-                        entry.editor.getHightligtDiv().parentNode.appendChild(entry.labelDiv);
-                    }
+                    adjustLabelDiv(entry);
                 });
             },
             setText: (id, text) => {
@@ -225,7 +202,7 @@ function setup(dispatch, ready){
                 sync(entry, 'setColor', () => {
                     entry.color = color;
                     entry.editor.updateParams(pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR, color);
-                    adjustEditor(entry.editor, entry.type, color);
+                    adjustForType(entry);
                 });
             },
             setLineColor: (id, color) => {
@@ -233,15 +210,7 @@ function setup(dispatch, ready){
                 sync(entry, 'setLineColor', () => {
                     entry.lineColor = color;
                     entry.editor.edutiekLineColor = color;
-                    adjustEditor(entry.editor, entry.type, entry.color);
-                });
-            },
-            setTokenColor: (id, color) => {
-                const entry = entries.find(e => e.id === id);
-                sync(entry, 'setTokenColor', () => {
-                    entry.tokenColor = color;
-                    entry.editor.edutiekTokenColor = color;
-                    adjustEntryToken(entry);
+                    adjustForType(entry);
                 });
             },
             setType: (id, type) => {
@@ -252,7 +221,7 @@ function setup(dispatch, ready){
                 sync(entry, 'setType', () => {
                     entry.editor.edutiekType = type;
                     entry.type = type;
-                    adjustEditor(entry.editor, entry.type, entry.color);
+                    adjustForType(entry);
                 });
             },
             setDeletable: (id, bool) => {
@@ -267,7 +236,7 @@ function setup(dispatch, ready){
                 const entry = entries.find(e => e.id === id);
                 sync(entry, 'setToken', () => {
                     entry.token = token;
-                    adjustEntryToken(entry);
+                    adjustLabelDiv(entry);
                 });
             },
             enableTokenButtons: bool => {
@@ -276,6 +245,9 @@ function setup(dispatch, ready){
             enableTypeButtons: bool => {
                 document.querySelector('#viewer').classList[bool ? 'remove' : 'add']('disable-type-buttons');
             },
+            enableWordSelection: bool => {
+                manager.edutiekSelectWord = Boolean(bool);
+            }
         };
 
         actions.viewOnly(Boolean(new URLSearchParams(window.location.search).get('viewOnly')));
@@ -340,19 +312,18 @@ function setup(dispatch, ready){
                 Promise.all(entries.filter(x => x.page === page).map(x => sync(x, 'checkCreate', Void))).then(() => {
                     if(entryByEditor(editor)){return;}
                     editor.edutiekLineColor = defaultColors.line;
-                    editor.edutiekTokenColor = defaultColors.token;
-                    adjustEditor(editor, currentMode);
                     const id = lastDeleted.internId === editor.id ? lastDeleted.id : uuid();
                     const entry = {
                         id,
                         page,
                         editor,
-                        intern: pdfSerializeEditor(editor),
+                        intern: null,
                         type: currentMode,
-                        tokenColor: defaultColors.token,
                         lineColor: defaultColors.line,
                         color: editor.color,
                     };
+                    adjustForType(entry, pdfjsLib.HighlightEditor._defaultColor);
+                    entry.intern = pdfSerializeEditor(editor);
                     const extern = externEntry(entry);
                     entries.push(entry);
                     dispatch('create', extern);
@@ -423,56 +394,82 @@ function updateDeletable(entry)
     entry.editor._editToolbar.div.classList[entry.noDelete ? 'add' : 'remove']('annotate-pdf-hide');
 }
 
-function createLabelDiv(label)
+function createLabelDiv()
 {
     const d = document.createElement('div');
     d.classList.add('annotation-label');
-    d.textContent = label;
+    const c = document.createElement('span');
+    c.classList.add('label-content');
+    d.appendChild(c);
+    const t = document.createElement('div');
+    d.appendChild(t);
     return d;
 }
 
-function adjustEditor(editor, mode, color)
+function adjustForType(entry, color)
 {
-    editor.edutiekType = mode;
-    if (!editor.edutiekOriginalSvgData) {
-        const svg = editor.getSvgNode();
-        const path = editor.getPathNode();
-        editor.edutiekOriginalSvgData = {
+    color = color || entry.color;
+    entry.editor.edutiekType = entry.type;
+    if (!entry.editor.edutiekOriginalSvgData) {
+        const svg = entry.editor.getSvgNode();
+        const path = entry.editor.getPathNode();
+        entry.editor.edutiekOriginalSvgData = {
             d: path.getAttribute('d'),
             left: parseFloat(svg.style.left),
             width: parseFloat(svg.style.width),
             height: parseFloat(svg.style.height),
         }
-        const orig = editor.onceAdded;
-        editor.onceAdded = focus => {
-            changeSvg(editor, editor.edutiekType, editor.color);
-            return orig.call(editor, focus);
+        const orig = entry.editor.onceAdded;
+        entry.editor.onceAdded = focus => {
+            changeSvg(entry.editor, entry.editor.edutiekType, color);
+            return orig.call(entry.editor, focus);
         }
     }
-    changeSvg(editor, mode, color);
-    updateButtons(editor, mode);
+    changeSvg(entry.editor, entry.type, color);
+    updateButtons(entry.editor, entry.type);
+
+    adjustLabelDiv(entry);
 }
 
-function adjustEntryToken(entry)
+function adjustLabelDiv(entry)
 {
     entry.editor.selectTokenButton && entry.editor.selectTokenButton(entry.token);
     entry.editor.edutiekToken = entry.token;
-    if (!entry.tokenDiv) {
-        if (!entry.token) {
-            return;
-        }
-        entry.tokenDiv = document.createElement('div');
-        entry.editor.getHightligtDiv().parentNode.appendChild(entry.tokenDiv);
-    } else if (!entry.token) {
-        entry.tokenDiv.remove();
-        entry.tokenDiv = null;
+
+    entry.editor.edutiekLabel = entry.label;
+    if (!entry.label && !entry.token) {
+        entry.labelDiv && entry.labelDiv.remove();
+        entry.labelDiv = null;
         return;
     }
-    entry.tokenDiv.className = 'annotation-token annotation-token-' + entry.token;
-    entry.tokenDiv.style.backgroundColor = entry.tokenColor || entry.editor.color;
-    requestAnimationFrame(() => {
-        entry.tokenDiv.style.left = (entry.editor.getVerticalEdges()[1][0] * entry.editor.getHightligtDiv().getBoundingClientRect().width) + 'px';
-    });
+    if (!entry.labelDiv) {
+        entry.labelDiv = createLabelDiv();
+        entry.editor.getHightligtDiv().parentNode.appendChild(entry.labelDiv);
+    }
+    const e = entry.editor.getVerticalEdges();
+    if (entry.editor.leftAlign && entry.type === 'vline') {
+        window.requestAnimationFrame(() => {
+            const r = entry.labelDiv.closest('.page').getBoundingClientRect();
+            const hr = entry.editor.getHightligtDiv().getBoundingClientRect();
+            const x = r.x;
+            const w = r.width;
+            const xc = hr.x;
+            entry.labelDiv.style.left = (((x + (w * (entry.editor.leftAlign / 100)) - xc) / hr.width) * 100) + '%';
+        });
+    } else {
+        entry.labelDiv.style.left = '';
+        window.requestAnimationFrame(() => {
+            const r = entry.labelDiv.closest('.page').getBoundingClientRect();
+            entry.labelDiv.style.left = (e[0][0] * r.width / 10) + '%';
+        });
+    }
+    if (entry.token) {
+        entry.labelDiv.lastChild.className = 'annotation-token annotation-token-' + entry.token;
+    } else {
+        entry.labelDiv.lastChild.className = '';
+    }
+    entry.labelDiv.children[0].textContent = entry.label || '';
+    entry.labelDiv.children[0].classList[entry.label ? 'add' : 'remove']('label-content');
 }
 
 function updateButtons(editor, mode)
@@ -498,7 +495,6 @@ function changeSvg(editor, mode, color)
 
     resetSvg(editor);
 
-    color = color || pdfjsLib.HighlightEditor._defaultColor;
     switch(mode){
     case 'marker':    return; // Do nothing, done by resetSvg.
     case 'underline': return changeSvgToUnderline(editor, color);
@@ -650,7 +646,6 @@ function externEntry(entry)
         type: entry.type,
         noDelete: Boolean(entry.noDelete),
         token: entry.token,
-        tokenColor: entry.tokenColor,
         lineColor: entry.lineColor,
     };
 }
