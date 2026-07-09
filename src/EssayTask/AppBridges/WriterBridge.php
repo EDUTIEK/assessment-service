@@ -21,6 +21,7 @@ use Edutiek\AssessmentService\Task\Data\WriterAnnotation;
 use Edutiek\AssessmentService\Task\Manager\ReadService as TasksService;
 use ILIAS\Plugin\LongEssayAssessment\Assessment\Data\Writer;
 use Edutiek\AssessmentService\System\Data\FileInfo;
+use Edutiek\AssessmentService\System\HtmlProcessing\ServiceVersion;
 
 class WriterBridge implements AppBridge
 {
@@ -35,7 +36,6 @@ class WriterBridge implements AppBridge
     public function __construct(
         private int $ass_id,
         private int $user_id,
-        private int $service_version,
         private Repositories $repos,
         private EntityService $entity,
         private WriterReadService $writer_service,
@@ -269,7 +269,7 @@ class WriterBridge implements AppBridge
             $essay
             ->setWrittenText($currentText)
             ->setRawTextHash((string) $currentHash)
-            ->setServiceVersion($this->service_version)
+            ->setServiceVersion(ServiceVersion::current())
             ->setLastChange($step->getTimestamp())
         );
 

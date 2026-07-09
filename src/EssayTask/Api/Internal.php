@@ -39,16 +39,6 @@ class Internal
     ) {
     }
 
-    /**
-     * Get the current service version
-     * This is saved for written essays and relevant for their correction comments
-     * By convention the version number is a coded date of the last relevant service change
-     */
-    public function serviceVersion(): int
-    {
-        return 20240603;
-    }
-
     public function assessmentStatus(int $ass_id, int $user_id): StatusService
     {
         return $this->instances[StatusService::class][$ass_id][$user_id] = new StatusService(
@@ -274,7 +264,6 @@ class Internal
         return $this->instances[WriterBridgeService::class][$ass_id][$user_id] ??= new WriterBridgeService(
             $ass_id,
             $user_id,
-            $this->serviceVersion(),
             $this->dependencies->repositories(),
             $this->dependencies->systemApi()->entity(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
