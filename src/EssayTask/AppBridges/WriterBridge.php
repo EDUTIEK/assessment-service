@@ -159,7 +159,7 @@ class WriterBridge implements AppBridge
 
             $this->entity->fromPrimitives([
                 'written_text' => $data['content'] ?? null,
-                'service_version' => $this->service_version,
+                'service_version' => ServiceVersion::current()->value,
                 'last_change' => $data['last_change'] ?? null,
             ], $essay, Essay::class);
             $this->entity->secure($essay, Essay::class);
