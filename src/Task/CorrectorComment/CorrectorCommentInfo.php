@@ -84,7 +84,7 @@ class CorrectorCommentInfo
 
     /**
      * Set a comment label
-     * The label is built when all comemnts to be shown for a parent are known
+     * The label is built when all comments to be shown for a parent are known
      */
     public function withLabel(string $label): static
     {

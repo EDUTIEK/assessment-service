@@ -146,7 +146,7 @@ readonly class Service implements InfoService
             case CorrectionMark::SYMBOL_EXCLAMATION:
                 return '!';
             case CorrectionMark::SYMBOL_MISSING:
-                return '¬';
+                return '∀';
         }
         return '';
     }

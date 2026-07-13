@@ -98,6 +98,9 @@ class Service implements FullService
         return $html;
     }
 
+    /**
+     * @param CorrectorCommentInfo[] $infos
+     */
     public function getCommentsHtml(array $infos): string
     {
         $html = '';
@@ -111,28 +114,19 @@ class Service implements FullService
                 $color = $this->getTextBackgroundColor([$info]);
                 $content = '<strong style="background-color:' . $color . ';">' . $content . '</strong>';
 
-                $texts = [];
-                if ($info->getSymbol()) {
-                    $texts[] = $this->comments_service->getSymbolText($info->getSymbol());
-                }
-
                 if ($info->getRatingText()) {
-                    $texts[] = $info->getRatingText();
-                }
-
-                if (!empty($texts)) {
-                    $content .= ' ' . implode(',', $texts);
+                    $content .= ' <em>(' . $info->getRatingText() . ')</em>';
                 }
 
                 if (!empty($info->getComment()->getComment())) {
-                    $content .= '<br />' . nl2br($this->quote($info->getComment()->getComment()), true);
+                    $content .= ' ' . nl2br($this->quote($info->getComment()->getComment()), true);
                 }
 
                 $points = $info->getPoints();
                 if ($points == 1) {
-                    $content .= '<br />(' . $this->lang->txt('1_point') . ')';
+                    $content .= ' (' . $this->lang->txt('1_point') . ')';
                 } elseif ($points != 0) {
-                    $content .= '<br />(' . sprintf($this->lang->txt('x_points'), $points) . ')';
+                    $content .= ' <em>(' . sprintf($this->lang->txt('x_points'), $points) . ')</em>';
                 }
 
                 $content = '<p>' . $content . '</p>';

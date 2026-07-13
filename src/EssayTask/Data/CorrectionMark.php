@@ -34,7 +34,7 @@ class CorrectionMark
     public const SYMBOL_CROSS = '✗';
     public const SYMBOL_QUESTION = '?';
     public const SYMBOL_EXCLAMATION = "!";
-    public const SYMBOL_MISSING = "⌈";
+    public const SYMBOL_MISSING = "∀";
 
     private string $key;
     private string $shape;
