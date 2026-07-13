@@ -7596,7 +7596,9 @@ function getXfaPageViewport(xfaPage, {
 }
 function getRGB(color) {
   if (color.startsWith("#")) {
-    const colorRGB = parseInt(color.slice(1), 16);
+    // edutiek-patch: begin
+    const colorRGB = parseInt(color.slice(1, 7), 16);
+    // edutiek-patch: end
     return [(colorRGB & 0xff0000) >> 16, (colorRGB & 0x00ff00) >> 8, colorRGB & 0x0000ff];
   }
   if (color.startsWith("rgb(")) {
