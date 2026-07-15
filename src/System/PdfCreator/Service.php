@@ -45,7 +45,7 @@ class Service implements FullService
         $header = $options->getPrintHeader() ? ('<header> ' . $options->getTitle() . '</header>') : '';
         $pdf->loadHtml(
             sprintf(
-                '<!DOCTYPE html><html lang="de"><head>%s<meta charset="utf-8"/><style>%s</style></head><body>%s%s</body></html>',
+                '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"/>%s<style>%s</style></head><body>%s%s</body></html>',
                 $options->getTitle() ? ('<title>' . $options->getTitle() . '</title>') : '',
                 $this->css($options),
                 $header,
