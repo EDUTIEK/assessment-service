@@ -32,9 +32,9 @@
 .annotation-label
 {
     font-family: sans-serif;
-    color: white;
+    color: black;
     position: absolute;
-    font-size: 5%;
+    font-size: 7%;
     top: 0;
     left: 0;
     transform: translate(0, calc(1px - 100%));
@@ -44,13 +44,14 @@
 
 .annotation-label .label-content
 {
-    background-color: #606060;
+    background-color: lightgray;
+    padding: 1px;
 }
 
 .selectedEditor .annotation-label .label-content
 {
-    background-color: lightgray;
-    color: black;
+    background-color: #606060;
+    color: white;
 }
 
 .edutiek-button
@@ -63,16 +64,16 @@
 
 .annotation-token
 {
-    background-color: #606060;
+    background-color: lightgray;
     width: 1.5em;
-    height: 1.2em;
+    height: 1.5em;
     display: inline-block;
     position: relative;
 }
 
 .selectedEditor .annotation-token
 {
-    background-color: lightgray;
+    background-color: #606060;
 }
 
 .label-content + .annotation-token
@@ -82,11 +83,11 @@
 
 .annotation-token::before
 {
-    background-color: white;
-    mask-size: 300%;
+    background-color: black;
+    mask-size: 240%;
     mask-position: center;
-    width: 1em;
-    height: 1em;
+    width: 1.2em;
+    height: 1.5em;
     content: '';
     display: inline-block;
     position: absolute;
@@ -96,7 +97,7 @@
 
 .selectedEditor .annotation-token::before
 {
-    background-color: black;
+    background-color: white;
 }
 
 .edutiek-button-wave::before
@@ -123,6 +124,11 @@
 .annotation-token-question-mark::before
 {
     mask-image: url(question-mark.svg);
+}
+
+.annotation-token-question-mark::before
+{
+    mask-size: 240%;
 }
 
 .edutiek-button-exclamation-point::before,
@@ -164,4 +170,9 @@
 #viewer .textLayer.highlighting:not(.free) span
 {
     cursor: text;
+}
+
+#viewer .editToolbar.edutiek-move-toolbar
+{
+    left: 0;
 }

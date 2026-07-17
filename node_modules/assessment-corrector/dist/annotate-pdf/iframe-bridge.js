@@ -58,7 +58,7 @@ function setup(dispatch, ready){
 
         const actions = {
             getAll: () => entries.map(externEntry),
-            get: id => externEntry(entries.find(e => e.id === id)),
+            get: id => externEntry(entryById(id)),
             setAll: newOnes => {
                 entries.forEach(x => deleteEntry(x)); // Don't pass index as enableUndo
                 entries = [];
@@ -80,6 +80,7 @@ function setup(dispatch, ready){
                     pos: newOne.pos,
                     token: newOne.token,
                     lineColor: newOne.lineColor,
+                    altLabel: newOne.altLabel,
                 };
                 entries.push(entry);
                 sync(entry, 'create', layer => {
@@ -131,6 +132,17 @@ function setup(dispatch, ready){
                     }else{
                         manager.setSelected(entry.editor);
                     }
+                    window.requestAnimationFrame(() => {
+                        if (!entry.editor) {
+                            return;
+                        }
+                        if (entry.editor.getHightligtDiv().getBoundingClientRect().top >= window.innerHeight) {
+                            entry.editor.getHightligtDiv().scrollIntoView({
+                                block: 'center',
+                                behaviour: 'instant',
+                            });
+                        }
+                    });
                     updateDeletable(entry);
                 });
                 if(entry.page !== pdfCurrentPageIndex()){
@@ -184,59 +196,66 @@ function setup(dispatch, ready){
                 }
             }),
             setLabel: (id, label) => {
-                const entry = entries.find(e => e.id === id);
+                const entry = entryById(id)
                 sync(entry, 'setLabel', () => {
                     entry.label = label;
                     adjustLabelDiv(entry);
+                    entry.intern = pdfSerializeEditor(entry.editor);
                 });
             },
             setText: (id, text) => {
-                const entry = entries.find(e => e.id === id);
+                const entry = entryById(id);
                 sync(entry, 'setText', () => {
                     entry.text = text;
                     entry.editor.contents = text;
+                    entry.intern = pdfSerializeEditor(entry.editor);
                 });
             },
             setColor: (id, color) => {
-                const entry = entries.find(e => e.id === id);
+                const entry = entryById(id);
                 sync(entry, 'setColor', () => {
                     entry.color = color;
                     entry.editor.updateParams(pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR, color);
                     adjustForType(entry);
+                    entry.intern = pdfSerializeEditor(entry.editor);
                 });
             },
             setLineColor: (id, color) => {
-                const entry = entries.find(e => e.id === id);
+                const entry = entryById(id);
                 sync(entry, 'setLineColor', () => {
                     entry.lineColor = color;
                     entry.editor.edutiekLineColor = color;
                     adjustForType(entry);
+                    entry.intern = pdfSerializeEditor(entry.editor);
                 });
             },
             setType: (id, type) => {
                 if (!validDrawTypes().includes(type)) {
                     throw new Error('Invalid draw type: ' + type);
                 }
-                const entry = entries.find(e => e.id === id);
+                const entry = entryById(id);
                 sync(entry, 'setType', () => {
                     entry.editor.edutiekType = type;
                     entry.type = type;
                     adjustForType(entry);
+                    entry.intern = pdfSerializeEditor(entry.editor);
                 });
             },
             setDeletable: (id, bool) => {
-                const entry = entries.find(e => e.id === id);
+                const entry = entryById(id);
                 entry.noDelete = !bool;
                 updateDeletable(entry);
+                entry.intern = pdfSerializeEditor(entry.editor);
             },
             setToken: (id, token) => {
                 if (!validTokenTypes().includes(token) && token !== null) {
                     throw new Error('Invalid token type: ' + token);
                 }
-                const entry = entries.find(e => e.id === id);
+                const entry = entryById(id);
                 sync(entry, 'setToken', () => {
                     entry.token = token;
                     adjustLabelDiv(entry);
+                    entry.intern = pdfSerializeEditor(entry.editor);
                 });
             },
             enableTokenButtons: bool => {
@@ -247,7 +266,15 @@ function setup(dispatch, ready){
             },
             enableWordSelection: bool => {
                 manager.edutiekSelectWord = Boolean(bool);
-            }
+            },
+            setAltLabel: (id, string) => {
+                const entry = entryById(id);
+                entry.altLabel = string ? String(string) : null;
+                sync(entry, 'setAltLabel', () => {
+                    entry.editor.edutiekAltLabel = entry.altLabel;
+                    entry.intern = pdfSerializeEditor(entry.editor);
+                });
+            },
         };
 
         actions.viewOnly(Boolean(new URLSearchParams(window.location.search).get('viewOnly')));
@@ -333,10 +360,8 @@ function setup(dispatch, ready){
                 return null;
             }else if(s !== JSON.stringify(entry.intern)){
                 // These are null -> NaN and rounding issues that don't need to be propagated.
-                const ignore = arrayEquals(
-                    ['outlines', 'rect'],
-                    Object.keys((diff(newData, entry.intern) || {}).Object || {})
-                );
+                const d = Object.keys((diff(newData, entry.intern) || {}).Object || {});
+                const ignore = isSubset(['outlines', 'rect', 'structTreeParentId'], d);
                 entry.intern = newData;
                 if(!ignore){
                     dispatch('update', externEntry(entry));
@@ -372,7 +397,14 @@ function setup(dispatch, ready){
 
         function entryById(id)
         {
-            return entries.find(x => x.id === id);
+            if (typeof id !== 'string') {
+                throw new Error('Entry id must be a string, ' + typeof id + ' given');
+            }
+            const e = entries.find(x => x.id === id);
+            if (!e) {
+                throw new Error('Could not find entry with id: ' + JSON.stringify(id));
+            }
+            return e;
         }
     });
 }
@@ -448,7 +480,7 @@ function adjustLabelDiv(entry)
     }
     const e = entry.editor.getVerticalEdges();
     if (entry.editor.leftAlign && entry.type === 'vline') {
-        window.requestAnimationFrame(() => {
+        animationFrameWihLabel(() => {
             const r = entry.labelDiv.closest('.page').getBoundingClientRect();
             const hr = entry.editor.getHightligtDiv().getBoundingClientRect();
             const x = r.x;
@@ -458,7 +490,7 @@ function adjustLabelDiv(entry)
         });
     } else {
         entry.labelDiv.style.left = '';
-        window.requestAnimationFrame(() => {
+        animationFrameWihLabel(() => {
             const r = entry.labelDiv.closest('.page').getBoundingClientRect();
             entry.labelDiv.style.left = (e[0][0] * r.width / 10) + '%';
         });
@@ -647,7 +679,18 @@ function externEntry(entry)
         noDelete: Boolean(entry.noDelete),
         token: entry.token,
         lineColor: entry.lineColor,
+        altLabel: entry.altLabel,
     };
+}
+
+function animationFrameWihLabel(entry, proc)
+{
+    window.requestAnimationFrame(() => {
+        if (!entry.labelDiv) { // If deleted or label removed in the meanwhile.
+            return;
+        }
+        proc();
+    });
 }
 
 function uuid()
@@ -943,9 +986,9 @@ function switchPageWhenReady()
     };
 }
 
-function arrayEquals(left, right)
+function isSubset(set, smallerSet)
 {
-    return diff(left, right) === null;
+    return 'undefined' === typeof smallerSet.find(x => !set.includes(x));
 }
 
 function diff(left, right)

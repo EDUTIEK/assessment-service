@@ -11887,7 +11887,15 @@ class AnnotationEditor {
       return this._editToolbar;
     }
     this._editToolbar = new EditorToolbar(this);
-    this.div.append(this._editToolbar.render());
+    // edutiek-patch: begin
+    const toolbarNode = this._editToolbar.render();
+    this.div.append(toolbarNode);
+    window.requestAnimationFrame(() => {
+      if (toolbarNode.getBoundingClientRect().left <= 0) {
+        toolbarNode.classList.add('edutiek-move-toolbar');
+      }
+    });
+    // edutiek-patch: end
     const {
       toolbarButtons
     } = this;
