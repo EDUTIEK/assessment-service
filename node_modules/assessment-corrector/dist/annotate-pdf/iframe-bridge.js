@@ -54,6 +54,12 @@ function setup(dispatch, ready){
             const entry = entryByEditor(x.source);
             actions.setToken(entry.id, x.type === entry.token ? null : x.type);
             dispatch('update', externEntry(entry));
+        });
+        pdfOn('edutiek-editor-focus-end', event => {
+            const entry = entryByEditor(event.source);
+            if (entry) {
+                dispatch('focus-end', externEntry(entry));
+            }
         })
 
         const actions = {
@@ -80,7 +86,7 @@ function setup(dispatch, ready){
                     pos: newOne.pos,
                     token: newOne.token,
                     lineColor: newOne.lineColor,
-                    altLabel: newOne.altLabel,
+                    altText: newOne.altText,
                 };
                 entries.push(entry);
                 sync(entry, 'create', layer => {
@@ -94,6 +100,9 @@ function setup(dispatch, ready){
                         }
                         if (entry.label) {
                             entry.editor.edutiekLabel = entry.label;
+                        }
+                        if (entry.altText) {
+                            entry.editor.edutiekAltText = entry.altText;
                         }
                         entry.editor.edutiekLineColor = entry.lineColor;
                         pdfAddEditorToLayerNoFocus(layer, entry.editor, () => {
@@ -136,7 +145,8 @@ function setup(dispatch, ready){
                         if (!entry.editor) {
                             return;
                         }
-                        if (entry.editor.getHightligtDiv().getBoundingClientRect().top >= window.innerHeight) {
+                        const rect = entry.editor.getHightligtDiv().getBoundingClientRect();
+                        if (rect.top - rect.height < 0 || rect.top >= window.innerHeight) {
                             entry.editor.getHightligtDiv().scrollIntoView({
                                 block: 'center',
                                 behaviour: 'instant',
@@ -267,11 +277,11 @@ function setup(dispatch, ready){
             enableWordSelection: bool => {
                 manager.edutiekSelectWord = Boolean(bool);
             },
-            setAltLabel: (id, string) => {
+            setAltText: (id, string) => {
                 const entry = entryById(id);
-                entry.altLabel = string ? String(string) : null;
-                sync(entry, 'setAltLabel', () => {
-                    entry.editor.edutiekAltLabel = entry.altLabel;
+                entry.altText = string ? String(string) : null;
+                sync(entry, 'setAltText', () => {
+                    entry.editor.edutiekAltText = entry.altText;
                     entry.intern = pdfSerializeEditor(entry.editor);
                 });
             },
@@ -309,8 +319,9 @@ function setup(dispatch, ready){
 
         function checkForChanges(){
             const page = pdfCurrentPageIndex();
-            const usedIds = Array.from(manager.getEditors(page)).map(createOrUpdateEntry.bind(null, page));
-            const isUsed = x => x.page !== page || usedIds.includes(x.id) || (x.pending || []).length || updating === x.id;
+            const pages = [page - 1, page, page + 1];
+            const usedIds = [].concat(...pages.map(createOrUpdateEntriesOfPage));
+            const isUsed = x => !pages.includes(x.page) || usedIds.includes(x.id) || (x.pending || []).length || updating === x.id;
             const deleted = entries.filter(x => !isUsed(x));
             entries = entries.filter(isUsed);
             updating = null;
@@ -322,6 +333,11 @@ function setup(dispatch, ready){
             });
             deletedIds = deletedIds.filter(id => !deleted.find(x => x.id === id));
             updateSelection();
+        }
+
+        function createOrUpdateEntriesOfPage(page)
+        {
+            return Array.from(manager.getEditors(page)).map(createOrUpdateEntry.bind(null, page));
         }
 
         function pageChanging(){
@@ -361,7 +377,7 @@ function setup(dispatch, ready){
             }else if(s !== JSON.stringify(entry.intern)){
                 // These are null -> NaN and rounding issues that don't need to be propagated.
                 const d = Object.keys((diff(newData, entry.intern) || {}).Object || {});
-                const ignore = isSubset(['outlines', 'rect', 'structTreeParentId'], d);
+                const ignore = isSubset(['outlines', 'rect', 'structTreeParentId', 'edutiekAltText'], d);
                 entry.intern = newData;
                 if(!ignore){
                     dispatch('update', externEntry(entry));
@@ -480,7 +496,7 @@ function adjustLabelDiv(entry)
     }
     const e = entry.editor.getVerticalEdges();
     if (entry.editor.leftAlign && entry.type === 'vline') {
-        animationFrameWihLabel(() => {
+        animationFrameWihLabel(entry, () => {
             const r = entry.labelDiv.closest('.page').getBoundingClientRect();
             const hr = entry.editor.getHightligtDiv().getBoundingClientRect();
             const x = r.x;
@@ -490,7 +506,7 @@ function adjustLabelDiv(entry)
         });
     } else {
         entry.labelDiv.style.left = '';
-        animationFrameWihLabel(() => {
+        animationFrameWihLabel(entry, () => {
             const r = entry.labelDiv.closest('.page').getBoundingClientRect();
             entry.labelDiv.style.left = (e[0][0] * r.width / 10) + '%';
         });
@@ -679,7 +695,7 @@ function externEntry(entry)
         noDelete: Boolean(entry.noDelete),
         token: entry.token,
         lineColor: entry.lineColor,
-        altLabel: entry.altLabel,
+        altText: entry.altText,
     };
 }
 

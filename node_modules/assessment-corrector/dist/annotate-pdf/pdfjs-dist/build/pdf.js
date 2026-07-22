@@ -12476,6 +12476,7 @@ class AnnotationEditor {
       edutiekToken: this.edutiekToken,
       edutiekLineColor: colorHex2Array(this.edutiekLineColor),
       edutiekLineColorAlpha: this.edutiekLineColor ? this.alphaColorOf(this.edutiekLineColor) : null,
+      edutiekAltText: this.edutiekAltText,
       // edutiek-patch: end
     };
   }
@@ -32454,6 +32455,9 @@ class AnnotationEditorLayer {
         } else {
           editor._focusEventsAllowed = true;
         }
+        // edutiek-patch: begin
+        this.#uiManager._eventBus.dispatch('edutiek-editor-focus-end', {source: editor});
+        // edutiek-patch: end
       }, 0);
     }
     editor._structTreeParentId = this.#accessibilityManager?.moveElementInDOM(this.div, editor.div, editor.contentDiv, true);

@@ -59932,12 +59932,12 @@ class HighlightAnnotation extends MarkupAnnotation {
       return {width, height};
     };
     let offsetX = 0;
-    const HEIGHT = 11;
+    const HEIGHT = 8.5;
     const SHIFT = HEIGHT / 3;
     const RECT_HEIGHT = HEIGHT - 2;
     if (annotation.edutiekLabel) {
-      const f = await getFont(8.0);
-      const {width, height} = calcTextSize(annotation.edutiekLabel, 8.0, f);
+      const f = await getFont(6.0);
+      const {width, height} = calcTextSize(annotation.edutiekLabel, 6.0, f);
       const shift = height / 3;
       rect[0] -= width;
       rect[3] = Math.max(rectBaseYTop + height, rect[3]);
@@ -59947,64 +59947,65 @@ class HighlightAnnotation extends MarkupAnnotation {
       appearanceBuffer.push(`${getPdfColor([0x60, 0x60, 0x60], true)}`);
       drawRect(leftPosOverwrite || outlines[0][0], outlines[0][3], width + 2, RECT_HEIGHT);
       appearanceBuffer.push(`${getPdfColor([0xFF, 0xFF, 0xFF], true)}`);
-      appearanceBuffer.push(`BT ${numberToString((leftPosOverwrite || outlines[0][0]) + 1)} ${numberToString(outlines[0][3] + 2)} Td /F1 8.0 Tf [(${f.encodeString(annotation.edutiekLabel).map(escapeString).join('')})] TJ ET`);
+      appearanceBuffer.push(`BT ${numberToString((leftPosOverwrite || outlines[0][0]) + 1)} ${numberToString(outlines[0][3] + 1)} Td /F1 6.0 Tf [(${f.encodeString(annotation.edutiekLabel).map(escapeString).join('')})] TJ ET`);
     }
     let f, fontSize, basePos;
     switch (annotation.edutiekToken) {
     case 'cross':
-      basePos = {x: outlines[0][0] + offsetX + 2, y: outlines[0][3] + 6.5};
+      basePos = {x: (leftPosOverwrite || outlines[0][0]) + offsetX + 1.6, y: outlines[0][3] + 4.5};
       appearanceBuffer.push('/DeviceRGB cs');
       appearanceBuffer.push('/R1 gs');
       appearanceBuffer.push(`${getPdfColor([0x60, 0x60, 0x60], true)}`);
       appearanceBuffer.push(`${getPdfColor([0xFF, 0xFF, 0xFF])}`);
       appearanceBuffer.push('0.5 w');
-      drawRect(outlines[0][0] + offsetX, outlines[0][3], 10, RECT_HEIGHT);
-      drawPath([{x: 0, y: 1}, {x: 6, y: -5}], basePos);
-      drawPath([{x: 6, y: 1}, {x: 0, y: -5}], basePos);
+      drawRect((leftPosOverwrite || outlines[0][0]) + offsetX, outlines[0][3], 7.5, RECT_HEIGHT);
+      drawPath([{x: 0, y: 1}, {x: 6, y: -5}].map(scale(0.7)), basePos);
+      drawPath([{x: 6, y: 1}, {x: 0, y: -5}].map(scale(0.7)), basePos);
       rect[0] -= 20;
       rect[3] = Math.max(rectBaseYTop + 10, rect[3]);
       break;
     case 'check':
-      basePos = {x: (leftPosOverwrite || outlines[0][0]) + offsetX, y: outlines[0][3] + 6};
+      basePos = {x: (leftPosOverwrite || outlines[0][0]) + offsetX, y: outlines[0][3] + 4};
       appearanceBuffer.push('/DeviceRGB cs');
       appearanceBuffer.push('/R1 gs');
       appearanceBuffer.push(`${getPdfColor([0x60, 0x60, 0x60], true)}`);
       appearanceBuffer.push(`${getPdfColor([0xFF, 0xFF, 0xFF])}`);
       appearanceBuffer.push('0.5 w');
-      drawRect((leftPosOverwrite || outlines[0][0]) + offsetX, outlines[0][3], 11, RECT_HEIGHT);
-      drawPath([{x: 12, y: 2}, {x: 5, y: -5}, {x: 2, y: -2}].map(scale(0.8)), basePos);
+      drawRect((leftPosOverwrite || outlines[0][0]) + offsetX, outlines[0][3], 8.5, RECT_HEIGHT);
+      drawPath([{x: 12, y: 2}, {x: 5, y: -5}, {x: 2, y: -2}].map(scale(0.6)), basePos);
       rect[0] -= 20;
       rect[3] = Math.max(rectBaseYTop + 10, rect[3]);
       break;
     case 'question-mark':
-      f = await getFont(8.0);
-      fontSize = calcTextSize('?', 8.0, f);
+      basePos = {x: (leftPosOverwrite || outlines[0][0]) + offsetX + 1.3, y: outlines[0][3] + 1};
+      f = await getFont(6.0);
+      fontSize = calcTextSize('?', 6.0, f);
       appearanceBuffer.push('/DeviceRGB cs');
       appearanceBuffer.push('/R1 gs');
       appearanceBuffer.push(`${getPdfColor([0x60, 0x60, 0x60], true)}`);
-      drawRect(outlines[0][0] + offsetX, outlines[0][3], 10, RECT_HEIGHT);
+      drawRect((leftPosOverwrite || outlines[0][0]) + offsetX, outlines[0][3], 6, RECT_HEIGHT);
       appearanceBuffer.push(`${getPdfColor([0xFF, 0xFF, 0xFF], true)}`);
-      appearanceBuffer.push(`BT ${numberToString(outlines[0][0] + offsetX + 3)} ${numberToString(outlines[0][3] + 1.5)} Td /F1 8.0 Tf [(${f.encodeString('?').map(escapeString).join('')})] TJ ET`);
+      appearanceBuffer.push(`BT ${numberToString(basePos.x)} ${numberToString(basePos.y)} Td /F1 6.0 Tf [(${f.encodeString('?').map(escapeString).join('')})] TJ ET`);
       rect[0] -= fontSize.width;
       rect[3] = Math.max(rectBaseYTop + fontSize.height, rect[3]);
       break;
     case 'missing':
-      basePos = {x: outlines[0][0] + offsetX + 2, y: outlines[0][3] + 7.5};
+      basePos = {x: (leftPosOverwrite || outlines[0][0]) + offsetX + 1.5, y: outlines[0][3] + 5.5};
       appearanceBuffer.push('/DeviceRGB cs');
       appearanceBuffer.push('/R1 gs');
       appearanceBuffer.push(`${getPdfColor([0x60, 0x60, 0x60], true)}`);
-      drawRect(outlines[0][0] + offsetX, outlines[0][3], 10, RECT_HEIGHT);
+      drawRect((leftPosOverwrite || outlines[0][0]) + offsetX, outlines[0][3], 7, RECT_HEIGHT);
       appearanceBuffer.push('0.5 w');
       appearanceBuffer.push(`${getPdfColor([0xFF, 0xFF, 0xFF])}`);
       drawPath([
         {x: 0, y: 0},
         {x: 2.5, y: -5},
         {x: 5, y: 0},
-      ].map(scale(1.2)), basePos);
+      ].map(scale(0.8)), basePos);
       drawPath([
-        {x: 1.3, y: -2.5},
-        {x: 3.7, y: -2.5},
-      ].map(scale(1.2)), basePos);
+        {x: -0.2, y: -2.5},
+        {x: 5.1, y: -2.5},
+      ].map(scale(0.8)), basePos);
       rect[0] -= 20;
       rect[3] = Math.max(rectBaseYTop + 10, rect[3]);
       break;
@@ -67286,7 +67287,7 @@ const edutiek = (function(){
     newAnnot.set('S', new Name('Annot'));
     newAnnot.set('K', [objDict]);
     newAnnot.set('P', structElementRef);
-    const altText = annotation.edutiekAltLabel || annotation.contents;
+    const altText = annotation.edutiekAltText || annotation.contents;
     if (altText) { // structElement.has('Contents')
       newAnnot.set('Alt', altText); // structElement.get('Contents')
     }

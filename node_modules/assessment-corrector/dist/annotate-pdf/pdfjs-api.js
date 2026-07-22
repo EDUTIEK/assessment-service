@@ -15,7 +15,7 @@
  *     token: {Token},
  *     tokenColor: {Color},
  *     lineColor: {Color},
- *     altLabel: {string},
+ *     altText: {string},
  * }} Annotation
  *
  * @typedef {string} Color // all hex forms are valid but names are not. E.g. `#FF003377` is valid but `green` is not.
@@ -59,7 +59,7 @@
  *   enableTokenButtons: {function(bool): Promise},
  *   enableTypeButtons: {function(bool): Promise},
  *   enableWordSelection: {function(bool): Promise},
- *   setAltLabel: {function(string, string): Promise},
+ *   setAltText: {function(string, string): Promise},
  * }}
  */
 export default (parent, viewer, pdf, options = {}) => {
@@ -126,7 +126,7 @@ export default (parent, viewer, pdf, options = {}) => {
         enableTokenButtons: bool => request('enableTokenButtons', bool),
         enableTypeButtons: bool => request('enableTypeButtons', bool),
         enableWordSelection: bool => request('enableWordSelection', bool),
-        setAltLabel: (id, altLabel) => request('setAltLabel', id, altLabel),
+        setAltText: (id, altText) => request('setAltText', id, altText),
     };
 
     function request(name, ...args)
