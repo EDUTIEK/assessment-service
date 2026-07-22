@@ -255,7 +255,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         ];
 
         $pdf_ids = [];
-        $temp_ids = [];
+        $final_pdf_id = null;
 
         $start_page = $options->getStartPageNumber();
         foreach ($this->essay_images->getByEssayId($essay->getId()) as $page_no => $essay_image) {
@@ -277,44 +277,44 @@ readonly class CorrectionProvider implements PdfPartProvider
                     $page_infos
                 );
 
-                $file_info = $this->temp_storage->saveFile($applied_image->stream());
-                $temp_ids[] = $image_id = $file_info->getId();
+                $image_file = $this->temp_storage->saveFile($applied_image->stream());
 
                 if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
                     // print image and comments beneath each other
                     $data['pages'][] = [
                         'partTitle' => $page_no == 1 ? $this->getCorrectionTitle($key) : '',
                         'pageBreakClass' => $page_no > 1 ? 'xlas-page-break' : '',
-                        'src' => $this->temp_storage->getReadablePath($image_id),
+                        'src' => $this->temp_storage->getReadablePath($image_file->getId()),
                         'comments' => $this->html_processing->getCommentsHtml($page_infos),
                     ];
                 } else {
                     // print only image
                     $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/solo_image.html', [
-                        'src' => $this->temp_storage->getReadablePath($image_id),
+                        'src' => $this->temp_storage->getReadablePath($image_file->getId()),
                     ]);
                     $pdf_ids[] = $id = $this->pdf_processing->create($html, $options->withStartPageNumber($start_page));
                     $start_page += $this->pdf_processing->count($id);
                 }
+
+                $this->temp_storage->deleteFile($image_file->getId());
             }
         }
 
         if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
             $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/image_comments.html', $data);
             $html = $this->system_processing->addCorrectionStyles($html);
-            $pdf_id = $this->pdf_processing->create($html, $options->withPortrait(false));
+            $final_pdf_id = $this->pdf_processing->create($html, $options->withPortrait(false));
 
         } else {
-            $pdf_ids[] = $this->renderComments($key, $infos, $options->withStartPageNumber($start_page));
-            $pdf_id = $this->pdf_processing->join($pdf_ids);
-            $temp_ids = array_merge($temp_ids, $pdf_ids);
+            $comment_pdf = $this->renderComments($key, $infos, $options->withStartPageNumber($start_page));
+            if ($comment_pdf) {
+                $pdf_ids[] = $comment_pdf;
+            }
+            $final_pdf_id = $this->pdf_processing->join($pdf_ids);
         }
 
-        foreach ($temp_ids as $image_id) {
-            $this->temp_storage->deleteFile($image_id);
-        }
-
-        return $pdf_id;
+        $this->pdf_processing->cleanup($pdf_ids);
+        return $final_pdf_id;
     }
 
     private function getCorrectionTitle($key)
