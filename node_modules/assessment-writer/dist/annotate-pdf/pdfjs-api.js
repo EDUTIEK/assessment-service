@@ -15,6 +15,7 @@
  *     token: {Token},
  *     tokenColor: {Color},
  *     lineColor: {Color},
+ *     altText: {string},
  * }} Annotation
  *
  * @typedef {string} Color // all hex forms are valid but names are not. E.g. `#FF003377` is valid but `green` is not.
@@ -52,12 +53,13 @@
  *   setText: {function(string, string): Promise},
  *   setColor: {function(string, Color): Promise},
  *   setLineColor: {function(string, Color): Promise},
- *   setTokenColor: {function(string, Color): Promise},
  *   setType: {function(string, Type): Promise},
  *   setDeletable: {function(string, bool): Promise},
  *   setToken: {function{string, Token}: Promise},
- *   enableTokenButtons(bool),
- *   enableTypeButtons(bool),
+ *   enableTokenButtons: {function(bool): Promise},
+ *   enableTypeButtons: {function(bool): Promise},
+ *   enableWordSelection: {function(bool): Promise},
+ *   setAltText: {function(string, string): Promise},
  * }}
  */
 export default (parent, viewer, pdf, options = {}) => {
@@ -118,12 +120,13 @@ export default (parent, viewer, pdf, options = {}) => {
         setText: (id, text) => request('setText', id, text),
         setColor: (id, color) => request('setColor', id, color),
         setLineColor: (id, color) => request('setLineColor', id, color),
-        setTokenColor: (id, color) => request('setTokenColor', id, color),
         setType: (id, type) => request('setType', id, type),
         setDeletable: (id, deletable) => request('setDeletable', id, deletable),
         setToken: (id, token) => request('setToken', id, token),
         enableTokenButtons: bool => request('enableTokenButtons', bool),
         enableTypeButtons: bool => request('enableTypeButtons', bool),
+        enableWordSelection: bool => request('enableWordSelection', bool),
+        setAltText: (id, altText) => request('setAltText', id, altText),
     };
 
     function request(name, ...args)

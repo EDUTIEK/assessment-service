@@ -22,17 +22,36 @@
     display: none;
 }
 
+.highlightOutline.selected:is(.canvasWrapper svg):not(.free) .secondaryOutline,
+.highlightOutline.selected:is(.canvasWrapper svg):not(.free) .mainOutline
+{
+    stroke: none;
+    stroke-width: 0;
+}
+
 .annotation-label
 {
     font-family: sans-serif;
-    background-color: #606060;
-    color: white;
+    color: black;
     position: absolute;
-    font-size: 12px;
+    font-size: 7%;
     top: 0;
     left: 0;
-    transform: translate(-100%, -100%);
+    transform: translate(0, calc(1px - 100%));
     padding: 1px;
+    display: flex;
+}
+
+.annotation-label .label-content
+{
+    background-color: lightgray;
+    padding: 1px;
+}
+
+.selectedEditor .annotation-label .label-content
+{
+    background-color: #606060;
+    color: white;
 }
 
 .edutiek-button
@@ -45,13 +64,40 @@
 
 .annotation-token
 {
-    position: absolute;
-    top: 0;
-    transform: translateY(-100%);
-    width: 25px;
-    height: 25px;
-    mask-position: center;
+    background-color: lightgray;
+    width: 1.5em;
+    height: 1.5em;
+    display: inline-block;
+    position: relative;
+}
+
+.selectedEditor .annotation-token
+{
+    background-color: #606060;
+}
+
+.label-content + .annotation-token
+{
+    margin-left: 0.5em;
+}
+
+.annotation-token::before
+{
     background-color: black;
+    mask-size: 240%;
+    mask-position: center;
+    width: 1.2em;
+    height: 1.5em;
+    content: '';
+    display: inline-block;
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 5%);
+}
+
+.selectedEditor .annotation-token::before
+{
+    background-color: white;
 }
 
 .edutiek-button-wave::before
@@ -75,31 +121,36 @@
 }
 
 .edutiek-button-question-mark::before,
-.annotation-token-question-mark
+.annotation-token-question-mark::before
 {
     mask-image: url(question-mark.svg);
 }
 
+.annotation-token-question-mark::before
+{
+    mask-size: 240%;
+}
+
 .edutiek-button-exclamation-point::before,
-.annotation-token-exclamation-point
+.annotation-token-exclamation-point::before
 {
     mask-image: url(exclamation-point.svg);
 }
 
 .edutiek-button-cross::before,
-.annotation-token-cross
+.annotation-token-cross::before
 {
     mask-image: url(cross.svg);
 }
 
 .edutiek-button-check::before,
-.annotation-token-check
+.annotation-token-check::before
 {
     mask-image: url(check.svg);
 }
 
 .edutiek-button-missing::before,
-.annotation-token-missing
+.annotation-token-missing::before
 {
     mask-image: url(missing.svg);
 }
@@ -119,4 +170,9 @@
 #viewer .textLayer.highlighting:not(.free) span
 {
     cursor: text;
+}
+
+#viewer .editToolbar.edutiek-move-toolbar
+{
+    left: 0;
 }
