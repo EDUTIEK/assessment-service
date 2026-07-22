@@ -142,7 +142,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         $corrector = $this->correctors->oneByUserId($this->user_id);
         foreach ($positions as $position) {
             if (!empty($grading = $gradings[$position->value] ?? null)) {
-                if ($grading->isAuthorized() || ($grading->getCorrectorId() === $corrector?->getId() && $grading->isPreGraded())) {
+                if ($grading->isAuthorized() || ($grading->getCorrectorId() === $corrector?->getId())) {
                     $allowed_positions[] = $position;
                 }
             }
@@ -156,19 +156,23 @@ readonly class CorrectionProvider implements PdfPartProvider
                 return $this->renderFromImages($key, $essay, $infos, $anonymous_corrector, $options);
             }
             if ($this->task_settings->getPdfMarking() === PdfMarking::TEXT && !empty($allowed_positions)) {
-                $position = end($allowed_positions);
-                $grading = $gradings[$position->value];
+                foreach (array_reverse($allowed_positions) as $position) {
+                    $grading = $gradings[$position->value];
 
-                $pdf_id = null;
-                if ($key === self::KEY_COMMENTS_ALL) {
-                    $pdf_id = $this->marked_pdfs->sumByIds($grading->getTaskId(), $grading->getWriterId(), $grading->getCorrectorId());
-                } else {
-                    $pdf_id = $this->marked_pdfs->ownByIds($grading->getTaskId(), $grading->getWriterId(), $grading->getCorrectorId());
-                }
+                    // this is necessary to check because the marked pdf is created at authorization or pre-grading
+                    if ($grading->isAuthorized() || $grading->isPreGraded()) {
+                        $pdf_id = null;
+                        if ($key === self::KEY_COMMENTS_ALL) {
+                            $pdf_id = $this->marked_pdfs->sumByIds($grading->getTaskId(), $grading->getWriterId(), $grading->getCorrectorId());
+                        } else {
+                            $pdf_id = $this->marked_pdfs->ownByIds($grading->getTaskId(), $grading->getWriterId(), $grading->getCorrectorId());
+                        }
 
-                if ($pdf_id) {
-                    return $this->renderForMarkedPdf($key, $pdf_id, $infos, $anonymous_corrector, $options);
-                }
+                        if ($pdf_id) {
+                            return $this->renderForMarkedPdf($key, $pdf_id, $infos, $anonymous_corrector, $options);
+                        }
+                    }
+                };
             }
         } else {
             return $this->renderFromText($key, $essay, $infos, $anonymous_corrector, $options);
@@ -255,6 +259,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         ];
 
         $pdf_ids = [];
+        $image_ids = [];
         $final_pdf_id = null;
 
         $start_page = $options->getStartPageNumber();
@@ -277,26 +282,24 @@ readonly class CorrectionProvider implements PdfPartProvider
                     $page_infos
                 );
 
-                $image_file = $this->temp_storage->saveFile($applied_image->stream());
+                $image_ids[] = $image_id = $this->temp_storage->saveFile($applied_image->stream())->getId();
 
                 if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
                     // print image and comments beneath each other
                     $data['pages'][] = [
                         'partTitle' => $page_no == 1 ? $this->getCorrectionTitle($key) : '',
                         'pageBreakClass' => $page_no > 1 ? 'xlas-page-break' : '',
-                        'src' => $this->temp_storage->getReadablePath($image_file->getId()),
+                        'src' => $this->temp_storage->getReadablePath($image_id),
                         'comments' => $this->html_processing->getCommentsHtml($page_infos),
                     ];
                 } else {
                     // print only image
                     $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/solo_image.html', [
-                        'src' => $this->temp_storage->getReadablePath($image_file->getId()),
+                        'src' => $this->temp_storage->getReadablePath($image_id),
                     ]);
                     $pdf_ids[] = $id = $this->pdf_processing->create($html, $options->withStartPageNumber($start_page));
                     $start_page += $this->pdf_processing->count($id);
                 }
-
-                $this->temp_storage->deleteFile($image_file->getId());
             }
         }
 
@@ -313,7 +316,11 @@ readonly class CorrectionProvider implements PdfPartProvider
             $final_pdf_id = $this->pdf_processing->join($pdf_ids);
         }
 
+        foreach ($image_ids as $id) {
+            $this->temp_storage->deleteFile($id);
+        }
         $this->pdf_processing->cleanup($pdf_ids);
+
         return $final_pdf_id;
     }
 
