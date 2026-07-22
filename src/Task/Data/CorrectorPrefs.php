@@ -14,6 +14,12 @@ abstract class CorrectorPrefs implements TaskEntity
     abstract public function setEssayTextZoom(float $essay_text_zoom): self;
     abstract public function getSummaryTextZoom(): float;
     abstract public function setSummaryTextZoom(float $summary_text_zoom): self;
+    abstract public function getDefaultShape(): ?string;
+    abstract public function setDefaultShape(?string $default_shape): self;
+    abstract public function getDisplayLabels(): bool;
+    abstract public function setDisplayLabels(bool $display_labels): self;
+    abstract public function getSelectWords(): bool;
+    abstract public function setSelectWords(bool $select_words): self;
     abstract public function getFilterGradingStatus(): ?string;
     abstract public function setFilterGradingStatus(?string $filter_grading_status): self;
     abstract public function getFilterAssignedPosition(): ?int;

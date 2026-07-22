@@ -217,6 +217,9 @@ class CorrectorBridge implements AppCorrectorBridge
             'essay_page_zoom' => $preferences->getEssayPageZoom(),
             'essay_text_zoom' => $preferences->getEssayTextZoom(),
             'summary_text_zoom' => $preferences->getSummaryTextZoom(),
+            'default_shape' => $preferences->getDefaultShape(),
+            'display_labels' => $preferences->getDisplayLabels(),
+            'select_words' => $preferences->getSelectWords(),
         ]);
 
         $data['Snippets'] = $this->snippets_service->json($this->corrector?->getId() ?? 0);
@@ -678,6 +681,9 @@ class CorrectorBridge implements AppCorrectorBridge
             'essay_page_zoom' => $data['essay_page_zoom'] ?? null,
             'essay_text_zoom' => $data['essay_text_zoom'] ?? null,
             'summary_text_zoom' => $data['summary_text_zoom'] ?? null,
+            'default_shape' => $data['default_shape'] ?? null,
+            'display_labels' => $data['display_labels'] ?? false,
+            'select_words' => $data['select_words'] ?? false,
 
         ], $prefs, CorrectorPrefs::class);
         $this->entity->secure($prefs, CorrectorPrefs::class);
