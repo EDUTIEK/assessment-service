@@ -149,6 +149,11 @@ abstract class CorrectorSummary implements TaskEntity
         return $this->getLastChange() !== null;
     }
 
+    public function isPregraded(): bool
+    {
+        return $this->getPreGraded() !== null;
+    }
+
     public function isAuthorized(): bool
     {
         return $this->getCorrectionAuthorized() !== null;

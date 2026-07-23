@@ -5,6 +5,7 @@ return [
     'authorization_not_allowed' => 'Status erlaubt keine Freigabe',
     'authorization_text_missing' => 'Gutachten fehlt',
     'authorizations_not_found' => 'Keine passende Freigabe gefunden',
+    'authorization_needs_pregrade' => 'Die Korrektur muss vorbenotet sein',
     'assignment_or_writer_not_found' => 'Zuweisung oder Teilnehmer nicht gefunden',
     'grading_pos_first' => 'Erstkorrektur',
     'grading_pos_second' => 'Zweitkorrektur',
