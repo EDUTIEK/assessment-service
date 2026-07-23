@@ -540,4 +540,53 @@ readonly class Service implements FullService
             }
         }
     }
+
+    public function getAssignmentsToDo(array $assignments): array
+    {
+        $classified = [
+            'first' => [],
+            'second' => [],
+            'revision' => [],
+            'stitch' => [],
+        ];
+
+        $lang_vars = [
+            'first' => ['1_first_correction', 'x_first_corrections'],
+            'second' => ['1_second_correction', 'x_second_corrections'],
+            'revision' => $this->correction_settings->getProcedure() === CorrectionProcedure::APPROXIMATION
+                ? ['1_approximation', 'x_approximations']
+                : ['1_consulting', 'x_consultings'],
+            'stitch' => ['1_stitch_decision', 'x_stitch_decisions'],
+        ];
+
+        foreach ($assignments as $assignment) {
+            if ($this->canCorrect($assignment)) {
+                switch ($assignment->getPosition()) {
+                    case GradingPosition::FIRST:
+                        $classified['first'][] = $assignment;
+                        break;
+                    case GradingPosition::SECOND:
+                        $classified['second'][] = $assignment;
+                        break;
+                    case GradingPosition::STITCH:
+                        $classified['stitch'][] = $assignment;
+                        break;
+                }
+            } elseif ($this->canRevise($assignment)) {
+                $classified['revision'][] = $assignment;
+            }
+        }
+
+        $named = [];
+        foreach ($classified as $key => $list) {
+            if (count($list) === 1) {
+                $named[$this->language->txt($lang_vars[$key][0])] = $list;
+            }
+            if (count($list) > 1) {
+                $named[$this->language->txt($lang_vars[$key][1], ['x' => count($list)])] = $list;
+            }
+        }
+
+        return $named;
+    }
 }

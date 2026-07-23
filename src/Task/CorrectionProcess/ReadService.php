@@ -13,8 +13,8 @@ interface ReadService
     /**
      * Check if an assigned writing can be corrected by the assigned corrector
      * - Writing must be authorized
-     * - Status must be stitch for stich decider (third corrector)
-     * - Own status must be not started or open for normal corrector
+     * - Status must be 'stitch' for stich decider (third corrector)
+     * - Own status must be 'not started' or 'open' for normal corrector
      * - Check if second corrector has to wait for the first corrector
      * - Authorization is taken into account here, but not the pre-graded status
      * - The pre-graded status is handled in the corrector app
@@ -43,4 +43,17 @@ interface ReadService
      * Check if the correction of an assigned task can be revised
      */
     public function canRevise(CorrectorAssignment $assignment): bool;
+
+    /**
+     * Categorize assignments by pending activity
+     * - first corrections
+     * - second correction
+     * - revision
+     * - stitch decision
+     * Only activities that have assignnemts will be added to the resulting array
+     *
+     * @param CorrectorAssignment[] $assignments
+     * @return array<string, array> category label => list of assignments
+     */
+    public function getAssignmentsToDo(array $assignments): array;
 }
