@@ -32,5 +32,5 @@ interface FullService
      * Get the options to select a combined status for filtering, indexed by backed values
      * @return array<string, string>
      */
-    public function combinedStatusOptions(): array;
+    public function combinedStatusOptions(bool $with_writing): array;
 }

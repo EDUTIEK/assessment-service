@@ -5,6 +5,7 @@ namespace Edutiek\AssessmentService\Task\CorrectorAssignments;
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorService;
 use Edutiek\AssessmentService\Assessment\Data\AssignFilter;
 use Edutiek\AssessmentService\Assessment\Data\AssignMode;
+use Edutiek\AssessmentService\Assessment\Data\CombinedStatus;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
@@ -92,7 +93,7 @@ readonly class Service implements FullService
         return $this->repos->correctorAssignment()->oneByIds($writer_id, $corrector_id, $task_id);
     }
 
-    public function saveCorrectorFilter(int $corrector_id, ?array $grading_status, ?int $position): void
+    public function saveCorrectorFilter(int $corrector_id, ?array $grading_status, ?array $combined_status, ?int $position): void
     {
         $prefs = $this->repos->correctorPrefs()->one($corrector_id) ??
             $this->repos->correctorPrefs()->new()->setCorrectorId($corrector_id);
@@ -101,6 +102,13 @@ readonly class Service implements FullService
             $grading_status === null ? null : implode(
                 ',',
                 array_map(fn($status) => $status->value, $grading_status)
+            )
+        );
+
+        $prefs->setFilterCombinedStatus(
+            $combined_status === null ? null : implode(
+                ',',
+                array_map(fn($status) => $status->value, $combined_status)
             )
         );
 
@@ -115,11 +123,18 @@ readonly class Service implements FullService
             $this->repos->correctorPrefs()->new()->setCorrectorId($corrector_id);
 
         $pos = $prefs->getFilterAssignedPosition();
-        $status = null;
+
         if ($prefs->getFilterGradingStatus() !== null) {
             $status = explode(',', $prefs->getFilterGradingStatus());
         }
-        return [$status, $pos];
+        $status = empty($status) ? null : $status;
+
+        if ($prefs->getFilterCombinedStatus() !== null) {
+            $combined = explode(',', $prefs->getFilterCombinedStatus());
+        }
+        $combined = empty($combined) ? null : $combined;
+
+        return [$status, $combined, $pos];
     }
 
 
@@ -127,7 +142,7 @@ readonly class Service implements FullService
     {
         $assignments = $this->allByCorrectorId($corrector_id, $only_authorized_writings);
 
-        [$status, $pos] = $this->getCorrectionFilter($corrector_id);
+        [$status, $combined, $pos] = $this->getCorrectionFilter($corrector_id);
 
         $filtered = [];
         foreach ($assignments as $assignment) {
@@ -143,6 +158,14 @@ readonly class Service implements FullService
                 $value = $summary?->getGradingStatus()?->value ?? GradingStatus::NOT_STARTED->value;
 
                 if (!in_array($value, $status)) {
+                    continue;
+                }
+            }
+            if ($combined !== null) {
+                $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
+                $value = $writer?->getCombinedStatus()?->value ?? CombinedStatus::WRITING_NOT_STARTED->value;
+
+                if (!in_array($value, $combined)) {
                     continue;
                 }
             }

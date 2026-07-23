@@ -125,20 +125,30 @@ readonly class Service implements FullService
         };
     }
 
-    public function combinedStatusOptions(): array
+    public function combinedStatusOptions(bool $with_writing): array
     {
         $txt = $this->language->txt(...);
 
-        return [
+        $options = [
             CombinedStatus::WRITING_EXCLUDED->value => $txt('combined_status_writing_excluded'),
             CombinedStatus::WRITING_NOT_STARTED->value => $txt('combined_status_writing_not_started'),
             CombinedStatus::WRITING_STARTED->value => $txt('combined_status_writing_started'),
             CombinedStatus::OPEN->value => $txt('combined_status_open'),
-            CombinedStatus::STITCH_NEEDED->value => $txt('combined_status_stitch'),
-            CombinedStatus::FINALIZED->value => $txt('combined_status_finalized'),
             CombinedStatus::APPROXIMATION->value => $txt('combined_status_approximation'),
             CombinedStatus::CONSULTING->value => $txt('combined_status_consulting'),
+            CombinedStatus::STITCH_NEEDED->value => $txt('combined_status_stitch'),
+            CombinedStatus::FINALIZED->value => $txt('combined_status_finalized'),
         ];
+
+        if (!$with_writing) {
+            unset(
+                $options[CombinedStatus::WRITING_EXCLUDED->value],
+                $options[CombinedStatus::WRITING_NOT_STARTED->value],
+                $options[CombinedStatus::WRITING_STARTED->value]
+            );
+        }
+
+        return $options;
     }
 
 }
