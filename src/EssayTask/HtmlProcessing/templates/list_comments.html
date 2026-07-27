@@ -1,0 +1,24 @@
+<style>
+    {{style}}
+</style>
+<div class="xlas-list-comments-table">
+{{#comments}}
+<div class="xlas-list-comments-table-row">
+    <div class="xlas-list-comments-table-col1">
+            <span class="xlas-list-comments-label" style="background-color:{{{color}}};">{{label}}</span>
+            <span class="xlas-list-comments-symbol" style="background-color:{{{color}}};">{{symbol}}</span>
+    </div>
+    <div class="xlas-list-comments-table-col2">
+        {{#rating}}
+        <em class="xlas-list-comments-text">({{.}})</em>
+        {{/rating}}
+        {{#comment}}
+        <span class="xlas-list-comments-text">{{.}}</span>
+        {{/comment}}
+        {{#points}}
+        <em class="xlas-list-comments-text">({{.}})</em>
+        {{/points}}
+    </div>
+</div>
+{{/comments}}
+</div>

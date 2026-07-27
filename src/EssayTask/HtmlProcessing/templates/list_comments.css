@@ -1,0 +1,34 @@
+.xlas-list-comments-table {
+    display: table;
+    vertical-align: top;
+    font-family: sans-serif;
+}
+.xlas-list-comments-table-row {
+    display: table-row;
+    vertical-align: top;
+    font-family: sans-serif;
+}
+.xlas-list-comments-table-col1 {
+    display: table-cell;
+    vertical-align: top;
+    font-family: sans-serif;
+    width: 10%;
+}
+.xlas-list-comments-table-col2 {
+    display: table-cell;
+    vertical-align: top;
+    font-family: sans-serif;
+    width: 90%;
+}
+.xlas-list-comments-label {
+    padding-left: 1mm;
+    padding-right: 1mm;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+.xlas-list-comments-symbol {
+    padding-left: 1mm;
+    padding-right: 1mm;
+    font-size: 0.8rem;
+    text-align: center;
+}

@@ -103,44 +103,35 @@ class Service implements FullService
      */
     public function getCommentsHtml(array $infos): string
     {
-        $html = '';
+        $data = [
+            'style' => file_get_contents(__DIR__ . '/templates/list_comments.css'),
+            'comments' => []
+        ];
+
         foreach ($infos as $info) {
+            $points = null;
+            if ($info->getPoints() == 1) {
+               $points = $this->lang->txt('1_point');
+            } elseif ($info->getPoints() != 0) {
+                $points = sprintf($this->lang->txt('x_points'), $info->getPoints());
+            }
+
             if ($info->hasDetailsToShow()) {
-                $content = $this->quote($info->getLabel());
-                if ($this->correction_settings->hasMultipleCorrectors()) {
-                    $content = $info->getPositionText() . ' ' . $content;
-                }
-
-                $color = $this->getTextBackgroundColor([$info]);
-                $content = '<span class="xlas-comments-label" style="background-color:' . $color . ';">' . $content . '</span>';
-                if ($info->getSymbol()) {
-                    $content .= ' <span class="xlas-comments-symbol" style="background-color:' . $color . ';">'
-                        . $this->comments_service->getSymbolForLabel($info->getSymbol()) . '</span>';
-                }
-
-                if ($info->getRatingText()) {
-                    $content .= ' <em>(' . $info->getRatingText() . ')</em>';
-                }
-
-                if (!empty($info->getComment()->getComment())) {
-                    $content .= ' ' . nl2br($this->quote($info->getComment()->getComment()), true);
-                }
-
-                $points = $info->getPoints();
-                if ($points == 1) {
-                    $content .= ' (' . $this->lang->txt('1_point') . ')';
-                } elseif ($points != 0) {
-                    $content .= ' <em>(' . sprintf($this->lang->txt('x_points'), $points) . ')</em>';
-                }
-
-                $content = '<p class="xlas-comments-list">' . $content . '</p>';
-
-                $html .= $content . "\n";
-
-                // remove ascii control characters except tab, cr and lf
-                $html = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $html);
+                $data['comments'][] = [
+                   'color' => $this->getTextBackgroundColor([$info]),
+                   'label' => ($this->correction_settings->hasMultipleCorrectors() ? $info->getPositionText() . ' ' : '') . $info->getLabel(),
+                   'symbol' => $this->comments_service->getSymbolForLabel($info->getSymbol()),
+                   'rating' => $info->getRatingText(),
+                   'comment' => empty($info->getComment()) ? null : nl2br($this->quote($info->getComment()->getComment()), true),
+                   'points' => $points
+                ];
             }
         }
+
+        $html = $this->processor->fillTemplate(__DIR__ . '/templates/list_comments.html', $data);
+
+        // remove ascii control characters except tab, cr and lf
+        $html = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $html);
         return $html;
     }
 
