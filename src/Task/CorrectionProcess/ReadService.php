@@ -56,4 +56,9 @@ interface ReadService
      * @return array<string, array> category label => list of assignments
      */
     public function getAssignmentsToDo(array $assignments): array;
+
+    /**
+     * Get a warning message if an authorization requires a procedure or stitch decision
+     */
+    public function getAuthorizationWarning(Writer $writer, int $task_id, int $corrector_id): ?string;
 }

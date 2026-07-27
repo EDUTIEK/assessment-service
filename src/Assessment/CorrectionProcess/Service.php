@@ -53,6 +53,24 @@ readonly class Service implements FullService
         }
     }
 
+    public function getAuthorizationResultStatus(Writer $writer, int $task_id, int $corrector_id): CorrectionStatus
+    {
+        $settings = $this->settings_service->get();
+
+        $gradings = [];
+        foreach ($this->grading_provider->gradingsForTaskAndWriter($task_id, $writer->getId()) as $grading) {
+            if ($grading?->getCorrectorId() === $corrector_id) {
+                // simulate authorization
+                $grading = $grading->withAuthorized();
+            }
+            $gradings[] = $grading;
+        }
+
+        list($status, $points) = $this->calculateTask($writer, $settings, $gradings);
+
+        return $status;
+    }
+
     public function updateStatus(Writer $writer): CorrectionStatus
     {
         $status = $writer->getCorrectionStatus();

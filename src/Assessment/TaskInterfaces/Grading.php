@@ -8,16 +8,16 @@ namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
  * Shortened info about a single grading
  * This is used to calculate the overall correction status and points
  */
-readonly class Grading
+class Grading
 {
     public function __construct(
-        private int $writer_id,
-        private int $task_id,
-        private int $corrector_id,
-        private GradingPosition $position,
+        private readonly int $writer_id,
+        private readonly int $task_id,
+        private readonly int $corrector_id,
+        private readonly GradingPosition $position,
         private GradingStatus $status,
-        private ?float $points,
-        private bool $require_other_revision,
+        private readonly ?float $points,
+        private readonly bool $require_other_revision,
     ) {
     }
 
@@ -70,5 +70,12 @@ readonly class Grading
     public function isRevised(): bool
     {
         return $this->status === GradingStatus::REVISED;
+    }
+
+    public function withAuthorized(): self
+    {
+        $clone = clone($this);
+        $clone->status = GradingStatus::AUTHORIZED;
+        return $clone;
     }
 }

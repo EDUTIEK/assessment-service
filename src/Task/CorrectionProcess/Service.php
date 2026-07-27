@@ -594,4 +594,15 @@ readonly class Service implements FullService
 
         return $named;
     }
+
+    public function getAuthorizationWarning(Writer $writer, int $task_id, int $corrector_id): ?string
+    {
+        $status = $this->whole_process->getAuthorizationResultStatus($writer, $task_id, $corrector_id);
+        return match ($status) {
+            CorrectionStatus::APPROXIMATION => $this->language->txt('authorization_warning_approximation'),
+            CorrectionStatus::CONSULTING => $this->language->txt('authorization_warning_consulting'),
+            CorrectionStatus::STITCH => $this->language->txt('authorization_warning_stitch'),
+            default => null,
+        };
+    }
 }
