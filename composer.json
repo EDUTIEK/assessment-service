@@ -36,7 +36,7 @@
         "ext-xml": "*",
         "ext-xsl": "*",
         "ext-curl": "*",
-        "mustache/mustache": "^2.14",
+        "mustache/mustache": "^3.0",
         "slim/psr7": "^1.7",
         "slim/slim": "^4.14",
         "tecnickcom/tcpdf": "^6.3",
