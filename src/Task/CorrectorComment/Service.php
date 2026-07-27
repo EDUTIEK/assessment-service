@@ -122,9 +122,6 @@ readonly class Service implements InfoService
 
             if ($info->hasDetailsToShow()) {
                 $label = ($parent_no . '.' . $number++);
-                if ($info->getSymbol()) {
-                    $label = $label . ' ' . $this->getSymbolForLabel($info->getSymbol());
-                }
             }
             $result[] = $info->withLabel($label);
 
@@ -138,9 +135,9 @@ readonly class Service implements InfoService
     {
         switch ($symbol) {
             case CorrectionMark::SYMBOL_CHECK:
-                return '√';
+                return '✓';
             case CorrectionMark::SYMBOL_CROSS:
-                return '×';
+                return '✗';
             case CorrectionMark::SYMBOL_QUESTION:
                 return '?';
             case CorrectionMark::SYMBOL_EXCLAMATION:

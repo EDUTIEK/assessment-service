@@ -112,7 +112,11 @@ class Service implements FullService
                 }
 
                 $color = $this->getTextBackgroundColor([$info]);
-                $content = '<strong style="background-color:' . $color . ';">' . $content . '</strong>';
+                $content = '<span class="xlas-comments-label" style="background-color:' . $color . ';">' . $content . '</span>';
+                if ($info->getSymbol()) {
+                    $content .= ' <span class="xlas-comments-symbol" style="background-color:' . $color . ';">'
+                        . $this->comments_service->getSymbolForLabel($info->getSymbol()) . '</span>';
+                }
 
                 if ($info->getRatingText()) {
                     $content .= ' <em>(' . $info->getRatingText() . ')</em>';
@@ -129,7 +133,7 @@ class Service implements FullService
                     $content .= ' <em>(' . sprintf($this->lang->txt('x_points'), $points) . ')</em>';
                 }
 
-                $content = '<p>' . $content . '</p>';
+                $content = '<p class="xlas-comments-list">' . $content . '</p>';
 
                 $html .= $content . "\n";
 
