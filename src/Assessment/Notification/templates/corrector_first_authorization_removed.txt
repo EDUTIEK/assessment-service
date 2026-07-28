@@ -1,4 +1,4 @@
-Die Freigabe der Erstkorrektur wurde zurückgezogen.
+Der Zweitkorrektor hat bezüglich einer Abgabe (siehe unten) Ihre Freigabe zurückgezogen. Bitte überprüfen Sie Ihre Bewertung (Anmerkungen und Punkte) und geben diese erneut frei.
 
 Aufgabe: [assessment_title]
 Teilnehmer: [writer_pseudonym]

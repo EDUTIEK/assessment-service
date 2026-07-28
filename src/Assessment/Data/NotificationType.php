@@ -10,18 +10,20 @@ enum NotificationType: string
     case CORRECTOR_WRITING_CHANGED = 'corrector_writing_changed';
     case WRITER_CORRECTION_FINALIZED = 'writer_correction_finalized';
     case ADMIN_STITCH_NEEDED = 'admin_stitch_needed';
+    case CORRECTOR_STITCH_NEEDED = 'corrector_stitch_needed';
     case ADMIN_WRITING_AUTHORIZED = 'admin_writing_authorized';
 
-    public static function availableTypes(): array
+    public static function allTypes(): array
     {
         return  [
-            self::WRITER_CORRECTION_FINALIZED,
-            self::CORRECTOR_PROCEDURE_STARTED,
-            self::CORRECTOR_AUTHORIZATION_REMOVED,
-            self::CORRECTOR_FIRST_AUTHORIZATION_REMOVED,
-            self::CORRECTOR_WRITING_CHANGED,
             self::ADMIN_WRITING_AUTHORIZED,
+            self::CORRECTOR_WRITING_CHANGED,
+            self::CORRECTOR_FIRST_AUTHORIZATION_REMOVED,
+            self::CORRECTOR_AUTHORIZATION_REMOVED,
+            self::CORRECTOR_PROCEDURE_STARTED,
             self::ADMIN_STITCH_NEEDED,
+            self::CORRECTOR_STITCH_NEEDED,
+            self::WRITER_CORRECTION_FINALIZED,
         ];
     }
 
@@ -40,6 +42,7 @@ enum NotificationType: string
             self::CORRECTOR_AUTHORIZATION_REMOVED => true,
             self::CORRECTOR_FIRST_AUTHORIZATION_REMOVED => true,
             self::CORRECTOR_WRITING_CHANGED => true,
+            self::CORRECTOR_STITCH_NEEDED => true,
             self::WRITER_CORRECTION_FINALIZED => false,
             self::ADMIN_STITCH_NEEDED => false,
             self::ADMIN_WRITING_AUTHORIZED => false,
@@ -105,6 +108,7 @@ enum NotificationType: string
             case self::CORRECTOR_AUTHORIZATION_REMOVED:
             case self::CORRECTOR_FIRST_AUTHORIZATION_REMOVED:
             case self::CORRECTOR_WRITING_CHANGED:
+            case self::CORRECTOR_STITCH_NEEDED:
                 unset($placeholders['writer_name']);
                 unset($placeholders['writer_login']);
         }

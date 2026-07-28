@@ -1,4 +1,4 @@
-Ein Teilnehmer hat abgegeben.
+Ein Teilnehmer (siehe unten) hat abgegeben.
 
 Aufgabe: [assessment_title]
 Teilnehmer: [writer_name] ([writer_login])

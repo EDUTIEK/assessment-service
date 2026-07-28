@@ -8,6 +8,7 @@ use Edutiek\AssessmentService\Assessment\Data\AssignMode;
 use Edutiek\AssessmentService\Assessment\Data\CombinedStatus;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
+use Edutiek\AssessmentService\Assessment\Notification\DeliverService as NotificationService;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
 use Edutiek\AssessmentService\System\EventHandling\Events\AssignmentRemoved;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
@@ -23,6 +24,7 @@ use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Task\Api\Internal;
 use Edutiek\AssessmentService\System\Spreadsheet\ExportType;
 use Edutiek\AssessmentService\System\File\Disposition;
+use Edutiek\AssessmentService\Assessment\Data\NotificationType;
 
 readonly class Service implements FullService
 {
@@ -32,6 +34,7 @@ readonly class Service implements FullService
         private CorrectionSettings $correction_settings,
         private CorrectorService $corrector_service,
         private WriterService $writer_service,
+        private NotificationService $notification,
         private SpreadsheetService $spreadsheet_service,
         private LanguageService $lang,
         private FileDelivery $delivery,
@@ -345,6 +348,17 @@ readonly class Service implements FullService
                 } elseif ($new_assignment !== null) {
                     $this->repos->correctorAssignment()->save($new_assignment);
                 }
+
+                if ($new_assignment->getPosition() === GradingPosition::STITCH) {
+                    $writer = $this->writer_service->oneByWriterId($new_assignment->getWriterId());
+                    $corrector = $this->corrector_service->oneById($new_assignment->getCorrectorId());
+                    $this->notification->sendDirect(
+                        NotificationType::CORRECTOR_STITCH_NEEDED,
+                        [$corrector->getUserId()],
+                        $writer
+                    );
+                }
+
             } // next position
         } // next writer
 

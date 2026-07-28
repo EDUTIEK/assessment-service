@@ -1,4 +1,4 @@
-Die Abgabe Ihrer Korrektur wurde geändert. Bitte überprüfen Sie Ihre Anmerkungen und Punkte.
+Eine Ihrer Korrektur zugrundeliegende Abgabe (siehe unten) wurde geändert. Damit wurden Ihre bisherigen Korrektureingaben ungültig und mussten gelöscht werden.
 
 Aufgabe: [assessment_title]
 Teilnehmer: [writer_pseudonym]

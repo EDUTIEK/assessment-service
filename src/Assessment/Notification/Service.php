@@ -83,8 +83,32 @@ readonly class Service implements FullService
     public function allSettings(): array
     {
         $settings = [];
-        foreach (NotificationType::availableTypes() as $type) {
+        foreach (NotificationType::allTypes() as $type) {
             $settings[$type->value] = $this->getSettings($type);
+        }
+        return $settings;
+    }
+
+    public function availableSettings(): array
+    {
+        $settings = $this->allSettings();
+        $correction = $this->correction->get();
+
+        if ($correction->getProcedure() === CorrectionProcedure::NONE) {
+            unset($settings[NotificationType::CORRECTOR_PROCEDURE_STARTED->value]);
+        }
+        if (!$correction->getStitchAfterProcedure()) {
+            unset($settings[NotificationType::CORRECTOR_STITCH_NEEDED->value]);
+            unset($settings[NotificationType::ADMIN_STITCH_NEEDED->value]);
+        }
+        if (!$correction->getUndoFirstAuthorization()) {
+            unset($settings[NotificationType::CORRECTOR_FIRST_AUTHORIZATION_REMOVED->value]);
+        }
+        if ($correction->getRequiredCorrectors() == 1) {
+            unset($settings[NotificationType::CORRECTOR_FIRST_AUTHORIZATION_REMOVED->value]);
+            unset($settings[NotificationType::CORRECTOR_PROCEDURE_STARTED->value]);
+            unset($settings[NotificationType::CORRECTOR_STITCH_NEEDED->value]);
+            unset($settings[NotificationType::ADMIN_STITCH_NEEDED->value]);
         }
         return $settings;
     }
@@ -175,6 +199,7 @@ readonly class Service implements FullService
             case NotificationType::CORRECTOR_WRITING_CHANGED:
             case NotificationType::CORRECTOR_PROCEDURE_STARTED:
             case NotificationType::CORRECTOR_AUTHORIZATION_REMOVED:
+            case NotificationType::CORRECTOR_STITCH_NEEDED:
             case NotificationType::CORRECTOR_FIRST_AUTHORIZATION_REMOVED:
                 if ($corrector !== null) {
                     $to_ids[] = $corrector->getUserId();

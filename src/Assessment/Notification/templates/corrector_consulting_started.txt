@@ -1,4 +1,4 @@
-Eine Korrektur erfordert Ihre Teilnahme am Beratungsverfahren.
+Der Status einer Korrektur (siehe unten) erfordert Ihre Teilnahme am Beratungsverfahren.
 
 Aufgabe: [assessment_title]
 Teilnehmer: [writer_pseudonym]

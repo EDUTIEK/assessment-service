@@ -1,4 +1,4 @@
-Eine Korrektur erfordert Ihre Teilnahme am Annäherungsverfahren.
+Der Status einer Korrektur (siehe unten) erfordert Ihre Teilnahme am Annäherungsverfahren.
 
 Aufgabe: [assessment_title]
 Teilnehmer: [writer_pseudonym]

@@ -19,8 +19,17 @@ interface FullService extends DeliverService
 
     public function getSettings(NotificationType $type): NotificationSettings;
 
-    /** @return NotificationSettings[] */
+    /**
+     * Get for all types
+     * @return NotificationSettings[]   - indexed by type value
+     */
     public function allSettings(): array;
+
+    /**
+     * Get for types, depending on the muti corrector settings
+     * @return NotificationSettings[] - indexed by type value
+     */
+    public function availableSettings(): array;
 
     /** @return NotificationUser[] */
     public function usersByType(NotificationType $type): array;

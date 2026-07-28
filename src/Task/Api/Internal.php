@@ -89,6 +89,7 @@ class Internal implements RatingCriterionServiceFactory
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->notification(),
             $this->dependencies->systemApi()->spreadsheet(true),
             $this->dependencies->systemApi()->language($user_id, __DIR__ . '/../Languages/'),
             $this->dependencies->systemApi()->fileDelivery(),
