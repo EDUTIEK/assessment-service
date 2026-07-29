@@ -8,6 +8,7 @@ use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Edutiek\AssessmentService\System\EventHandling\Handler;
 use Edutiek\AssessmentService\System\EventHandling\Event;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
+use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentsService;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Api\ForTasks;
@@ -26,10 +27,10 @@ readonly class OnWritingContentChanged implements Handler
     }
 
     public function __construct(
-        private int $user_id,
         private AssignmentsService $assignments,
         private Repositories $repos,
         private ForTasks $assessment_api,
+        private Storage $storage,
     ) {
     }
 
@@ -57,18 +58,19 @@ readonly class OnWritingContentChanged implements Handler
                     $assignment->getCorrectorId()
                 )
             ) {
-                // remove a pre-grading
-                // authorization should already be removed
-                if ($summary->getGradingStatus() !== GradingStatus::NOT_STARTED) {
-                    $summary->setGradingStatus(GradingStatus::OPEN, $this->user_id);
-                    $this->repos->correctorSummary()->save($summary);
-                }
-
                 $this->assessment_api->notification()->createFor(
                     NotificationType::CORRECTOR_WRITING_CHANGED,
                     $this->assessment_api->writer()->oneByWriterId($assignment->getWriterId()),
                     $this->assessment_api->corrector()->oneById($assignment->getCorrectorId())
                 );
+            }
+
+            $this->repos->correctorComment()->deleteByTaskIdAndWriterId($event->getTaskId(), $event->getWriterId());
+            $this->repos->correctorPoints()->deleteByTaskIdAndWriterId($event->getTaskId(), $event->getWriterId());
+
+            if ($summary) {
+                $this->storage->deleteFile($summary->getSummaryPdf());
+                $this->repos->correctorSummary()->delete($summary->getId());
             }
         }
     }

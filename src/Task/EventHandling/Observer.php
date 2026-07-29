@@ -30,10 +30,10 @@ class Observer extends AbstractObserver
         ));
 
         $this->registerHandler(OnWritingContentChanged::class, fn() => new OnWritingContentChanged(
-            $user_id,
             $internal->correctorAssignments($ass_id, $user_id),
             $repos,
-            $assessment_api
+            $assessment_api,
+            $storage
         ));
 
         $this->registerHandler(OnCorrectorRemoved::class, fn() => new OnCorrectorRemoved(

@@ -19,6 +19,7 @@ use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFacto
 use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
 use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
+use Edutiek\AssessmentService\System\EventHandling\Events\WritingAuthorizationRemoved;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
 use Edutiek\AssessmentService\System\EventHandling\Events\WriterAdded;
 use Edutiek\AssessmentService\Assessment\Data\GradeLevel;
@@ -151,6 +152,7 @@ readonly class Service implements ReadService, FullService
                     LogEntryMention::fromSystem($this->user_id),
                     LogEntryMention::fromWriter($writer)
                 );
+                $this->events->dispatchEvent(new WritingAuthorizationRemoved($writer->getId(), new \DateTimeImmutable('now')));
             }
         }
         return $result;

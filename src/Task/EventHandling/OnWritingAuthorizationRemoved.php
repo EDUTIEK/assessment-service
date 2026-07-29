@@ -36,7 +36,7 @@ readonly class OnWritingAuthorizationRemoved implements Handler
      */
     public function handle(Event $event): void
     {
-        foreach ($this->assignments->allByTaskIdAndWriterId($event->getTaskId(), $event->getWriterId()) as $assignment) {
+        foreach ($this->assignments->allByWriterId($event->getWriterId()) as $assignment) {
             $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
                 $assignment->getTaskId(),
                 $assignment->getWriterId(),

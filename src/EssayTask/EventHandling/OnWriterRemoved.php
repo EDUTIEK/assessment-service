@@ -9,11 +9,12 @@ use Edutiek\AssessmentService\System\EventHandling\Event;
 use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\EssayTask\Essay\EventService as EssayService;
+use Edutiek\AssessmentService\System\File\Storage;
 
 /**
  * Handle the removal of a writer from an assessment
  * - delete writers preferences
- * - delete the essay and all related filed (pdf upload, page imagee)
+ * - delete the essay and all related filed (pdf upload, page images, marked pdfs)
  */
 readonly class OnWriterRemoved implements Handler
 {
@@ -25,6 +26,7 @@ readonly class OnWriterRemoved implements Handler
     public function __construct(
         private Repositories $repos,
         private EssayService $essay_service,
+        private Storage $storage
     ) {
     }
 
@@ -35,10 +37,17 @@ readonly class OnWriterRemoved implements Handler
     {
         $this->repos->writerPrefs()->delete($event->getWriterId());
 
-        // use repo, not service  for searching to prevent a scope check
+        // use repo, not service for searching to prevent a scope check
         foreach ($this->repos->essay()->allByWriterId($event->getWriterId()) as $essay) {
             //this deletes all dependent data and files
             $this->essay_service->delete($essay);
+        }
+
+        $marked_pdfs = $this->repos->markedPdf()->allByWriterId($event->getWriterId());
+        foreach ($marked_pdfs as $marked) {
+            $this->storage->deleteFile($marked->getOwnPdf());
+            $this->storage->deleteFile($marked->getSumPdf());
+            $this->repos->markedPdf()->delete($marked->getId());
         }
     }
 }

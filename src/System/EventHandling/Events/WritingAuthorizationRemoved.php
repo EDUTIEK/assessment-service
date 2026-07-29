@@ -19,7 +19,6 @@ readonly class WritingAuthorizationRemoved implements Event
 {
     public function __construct(
         private int $writer_id,
-        private int $task_id,
         private DateTimeImmutable $time
     ) {
     }
@@ -27,11 +26,6 @@ readonly class WritingAuthorizationRemoved implements Event
     public function getWriterId(): int
     {
         return $this->writer_id;
-    }
-
-    public function getTaskId(): int
-    {
-        return $this->task_id;
     }
 
     public function getTime(): DateTimeImmutable

@@ -67,10 +67,6 @@ abstract class CorrectorSummary implements TaskEntity
             return GradingStatus::OPEN;
         }
         return GradingStatus::NOT_STARTED;
-
-        if (empty($this->getLastChange())) {
-            return GradingStatus::NOT_STARTED;
-        }
     }
 
     /**
