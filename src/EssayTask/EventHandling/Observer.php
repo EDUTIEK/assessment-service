@@ -24,7 +24,6 @@ class Observer extends AbstractObserver
         $this->registerHandler(OnWriterRemoved::class, fn() => new OnWriterRemoved(
             $repos,
             $internal->essay($ass_id, $user_id, true),
-            $storage
         ));
 
         $this->registerHandler(OnAssignmentRemoved::class, fn() => new OnAssignmentRemoved(
