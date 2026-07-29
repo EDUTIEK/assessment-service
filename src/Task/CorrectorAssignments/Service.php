@@ -349,7 +349,7 @@ readonly class Service implements FullService
                     $this->repos->correctorAssignment()->save($new_assignment);
                 }
 
-                if ($new_assignment->getPosition() === GradingPosition::STITCH) {
+                if ($new_assignment?->getPosition() === GradingPosition::STITCH) {
                     $writer = $this->writer_service->oneByWriterId($new_assignment->getWriterId());
                     $corrector = $this->corrector_service->oneById($new_assignment->getCorrectorId());
                     $this->notification->sendDirect(
