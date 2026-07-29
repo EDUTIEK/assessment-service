@@ -240,12 +240,7 @@ class CorrectorBridge implements AppCorrectorBridge
 
         $writer = $this->writer_service->oneByWriterId($writer_id);
         if (!$writer?->isAuthorized()) {
-            return [];
-        }
-
-        $assignments = $this->assignment_service->allByTaskIdAndWriterId($task_id, $writer_id);
-        if (empty($assignments)) {
-            return [];
+            return $data;
         }
 
         $own_assignment = $this->assignment_service->oneByIds($writer_id, (int) $this->corrector?->getId(), $task_id);
@@ -275,8 +270,10 @@ class CorrectorBridge implements AppCorrectorBridge
                 'can_revise' => false,
             ]);
         } else {
-            return [];
+            return $data;
         }
+
+        $assignments = $this->assignment_service->allByTaskIdAndWriterId($task_id, $writer_id);
 
         foreach ($assignments as $assignment) {
 

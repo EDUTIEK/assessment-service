@@ -127,7 +127,7 @@ class CorrectorBridge implements AppCorrectorBridge
                         $this->corrector->getId(),
                         $essay->getTaskId()
                     );
-                    if ($assignment === null) {
+                    if ($assignment === null && !$this->is_admin) {
                         return null;
                     }
                 }
