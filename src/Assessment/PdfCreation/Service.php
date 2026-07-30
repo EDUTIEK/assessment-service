@@ -172,6 +172,8 @@ class Service implements FullService
 
     private function createPdfFile(PdfPurpose $purpose, int $task_id, int $writer_id, bool $anonymous_writer, bool $anonymous_corrector): string
     {
+        $this->processor->resetSavedFiles();
+
         $options = (new Options())
             ->withTitle($this->buildTitle($task_id, $writer_id, $anonymous_writer));
 
@@ -198,12 +200,12 @@ class Service implements FullService
 
         if (count($pdf_ids) == 1) {
             $id = reset($pdf_ids);
-            return $id;
         } else {
             $id = $this->processor->join($pdf_ids);
         }
 
-        $this->processor->cleanupExcept([$id]);
+        $this->processor->cleanupSavedFiledExcept([$id]);
+
         return $id;
     }
 

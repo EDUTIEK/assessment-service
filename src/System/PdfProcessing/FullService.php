@@ -34,17 +34,16 @@ interface FullService
     public function onTopOfEachOther(string $pdf_left, string $pdf_right): string;
 
     /**
-     * Cleanup temporary files created during the processing
-     *
-     * @param string[] $ids    file ids of files that should be deleted
+     * Reset the List of saved files
+     * This should be called at top level of a staged processing before the first step
      */
-    public function cleanup(array $ids);
+    public function resetSavedFiles(): void;
 
     /**
-     * Cleanup temporary files created during the processing
-     * This should be called after the last processing step of a sequence
+     * Cleanup saved files except the ones specified
+     * This should be called at top level of a staged processing after the last step
      *
      * @param string[] $keep_ids    file ids of files that should be kept
      */
-    public function cleanupExcept(array $keep_ids);
+    public function cleanupSavedFiledExcept(array $keep_ids): void;
 }

@@ -67,7 +67,6 @@ readonly class WritingProvider implements PdfPartProvider
             // both pdf and written text are relevant - create text pdf and join it with the pdf file
             $created = $this->renderWrittenText($essay, $anonymous_writer, $options);
             $id = $this->pdf_processing->join([$created, $essay->getPdfVersion()]);
-            $this->pdf_processing->cleanup([$created]);
             return $id;
         }
 

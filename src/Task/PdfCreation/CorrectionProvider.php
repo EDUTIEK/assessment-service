@@ -180,7 +180,6 @@ readonly class CorrectionProvider implements PdfPartProvider
             $pdf2 = $this->renderContent(null, null, [$summary->getPoints()], $options);
 
             $joined = $this->pdf_processing->join([$pdf1, $summary->getSummaryPdf(), $pdf2]);
-            $this->pdf_processing->cleanup([$pdf1, $pdf2]);
             return $joined;
         } else {
             $pdf = $this->renderContent(

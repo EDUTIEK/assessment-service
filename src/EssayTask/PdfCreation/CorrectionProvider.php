@@ -208,13 +208,14 @@ readonly class CorrectionProvider implements PdfPartProvider
         $start_page = $options->getStartPageNumber() + $this->pdf_processing->count($marked_pdf_id);
         $comment_pdf = $this->renderComments($key, $infos, $options->withStartPageNumber($start_page));
 
+        $marked_copy_id = $this->pdf_processing->copy($marked_pdf_id);
+
         if ($comment_pdf) {
-            $joined_id = $this->pdf_processing->join([$marked_pdf_id, $comment_pdf]);
-            $this->pdf_processing->cleanup([$comment_pdf]);
+            $joined_id = $this->pdf_processing->join([$marked_copy_id, $comment_pdf]);
             return $joined_id;
         }
 
-        return $marked_pdf_id;
+        return $marked_copy_id;
     }
 
     /**
@@ -244,7 +245,6 @@ readonly class CorrectionProvider implements PdfPartProvider
             $comment_pdf = $this->renderComments($key, $infos, $options->withStartPageNumber($start_page));
 
             $joined_id = $this->pdf_processing->join([$marked_pdf, $comment_pdf]);
-            $this->pdf_processing->cleanup([$marked_pdf, $comment_pdf]);
             return $joined_id;
         }
     }
@@ -319,7 +319,6 @@ readonly class CorrectionProvider implements PdfPartProvider
         foreach ($image_ids as $id) {
             $this->temp_storage->deleteFile($id);
         }
-        $this->pdf_processing->cleanup($pdf_ids);
 
         return $final_pdf_id;
     }

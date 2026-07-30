@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\PdfProcessing;
 
+use Edutiek\AssessmentService\System\Data\FileInfo;
 use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreator;
 use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverter;
 use Edutiek\AssessmentService\System\File\Storage;
@@ -85,10 +86,10 @@ class Service implements FullService
 
     public function copy(string $pdf_id): string
     {
-        return $this->storage->saveFile(
+        return $this->saveFile(
             $this->storage->getFileStream($pdf_id),
             $this->storage->getFileInfo($pdf_id)->setId(null)
-        )->getId();
+        );
     }
 
     public function count(string $pdf_id): int
@@ -119,24 +120,6 @@ class Service implements FullService
         return $target;
     }
 
-    public function cleanup(array $ids)
-    {
-        return;
-        foreach (array_intersect($this->saved_files, $ids) as $id) {
-            $this->storage->deleteFile($id);
-        }
-        $this->saved_files = array_diff($this->saved_files, $ids);
-    }
-
-    public function cleanupExcept(array $keep_ids)
-    {
-        return;
-        foreach (array_diff($this->saved_files, $keep_ids) as $id) {
-            $this->storage->deleteFile($id);
-        }
-        $this->saved_files = array_intersect($this->saved_files, $keep_ids);
-    }
-
     /**
      * @return string[]
      */
@@ -156,15 +139,28 @@ class Service implements FullService
         return $this->storage->getReadablePath($id);
     }
 
-    private function saveFile($content): string
+    private function saveFile($content, ?FileInfo $info = null): string
     {
         $id = $this->storage->saveFile(
             $content,
-            $this->storage->newInfo()
+            $info ?? $this->storage->newInfo()
             ->setMimeType('application/pdf')
             ->setFileName('file.pdf')
         )->getId();
         $this->saved_files[] = $id;
         return $id;
+    }
+
+    public function resetSavedFiles(): void
+    {
+        $this->saved_files = [];
+    }
+
+    public function cleanupSavedFiledExcept(array $keep_ids): void
+    {
+        foreach (array_diff($this->saved_files, $keep_ids) as $id) {
+            $this->storage->deleteFile($id);
+        }
+        $this->saved_files = [];
     }
 }
