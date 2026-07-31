@@ -9,6 +9,11 @@ use Edutiek\AssessmentService\System\Data\UserDisplay;
 interface UserDataRepo
 {
     /**
+     * Get a dummy record of a user
+     */
+    public function new(int $id): UserData;
+
+    /**
      * Get the data of a user by its id
      */
     public function one(int $id): ?UserData;
