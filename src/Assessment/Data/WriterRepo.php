@@ -26,8 +26,8 @@ interface WriterRepo
      * @see Writer::canBeCorrected
      */
     public function correctableIds(int $ass_id): array;
+    public function stitchableIds(int $ass_id): array;
     public function save(Writer $entity): void;
     public function delete(int $id): void;
     public function deleteByAssId(int $ass_id): void;
-    public function hasStitchDecisions(int $ass_id): bool;
 }

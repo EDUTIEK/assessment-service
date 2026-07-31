@@ -60,17 +60,51 @@ readonly class Service implements FullService
         return $this->repos->correctorAssignment()->allByTaskIdAndWriterId($task_id, $writer_id);
     }
 
-    public function countMissingAssignments(): int
+    public function getMissingAssignmentsInfo(): ?string
     {
-        $correctable_ids = $this->writer_service->correctableIds();
-
         $num_tasks = $this->repos->settings()->countByAssId($this->ass_id);
         $correctors_per_task = $this->correction_settings->getRequiredCorrectors();
 
-        $required = count($correctable_ids) * $num_tasks * $correctors_per_task;
-        $assigned = $this->repos->correctorAssignment()->countByWriterIds($correctable_ids);
+        $correctable_ids = $this->writer_service->correctableIds();
+        $required_normal = count($correctable_ids) * $num_tasks;
+        $missing_first = $required_normal - $this->repos->correctorAssignment()->countByWriterIds($correctable_ids, [GradingPosition::FIRST]);
 
-        return max(0, $required - $assigned);
+        $texts = [];
+        if ($correctors_per_task === 1) {
+
+            if ($missing_first > 0) {
+                $texts[] = $missing_first == 1
+                    ? $this->lang->txt('1_correction')
+                    : $this->lang->txt('x_corrections', ['x' => $missing_first]);
+            }
+        } else {
+            $stitchable_ids = $this->writer_service->stitchableIds();
+            $require_stitch = count($stitchable_ids) * $num_tasks;
+
+            $missing_second = $required_normal - $this->repos->correctorAssignment()->countByWriterIds($correctable_ids, [GradingPosition::SECOND]);
+            $missing_stitch = $require_stitch - $this->repos->correctorAssignment()->countByWriterIds($stitchable_ids, [GradingPosition::STITCH]);
+
+            if ($missing_first > 0) {
+                $texts[] = $missing_first == 1
+                    ? $this->lang->txt('1_first_correction')
+                    : $this->lang->txt('x_first_corrections', ['x' => $missing_first]);
+            }
+
+            if ($missing_second > 0) {
+                $texts[] = $missing_second == 1
+                    ? $this->lang->txt('1_second_correction')
+                    : $this->lang->txt('x_second_corrections', ['x' => $missing_second]);
+            }
+
+            if ($missing_stitch > 0) {
+                $texts[] = $missing_stitch == 1
+                    ? $this->lang->txt('1_stitch_decision')
+                    : $this->lang->txt('x_stitch_decisions', ['x' => $missing_stitch]);
+            }
+        }
+
+
+        return empty($texts) ? null : $this->lang->txt('assignments_missing') . ' ' . implode(', ', $texts);
     }
 
     public function allByCorrectorId(int $corrector_id, $only_authorized_writings = false): array

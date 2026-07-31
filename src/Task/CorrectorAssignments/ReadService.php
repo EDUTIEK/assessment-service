@@ -39,5 +39,8 @@ interface ReadService
      */
     public function allForCorrectorAdminFiltered(): array;
 
-    public function countMissingAssignments(): int;
+    /**
+     * Get an info message about missing assignments
+     */
+    public function getMissingAssignmentsInfo(): ?string;
 }

@@ -94,6 +94,11 @@ readonly class Service implements ReadService, FullService
         return $this->repos->writer()->correctableIds($this->ass_id);
     }
 
+    public function stitchableIds(): array
+    {
+        return $this->repos->writer()->stitchableIds($this->ass_id);
+    }
+
     /**
      * @todo: replace usage by dedicated operations and make private or remove
      */
@@ -287,10 +292,5 @@ readonly class Service implements ReadService, FullService
         $settings = $this->repos->orgaSettings()->one($this->ass_id);
         $working_time = $this->working_time_factory->workingTime($settings, $writer);
         return $working_time->validate();
-    }
-
-    public function hasStitchDecisions(): bool
-    {
-        return $this->repos->writer()->hasStitchDecisions($this->ass_id);
     }
 }

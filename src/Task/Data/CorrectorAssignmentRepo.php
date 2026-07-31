@@ -9,8 +9,11 @@ use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 interface CorrectorAssignmentRepo
 {
     public function new(): CorrectorAssignment;
-    /** @var int[] $writer_ids */
-    public function countByWriterIds(array $writer_ids): int;
+    /**
+     * @param int[] $writer_ids
+     * @param GradingPosition[] $positions
+     */
+    public function countByWriterIds(array $writer_ids, array $positions): int;
     public function hasByIds(int $writer_id, int $corrector_id, int $task_id): bool;
     public function oneByIds(int $writer_id, int $corrector_id, int $task_id): ?CorrectorAssignment;
     public function oneByPosition(int $task_id, int $writer_id, GradingPosition $position): ?CorrectorAssignment;
