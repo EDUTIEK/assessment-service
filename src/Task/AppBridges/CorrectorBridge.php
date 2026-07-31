@@ -118,6 +118,10 @@ class CorrectorBridge implements AppCorrectorBridge
 
         $data['Items'] = [];
         if ($this->is_admin) {
+            // todo respect filter in correction admin
+            // Items are keyed by writer and task (see WritingTask)
+            // Currently items without assignment are left out
+            // A missing item with access is aded by the getItem call
             $assignments = $this->assignment_service->all();
         } elseif ($this->corrector !== null) {
             $assignments = $this->assignment_service->allByCorrectorIdFiltered($this->corrector->getId(), true);
