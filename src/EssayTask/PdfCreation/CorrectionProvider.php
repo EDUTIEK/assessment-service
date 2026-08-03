@@ -174,7 +174,7 @@ readonly class CorrectionProvider implements PdfPartProvider
                     }
                 };
             }
-        } else {
+        } elseif (!empty($allowed_positions)) {
             return $this->renderFromText($key, $essay, $infos, $anonymous_corrector, $options);
         }
 
@@ -238,7 +238,7 @@ readonly class CorrectionProvider implements PdfPartProvider
 
         $marked_pdf = $this->pdf_processing->create($html, $options);
 
-        if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
+        if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE || empty($infos)) {
             return $marked_pdf;
         } else {
             $start_page = $options->getStartPageNumber() + $this->pdf_processing->count($marked_pdf);
