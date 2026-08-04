@@ -59,6 +59,11 @@ class ImportTypeNrw implements ImportType
         ];
     }
 
+    /**
+     * Get the table rows for listing the import files
+     * @param ImportFile[] $files
+     * @return Row[]
+     */
     public function rows(array $files): array
     {
         $rows = [];
@@ -66,7 +71,7 @@ class ImportTypeNrw implements ImportType
             $rows[] = new Row($file->getTempId(), [
                 'file' => $file->getFileName(),
                 'id' => $file->getLogin(),
-                'import_possible' => $file->getImportPossible(),
+                'import_possible' => $file->isImportPossible(),
                 'comment' => implode(', ', array_merge($file->getErrors(), $file->getComments()))
             ]);
         };
