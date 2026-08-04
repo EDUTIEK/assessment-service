@@ -14,6 +14,7 @@ use Edutiek\AssessmentService\EssayTask\ConstraintHandling\Provider as Constrain
 use Edutiek\AssessmentService\EssayTask\Essay\Service as EssayService;
 use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImageService;
 use Edutiek\AssessmentService\EssayTask\EssayImport\ImportTypeBavaria;
+use Edutiek\AssessmentService\EssayTask\EssayImport\ImportTypeDefault;
 use Edutiek\AssessmentService\EssayTask\EssayImport\ImportTypeNrw;
 use Edutiek\AssessmentService\EssayTask\EssayImport\Service as ImportService;
 use Edutiek\AssessmentService\EssayTask\EventHandling\Observer as EventObserver;
@@ -191,12 +192,17 @@ class Internal
             $this->essay($ass_id, $user_id, true),
             $this->language($user_id),
             [
-                // add bavaria first for detection order
+                // add bavaria first for detection order, requires spreadsheet
                 ImportTypeBavaria::class => new ImportTypeBavaria(
                     $this->dependencies->systemApi()->spreadsheet(true),
                     $this->language($user_id)
                 ),
+                // add nrw second, requires special file names
                 ImportTypeNrw::class => new ImportTypeNrw(
+                    $this->language($user_id)
+                ),
+                // add default as last, file name is just the login with '.pdf'
+                ImportTypeDefault::class => new ImportTypeDefault(
                     $this->language($user_id)
                 )
             ]

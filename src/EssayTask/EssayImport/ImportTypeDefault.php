@@ -22,9 +22,9 @@ namespace Edutiek\AssessmentService\EssayTask\EssayImport;
 
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 
-class ImportTypeNrw implements ImportType
+class ImportTypeDefault implements ImportType
 {
-    private const FILE_PATTERN = '/^\d+von\d+_(\d+-\d+).pdf$/';
+    private const FILE_PATTERN = '/^(.*)\.pdf$/';
 
     public function __construct(
         private Language $lng
