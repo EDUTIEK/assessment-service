@@ -93,7 +93,7 @@ class Service implements ReadService
         }
 
         $writer = $this->getWriter();
-        if ($writer === null || $writer->getWritingAuthorized() !== null || $writer->getWritingExcluded() !== null) {
+        if ($writer?->getWritingAuthorized() !== null || $writer?->getWritingExcluded() !== null) {
             return false;
         }
 
