@@ -68,7 +68,7 @@ class AppWriter extends BaseApp implements RestService
         // get data to update after changes
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
             $bridge = $this->getBridge($component);
-            $response_json['Update'][$component] = $bridge?->getData(false) ?? [];
+            $response_json['Update'][$component] = $bridge?->getData(true) ?? [];
         }
 
         $this->rest_helper->setAlive();
