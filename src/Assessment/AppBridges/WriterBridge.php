@@ -20,6 +20,7 @@ use Edutiek\AssessmentService\System\Data\FileInfo;
 class WriterBridge implements AppBridge
 {
     private const CHANGE_TYPE_WRITER = 'writer';
+    private const CHANGE_TYPE_STATUS = 'status';
 
     private ?\Edutiek\AssessmentService\Assessment\Data\Writer $writer;
 
@@ -85,10 +86,26 @@ class WriterBridge implements AppBridge
 
     public function applyChanges(string $type, array $changes): array
     {
-        if ($type = self::CHANGE_TYPE_WRITER) {
-            return array_map(fn(ChangeRequest $change) => $this->applyWriter($change), $changes);
+        switch ($type) {
+            case self::CHANGE_TYPE_STATUS:
+                return array_map(fn(ChangeRequest $change) => $this->applyStatus($change), $changes);
+
+            case self::CHANGE_TYPE_WRITER:
+                return array_map(fn(ChangeRequest $change) => $this->applyWriter($change), $changes);
         }
         return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'wrong type'), $changes);
+    }
+
+    public function applyStatus(ChangeRequest $change): ChangeResponse
+    {
+        if ($change->getAction() === ChangeAction::SAVE) {
+            $data = (array) $change->getPayload();
+            $battery = $data['battery'] ?? null;
+            $hidden = $data['hidden'] ?? null;
+
+            // todo: save this information
+        }
+        return $change->toResponse(false, 'wrong action');
     }
 
     public function applyWriter(ChangeRequest $change): ChangeResponse

@@ -33,18 +33,14 @@ class AppWriter extends BaseApp implements RestService
         $this->prepare($request, $response, $args, TokenPurpose::DATA);
 
         $json_data = $this->rest_helper->getJsonData($request);
-        $update_data = $json_data['Update'] ?? [];
-        $changes_data = $json_data['Changes'] ?? [];
 
         $response_json = [
             'Update' => [],
             'Changes' => []
         ];
 
-        // todo: process status data
-
         // process the changes
-        foreach ($changes_data as $component => $component_data) {
+        foreach ($json_data as $component => $component_data) {
             $bridge = $this->getBridge((string) $component);
             if ($bridge === null) {
                 continue;
