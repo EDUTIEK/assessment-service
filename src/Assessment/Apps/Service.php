@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Api\Internal;
+use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Throwable;
 use Edutiek\AssessmentService\System\Config\Frontend;
@@ -44,6 +45,20 @@ class Service implements OpenService, RestService
         $this->context_id = $context_id;
         $helper = $this->internal->openHelper($this->ass_id, $this->context_id, $this->user_id);
         $helper->setCommonFrontendParams($return_url);
+
+        $writer = $this->internal->writer($this->ass_id, $this->user_id)->oneByUserId($this->user_id);
+        if ($writer) {
+
+            $token = $this->internal->authentication($this->ass_id, $this->context_id)
+                ->getToken($this->user_id, TokenPurpose::DATA);
+
+            $client_service = $this->internal->writerClient($this->ass_id, $this->user_id);
+            $client_service->save(
+                $client_service->get($writer->getId(), $token->getId())
+                    ->setLastAccess(new \DateTimeImmutable('now'))
+            );
+        }
+
         $helper->openFrontend($this->config->getFrontendUrl($this->frontend));
     }
 

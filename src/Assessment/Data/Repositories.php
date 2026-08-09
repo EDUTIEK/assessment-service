@@ -22,6 +22,7 @@ interface Repositories
     public function pdfSettings(): PdfSettingsRepo;
     public function token(): TokenRepo;
     public function writer(): WriterRepo;
+    public function writerClient(): WriterClientRepo;
     public function disabledGroup(): DisabledGroupRepo;
     public function notificationSettings(): NotificationSettingsRepo;
     public function notificationUser(): NotificationUserRepo;

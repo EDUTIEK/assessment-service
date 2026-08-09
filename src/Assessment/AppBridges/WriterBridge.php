@@ -9,8 +9,10 @@ use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
 use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
+use Edutiek\AssessmentService\Assessment\WriterClient\FullService as WriterClientService;
 use Edutiek\AssessmentService\Assessment\Alert\FullService as AlertService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\Data\Config;
@@ -29,6 +31,7 @@ class WriterBridge implements AppBridge
         private readonly int $user_id,
         private readonly WorkingTimeFactory $working_time_factory,
         private readonly WriterService $writer_service,
+        private readonly WriterClientService $client_service,
         private readonly AlertService $alert_service,
         private readonly ConfigService $config,
         private readonly EntityService $entity,
@@ -100,10 +103,17 @@ class WriterBridge implements AppBridge
     {
         if ($change->getAction() === ChangeAction::SAVE) {
             $data = (array) $change->getPayload();
-            $battery = $data['battery'] ?? null;
-            $hidden = $data['hidden'] ?? null;
+            $battery = isset($data['battery']) ? (float) $data['battery'] : null;
+            $hidden = isset($data['hidden']) ? (bool) $data['hidden'] : null;
 
-            // todo: save this information
+            $token = $this->repos->token()->oneByIdsAndPurpose($this->user_id, $this->ass_id, TokenPurpose::DATA);
+
+            $client = $this->client_service->get($this->writer->getId(), $token->getId())
+                ->setLastAccess(new \DateTimeImmutable('now'))
+                ->setBattery($battery)
+                ->setHidden($hidden);
+
+            $this->client_service->save($client);
         }
         return $change->toResponse(false, 'wrong action');
     }
