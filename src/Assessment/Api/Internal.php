@@ -250,6 +250,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $ass_id,
             $user_id,
             $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->entity()
         );
     }
 

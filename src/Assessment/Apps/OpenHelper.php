@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Authentication\FullService as Authentication;
-use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\Token;
 use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigReadService;
-use JetBrains\PhpStorm\NoReturn;
-use SimpleSAML\Utils\Auth;
 
 readonly class OpenHelper
 {

@@ -105,15 +105,20 @@ class WriterBridge implements AppBridge
             $data = (array) $change->getPayload();
             $battery = isset($data['battery']) ? (float) $data['battery'] : null;
             $hidden = isset($data['hidden']) ? (bool) $data['hidden'] : null;
+            $user_agent = isset($data['user_agent']) ? (string) $data['user_agent'] : null;
+            $platform = isset($data['platform']) ? (string) $data['platform'] : null;
 
-            $token = $this->repos->token()->oneByIdsAndPurpose($this->user_id, $this->ass_id, TokenPurpose::DATA);
-
-            $client = $this->client_service->get($this->writer->getId(), $token->getId())
-                ->setLastAccess(new \DateTimeImmutable('now'))
-                ->setBattery($battery)
-                ->setHidden($hidden);
-
-            $this->client_service->save($client);
+            $client = $this->client_service->current($this->writer);
+            if ($client !== null) {
+                $this->client_service->save(
+                    $client
+                    ->setLastAccess(new \DateTimeImmutable('now'))
+                    ->setUserAgent($user_agent ?? $client->getUserAgent())
+                    ->setPlatform($platform ?? $client->getPlatform())
+                    ->setBattery($battery)
+                    ->setHidden($hidden)
+                );
+            }
         }
         return $change->toResponse(false, 'wrong action');
     }

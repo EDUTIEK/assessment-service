@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\WriterClient;
 
 use Edutiek\AssessmentService\Assessment\Data\WriterClient;
+use Edutiek\AssessmentService\Assessment\Data\Writer;
 
 interface ReadService
 {
@@ -14,5 +15,5 @@ interface ReadService
      */
     public function all(int $writer_id);
 
-    public function get(int $writer_id, int $token_id) : WriterClient;
+    public function current(Writer $writer): ?WriterClient;
 }

@@ -46,17 +46,10 @@ class Service implements OpenService, RestService
         $helper = $this->internal->openHelper($this->ass_id, $this->context_id, $this->user_id);
         $helper->setCommonFrontendParams($return_url);
 
+        // must be done after the token is created
         $writer = $this->internal->writer($this->ass_id, $this->user_id)->oneByUserId($this->user_id);
-        if ($writer) {
-
-            $token = $this->internal->authentication($this->ass_id, $this->context_id)
-                ->getToken($this->user_id, TokenPurpose::DATA);
-
-            $client_service = $this->internal->writerClient($this->ass_id, $this->user_id);
-            $client_service->save(
-                $client_service->get($writer->getId(), $token->getId())
-                    ->setLastAccess(new \DateTimeImmutable('now'))
-            );
+        if ($writer !== null) {
+            $this->internal->writerClient($this->ass_id, $this->user_id)->create($writer);
         }
 
         $helper->openFrontend($this->config->getFrontendUrl($this->frontend));
@@ -115,8 +108,10 @@ class Service implements OpenService, RestService
         } catch (RestException $e) {
             $this->context->sendResponse($e->getCode(), $e->getMessage());
         } catch (Throwable $e) {
-            $this->context->sendResponse(RestException::INTERNAL_SERVER_ERROR,
-                $e->getMessage() . "\n". $e->getTraceAsString());
+            $this->context->sendResponse(
+                RestException::INTERNAL_SERVER_ERROR,
+                $e->getMessage() . "\n" . $e->getTraceAsString()
+            );
         }
         exit;
     }
