@@ -14,6 +14,7 @@ abstract class WriterView
     abstract public function getWriterData(): UserData;
     abstract public function getWriterDisplay(): UserDisplay;
     abstract public function getLocation(): ?Location;
+    abstract public function getClientSummary(): ClientSummary;
     abstract public function getEssayTaskSummary(): EssayTaskSummary;
     abstract public function getAuthorizedByData(): ?UserData;
     abstract public function getExcludedByData(): ?UserData;
