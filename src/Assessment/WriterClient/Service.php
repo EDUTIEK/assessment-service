@@ -39,6 +39,16 @@ class Service implements ReadService, FullService
         $client = $this->repos->writerClient()->oneByWriterIdAndSessionId($writer->getId(), session_id());
 
         if ($client === null) {
+
+            // no client with current session id found
+            // remove the outdated session ids from the older clients
+            // the battery and hidden status will be queried from the client with a session_id
+            foreach ($this->repos->writerClient()->allByWriterId($writer->getId()) as $old_client) {
+                if ($old_client->getSessionId() !== null) {
+                    $this->repos->writerClient()->save($old_client->setSessionId(null));
+                }
+            }
+
             $client = $this->repos->writerClient()->new()
                         ->setWriterId($writer->getId())
                         ->setSessionId(session_id())

@@ -12,8 +12,8 @@ abstract class WriterClient implements AssessmentEntity
     abstract public function getTokenId(): int;
     abstract public function setTokenId(int $token_id): static;
 
-    abstract public function getSessionId(): string;
-    abstract public function setSessionId(string $session_id): static;
+    abstract public function getSessionId(): ?string;
+    abstract public function setSessionId(?string $session_id): static;
 
     abstract public function getFirstAccess(): DateTimeImmutable;
     abstract public function setFirstAccess(DateTimeImmutable $first_access): static;
