@@ -41,11 +41,16 @@ class Service implements ReadService, FullService
         if ($client === null) {
 
             // no client with current session id found
-            // remove the outdated session ids from the older clients
-            // the battery and hidden status will be queried from the client with a session_id
+            // remove outdated data from the older clients
+            // these should not be used in aggregate functions for the writer view
             foreach ($this->repos->writerClient()->allByWriterId($writer->getId()) as $old_client) {
                 if ($old_client->getSessionId() !== null) {
-                    $this->repos->writerClient()->save($old_client->setSessionId(null));
+                    $this->repos->writerClient()->save(
+                        $old_client
+                        ->setSessionId(null)
+                        ->setBattery(null)
+                        ->setHidden(null)
+                    );
                 }
             }
 
