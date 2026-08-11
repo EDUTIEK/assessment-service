@@ -29,6 +29,7 @@ use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymServi
 use Edutiek\AssessmentService\Assessment\WorkingTime\FullService as WorkingTimeService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\IndividualWorkingTime;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterFullService;
+use Edutiek\AssessmentService\Assessment\WriterClient\ReadService as WriterClientService;
 use Edutiek\AssessmentService\Assessment\WritingTask\ReadService as WritingTaskReadService;
 use Edutiek\AssessmentService\System\Language\ReadService as LanguageService;
 
@@ -109,6 +110,11 @@ readonly class ForClients
     public function writer(): WriterFullService
     {
         return $this->internal->writer($this->ass_id, $this->user_id);
+    }
+
+    public function writerClient(): WriterClientService
+    {
+        return $this->internal->writerClient($this->ass_id, $this->user_id);
     }
 
     public function format(): FormatInterface
