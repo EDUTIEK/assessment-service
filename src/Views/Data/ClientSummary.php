@@ -9,12 +9,17 @@ use DateTimeImmutable;
  */
 class ClientSummary
 {
+    public const  BATTERY_THRESHOLD = 0.5;      // 0 to 1
+    public const  ONLINE_THRESHOLD = 60;        // seconds
+
+
     public function __construct(
         private int $sessions,
         private ?DateTimeImmutable $first_access,
         private ?DateTimeImmutable $last_access,
         private ?float $battery = null,
         private ?bool $hidden = null,
+        private bool $online = false,
     ) {
     }
 
@@ -54,5 +59,10 @@ class ClientSummary
     public function getHidden(): ?bool
     {
         return $this->hidden;
+    }
+
+    public function isOnline(): bool
+    {
+        return $this->online;
     }
 }
