@@ -25,6 +25,7 @@ class WriterBridge implements AppBridge
     private const CHANGE_TYPE_STATUS = 'status';
 
     private ?\Edutiek\AssessmentService\Assessment\Data\Writer $writer;
+    private ?\Edutiek\AssessmentService\Assessment\Data\OrgaSettings $orga_settings;
 
     public function __construct(
         private readonly int $ass_id,
@@ -38,6 +39,7 @@ class WriterBridge implements AppBridge
         private readonly Repositories $repos,
     ) {
         $this->writer = $this->repos->writer()->oneByUserIdAndAssId($this->user_id, $this->ass_id);
+        $this->orga_settings = $this->repos->orgaSettings()->one($this->ass_id);
     }
 
     public function getData(bool $for_update): array
@@ -52,6 +54,7 @@ class WriterBridge implements AppBridge
         $data['Config'] = $this->entity->arrayToPrimitives([
             'primary_color' => $config->getPrimaryColor(),
             'primary_text_color' => $config->getPrimaryTextColor(),
+            'send_status' => $this->orga_settings->getDashboard() ?? false,
         ]);
 
         if ($this->writer !== null) {
@@ -101,7 +104,7 @@ class WriterBridge implements AppBridge
 
     public function applyStatus(ChangeRequest $change): ChangeResponse
     {
-        if ($change->getAction() === ChangeAction::SAVE) {
+        if ($change->getAction() === ChangeAction::SAVE && $this->orga_settings?->getDashboard()) {
             $data = (array) $change->getPayload();
             $battery = isset($data['battery']) ? (float) $data['battery'] : null;
             $hidden = isset($data['hidden']) ? (bool) $data['hidden'] : null;

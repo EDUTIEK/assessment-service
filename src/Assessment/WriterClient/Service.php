@@ -44,14 +44,12 @@ class Service implements ReadService, FullService
             // remove outdated data from the older clients
             // these should not be used in aggregate functions for the writer view
             foreach ($this->repos->writerClient()->allByWriterId($writer->getId()) as $old_client) {
-                if ($old_client->getSessionId() !== null) {
-                    $this->repos->writerClient()->save(
-                        $old_client
+                $this->repos->writerClient()->save(
+                    $old_client
                         ->setSessionId(null)
                         ->setBattery(null)
                         ->setHidden(null)
-                    );
-                }
+                );
             }
 
             $client = $this->repos->writerClient()->new()
@@ -86,6 +84,7 @@ class Service implements ReadService, FullService
     public function save(WriterClient $client): void
     {
         $this->checkScope($client->getWriterId());
+        $this->checkActive();
         $client = $this->entities->secure($client, WriterClient::class);
         $this->repos->writerClient()->save($client);
     }
@@ -98,10 +97,17 @@ class Service implements ReadService, FullService
         return $this->repos->token()->oneByIdsAndPurpose($writer->getUserId(), $writer->getAssId(), TokenPurpose::DATA);
     }
 
-    private function checkScope(int $writer_id)
+    private function checkScope(int $writer_id): void
     {
         if (!$this->repos->writer()->hasByWriterIdAndAssId($writer_id, $this->ass_id)) {
             throw new ApiException("wrong writer_id", ApiException::ID_SCOPE);
+        }
+    }
+
+    private function checkActive(): void
+    {
+        if (!$this->repos->orgaSettings()->one($this->ass_id)?->getDashboard()) {
+            throw new ApiException("dashboard not active", ApiException::PRIVACY);
         }
     }
 }

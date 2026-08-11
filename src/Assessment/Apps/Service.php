@@ -47,9 +47,12 @@ class Service implements OpenService, RestService
         $helper->setCommonFrontendParams($return_url);
 
         // must be done after the token is created
-        $writer = $this->internal->writer($this->ass_id, $this->user_id)->oneByUserId($this->user_id);
-        if ($writer !== null) {
-            $this->internal->writerClient($this->ass_id, $this->user_id)->create($writer);
+        $settings = $this->internal->orgaSettings($this->ass_id, $this->user_id)->get();
+        if ($settings?->getDashboard()) {
+            $writer = $this->internal->writer($this->ass_id, $this->user_id)->oneByUserId($this->user_id);
+            if ($writer !== null) {
+                $this->internal->writerClient($this->ass_id, $this->user_id)->create($writer);
+            }
         }
 
         $helper->openFrontend($this->config->getFrontendUrl($this->frontend));
