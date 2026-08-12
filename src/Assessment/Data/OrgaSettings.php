@@ -89,5 +89,8 @@ abstract class OrgaSettings implements AssessmentEntity
     abstract public function setSrcTemplateName(?string $name): self;
 
     abstract public function getDashboard(): bool;
-    abstract public function setDashboard(bool $dashboard): void;
+    abstract public function setDashboard(bool $dashboard): self;
+
+    abstract public function getStartPassword(): ?string;
+    abstract public function setStartPassword(?string $start_password): self;
 }
