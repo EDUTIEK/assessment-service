@@ -30,6 +30,7 @@ use Edutiek\AssessmentService\System\BackgroundTask\ComponentJob;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\System\File\FileUsageFinder;
 use Edutiek\AssessmentService\EssayTask\FileUsage\Finder;
+use Edutiek\AssessmentService\EssayTask\EssayImport\ImportTypeBerlinBrandenburg;
 
 class Internal
 {
@@ -199,6 +200,10 @@ class Internal
                 ),
                 // add nrw second, requires special file names
                 ImportTypeNrw::class => new ImportTypeNrw(
+                    $this->language($user_id)
+                ),
+                // add berlin third, requires special file names
+                ImportTypeBerlinBrandenburg::class => new ImportTypeBerlinBrandenburg(
                     $this->language($user_id)
                 ),
                 // add default as last, file name is just the login with '.pdf'
