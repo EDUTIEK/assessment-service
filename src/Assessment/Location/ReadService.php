@@ -10,7 +10,7 @@ interface ReadService
     public function exampleTitles(): array;
 
     /** @return string[] */
-    public function allTitles(): array;
+    public function allTitlesIndexed(): array;
 
     /** @return Location[] */
     public function all(): array;
