@@ -14,6 +14,8 @@ use Edutiek\AssessmentService\System\Data\ImageSizeType;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverter;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
+use Edutiek\AssessmentService\Task\CorrectionSettings\ReadService as TaskSettings;
+use Edutiek\AssessmentService\Task\Data\PdfMarking;
 
 readonly class Service implements FullService
 {
@@ -23,6 +25,7 @@ readonly class Service implements FullService
         private Storage $storage,
         private PdfConverter $pdf_converter,
         private WritingProvider $pdf_provider,
+        private TaskSettings $task_settings,
     ) {
     }
 
@@ -42,6 +45,10 @@ readonly class Service implements FullService
 
     public function createForEssay(Essay $essay): array
     {
+        if ($this->task_settings->get()->getPdfMarking() !== PdfMarking::IMAGES) {
+            return [];
+        }
+
         $delete_me = null;
         $pdfs = [];
         if ($essay->getWrittenText()) {

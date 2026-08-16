@@ -9,8 +9,10 @@ use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
 use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
+use Edutiek\AssessmentService\Assessment\WriterClient\FullService as WriterClientService;
 use Edutiek\AssessmentService\Assessment\Alert\FullService as AlertService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\Data\Config;
@@ -20,20 +22,24 @@ use Edutiek\AssessmentService\System\Data\FileInfo;
 class WriterBridge implements AppBridge
 {
     private const CHANGE_TYPE_WRITER = 'writer';
+    private const CHANGE_TYPE_STATUS = 'status';
 
     private ?\Edutiek\AssessmentService\Assessment\Data\Writer $writer;
+    private ?\Edutiek\AssessmentService\Assessment\Data\OrgaSettings $orga_settings;
 
     public function __construct(
         private readonly int $ass_id,
         private readonly int $user_id,
         private readonly WorkingTimeFactory $working_time_factory,
         private readonly WriterService $writer_service,
+        private readonly WriterClientService $client_service,
         private readonly AlertService $alert_service,
         private readonly ConfigService $config,
         private readonly EntityService $entity,
         private readonly Repositories $repos,
     ) {
         $this->writer = $this->repos->writer()->oneByUserIdAndAssId($this->user_id, $this->ass_id);
+        $this->orga_settings = $this->repos->orgaSettings()->one($this->ass_id);
     }
 
     public function getData(bool $for_update): array
@@ -48,6 +54,7 @@ class WriterBridge implements AppBridge
         $data['Config'] = $this->entity->arrayToPrimitives([
             'primary_color' => $config->getPrimaryColor(),
             'primary_text_color' => $config->getPrimaryTextColor(),
+            'send_status' => $this->orga_settings->getDashboard() ?? false,
         ]);
 
         if ($this->writer !== null) {
@@ -85,10 +92,38 @@ class WriterBridge implements AppBridge
 
     public function applyChanges(string $type, array $changes): array
     {
-        if ($type = self::CHANGE_TYPE_WRITER) {
-            return array_map(fn(ChangeRequest $change) => $this->applyWriter($change), $changes);
+        switch ($type) {
+            case self::CHANGE_TYPE_STATUS:
+                return array_map(fn(ChangeRequest $change) => $this->applyStatus($change), $changes);
+
+            case self::CHANGE_TYPE_WRITER:
+                return array_map(fn(ChangeRequest $change) => $this->applyWriter($change), $changes);
         }
         return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'wrong type'), $changes);
+    }
+
+    public function applyStatus(ChangeRequest $change): ChangeResponse
+    {
+        if ($change->getAction() === ChangeAction::SAVE && $this->orga_settings?->getDashboard()) {
+            $data = (array) $change->getPayload();
+            $battery = isset($data['battery']) ? (float) $data['battery'] : null;
+            $hidden = isset($data['hidden']) ? (bool) $data['hidden'] : null;
+            $user_agent = isset($data['user_agent']) ? (string) $data['user_agent'] : null;
+            $platform = isset($data['platform']) ? (string) $data['platform'] : null;
+
+            $client = $this->client_service->current($this->writer);
+            if ($client !== null) {
+                $this->client_service->save(
+                    $client
+                    ->setLastAccess(new \DateTimeImmutable('now'))
+                    ->setUserAgent($user_agent ?? $client->getUserAgent())
+                    ->setPlatform($platform ?? $client->getPlatform())
+                    ->setBattery($battery)
+                    ->setHidden($hidden)
+                );
+            }
+        }
+        return $change->toResponse(false, 'wrong action');
     }
 
     public function applyWriter(ChangeRequest $change): ChangeResponse

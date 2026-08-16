@@ -266,14 +266,25 @@ readonly class CorrectionProvider implements PdfPartProvider
 
         // criterion_id => points
         $sum_of_points = [];
+        $has_points = [
+            'general' => false,
+            'comment' => false
+        ];
 
         // criterion id is 0 for points without a criterion
         foreach ($this->repos->correctorPoints()->allByTaskIdAndWriterIdAndCorrectorId($summary->getTaskId(), $summary->getWriterId(), $summary->getCorrectorId()) as $point) {
-            $sum_of_points[(int) $point->getCriterionId()] = ($sum_of_points[$point->getCriterionId()] ?? 0) + $point->getPoints();
+            if ($point->getPoints() != 0) {
+                $sum_of_points[(int) $point->getCriterionId()] = ($sum_of_points[(int) $point->getCriterionId()] ?? 0) + $point->getPoints();
+                if ($point->getCommentId() === null) {
+                    $has_points['general'] = true;
+                } else {
+                    $has_points['comment'] = true;
+                }
+            }
         }
 
-        // don't show part of partial points of no partial points are entered
-        if (array_sum($sum_of_points) == 0) {
+        // don't show part of partial points if no partial points are entered
+        if (!$has_points['general'] && !$has_points['comment']) {
             return null;
         }
 
@@ -283,10 +294,11 @@ readonly class CorrectionProvider implements PdfPartProvider
             'general' => [],
             'comment' => [
                 $criteria_service->new()
-                    ->setId(0)
+                    ->setId(0)      // comment points without criterion
                     ->setCorrectorId($summary->getCorrectorId())
                     ->setTaskId($summary->getTaskId())
                     ->setGeneral(0)
+                    ->setPoints(0)  // no maximum points
                     ->setTitle($this->language->txt('independent_points'))
                     ->setDescription($this->language->txt('independent_points_description'))
             ]
@@ -306,7 +318,7 @@ readonly class CorrectionProvider implements PdfPartProvider
          ];
 
         foreach ($criteria_by_type as $type => $criteria) {
-            if (!empty($criteria)) {
+            if ($has_points[$type]) {
                 $table = [
                     'title' => $this->language->txt($type . '_points'),
                     'rows' => []

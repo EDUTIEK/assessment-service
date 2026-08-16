@@ -35,5 +35,7 @@ readonly class OnWriterRemoved implements Handler
         ) {
             $this->repos->alert()->delete($alert->getId());
         }
+
+        $this->repos->writerClient()->deleteByWriterId($event->getWriterId());
     }
 }

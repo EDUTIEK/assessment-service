@@ -25,6 +25,7 @@ use Edutiek\AssessmentService\Task\Api\Internal;
 use Edutiek\AssessmentService\System\Spreadsheet\ExportType;
 use Edutiek\AssessmentService\System\File\Disposition;
 use Edutiek\AssessmentService\Assessment\Data\NotificationType;
+use Edutiek\AssessmentService\System\Data\Result;
 
 readonly class Service implements FullService
 {
@@ -264,137 +265,136 @@ readonly class Service implements FullService
         ));
     }
 
-    /**
-     * Assign correctors to multiple writers
-     */
-    public function assignMultiple(
+    public function assignCorrectors(
         int $task_id,
+        int $writer_id,
         int $first_corrector_id,
         int $second_corrector_id,
         int $stitch_corrector_id,
-        array $writer_ids,
-        $dry_run = false
-    ): array {
+        $dry_run = false,
+        $check_combination_only = false,
+        $ignore_unchanged = false,
+    ): Result {
         $corrector_ids = [
             0 => $first_corrector_id,
             1 => $second_corrector_id,
             2 => $stitch_corrector_id,
         ];
 
-        $result = ["changed" => [], "unchanged" => [], "invalid" => []];
-
-        /** @var CorrectorAssignment[][] $old_assignments */
-        /** @var CorrectorAssignment[][] $new_assignments */
+        /** @var CorrectorAssignment[] $old_assignments */
+        /** @var CorrectorAssignment[] $new_assignments */
         $old_assignments = [];
         $new_assignments = [];
-        foreach ($this->repos->correctorAssignment()->allByTaskId($task_id) as $assignment) {
-            $old_assignments[$assignment->getWriterId()][$assignment->getPosition()->value] = $assignment;
+        foreach ($this->repos->correctorAssignment()->allByTaskIdAndWriterId($task_id, $writer_id) as $assignment) {
+            $old_assignments[$assignment->getPosition()->value] = $assignment;
         }
 
-        /** @var CorrectorSummary[][] $summaries */
+        /** @var CorrectorSummary[] $summaries */
         $summaries = [];
-        foreach ($this->repos->correctorSummary()->allByTaskIdAndWriterIds($task_id, $writer_ids) as $summary) {
-            $summaries[$summary->getCorrectorId()][$summary->getCorrectorId()] = $summary;
+        foreach ($this->repos->correctorSummary()->allByTaskIdAndWriterIds($task_id, [$writer_id]) as $summary) {
+            $summaries[$summary->getCorrectorId()] = $summary;
         }
 
-        foreach ($writer_ids as $writer_id) {
+        $change_any = false;
+        $change_authorized = false;
+        $ids = [];
 
-            $change_any = false;
-            $ids = [];
+        foreach ($corrector_ids as $position => $corrector_id) {
+            $to_change = false;
+            $old_assignment = $old_assignments[$position] ?? null;
 
-            foreach ($corrector_ids as $position => $corrector_id) {
-                $to_change = false;
-
-                $old_assignment = $old_assignments[$writer_id][$position] ?? null;
-                $summary = $summaries[$writer_id][$old_assignment?->getCorrectorId()] ?? null;
-
-                if ($summary?->isAuthorized()) {
+            switch ($corrector_id) {
+                case self::UNCHANGED_CORRECTOR_ASSIGNMENT:
+                case $old_assignment?->getCorrectorId():
                     $new_assignment = $old_assignment;
-                } else {
-                    switch ($corrector_id) {
+                    break;
 
-                        case self::UNCHANGED_CORRECTOR_ASSIGNMENT:
-                        case $old_assignment?->getCorrectorId():
-                            $new_assignment = $old_assignment;
-                            break;
+                case self::BLANK_CORRECTOR_ASSIGNMENT:
+                    $new_assignment = null;
+                    $to_change = $old_assignment !== null;
+                    break;
 
-                        case self::BLANK_CORRECTOR_ASSIGNMENT:
-                            $new_assignment = null;
-                            $to_change = $old_assignment !== null;
-                            break;
-
-                        default:
-                            if ($old_assignment !== null) {
-                                $new_assignment = (clone $old_assignment)   // cloning is needed to prevent a change of cached objects
-                                ->setCorrectorId($corrector_id);
-                            } else {
-                                $new_assignment = $this->repos->correctorAssignment()->new()
-                                    ->setTaskId($task_id)
-                                    ->setWriterId($writer_id)
-                                    ->setCorrectorId($corrector_id)
-                                    ->setPosition(GradingPosition::from($position));
-                            }
-                            $to_change = true;
+                default:
+                    if ($old_assignment !== null) {
+                        $new_assignment = (clone $old_assignment)   // cloning is needed to prevent a change of cached objects
+                        ->setCorrectorId($corrector_id);
+                    } else {
+                        $new_assignment = $this->repos->correctorAssignment()->new()
+                            ->setTaskId($task_id)
+                            ->setWriterId($writer_id)
+                            ->setCorrectorId($corrector_id)
+                            ->setPosition(GradingPosition::from($position));
                     }
-                }
-
-                $new_assignments[$writer_id][$position] = $new_assignment;
-                if ($new_assignment?->getCorrectorId() !== null) {
-                    $ids[] = $new_assignment?->getCorrectorId();
-                }
-                $change_any = $change_any || $to_change;
+                    $to_change = true;
             }
 
-            // Do not proceed if a corrector is assigned twice
-            if (count($ids) > 0 && count($ids) !== count(array_unique($ids))) {
-                $result["invalid"][] = $writer_id;
-                continue; // next writer
-            }
-            if ($change_any) {
-                $result["changed"][] = $writer_id;
-            } else {
-                $result["unchanged"][] = $writer_id;
+            $summary = $summaries[$old_assignment?->getCorrectorId()] ?? null;
+            if ($to_change && $summary?->isAuthorized()) {
+                $change_authorized = true;
             }
 
-            if ($dry_run) {
-                continue; // next writer
+            $new_assignments[$position] = $new_assignment;
+            if ($new_assignment?->getCorrectorId() !== null) {
+                $ids[] = $new_assignment?->getCorrectorId();
+            }
+            $change_any = $change_any || $to_change;
+        }
+
+        $result = new Result(true);
+
+        // check assignment combination
+        if (count($ids) > 0 && count($ids) !== count(array_unique($ids))) {
+            $result->addFailure($this->lang->txt('failure_corrector_assigned_twice'));
+        }
+        if ($check_combination_only) {
+            return $result;
+        }
+
+        if ($change_authorized) {
+            $result->addFailure($this->lang->txt('failure_change_assigment_of_authorized'));
+        }
+        if (!$change_any && !$ignore_unchanged) {
+            $result->addFailure($this->lang->txt('failure_assignment_unchanged'));
+        }
+
+        if ($dry_run || $result->isFailed()) {
+            return $result;
+        }
+
+        foreach (array_keys($corrector_ids) as $position) {
+            $old_assignment = $old_assignments[$position] ?? null;
+            $new_assignment = $new_assignments[$position] ?? null;
+
+            if ($old_assignment !== null && $new_assignment !== null
+                && $old_assignment->getCorrectorId() !== $new_assignment->getCorrectorId()
+            ) {
+                $this->moveCorrection(
+                    $task_id,
+                    $writer_id,
+                    $old_assignment?->getCorrectorId(),
+                    $new_assignment?->getCorrectorId()
+                );
+                // will overwrite the old assignment
+                $this->repos->correctorAssignment()->save($new_assignment);
+            } elseif ($old_assignment !== null && $new_assignment === null
+            ) {
+                $this->removeAssignment($old_assignment);
+
+            } elseif ($new_assignment !== null) {
+                $this->repos->correctorAssignment()->save($new_assignment);
             }
 
-            foreach (array_keys($corrector_ids) as $position) {
-                $old_assignment = $old_assignments[$writer_id][$position] ?? null;
-                $new_assignment = $new_assignments[$writer_id][$position] ?? null;
+            if ($new_assignment?->getPosition() === GradingPosition::STITCH) {
+                $writer = $this->writer_service->oneByWriterId($new_assignment->getWriterId());
+                $corrector = $this->corrector_service->oneById($new_assignment->getCorrectorId());
+                $this->notification->sendDirect(
+                    NotificationType::CORRECTOR_STITCH_NEEDED,
+                    [$corrector->getUserId()],
+                    $writer
+                );
+            }
 
-                if ($old_assignment !== null && $new_assignment !== null
-                    && $old_assignment->getCorrectorId() !== $new_assignment->getCorrectorId()
-                ) {
-                    $this->moveCorrection(
-                        $task_id,
-                        $writer_id,
-                        $old_assignment?->getCorrectorId(),
-                        $new_assignment?->getCorrectorId()
-                    );
-                    // will overwrite the old assignment
-                    $this->repos->correctorAssignment()->save($new_assignment);
-                } elseif ($old_assignment !== null && $new_assignment === null
-                ) {
-                    $this->removeAssignment($old_assignment);
-
-                } elseif ($new_assignment !== null) {
-                    $this->repos->correctorAssignment()->save($new_assignment);
-                }
-
-                if ($new_assignment?->getPosition() === GradingPosition::STITCH) {
-                    $writer = $this->writer_service->oneByWriterId($new_assignment->getWriterId());
-                    $corrector = $this->corrector_service->oneById($new_assignment->getCorrectorId());
-                    $this->notification->sendDirect(
-                        NotificationType::CORRECTOR_STITCH_NEEDED,
-                        [$corrector->getUserId()],
-                        $writer
-                    );
-                }
-
-            } // next position
-        } // next writer
+        } // next position
 
         return $result;
     }
@@ -462,19 +462,19 @@ readonly class Service implements FullService
         if ($ea->isMultiTask()) {
             foreach ($data as $writer_id => $task_assignments) {
                 foreach ($task_assignments as list($corrector_id, $pos, $task_id, $row_id)) {
-                    $result = $this->assignMultiple(
+                    $result = $this->assignCorrectors(
                         $task_id,
+                        $writer_id,
                         $corrector_id ?? self::BLANK_CORRECTOR_ASSIGNMENT,
                         self::BLANK_CORRECTOR_ASSIGNMENT,
                         self::BLANK_CORRECTOR_ASSIGNMENT,
-                        [$writer_id],
-                        $dry_run
+                        $dry_run,
+                        false,
+                        true
                     );
-                    if (!empty($result['invalid'])) {
-                        $errors[] = sprintf(
-                            $this->lang->txt('invalid_import_assignment'),
-                            $row_id
-                        );
+                    if ($result->isFailed()) {
+                        $errors[] = sprintf($this->lang->txt('invalid_import_assignment'), $row_id)
+                            . ': ' . implode('; ', $result->failures());
                     }
                 }
             }
@@ -493,12 +493,10 @@ readonly class Service implements FullService
                     $task = $task_id;
                 }
 
-                $result = $this->assignMultiple($task, $first, $second, $stitch, [$writer_id], $dry_run);
-                if (!empty($result['invalid'])) {
-                    $errors[] = sprintf(
-                        $this->lang->txt('invalid_import_assignment'),
-                        $row_id
-                    );
+                $result = $this->assignCorrectors($task, $writer_id, $first, $second, $stitch, $dry_run, false, true);
+                if ($result->isFailed()) {
+                    $errors[] = sprintf($this->lang->txt('invalid_import_assignment'), $row_id)
+                        . ': ' . implode('; ', $result->failures());
                 }
             }
         }

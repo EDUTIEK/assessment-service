@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Api\Internal;
+use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Throwable;
 use Edutiek\AssessmentService\System\Config\Frontend;
@@ -44,6 +45,16 @@ class Service implements OpenService, RestService
         $this->context_id = $context_id;
         $helper = $this->internal->openHelper($this->ass_id, $this->context_id, $this->user_id);
         $helper->setCommonFrontendParams($return_url);
+
+        // must be done after the token is created
+        $settings = $this->internal->orgaSettings($this->ass_id, $this->user_id)->get();
+        if ($settings?->getDashboard()) {
+            $writer = $this->internal->writer($this->ass_id, $this->user_id)->oneByUserId($this->user_id);
+            if ($writer !== null) {
+                $this->internal->writerClient($this->ass_id, $this->user_id)->create($writer);
+            }
+        }
+
         $helper->openFrontend($this->config->getFrontendUrl($this->frontend));
     }
 
@@ -100,8 +111,10 @@ class Service implements OpenService, RestService
         } catch (RestException $e) {
             $this->context->sendResponse($e->getCode(), $e->getMessage());
         } catch (Throwable $e) {
-            $this->context->sendResponse(RestException::INTERNAL_SERVER_ERROR,
-                $e->getMessage() . "\n". $e->getTraceAsString());
+            $this->context->sendResponse(
+                RestException::INTERNAL_SERVER_ERROR,
+                $e->getMessage() . "\n" . $e->getTraceAsString()
+            );
         }
         exit;
     }

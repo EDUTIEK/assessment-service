@@ -115,8 +115,7 @@ class WriterBridge implements AppBridge
                 case self::CHANGE_TYPE_NOTES:
                     return array_map(fn(ChangeRequest $change) => $this->applyNote($change), $changes);
                 case self::CHANGE_TYPE_STEP:
-                    // todo optimize performance by applying steps in one function - essay should not be written multiple times
-                    return array_map(fn(ChangeRequest $change) => $this->applyStep($change), $changes);
+                    return $this->applySteps($changes);
                 default:
                     return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'wrong type'), $changes);
             }
@@ -209,71 +208,100 @@ class WriterBridge implements AppBridge
         return $change->toResponse(false, 'wrong action');
     }
 
-    private function applyStep(ChangeRequest $change): ChangeResponse
+    /**
+     * @param ChangeRequest[] $changes
+     * @return ChangeResponse[]
+     */
+    private function applySteps(array $changes): array
     {
-        $data = $change->getPayload();
-        $essay = $this->getAndCheckEssay((int) $data['task_id']);
-        if ($essay === null) {
-            return $change->toResponse(false, 'forbidden');
+        if (empty($changes)) {
+            return [];
         }
 
         $step_repo = $this->repos->writingStep();
         $essay_repo = $this->repos->essay();
-
-        $step = $step_repo->new();
-        $this->entity->fromPrimitives([
-            'essay_id' => $essay->getId(),
-            'timestamp' => $data['timestamp'] ?? null,
-            'content' => $data['content'] ?? null,
-            'is_delta' => $data['is_delta'] ?? null,
-            'hash_before' => $data['hash_before'] ?? null,
-            'hash_after' => $data['hash_after'] ?? null,
-
-        ], $step, WritingStep::class);
-
-        // todo: this does not work well with the diff
-        //$this->entity->secure($step, WritingStep::class);
-
         $dmp = new DiffMatchPatch();
-        $currentText = $essay->getWrittenText();
-        $currentHash = $essay->getRawTextHash();
 
-        // check if step can be added
-        // fault tolerance if a former put was partially applied or the response to the app was lost
-        // then this list may include steps that are already saved
-        // exclude these steps because they will corrupt the sequence
-        // later steps may fit again
-        if ((string) $step->getHashBefore() !== $currentHash) {
-            if ($step->getIsDelta()) {
-                // don't add a delta step that can't be applied
-                // step may already be saved, so a later new step may fit
-                return($change->toResponse(true));
-            } elseif ($step_repo->hasByEssayIdAndHashAfter($essay->getId(), (string) $step->getHashAfter())) {
-                // the same full save should not be saved twice
-                // note: hash_after is salted by timestamp and is unique
-                return($change->toResponse(true));
+        $clusters = [];
+        $responses = [];
+
+        // cluster changes by task id
+        foreach ($changes as $change) {
+            $data = $change->getPayload();
+            $clusters[(int) $data['task_id']] ??= [];
+            $clusters[(int) $data['task_id']][] = $change;
+        }
+
+        foreach ($clusters as $task_id => $cluster) {
+            // get the essay once per task (avoid muliple read and save)
+            $essay = $this->getAndCheckEssay((int) $task_id);
+
+            foreach ($cluster as $change) {
+                if ($essay === null) {
+                    $responses[] = $change->toResponse(false, 'forbidden');
+                    continue;
+                }
+
+                $data = $change->getPayload();
+                $step = $step_repo->new();
+                $this->entity->fromPrimitives([
+                    'essay_id' => $essay->getId(),
+                    'timestamp' => $data['timestamp'] ?? null,
+                    'content' => $data['content'] ?? null,
+                    'is_delta' => $data['is_delta'] ?? null,
+                    'hash_before' => $data['hash_before'] ?? null,
+                    'hash_after' => $data['hash_after'] ?? null,
+
+                ], $step, WritingStep::class);
+
+                $currentText = $essay->getWrittenText();
+                $currentHash = $essay->getRawTextHash();
+
+                // check if step can be added
+                // fault tolerance if a former put was partially applied or the response to the app was lost
+                // then this list may include steps that are already saved
+                // exclude these steps because they will corrupt the sequence
+                // later steps may fit again
+                if ((string) $step->getHashBefore() !== $currentHash) {
+                    if ($step->getIsDelta()) {
+                        // don't add a delta step that can't be applied
+                        // step may already be saved, so a later new step may fit
+                        return($change->toResponse(true));
+                    } elseif ($step_repo->hasByEssayIdAndHashAfter($essay->getId(), (string) $step->getHashAfter())) {
+                        // the same full save should not be saved twice
+                        // note: hash_after is salted by timestamp and is unique
+                        return($change->toResponse(true));
+                    }
+                }
+
+                if ($step->getIsDelta()) {
+                    $patches = $dmp->patch_fromText($step->getContent());
+                    $result = $dmp->patch_apply($patches, $currentText);
+                    $currentText = $result[0];
+                } else {
+                    $currentText = $step->getContent();
+                }
+                $currentHash = $step->getHashAfter();
+
+                $step_repo->create($step);
+
+                $essay
+                    ->setWrittenText($currentText)
+                    ->setRawTextHash((string) $currentHash)
+                    ->setServiceVersion(ServiceVersion::current())
+                    ->setLastChange($step->getTimestamp());
+
+                $responses[] = $change->toResponse(true);
+            }
+
+            // save essay with all changes applied
+            if ($essay !== null) {
+                $this->entity->secure($essay, Essay::class);
+                $essay_repo->save($essay);
             }
         }
 
-        if ($step->getIsDelta()) {
-            $patches = $dmp->patch_fromText($step->getContent());
-            $result = $dmp->patch_apply($patches, $currentText);
-            $currentText = $result[0];
-        } else {
-            $currentText = $step->getContent();
-        }
-        $currentHash = $step->getHashAfter();
-
-        $step_repo->create($step);
-        $essay_repo->save(
-            $essay
-            ->setWrittenText($currentText)
-            ->setRawTextHash((string) $currentHash)
-            ->setServiceVersion(ServiceVersion::current())
-            ->setLastChange($step->getTimestamp())
-        );
-
-        return($change->toResponse(true));
+        return $responses;
     }
 
     private function getAndCheckEssay(int $task_id): ?Essay

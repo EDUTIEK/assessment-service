@@ -11,8 +11,6 @@ use Edutiek\AssessmentService\System\ConstraintHandling\Action;
  *
  * - BLOCK if authorized corrections exist
  * - BLOCK if the correction process status is not open
- *
- * @param bool $as_admin
  */
 readonly class RemoveWritingAuthorization implements Action
 {

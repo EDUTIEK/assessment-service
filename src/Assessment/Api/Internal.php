@@ -45,6 +45,7 @@ use Edutiek\AssessmentService\Assessment\Pseudonym\Service as PseudonymService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskType;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\Assessment\Writer\Service as WriterService;
+use Edutiek\AssessmentService\Assessment\WriterClient\Service as WriterClientService;
 use Edutiek\AssessmentService\Assessment\WritingTask\Service as WritingTaskService;
 use Edutiek\AssessmentService\Assessment\AppBridges\WriterBridge;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
@@ -243,6 +244,16 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
+    public function writerClient(int $ass_id, int $user_id): WriterClientService
+    {
+        return $this->instances[WriterClientService::class][$ass_id] ??= new WriterClientService(
+            $ass_id,
+            $user_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->entity()
+        );
+    }
+
     /**
      * Translation of language variables
      */
@@ -357,6 +368,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $user_id,
             $this->workingTimeFactory($user_id),
             $this->writer($ass_id, $user_id),
+            $this->writerClient($ass_id, $user_id),
             $this->alert($ass_id),
             $this->dependencies->systemApi()->config(),
             $this->dependencies->systemApi()->entity(),

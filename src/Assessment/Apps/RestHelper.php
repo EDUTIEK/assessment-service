@@ -95,26 +95,6 @@ readonly class RestHelper
     }
 
     /**
-     * Generate a new data token and set it in the response
-     */
-    public function setNewDataToken(Response $response): Response
-    {
-        $token = $this->auth->newToken($this->user_id, TokenPurpose::DATA);
-        $this->auth->saveToken($token);
-        return $response->withHeader('xlasDataToken', $token->getToken());
-    }
-
-    /**
-     * Generate a new file token and set it in the response
-     */
-    public function setNewFileToken(Response $response): Response
-    {
-        $token = $this->auth->newToken($this->user_id, TokenPurpose::FILE);
-        $this->auth->saveToken($token);
-        return $response->withHeader('xlasFileToken', $token->getToken());
-    }
-
-    /**
      * Modify the response with a status code and json return
      * @param string|array $data
      */

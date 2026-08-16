@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Api;
 
@@ -13,4 +13,9 @@ class ApiException extends Exception
      * e.g. an ass_id that is not handled by the service
      */
     public const ID_SCOPE = 0;
+
+    /**
+     * The operation would be against privacy settings
+     */
+    public const PRIVACY = 1;
 }

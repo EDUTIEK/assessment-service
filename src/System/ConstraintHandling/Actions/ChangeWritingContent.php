@@ -13,8 +13,6 @@ use Edutiek\AssessmentService\System\ConstraintHandling\Action;
  *
  * All correction activity is based on authorized writings.
  * If an admin wants to change writing content, the authorization must be removed first.
- *
- * @param bool $as_admin
  */
 readonly class ChangeWritingContent implements Action
 {

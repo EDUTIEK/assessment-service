@@ -89,6 +89,7 @@ abstract class BaseApp implements RestService
             $data[$component] = $bridge->getData(true);
         }
 
+        $this->rest_helper->setAlive();
         $this->rest_helper->extendDataToken($response);
         return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
     }
