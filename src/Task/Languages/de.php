@@ -46,7 +46,7 @@ return [
     'revision_text_missing' => 'Begründungstext fehlt',
     'summary_not_found' => 'Korrektur nicht gefunden',
     'task_solution' => "Lösungshinweise",
-    'invalid_import_assignment' => 'Fehlerhafte zuweisung in Zeile %d',
+    'invalid_import_assignment' => 'Fehlerhafte Zuweisung in Zeile %d',
     'writer_not_found' => 'Teilnehmer mit Anmeldename "%2$s" in Zeile %1$d nicht gefunden.',
     'corrector_not_found_pos' => 'Korrektor %3$d mit Anmeldename "%2$s" in Zeile %1$d nicht gefunden.',
     'corrector_not_found_task' => 'Korrektor für Aufgabe %3$s mit Anmeldename "%2$s" in Zeile %1$d nicht gefunden.',
@@ -110,4 +110,7 @@ return [
     'x_approximations' => "{x} Annäherungen",
     'x_consultings' => "{x}  Beratungen",
     'x_stitch_decisions' => "{x} Stichentscheide",
+    'failure_corrector_assigned_twice' => "Ein Korrektor würde mehrfach zugewiesen",
+    'failure_change_assigment_of_authorized' => "Eine freigegebene Korrektur würde geändert",
+    'failure_assignment_unchanged' => "Keine Änderung nötig"
 ];
