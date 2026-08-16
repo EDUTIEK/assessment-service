@@ -138,6 +138,7 @@ class Internal
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->pdfConverter(),
             $this->writingPartProvider($ass_id, $user_id),
+            $this->dependencies->taskApi($ass_id, $user_id)->correctionSettings()
         );
     }
 
