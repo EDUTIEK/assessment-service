@@ -99,9 +99,6 @@ readonly class Service implements ReadService, FullService
         return $this->repos->writer()->stitchableIds($this->ass_id);
     }
 
-    /**
-     * @todo: replace usage by dedicated operations and make private or remove
-     */
     public function save(Writer $writer): void
     {
         $this->checkScope($writer);
@@ -110,10 +107,17 @@ readonly class Service implements ReadService, FullService
 
     public function setWorkingStart(Writer $writer): void
     {
-        if ($writer->getWorkingStart() === null) {
-            $writer->setWorkingStart(new DateTimeImmutable());
+        if (empty($writer->getPseudonym())) {
+            // ensure writer has an id, if the pseudonym is generated from the writer id
             $this->save($writer);
+            $writer->setPseudonym($this->pseudonym_service->buildForWriter($writer->getId(), $writer->getUserId()));
         }
+
+        if (empty($writer->getWorkingStart())) {
+            $writer->setWorkingStart(new DateTimeImmutable());
+        }
+
+        $this->save($writer);
     }
 
     public function authorizeWriting(Writer $writer, bool $as_admin): Result
