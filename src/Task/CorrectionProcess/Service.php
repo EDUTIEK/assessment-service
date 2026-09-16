@@ -503,7 +503,10 @@ readonly class Service implements FullService
                 foreach ($this->assignments->allByTaskIdAndWriterId($summary->getTaskId(), $summary->getWriterId()) as $assignment) {
                     if ($assignment->getPosition() === GradingPosition::SECOND) {
                         $corrector = $this->corrector_service->oneById($assignment->getCorrectorId());
-                        $this->notification_service->createFor(NotificationType::CORRECTOR_PROCEDURE_STARTED, $writer, $corrector);
+                        $this->notification_service->createFor(match($status) {
+                            CorrectionStatus::APPROXIMATION => NotificationType::CORRECTOR_APPROXIMATION_STARTED,
+                            CorrectionStatus::CONSULTING => NotificationType::CORRECTOR_CONSULTING_STARTED
+                        }, $writer, $corrector);
                         break;
                     }
                 }

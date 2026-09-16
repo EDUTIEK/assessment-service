@@ -97,7 +97,14 @@ readonly class Service implements FullService
                     if ($writer->getCorrectionStatus() === CorrectionStatus::OPEN) {
                         $first = $gradings[GradingPosition::FIRST->value] ?? null;
                         $corrector = $this->corrector_service->oneById($first?->getCorrectorId() ?? 0);
-                        $this->notification_service->createFor(NotificationType::CORRECTOR_PROCEDURE_STARTED, $writer, $corrector);
+                        $this->notification_service->createFor(
+                            match($status) {
+                                CorrectionStatus::APPROXIMATION => NotificationType::CORRECTOR_APPROXIMATION_STARTED,
+                                CorrectionStatus::CONSULTING => NotificationType::CORRECTOR_CONSULTING_STARTED
+                            },
+                            $writer,
+                            $corrector
+                        );
                     }
                     $this->writer_service->changeCorrectionStatus($writer, $status, $this->user_id);
                     return $status;
