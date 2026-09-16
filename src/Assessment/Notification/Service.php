@@ -35,21 +35,13 @@ readonly class Service implements FullService
     ) {
     }
 
-    private function defaultTemplate(NotificationType $type, ?CorrectionProcedure $procedure = null)
+    private function defaultTemplate(NotificationType $type): string
     {
-        if ($type === NotificationType::CORRECTOR_PROCEDURE_STARTED) {
-            $file = match($procedure) {
-                CorrectionProcedure::APPROXIMATION => 'corrector_approximation_started.txt',
-                CorrectionProcedure::CONSULTING => 'corrector_consulting_started.txt',
-                default => $type->value . '.txt',
-            };
-        } else {
-            $file = $type->value . '.txt';
-        }
+        $file = $type->value . '.txt';
         if (file_exists(__DIR__ . '/templates/' . $file)) {
             return file_get_contents(__DIR__ . '/templates/' . $file);
         }
-        return null;
+        return '';
     }
 
     public function getSettings(NotificationType $type): NotificationSettings
@@ -60,8 +52,8 @@ readonly class Service implements FullService
                         ->setAssId($this->ass_id)
                         ->setType($type)
                         ->setActive($type->defaultActive())
-                        ->setSubject($this->lang->txt($type->subjectLangVar($this->correction->get()->getProcedure())))
-                        ->setBody($this->defaultTemplate($type, $this->correction->get()->getProcedure()));
+                        ->setSubject($this->lang->txt($type->subjectLangVar()))
+                        ->setBody($this->defaultTemplate($type));
             // this is needed to get a valid id in the settings
             $this->repos->notificationSettings()->save($settings);
         }
@@ -94,8 +86,11 @@ readonly class Service implements FullService
         $settings = $this->allSettings();
         $correction = $this->correction->get();
 
-        if ($correction->getProcedure() === CorrectionProcedure::NONE) {
-            unset($settings[NotificationType::CORRECTOR_PROCEDURE_STARTED->value]);
+        if ($correction->getProcedure() !== CorrectionProcedure::APPROXIMATION) {
+            unset($settings[NotificationType::CORRECTOR_APPROXIMATION_STARTED->value]);
+        }
+        if ($correction->getProcedure() !== CorrectionProcedure::CONSULTING) {
+            unset($settings[NotificationType::CORRECTOR_CONSULTING_STARTED->value]);
         }
         if (!$correction->getStitchAfterProcedure()) {
             unset($settings[NotificationType::CORRECTOR_STITCH_NEEDED->value]);
@@ -106,7 +101,8 @@ readonly class Service implements FullService
         }
         if ($correction->getRequiredCorrectors() == 1) {
             unset($settings[NotificationType::CORRECTOR_FIRST_AUTHORIZATION_REMOVED->value]);
-            unset($settings[NotificationType::CORRECTOR_PROCEDURE_STARTED->value]);
+            unset($settings[NotificationType::CORRECTOR_APPROXIMATION_STARTED->value]);
+            unset($settings[NotificationType::CORRECTOR_CONSULTING_STARTED->value]);
             unset($settings[NotificationType::CORRECTOR_STITCH_NEEDED->value]);
             unset($settings[NotificationType::ADMIN_STITCH_NEEDED->value]);
         }
@@ -197,7 +193,8 @@ readonly class Service implements FullService
                 break;
 
             case NotificationType::CORRECTOR_WRITING_CHANGED:
-            case NotificationType::CORRECTOR_PROCEDURE_STARTED:
+            case NotificationType::CORRECTOR_APPROXIMATION_STARTED:
+            case NotificationType::CORRECTOR_CONSULTING_STARTED:
             case NotificationType::CORRECTOR_AUTHORIZATION_REMOVED:
             case NotificationType::CORRECTOR_STITCH_NEEDED:
             case NotificationType::CORRECTOR_FIRST_AUTHORIZATION_REMOVED:
@@ -219,7 +216,7 @@ readonly class Service implements FullService
 
         foreach ($to_ids as $to_id) {
             $subject = $this->fillPlaceholders($setting->getSubject(), $type, $to_id, $writer, $reason);
-            $body = $this->fillPlaceholders($setting->getBody(), $type, $to_id, $writer, $reason);
+            $body = $this->fillPlaceholders((string) $setting->getBody(), $type, $to_id, $writer, $reason);
             $this->mail->deliver($subject, $body, [$to_id]);
         }
     }
