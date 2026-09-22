@@ -249,7 +249,9 @@ class Service implements ReadService
 
     public function canUploadFiles(): bool
     {
-        return $this->canEditContentSettings() || $this->canMaintainWriters()
+        return $this->canEditContentSettings()
+            || $this->canMaintainWriters()
+            || $this->canMaintainCorrectors()
             || $this->isWriter() && $this->isOnline()
             || $this->isCorrector() && $this->isOnline();
     }
