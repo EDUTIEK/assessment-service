@@ -101,7 +101,7 @@ return [
     'justa_participant' => 'Prüfungsnummer',
     'justa_points' => 'Punktzahl',
     'justa_status' => 'Status',
-    'justa_id' => 'JUSTA-ID',
+    'justa_id' => 'JUSTA-ID Stichentscheid',
     'justa_filename' => 'Ergebnisse',
     'examis_participant_id' => 'TEILNAHMEID',
     'examis_code_number' => 'KENNZIFFER',

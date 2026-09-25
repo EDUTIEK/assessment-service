@@ -202,7 +202,7 @@ readonly class ResultsExport
                 'period' => $context->getParentTitle(),
                 'assessment' => $props->getTitle(),
                 'participant' => $user?->getFirstname(),
-                'points' => $writer->getFinalPoints(),
+                'points' => $this->sys_format->number($writer->getFinalPoints() ?? 0),
                 'status' => $writer->getImportedStatus(),
                 'id' => $stitch_user?->getMatriculation()
             ];
