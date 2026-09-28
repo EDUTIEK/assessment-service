@@ -11,4 +11,20 @@ enum ExportType: string
     case REPORTS = 'reports';
     case LOG = 'log';
     case HASHES = 'hashes';
+
+    case INSTRUCTION = 'instruction';
+    case SOLUTION = 'solution';
+    case WRITING = 'writing';
+    case WRITINGS = 'writings';
+    case CORRECTION = 'correction';
+    case CORRECTIONS = 'corrections';
+    case CORRECTORS = 'correctors';
+    case ASSIGNMENTS = 'assignments';
+    case WRITING_STATISTICS = 'writing_statistics';
+    case CORRECTION_STATISTICS = 'correction_statistics';
+
+    public function langVar()
+    {
+        return 'export_type_' . $this->value;
+    }
 }

@@ -14,6 +14,7 @@ use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\DisabledGroup\FullService as DisabledGroupFullService;
 use Edutiek\AssessmentService\Assessment\Export\FullService as ExportFullService;
+use Edutiek\AssessmentService\Assessment\Export\FileNameBuilder;
 use Edutiek\AssessmentService\Assessment\Format\FullService as FormatInterface;
 use Edutiek\AssessmentService\Assessment\GradeLevel\FullService as gradeLevelFullService;
 use Edutiek\AssessmentService\Assessment\Location\FullService as LocationFullService;
@@ -115,6 +116,11 @@ readonly class ForClients
     public function writerClient(): WriterClientService
     {
         return $this->internal->writerClient($this->ass_id, $this->user_id);
+    }
+
+    public function fileNameBuilder(): FileNameBuilder
+    {
+        return $this->internal->fileNameBuilder($this->ass_id, $this->user_id);
     }
 
     public function format(): FormatInterface
