@@ -19,7 +19,7 @@
  * }} Annotation
  *
  * @typedef {string} Color // all hex forms are valid but names are not. E.g. `#FF003377` is valid but `green` is not.
- * @typedef {string} Type // 'marker', 'underline' or 'wave'
+ * @typedef {string} Type // 'marker', 'underline', 'wave', 'freeform-line', 'freeform-wave' or 'freeform-circle'
  * @typedef {string|null} Token // 'cross', 'exclamation-point', 'question-mark', 'check' or 'missing'
  *
  * @param {string} parent   id of the parent element to add the iframe
@@ -60,6 +60,7 @@
  *   enableTypeButtons: {function(bool): Promise},
  *   enableWordSelection: {function(bool): Promise},
  *   setAltText: {function(string, string): Promise},
+ *   setDefaultFreeFormType: {function(string): Promise},
  * }}
  */
 export default (parent, viewer, pdf, options = {}) => {
@@ -127,6 +128,7 @@ export default (parent, viewer, pdf, options = {}) => {
         enableTypeButtons: bool => request('enableTypeButtons', bool),
         enableWordSelection: bool => request('enableWordSelection', bool),
         setAltText: (id, altText) => request('setAltText', id, altText),
+        setDefaultFreeFormType: type => request('setDefaultFreeFormType', type),
     };
 
     function request(name, ...args)

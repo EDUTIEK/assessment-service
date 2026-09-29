@@ -27187,11 +27187,160 @@ class Outline {
 
 ;// ./src/display/editor/drawers/freedraw.js
 
+// edutiek-patch: begin
+class CircleDrawOutliner {
+  #start;
+  #create;
+  #outliner;
+  #scale;
+  #box;
+  #isLTR;
+  #innerMargin;
+  constructor(startPoint, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
+    this.#start = startPoint;
+    this.#scale = scaleFactor;
+    this.#box = box;
+    this.#isLTR = isLTR;
+    this.#innerMargin = this.#innerMargin;
+    const [layerX, layerY, layerWidth, layerHeight] = this.#box;
+    const pos = {
+      x: (this.#start.x - layerX) / layerWidth,
+      y: (this.#start.y - layerY) / layerHeight,
+    };
+  }
 
+  isEmpty() {
+    return false;
+  }
 
+  add(point) {
+    const width = 0.03 * (this.#box[2] - this.#box[0]);
+    const ratio = this.#box[2] / (this.#box[3] - this.#box[1]);
+    this.#start = {x: point.x - width, y: point.y - (0.04 * (this.#box[2] - this.#box[0])) * ratio};
+    return true;
+  }
 
+  toSVGPath() {
+    const [layerX, layerY, layerWidth, layerHeight] = this.#box;
 
+    const ratio = layerWidth / layerHeight;
+    const w = 0.028;
+    const pos = {
+      x: (this.#start.x - layerX) / layerWidth,
+      y: (this.#start.y - layerY) / layerHeight,
+    }
 
+    return `M ${pos.x + w} ${pos.y + 0.04} A ${w} ${w * ratio} 1 1 1 ${pos.x + w + 0.001} ${pos.y + 0.04}`;
+  }
+
+  getOutlines() {
+    const [layerX, layerY, layerWidth, layerHeight] = this.#box;
+    const rr = {
+      x: (this.#start.x - layerX) / layerWidth,
+      y: (this.#start.y - layerY) / layerHeight,
+    };
+    return new CircleDrawOutline({x: (this.#start.x - layerX) / layerWidth, y: (this.#start.y - layerY) / layerHeight}, this.#box, this.#scale, this.#innerMargin, this.#isLTR);
+  }
+}
+
+class CircleDrawOutline extends Outline {
+  #pos;
+  #box;
+  #scaleFactor;
+  #innerMargin;
+  #isLTR;
+  constructor(pos, box, scaleFactor, innerMargin, isLTR) {
+    super();
+    this.#pos = pos;
+    this.#box = box;
+    this.#scaleFactor = scaleFactor;
+    this.#innerMargin = innerMargin;
+    this.#isLTR = isLTR;
+  }
+  toSVGPath() {
+    const [x, y, w, h] = this.box;
+    return `M 0.5 0.96 A 0.46 0.46 1 1 1 0.501 0.96 z`;
+  }
+
+  serialize([blX, blY, trX, trY], rotation) {
+    const width = trX - blX;
+    const height = trY - blY;
+    return {
+      points: {pos: {x: blX, y: trY}},
+    };
+  }
+
+  get firstPoint() {
+    const box = this.box;
+    return [box[0], box[1]];
+  }
+
+  get lastPoint() {
+    const box = this.box;
+    return [box[0] + box[2], box[1] + box[3]];
+  }
+
+  get box() {
+    const [layerX, layerY, layerWidth, layerHeight] = this.#box;
+
+    const ratio = layerWidth / layerHeight;
+
+    const w = 0.06;
+    const h = 0.06 * ratio;
+
+    return [this.#pos.x, this.#pos.y, w, w * ratio];
+  }
+
+  getNewOutline(thickness, innerMargin) {
+    const [layerX, layerY, layerWidth, layerHeight] = this.#box;
+    return new CircleDrawOutliner({x: (this.#pos.x * layerWidth) + layerX, y: (this.#pos.y * layerHeight) + layerY}, this.#box, this.#scaleFactor, thickness, this.#isLTR, innerMargin ?? this.#innerMargin).getOutlines();
+  }
+}
+
+class LineDrawOutliner {
+  #start;
+  #create;
+  #outliner;
+  constructor(startPoint, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
+    this.#start = startPoint;
+    this.#create = () => new FreeDrawOutliner(startPoint, box, scaleFactor, thickness, isLTR, innerMargin, this.wave());
+  }
+
+  wave() {
+    return false;
+  }
+
+  isEmpty() {
+    return !this.#outliner || this.#outliner.isEmpty();
+  }
+
+  add(point) {
+    const diff = {
+      x: Math.abs(this.#start.x - point.x),
+      y: Math.abs(this.#start.y - point.y),
+    };
+    this.#outliner = this.#create();
+    this.#outliner.add(diff.x > diff.y ? {x: point.x, y: this.#start.y} : {x: this.#start.x, y: point.y});
+    return true;
+  }
+
+  toSVGPath() {
+    return this.#outliner ? this.#outliner.toSVGPath() : '';
+  }
+
+  newFreeDrawOutline(outline, points, box, scaleFactor, innerMargin, isLTR) {
+    return new FreeDrawOutline(outline, points, box, scaleFactor, innerMargin, isLTR);
+  }
+
+  getOutlines() {
+    return this.#outliner ? this.#outliner.getOutlines() : null;
+  }
+}
+
+class WaveDrawOutliner extends LineDrawOutliner {
+  wave() { return true; }
+}
+// edutiek-patch: end
 
 class FreeDrawOutliner {
   #box;
@@ -27207,13 +27356,20 @@ class FreeDrawOutliner {
   #scaleFactor;
   #thickness;
   #points = [];
+  // edutiek-patch: begin
+  #wave;
+  // edutiek-patch: end
   static #MIN_DIST = 8;
   static #MIN_DIFF = 2;
   static #MIN = FreeDrawOutliner.#MIN_DIST + FreeDrawOutliner.#MIN_DIFF;
   constructor({
     x,
     y
-  }, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
+    // edutiek-patch: begin
+  }, box, scaleFactor, thickness, isLTR, innerMargin = 0, wave = false) {
+    innerMargin = 0.005;
+    thickness = 0.5;
+    // edutiek-patch: end
     this.#box = box;
     this.#thickness = thickness * scaleFactor;
     this.#isLTR = isLTR;
@@ -27223,6 +27379,9 @@ class FreeDrawOutliner {
     this.#min = FreeDrawOutliner.#MIN * scaleFactor;
     this.#scaleFactor = scaleFactor;
     this.#points.push(x, y);
+    // edutiek-patch: begin
+    this.#wave = wave;
+    // edutiek-patch: end
   }
   isEmpty() {
     return isNaN(this.#last[8]);
@@ -27320,9 +27479,53 @@ class FreeDrawOutliner {
     this.#toSVGPathStart(buffer);
     return buffer.join(" ");
   }
+  // edutiek-patch: begin
+  #buildWave (p1, p2, width, height) {
+    const v = {
+      x: p2.x - p1.x,
+      y: p2.y - p1.y,
+    };
+    const n = {
+      x: v.y,
+      y: -v.x * (width / height),
+    };
+    const vectorLen = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
+    const step = 0.005 / vectorLen;
+    const pitch = 0.006 / vectorLen;
+    let path = `M${p1.x} ${p1.y} `;
+    let currLen = 0;
+    let curr = {x: p1.x, y: p1.y};
+    const parts = [];
+    for (let currLen = 0; currLen <= 1 + step + step; currLen += step, curr.x += v.x * step, curr.y += v.y * step) {
+      parts.push([{x: curr.x + v.x * (step / 2), y: curr.y + v.y * (step / 2)}, {x: curr.x + v.x * step, y: curr.y + v.y * step}]);
+    }
+
+    const h = 0.0015 / vectorLen;
+    let pathBack = `L${curr.x + n.x * h} ${curr.y + n.y * h} `;
+    for (let i = 0, dir = -1, backDir = ((parts.length & 1) ^ 1) * 2 - 1; i < parts.length; i++, dir = -dir, backDir = -backDir) {
+      const forth = parts[i];
+      const back = parts[parts.length - i - 1];
+      const back2 = parts[parts.length - i - 2] || [0,p1];
+      path += ` Q${forth[0].x + (dir * pitch * n.x)} ${forth[0].y + (dir * pitch * n.y)} ${forth[1].x} ${forth[1].y}`;
+      pathBack += ` Q${back[0].x + (backDir * pitch * n.x) + n.x * h} ${back[0].y + (backDir * pitch * n.y) + n.y * h} ${back2[1].x + n.x * h} ${back2[1].y + n.y * h}`;
+    }
+
+    return path + ' ' + pathBack + ' Z';
+  }
+  // edutiek-patch: end
   #toSVGPathTwoPoints() {
     const [x, y, width, height] = this.#box;
     const [lastTopX, lastTopY, lastBottomX, lastBottomY] = this.#getLastCoords();
+    // edutiek-patch: begin
+    if (this.#wave) {
+      return this.#buildWave(
+        {x: (this.#last[2] - x) / width, y: (this.#last[3] - y) / height},
+        {x: (this.#last[4] - x) / width, y: (this.#last[5] - y) / height},
+        width,
+        height,
+      );
+    }
+    // edutiek-patch: end
     return `M${(this.#last[2] - x) / width} ${(this.#last[3] - y) / height} L${(this.#last[4] - x) / width} ${(this.#last[5] - y) / height} L${lastTopX} ${lastTopY} L${lastBottomX} ${lastBottomY} L${(this.#last[16] - x) / width} ${(this.#last[17] - y) / height} L${(this.#last[14] - x) / width} ${(this.#last[15] - y) / height} Z`;
   }
   #toSVGPathStart(buffer) {
@@ -27336,9 +27539,11 @@ class FreeDrawOutliner {
     const [lastTopX, lastTopY, lastBottomX, lastBottomY] = this.#getLastCoords();
     buffer.push(`L${(lastTop[0] - x) / width} ${(lastTop[1] - y) / height} L${lastTopX} ${lastTopY} L${lastBottomX} ${lastBottomY} L${(lastBottom[0] - x) / width} ${(lastBottom[1] - y) / height}`);
   }
-  newFreeDrawOutline(outline, points, box, scaleFactor, innerMargin, isLTR) {
-    return new FreeDrawOutline(outline, points, box, scaleFactor, innerMargin, isLTR);
+  // edutiek-patch: begin
+  newFreeDrawOutline(outline, points, box, scaleFactor, innerMargin, isLTR, wave) {
+    return new FreeDrawOutline(outline, points, box, scaleFactor, innerMargin, isLTR, wave);
   }
+  // edutiek-patch: end
   getOutlines() {
     const top = this.#top;
     const bottom = this.#bottom;
@@ -27378,7 +27583,9 @@ class FreeDrawOutliner {
       }
     }
     this.#getOutlineStart(outline, N);
-    return this.newFreeDrawOutline(outline, points, this.#box, this.#scaleFactor, this.#innerMargin, this.#isLTR);
+    // edutiek-patch: begin
+    return this.newFreeDrawOutline(outline, points, this.#box, this.#scaleFactor, this.#innerMargin, this.#isLTR, this.#wave);
+    // edutiek-patch: end
   }
   #getOutlineTwoPoints(points) {
     const last = this.#last;
@@ -27386,7 +27593,9 @@ class FreeDrawOutliner {
     const [lastTopX, lastTopY, lastBottomX, lastBottomY] = this.#getLastCoords();
     const outline = new Float32Array(36);
     outline.set([NaN, NaN, NaN, NaN, (last[2] - layerX) / layerWidth, (last[3] - layerY) / layerHeight, NaN, NaN, NaN, NaN, (last[4] - layerX) / layerWidth, (last[5] - layerY) / layerHeight, NaN, NaN, NaN, NaN, lastTopX, lastTopY, NaN, NaN, NaN, NaN, lastBottomX, lastBottomY, NaN, NaN, NaN, NaN, (last[16] - layerX) / layerWidth, (last[17] - layerY) / layerHeight, NaN, NaN, NaN, NaN, (last[14] - layerX) / layerWidth, (last[15] - layerY) / layerHeight], 0);
-    return this.newFreeDrawOutline(outline, points, this.#box, this.#scaleFactor, this.#innerMargin, this.#isLTR);
+    // edutiek-patch: begin
+    return this.newFreeDrawOutline(outline, points, this.#box, this.#scaleFactor, this.#innerMargin, this.#isLTR, this.#wave);
+    // edutiek-patch: end
   }
   #getOutlineStart(outline, pos) {
     const bottom = this.#bottom;
@@ -27410,7 +27619,10 @@ class FreeDrawOutline extends Outline {
   #points;
   #scaleFactor;
   #outline;
-  constructor(outline, points, box, scaleFactor, innerMargin, isLTR) {
+  // edutiek-patch: begin
+  #wave;
+  constructor(outline, points, box, scaleFactor, innerMargin, isLTR, wave) {
+    // edutiek-patch: end
     super();
     this.#outline = outline;
     this.#points = points;
@@ -27418,6 +27630,9 @@ class FreeDrawOutline extends Outline {
     this.#scaleFactor = scaleFactor;
     this.#innerMargin = innerMargin;
     this.#isLTR = isLTR;
+    // edutiek-patch: begin
+    this.#wave = wave;
+    // edutiek-patch: end
     this.firstPoint = [NaN, NaN];
     this.lastPoint = [NaN, NaN];
     this.#computeMinMax(isLTR);
@@ -27431,7 +27646,56 @@ class FreeDrawOutline extends Outline {
       points[i + 1] = (points[i + 1] - y) / height;
     }
   }
+  // edutiek-patch: begin
+  #buildWave(p1, p2, width, height) {
+    const v = {
+      x: p2.x - p1.x,
+      y: p2.y - p1.y,
+    };
+    const vectorLen = Math.sqrt(Math.pow(v.x, 2) + Math.pow(v.y, 2));
+    v.x /= vectorLen;
+    v.y /= vectorLen;
+    const n = {
+      x: v.y,
+      y: -v.x, //  * (width / height),
+    };
+
+    const boxLen = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
+    const step = (width > height ? 0.005 : 0.004) * (1 / boxLen);
+    const pitch = (width > height ? 0.5 : 1);
+    let path = `M${p1.x} ${p1.y} `;
+    let currLen = 0;
+    let curr = {x: p1.x, y: p1.y};
+    const parts = [];
+    const end = v.x === 0 ? (p2.y - p1.y) / v.y : (p2.x - p1.x) / v.x;
+    for (let currLen = 0; currLen < end; currLen += step, curr.x += v.x * step, curr.y += v.y * step) {
+      parts.push([{x: curr.x + v.x * (step / 2), y: curr.y + v.y * (step / 2)}, {x: curr.x + v.x * step, y: curr.y + v.y * step}]);
+    }
+
+    const h = 0.1;
+    let pathBack = `L${curr.x + n.x * h} ${curr.y + n.y * h} `;
+    for (let i = 0, dir = -1, backDir = ((parts.length & 1) ^ 1) * 2 - 1; i < parts.length; i++, dir = -dir, backDir = -backDir) {
+      const forth = parts[i];
+      const back = parts[parts.length - i - 1];
+      const back2 = parts[parts.length - i - 2] || [0,p1];
+      path += ` Q${forth[0].x + (dir * pitch * n.x)} ${forth[0].y + (dir * pitch * n.y)} ${forth[1].x} ${forth[1].y}`;
+      pathBack += ` Q${back[0].x + (backDir * pitch * n.x) + n.x * h} ${back[0].y + (backDir * pitch * n.y) + n.y * h} ${back2[1].x + n.x * h} ${back2[1].y + n.y * h}`;
+    }
+
+    return path + ' ' + pathBack + ' Z';
+  }
+
   toSVGPath() {
+    if (this.#wave) {
+      return this.#buildWave(
+        {x: this.#points[0], y: this.#points[1]},
+        {x: this.#points[this.#points.length - 2], y: this.#points[this.#points.length - 1]},
+        this.#bbox[2],
+        this.#bbox[3],
+        false
+      );
+    }
+    // edutiek-patch: end
     const buffer = [`M${this.#outline[4]} ${this.#outline[5]}`];
     for (let i = 6, ii = this.#outline.length; i < ii; i += 6) {
       if (isNaN(this.#outline[i])) {
@@ -27468,7 +27732,10 @@ class FreeDrawOutline extends Outline {
     }
     return {
       outline: Array.from(outline),
-      points: [Array.from(points)]
+      // edutiek-patch: begin
+      points: [Array.from(points)],
+      wave: this.#wave,
+      // edutiek-patch: end
     };
   }
   #computeMinMax(isLTR) {
@@ -27531,8 +27798,10 @@ class FreeDrawOutline extends Outline {
   get box() {
     return this.#bbox;
   }
-  newOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
-    return new FreeDrawOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin);
+  // edutiek-patch: begin
+  newOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin = 0, wave = false) {
+    return new FreeDrawOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin, wave);
+    // edutiek-patch: end
   }
   getNewOutline(thickness, innerMargin) {
     const [x, y, width, height] = this.#bbox;
@@ -27544,7 +27813,9 @@ class FreeDrawOutline extends Outline {
     const outliner = this.newOutliner({
       x: this.#points[0] * sx + tx,
       y: this.#points[1] * sy + ty
-    }, this.#box, this.#scaleFactor, thickness, this.#isLTR, innerMargin ?? this.#innerMargin);
+      // edutiek-patch: begin
+    }, this.#box, this.#scaleFactor, thickness, this.#isLTR, innerMargin ?? this.#innerMargin, this.#wave);
+    // edutiek-patch: end
     for (let i = 2; i < this.#points.length; i += 2) {
       outliner.add({
         x: this.#points[i] * sx + tx,
@@ -27825,13 +28096,17 @@ class HighlightOutline extends Outline {
   }
 }
 class FreeHighlightOutliner extends FreeDrawOutliner {
-  newFreeDrawOutline(outline, points, box, scaleFactor, innerMargin, isLTR) {
-    return new FreeHighlightOutline(outline, points, box, scaleFactor, innerMargin, isLTR);
+  // edutiek-patch: begin
+  newFreeDrawOutline(outline, points, box, scaleFactor, innerMargin, isLTR, wave) {
+    return new FreeHighlightOutline(outline, points, box, scaleFactor, innerMargin, isLTR, wave);
+    // edutiek-patch: end
   }
 }
 class FreeHighlightOutline extends FreeDrawOutline {
-  newOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
-    return new FreeHighlightOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin);
+  // edutiek-patch: begin
+  newOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin = 0, wave = false) {
+    return new FreeHighlightOutliner(point, box, scaleFactor, thickness, isLTR, innerMargin, wave);
+    // edutiek-patch: end
   }
 }
 
@@ -27927,7 +28202,7 @@ class HighlightEditor extends AnnotationEditor {
   getPathNode() {
     return this.parent.drawLayer.getSvgNode(this.#id).querySelector('path');
   }
-  getHightligtDiv() {
+  getHighlightDiv() {
     return this.#highlightDiv;
   }
   getVerticalEdges() {
@@ -28148,7 +28423,7 @@ class HighlightEditor extends AnnotationEditor {
         editor: this
       });
       // edutiek-patch: begin
-      return this.#isFreeHighlight ? [["colorPicker", colorPicker]] : [["colorPicker", colorPicker], ['edutiek-token'], ['edutiek']];
+      return this.#isFreeHighlight ? [['edutiek-token']] : [['edutiek-token'], ['edutiek']];
       // edutiek-patch: end
     }
     return super.toolbarButtons;
@@ -28482,7 +28757,15 @@ class HighlightEditor extends AnnotationEditor {
     textLayer.addEventListener("pointermove", this.#highlightMove.bind(this, parent), {
       signal
     });
-    this._freeHighlight = new FreeHighlightOutliner({
+    // edutiek-patch: begin
+    const types = {
+      line: LineDrawOutliner,
+      circle: CircleDrawOutliner,
+      wave: WaveDrawOutliner,
+    };
+    const type = types[HighlightEditor.edutiekDefaultOutlinerType] || LineDrawOutliner;
+    this._freeHighlight = new type({
+      // edutiek-patch: end
       x,
       y
     }, [layerX, layerY, parentWidth, parentHeight], parent.scale, this._defaultThickness / 2, isLTR, 0.001);
@@ -28493,7 +28776,9 @@ class HighlightEditor extends AnnotationEditor {
       bbox: [0, 0, 1, 1],
       root: {
         viewBox: "0 0 1 1",
-        fill: this._defaultColor,
+        // eduiek-patch: begin
+        fill: (['line', 'wave'].includes(pdfjsLib.HighlightEditor.edutiekDefaultOutlinerType) && pdfjsLib.HighlightEditor.edutiekDefaultLineColor) || this._defaultColor,
+        // eduiek-patch: end
         "fill-opacity": this._defaultOpacity
       },
       rootClass: {
@@ -28655,17 +28940,24 @@ class HighlightEditor extends AnnotationEditor {
       editor.rotate(editor.rotation);
     } else if (inkLists) {
       editor.#isFreeHighlight = true;
-      const points = inkLists[0];
-      const point = {
-        x: points[0] - pageX,
-        y: pageHeight - (points[1] - pageY)
-      };
-      const outliner = new FreeHighlightOutliner(point, [0, 0, pageWidth, pageHeight], 1, editor.#thickness / 2, true, 0.001);
-      for (let i = 0, ii = points.length; i < ii; i += 2) {
-        point.x = points[i] - pageX;
-        point.y = pageHeight - (points[i + 1] - pageY);
-        outliner.add(point);
+      // edutiek-patch: begin
+      let outliner;
+      if (inkLists.pos) {
+        outliner = new CircleDrawOutliner({x: inkLists.pos.x - pageX, y: pageHeight - (inkLists.pos.y - pageY)}, [0, 0, pageWidth, pageHeight], 1, editor.#thickness / 2, true, 0.001);
+      } else {
+        const points = inkLists[0];
+        const point = {
+          x: points[0] - pageX,
+          y: pageHeight - (points[1] - pageY)
+        };
+        outliner = new FreeHighlightOutliner(point, [0, 0, pageWidth, pageHeight], 1, editor.#thickness / 2, true, 0.001, data.outlines.wave); // marker
+        for (let i = 0, ii = points.length; i < ii; i += 2) {
+          point.x = points[i] - pageX;
+          point.y = pageHeight - (points[i + 1] - pageY);
+          outliner.add(point);
+        }
       }
+      // edutiek-patch: end
       const {
         id,
         clipPathId
