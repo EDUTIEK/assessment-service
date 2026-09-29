@@ -177,8 +177,10 @@ return [
     'export_type_writings' => 'Abgaben',
     'export_type_correction' => 'Korrektur',
     'export_type_corrections' => 'Korrekturen',
+    'export_type_writers' => 'Teilnahmen',
     'export_type_correctors' => 'Korrektoren',
     'export_type_assignments' => 'Korrekturzuweisung',
+    'export_type_dashboard' => 'Aufsicht',
     'export_type_writing_statistics' => 'Teilnahme-Notenstatistik',
-    'export_type_correction_statistics' => 'Korrektur-Statistik',
+    'export_type_correction_statistics' => 'Korrektur-Notenstatistik',
 ];

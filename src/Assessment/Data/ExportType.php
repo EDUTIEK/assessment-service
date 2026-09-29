@@ -18,8 +18,10 @@ enum ExportType: string
     case WRITINGS = 'writings';
     case CORRECTION = 'correction';
     case CORRECTIONS = 'corrections';
+    case WRITERS = 'writers';
     case CORRECTORS = 'correctors';
     case ASSIGNMENTS = 'assignments';
+    case DASHBOARD = 'dashboard';
     case WRITING_STATISTICS = 'writing_statistics';
     case CORRECTION_STATISTICS = 'correction_statistics';
 
