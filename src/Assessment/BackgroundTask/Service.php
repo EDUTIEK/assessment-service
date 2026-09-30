@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\BackgroundTask;
 
+use Edutiek\AssessmentService\Assessment\Data\ExportType;
 use Edutiek\AssessmentService\System\BackgroundTask\ComponentManager;
 use Edutiek\AssessmentService\System\BackgroundTask\FullService as BackgroundTasks;
-use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\System\File\Storage as Storage;
-use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropertiesService;
+use Edutiek\AssessmentService\Assessment\Export\FileNameBuilder;
 use Edutiek\AssessmentService\Assessment\Data\WritingTask;
 use Edutiek\AssessmentService\Assessment\Api\Internal;
 use Edutiek\AssessmentService\System\BackgroundTask\ComponentJob;
@@ -19,8 +19,7 @@ readonly class Service implements ComponentManager, FullService
         private int $ass_id,
         private int $context_id,
         private int $user_id,
-        private PropertiesService $properties,
-        private language $language,
+        private FileNameBuilder $filenames,
         private BackgroundTasks $manager,
         private Storage $storage,
         private Internal $internal,
@@ -30,7 +29,7 @@ readonly class Service implements ComponentManager, FullService
     public function createDocumentation(): void
     {
         $this->create(
-            $this->language->txt('create_documentation', ['title' => $this->properties->get()->getTitle()]),
+            $this->filenames->build(ExportType::DOCUMENTATION, '.zip'),
             CreateDocumentation::class,
             []
         );
@@ -47,7 +46,7 @@ readonly class Service implements ComponentManager, FullService
         }
 
         $this->create(
-            $this->language->txt('download_writings', ['title' => $this->properties->get()->getTitle()]),
+            $this->filenames->build(ExportType::WRITINGS, '.zip'),
             DownloadWritings::class,
             [$ids, $anonymous, $filename]
         );
@@ -64,7 +63,7 @@ readonly class Service implements ComponentManager, FullService
         }
 
         $this->create(
-            $this->language->txt('download_corrections', ['title' => $this->properties->get()->getTitle()]),
+            $this->filenames->build(ExportType::CORRECTIONS, '.zip'),
             DownloadCorrections::class,
             [$ids, $anonymous_writer, $anonymous_corrector, $filename]
         );

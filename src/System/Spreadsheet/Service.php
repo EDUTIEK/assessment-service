@@ -129,7 +129,7 @@ readonly class Service implements FullService
         $info = $this->store->saveFile(
             $fp,
             $this->store->newInfo()
-                        ->setFileName($this->store->asciiFilename($title ?? 'data') . $type->extension())
+                        ->setFileName($this->store->sanitizeFilename($title ?? 'data') . $type->extension())
                         ->setMimeType($type->mimetype())
         );
         unlink($file);

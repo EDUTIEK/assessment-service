@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\Assessment\PdfCreation;
 
 use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Api\ComponentApiFactory;
+use Edutiek\AssessmentService\Assessment\Data\ExportType;
 use Edutiek\AssessmentService\Assessment\Data\PdfConfig;
 use Edutiek\AssessmentService\Assessment\Data\PdfFormat;
 use Edutiek\AssessmentService\Assessment\Data\PdfSettings;
@@ -13,13 +14,14 @@ use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\WritingTask;
 use Edutiek\AssessmentService\Assessment\Properties\ReadService as PropetiesReadService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskReader as TasksReadService;
+use Edutiek\AssessmentService\Assessment\Export\FileNameBuilder;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingService;
 use Edutiek\AssessmentService\System\User\ReadService as UserService;
-use Edutiek\AssessmentService\Task\Manager\ReadService as TasksReadService;
 use ZipArchive;
 
 class Service implements FullService
@@ -39,7 +41,8 @@ class Service implements FullService
         private UserService $users,
         private TasksReadService $tasks,
         private PropetiesReadService $properties,
-        private CorrectionReport $correction_report
+        private CorrectionReport $correction_report,
+        private FileNameBuilder $filenames,
     ) {
     }
 
@@ -260,20 +263,25 @@ class Service implements FullService
         foreach ($ids as $writer_id => $task_ids) {
             $writer = $this->writers->oneByWriterId($writer_id);
             $user = $this->users->getUser($writer?->getUserId());
-            $name = $this->storage->asciiFilename($user->getListname(true));
+            $writer_dir = $user->getListname(true);
             if ($multi_tasks) {
-                $zip->addEmptyDir($name);
+                $zip->addEmptyDir($writer_dir, ZipArchive::FL_ENC_UTF_8);
             }
 
             foreach ($task_ids as $task_id) {
                 $pdf_id = $this->createPdfFile($purpose, $task_id, $writer_id, $anonymous_writer, $anonymous_corrector);
-                if ($multi_tasks) {
-                    $task = $tasks[$task_id] ?? null;
-                    $entry = $name . '/' . $this->storage->asciiFilename($task?->getTitle() ?? 'task') . '.pdf';
+
+                if ($purpose == PdfPurpose::WRITING) {
+                    $filename = $this->filenames->build(ExportType::WRITING, '.pdf', $task_id, $writer_id);
                 } else {
-                    $entry = $name . '.pdf';
+                    $filename = $this->filenames->build(ExportType::CORRECTION, '.pdf', $task_id, $writer_id);
                 }
-                $zip->addFile($this->storage->getReadablePath($pdf_id), $entry);
+
+                $zip->addFile(
+                    $this->storage->getReadablePath($pdf_id),
+                    $multi_tasks ? $writer_dir . '/' . $filename : $filename,
+                    ZipArchive::FL_ENC_UTF_8
+                );
                 $temp_files[] = $pdf_id;
             }
         }
@@ -290,45 +298,6 @@ class Service implements FullService
         return $info->getId();
     }
 
-    public function buildReportFilename(): string
-    {
-        return $this->properties->get()->getTitle() . ' - ' . $this->lang->txt('correction_reports');
-    }
-
-    /**
-     * @param WritingTask[] $writings
-     */
-    public function buildPdfFilename($writings, PdfPurpose $purpose): string
-    {
-        if (count($writings) > 1) {
-            $filename = $this->properties->get()->getTitle()
-                . ' - ' . $this->lang->txt(
-                    match ($purpose) {
-                        PdfPurpose::WRITING => 'writings',
-                        PdfPurpose::CORRECTION => 'corrections',
-                    }
-                )
-                . '.zip';
-        } else {
-            $wt = reset($writings);
-            $task = $this->tasks->one($wt->getTaskId());
-            $writer = $this->writers->oneByWriterId($wt->getWriterId());
-
-            $filename = $this->properties->get()->getTitle()
-                . ($this->tasks->count() > 1 ? ' - ' . $this->tasks->one($wt->getTaskId())->getTitle() : '')
-                . ' - ' . $writer->getPseudonym()
-                . ' - ' . $this->lang->txt(
-                    match ($purpose) {
-                        PdfPurpose::WRITING => 'writing',
-                        PdfPurpose::CORRECTION => 'correction',
-                    }
-                )
-                . '.pdf';
-        }
-
-        return $this->storage->asciiFilename($filename);
-    }
-
 
     private function getProvider(string $component, PdfPurpose $purpose): ?PdfPartProvider
     {
@@ -341,5 +310,4 @@ class Service implements FullService
         }
         return null;
     }
-
 }

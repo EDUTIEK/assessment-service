@@ -7,6 +7,8 @@ use Edutiek\AssessmentService\Assessment\Data\AssignFilter;
 use Edutiek\AssessmentService\Assessment\Data\AssignMode;
 use Edutiek\AssessmentService\Assessment\Data\CombinedStatus;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
+use Edutiek\AssessmentService\Assessment\Data\ExportType;
+use Edutiek\AssessmentService\Assessment\Export\FileNameBuilder;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\Assessment\Notification\DeliverService as NotificationService;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
@@ -22,7 +24,7 @@ use Edutiek\AssessmentService\System\File\Delivery as FileDelivery;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Task\Api\Internal;
-use Edutiek\AssessmentService\System\Spreadsheet\ExportType;
+use Edutiek\AssessmentService\System\Spreadsheet\ExportType as SpreadsheetExportType;
 use Edutiek\AssessmentService\System\File\Disposition;
 use Edutiek\AssessmentService\Assessment\Data\NotificationType;
 use Edutiek\AssessmentService\System\Data\Result;
@@ -36,6 +38,7 @@ readonly class Service implements FullService
         private CorrectorService $corrector_service,
         private WriterService $writer_service,
         private NotificationService $notification,
+        private FileNameBuilder $filenames,
         private SpreadsheetService $spreadsheet_service,
         private LanguageService $lang,
         private FileDelivery $delivery,
@@ -438,8 +441,8 @@ readonly class Service implements FullService
 
         $file_id = $this->spreadsheet_service->sheetsToFile(
             [$writer_sheet, $corrector_sheet],
-            ExportType::EXCEL,
-            "corrector_assignment"
+            SpreadsheetExportType::EXCEL,
+            $this->filenames->build(ExportType::ASSIGNMENTS, '')
         );
 
         $this->delivery->sendFile($file_id, Disposition::ATTACHMENT);

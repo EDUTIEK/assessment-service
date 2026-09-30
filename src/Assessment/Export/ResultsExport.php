@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Export;
 
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
+use Edutiek\AssessmentService\Assessment\Data\ExportType as DataExportType;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\ResultExportFormat;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingProvider;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskReader;
 use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
 use Edutiek\AssessmentService\Assessment\Corrector\FullService as CorrectorService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\FullService as GradingService;
@@ -33,7 +34,8 @@ readonly class ResultsExport
         private WriterService $writers,
         private CorrectorService $correctors,
         private GradingService $grades,
-        private TaskManager $tasks,
+        private FileNameBuilder $filenames,
+        private TaskReader $tasks,
         private GradingProvider $grading,
         private Language $lang,
         private FormatService $format,
@@ -202,7 +204,7 @@ readonly class ResultsExport
                 'period' => $context->getParentTitle(),
                 'assessment' => $props->getTitle(),
                 'participant' => $user?->getFirstname(),
-                'points' => $writer->getFinalPoints(),
+                'points' => $this->sys_format->number($writer->getFinalPoints() ?? 0),
                 'status' => $writer->getImportedStatus(),
                 'id' => $stitch_user?->getMatriculation()
             ];
@@ -291,11 +293,7 @@ readonly class ResultsExport
             $rows[] = $row;
         }
 
-        $title = $this->lang->txt('examis_filename');
-        if (!empty($props->getTitle())) {
-            $title .= " " . $props->getTitle();
-        }
-
+        $title = $this->filenames->build(DataExportType::RESULTS, '');
         return $this->spreadsheets->dataToFile($header, $rows, ExportType::CSV, $title);
     }
 }

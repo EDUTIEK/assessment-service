@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Task\CorrectionSettings;
 
@@ -20,13 +20,11 @@ class Service implements FullService
     public function __construct(
         private int $ass_id,
         private Repositories $repos,
-        private CorrectorAssignmentService $corrector_assignment_service,
-        private AssessmentStatus $assessment_status,
         private LanguageService $language,
     ) {
     }
 
-    public function get() : CorrectionSettings
+    public function get(): CorrectionSettings
     {
         return $this->repos->correctionSettings()->one($this->ass_id) ??
             $this->repos->correctionSettings()->new()
@@ -35,12 +33,13 @@ class Service implements FullService
                 ->setNegativeRating($this->language->txt('comment_rating_negative_default'));
     }
 
-    public function save(CorrectionSettings $settings) : void
+    public function save(CorrectionSettings $settings): void
     {
         $this->checkScope($settings);
 
         $existing = $this->get();
-        if ($existing->getCriteriaMode() !== $settings->getCriteriaMode() && $this->assessment_status->hasAuthorizedSummaries()) {
+        if ($existing->getCriteriaMode() !== $settings->getCriteriaMode()
+            && $this->repos->correctorSummary()->hasAuthorizedByAssId($this->ass_id)) {
             throw new ApiException("changing criteria mode not allowed if corrections are authorized", ApiException::CORRECTION_STATUS);
         }
 
@@ -58,9 +57,9 @@ class Service implements FullService
     /**
      * @return int[]
      */
-    private function allTaskIds() : array
+    private function allTaskIds(): array
     {
-        return $this->task_ids ??= array_map(fn (Settings $x) => $x->getTaskId(), $this->repos->settings()->allByAssId($this->ass_id));
+        return $this->task_ids ??= array_map(fn(Settings $x) => $x->getTaskId(), $this->repos->settings()->allByAssId($this->ass_id));
     }
 
     /**
@@ -69,10 +68,10 @@ class Service implements FullService
     private function allCorrectorIdsByTask()
     {
         $correctors_by_task = [];
-        foreach ($this->corrector_assignment_service->all() as $assignment) {
+        foreach ($this->repos->correctorAssignment()->allByAssId($this->ass_id) as $assignment) {
             $correctors_by_task[$assignment->getTaskId()][] = $assignment->getCorrectorId();
         }
-        return array_map(fn (array $x) => array_unique($x), $correctors_by_task);
+        return array_map(fn(array $x) => array_unique($x), $correctors_by_task);
     }
 
     /**

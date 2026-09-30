@@ -23,6 +23,7 @@ use Edutiek\AssessmentService\Assessment\DisabledGroup\Service as DisabledGroupS
 use Edutiek\AssessmentService\Assessment\EventHandling\AssessmentObserver as AssessmentObserver;
 use Edutiek\AssessmentService\Assessment\EventHandling\SystemObserver as SystemObserver;
 use Edutiek\AssessmentService\Assessment\Export\DocumentationExport;
+use Edutiek\AssessmentService\Assessment\Export\FileNameBuilder;
 use Edutiek\AssessmentService\Assessment\Export\Service as ExportService;
 use Edutiek\AssessmentService\Assessment\Format\FullService as FormatInterface;
 use Edutiek\AssessmentService\Assessment\Format\Service as Format;
@@ -173,8 +174,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $ass_id,
             $context_id,
             $user_id,
-            $this->properties($ass_id),
-            $this->language($user_id),
+            $this->fileNameBuilder($ass_id, $user_id),
             $this->dependencies->systemApi()->backgroundTask(),
             $this->dependencies->systemApi()->fileStorage(),
             $this
@@ -310,6 +310,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->correctionSettings($ass_id, $user_id),
             $this->logEntry($ass_id),
             $this->resultsExport($ass_id, $context_id, $user_id),
+            $this->fileNameBuilder($ass_id, $user_id),
             $this->language($user_id),
             $this->dependencies->systemApi()->config(),
             $this->dependencies->systemApi()->spreadsheet(false),
@@ -330,6 +331,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->writer($ass_id, $user_id),
             $this->corrector($ass_id, $user_id),
             $this->assessmentGrading($ass_id),
+            $this->fileNameBuilder($ass_id, $user_id),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->dependencies->taskApi()->gradingProvider($ass_id, $user_id),
             $this->language($user_id),
@@ -545,7 +547,8 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->systemApi()->user(),
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->properties($ass_id),
-            $this->correctionReport($ass_id, $user_id)
+            $this->correctionReport($ass_id, $user_id),
+            $this->fileNameBuilder($ass_id, $user_id),
         );
     }
 
@@ -622,6 +625,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->fileDelivery(),
             $this->resultsExport($ass_id, $context_id, $user_id),
+            $this->fileNameBuilder($ass_id, $user_id),
             $this->logEntry($ass_id, false),
             $this->language($user_id)
         );
@@ -638,6 +642,16 @@ class Internal implements ComponentApi, ComponentApiFactory
         return  $this->instances[WritingTaskService::class][$ass_id][$user_id] = new WritingTaskService(
             $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
             $this->writer($ass_id, $user_id)
+        );
+    }
+
+    public function fileNameBuilder(int $ass_id, int $user_id): FileNameBuilder
+    {
+        return $this->instances[FileNameBuilder::class][$ass_id][$user_id] ??= new FileNameBuilder(
+            $ass_id,
+            $this->dependencies->repositories(),
+            $this->dependencies->taskApi()->taskManager($ass_id, $user_id),
+            $this->language($user_id)
         );
     }
 

@@ -33,6 +33,7 @@ class Service implements FullService
         private FileStorage $storage,
         private FileDelivery $delivery,
         private ResultsExport $results,
+        private FilenameBuilder $filenames,
         private LogEntryService $log,
         private Language $language
     ) {
@@ -47,7 +48,7 @@ class Service implements FullService
             $this->background_tasks->downloadWritings(
                 $writings,
                 $anonymous,
-                $this->pdf->buildPdfFilename($writings, PdfPurpose::WRITING)
+                $this->filenames->build(ExportType::WRITINGS, '.zip')
             );
             return true;
         }
@@ -57,7 +58,7 @@ class Service implements FullService
         $file_id = $this->pdf->createWritingPdf($wt->getTaskId(), $wt->getWriterId(), $anonymous);
         $file_info = $this->storage->newInfo()
             ->setId($file_id)
-            ->setFileName($this->pdf->buildPdfFilename($writings, PdfPurpose::WRITING))
+            ->setFileName($this->filenames->build(ExportType::WRITING, '.pdf', $wt->getTaskId(), $wt->getWriterId()))
             ->setMimeType('application/pdf')
             ->setDisposable(true);
 
@@ -75,7 +76,7 @@ class Service implements FullService
                 $writings,
                 $anonymous_writer,
                 $anonymous_corrector,
-                $this->pdf->buildPdfFilename($writings, PdfPurpose::CORRECTION)
+                $this->filenames->build(ExportType::CORRECTIONS, '.zip')
             );
             return true;
         }
@@ -90,7 +91,7 @@ class Service implements FullService
         );
         $file_info = $this->storage->newInfo()
             ->setId($file_id)
-            ->setFileName($this->pdf->buildPdfFilename($writings, PdfPurpose::CORRECTION))
+            ->setFileName($this->filenames->build(ExportType::CORRECTION, '.pdf', $wt->getTaskId(), $wt->getWriterId()))
             ->setMimeType('application/pdf')
             ->setDisposable(true);
 
@@ -103,7 +104,7 @@ class Service implements FullService
         $file_id = $this->pdf->createCorrectionReport();
         $file_info = $this->storage->newInfo()
             ->setId($file_id)
-            ->setFileName($this->pdf->buildReportFilename())
+            ->setFileName($this->filenames->build(ExportType::REPORTS, '.pdf'))
             ->setMimeType('application/pdf')
             ->setDisposable(true);
 
@@ -142,7 +143,7 @@ class Service implements FullService
             case ExportType::REPORTS:
                 $file_id = $this->pdf->createCorrectionReport();
                 $this->storage->updateFileInfo($this->storage->getFileInfo($file_id)
-                    ->setFileName($this->pdf->buildReportFilename() . '.pdf')
+                    ->setFileName($this->filenames->build(ExportType::REPORTS, '.pdf'))
                     ->setMimeType('application/pdf'));
                 break;
         }

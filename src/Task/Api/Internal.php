@@ -90,6 +90,7 @@ class Internal implements RatingCriterionServiceFactory
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->notification(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->fileNameBuilder(),
             $this->dependencies->systemApi()->spreadsheet(true),
             $this->dependencies->systemApi()->language($user_id, __DIR__ . '/../Languages/'),
             $this->dependencies->systemApi()->fileDelivery(),
@@ -219,8 +220,6 @@ class Internal implements RatingCriterionServiceFactory
         return $this->instances[CorrectionSettingsService::class][$ass_id][$user_id] = new CorrectionSettingsService(
             $ass_id,
             $this->dependencies->repositories(),
-            $this->correctorAssignments($ass_id, $user_id),
-            $this->assessmentStatus($ass_id, $user_id),
             $this->language($user_id),
         );
     }
