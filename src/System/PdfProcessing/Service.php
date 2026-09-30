@@ -44,7 +44,7 @@ class Service implements FullService
     {
         try {
             return $this->joinAcc($pdf_ids);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('Falling back to GS, PDFUnite exception: ' . $e->getMessage());
             return $this->joinGS($pdf_ids);
         }
