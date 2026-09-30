@@ -138,6 +138,9 @@ class Service implements FullService
 
             case ExportType::LOG:
                 $file_id = $this->log->export();
+                $this->storage->updateFileInfo($this->storage->getFileInfo($file_id)
+                    ->setFileName($this->filenames->build(ExportType::LOG, '.csv'))
+                    ->setMimeType('text/csv'));
                 break;
 
             case ExportType::REPORTS:
