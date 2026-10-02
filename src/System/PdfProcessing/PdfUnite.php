@@ -332,6 +332,13 @@ class PdfUnite
         if (in_array(null, [$root, $other, $doc, $other_doc], true)) {
             return false;
         }
+
+        $src_parent_tree = $this->src->objGet($other, 'ParentTree');
+        $dest_parent_tree = $this->dest->objGet($root, 'ParentTree');
+        if ($src_parent_tree === null || $dest_parent_tree === null) {
+            return false;
+        }
+
         $this->src_dest[$other_doc] = $doc;
 
         $this->updateStructKids($doc, $other_doc);
