@@ -208,11 +208,7 @@ readonly class ResultsExport
             $rows[] = $row;
         }
 
-        $title = $this->lang->txt('justa_filename');
-        if (!empty($props->getDescription())) {
-            $title .= " " . $props->getDescription();
-        }
-
+        $title = $this->filenames->build(DataExportType::RESULTS, '');
         return $this->spreadsheets->dataToFile($header, $rows, ExportType::CSV, $title);
     }
 
