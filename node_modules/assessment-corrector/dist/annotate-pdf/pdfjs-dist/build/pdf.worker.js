@@ -67242,6 +67242,9 @@ const edutiek = (function(){
     if (nextStructParentKey === null) {
       xref = xref_;
       nextStructParentKey = findNextStructKey(root);
+      if (nextStructParentKey === null) {
+        return null;
+      }
     }
 
     const structParent = xref.fetch(new Ref(annotation.pageAndMC.page, 0)).get('StructParents');
@@ -67355,6 +67358,9 @@ const edutiek = (function(){
       return root.get('ParentTreeNextKey');
     }
     const parentTree = root.get('ParentTree');
+    if (!parentTree) {
+      return null;
+    }
     let next = parentTree;
     while(true) {
       if (next.has('Limits')) {

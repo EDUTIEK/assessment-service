@@ -70,6 +70,7 @@ class CorrectorBridge implements AppCorrectorBridge
 
         $settings = $this->repos->correctionSettings()->one($this->ass_id);
         $data['Settings'] = $this->entity->arrayToPrimitives([
+            'title' => $this->repos->properties()->one($this->ass_id)->getTitle(),
             'multiple_correctors' => $settings->hasMultipleCorrectors(),
             'mutual_visibility' => $settings->getMutualVisibility(),
             'procedure_when_distance' => $settings->getProcedureWhenDistance(),
@@ -79,6 +80,8 @@ class CorrectorBridge implements AppCorrectorBridge
             'stitch_after_procedure' => $settings->getStitchAfterProcedure(),
             'max_points' => $settings->getMaxPoints(),
             'no_manual_decimals' => $settings->getNoManualDecimals(),
+            'download_writing' => $this->is_admin || $settings->getDownloadWriting(),
+            'download_correction' => $this->is_admin || $settings->getDownloadCorrection()
         ]);
 
         return $data;
