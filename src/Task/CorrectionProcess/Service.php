@@ -601,11 +601,18 @@ readonly class Service implements FullService
     public function getAuthorizationWarning(Writer $writer, int $task_id, int $corrector_id): ?string
     {
         $status = $this->whole_process->getAuthorizationResultStatus($writer, $task_id, $corrector_id);
-        return match ($status) {
+        $message = match ($status) {
             CorrectionStatus::APPROXIMATION => $this->language->txt('authorization_warning_approximation'),
             CorrectionStatus::CONSULTING => $this->language->txt('authorization_warning_consulting'),
             CorrectionStatus::STITCH => $this->language->txt('authorization_warning_stitch'),
             default => null,
         };
+
+        if ($message) {
+            $message .= ' ' . $this->language->txt('authorization_warning_points_difference', ['points' => $this->correction_settings->getMaxAutoDistance()]);
+
+        }
+
+        return $message;
     }
 }

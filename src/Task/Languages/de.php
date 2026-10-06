@@ -9,6 +9,7 @@ return [
     'authorization_warning_approximation' => 'Die Freigabe wird ein Annäherungsverfahren auslösen!',
     'authorization_warning_consulting' => 'Die Freigabe wird ein Beratungsverfahren auslösen!',
     'authorization_warning_stitch' => 'Die Freigabe wird einen Stichentscheid auslösen!',
+    'authorization_warning_points_difference' => 'Der Punkteunterschied übersteigt {points} Punkte.',
     'assignment_or_writer_not_found' => 'Zuweisung oder Teilnehmer nicht gefunden',
     'grading_pos_first' => 'Erstkorrektur',
     'grading_pos_second' => 'Zweitkorrektur',
