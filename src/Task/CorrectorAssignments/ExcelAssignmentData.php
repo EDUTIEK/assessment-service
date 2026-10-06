@@ -325,7 +325,7 @@ class ExcelAssignmentData
 
         if ($user_data === null) {
             $user_id = $this->user_service->getUserIdByLogin($login);
-            if ($user_id !== null) {
+            if (!empty($user_id)) {
                 $user_data = $this->user_service->getUser($user_id);
                 $this->users_by_login[$login] = $user_data;
                 $this->users_by_id[$user_id] = $user_data;
