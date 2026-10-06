@@ -205,7 +205,7 @@ readonly class CorrectionProvider implements PdfPartProvider
      */
     private function renderForMarkedPdf(string $key, string $marked_pdf_id, array $infos, bool $anonymous_corrector, Options $options)
     {
-        $start_page = $options->getStartPageNumber() + $this->pdf_processing->count($marked_pdf_id);
+        $start_page = $options->getStartPageNumber() + $this->pdf_processing->count($marked_pdf_id) ?? 0;
         $comment_pdf = $this->renderComments($key, $infos, $options->withStartPageNumber($start_page));
 
         $marked_copy_id = $this->pdf_processing->copy($marked_pdf_id);
@@ -241,7 +241,7 @@ readonly class CorrectionProvider implements PdfPartProvider
         if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE || empty($infos)) {
             return $marked_pdf;
         } else {
-            $start_page = $options->getStartPageNumber() + $this->pdf_processing->count($marked_pdf);
+            $start_page = $options->getStartPageNumber() + $this->pdf_processing->count($marked_pdf) ?? 0;
             $comment_pdf = $this->renderComments($key, $infos, $options->withStartPageNumber($start_page));
 
             $joined_id = $this->pdf_processing->join([$marked_pdf, $comment_pdf]);
@@ -298,7 +298,7 @@ readonly class CorrectionProvider implements PdfPartProvider
                         'src' => $this->temp_storage->getReadablePath($image_id),
                     ]);
                     $pdf_ids[] = $id = $this->pdf_processing->create($html, $options->withStartPageNumber($start_page));
-                    $start_page += $this->pdf_processing->count($id);
+                    $start_page += $this->pdf_processing->count($id) ?? 0;
                 }
             }
         }

@@ -92,18 +92,21 @@ class Service implements FullService
         );
     }
 
-    public function count(string $pdf_id): int
+    public function count(string $pdf_id): ?int
     {
         // Cannot use escapeshellarg. The file is used inside the PS command and not as a standalone argument.
         // This means that it is currently vulnerable to command injecting attacks.
         try {
+            $path = $this->pathOfId($pdf_id);
+
             return (int) current($this->exec(sprintf(
-                '%s -q -dNOSAFER -dNODISPLAY -c "(%s) (r) file runpdfbegin pdfpagecount = quit"',
+                '%s -q -dSAFER -dNODISPLAY --permit-file-read="%s" -c "(%s) (r) file runpdfbegin pdfpagecount = quit"',
                 escapeshellcmd($this->ghostscript_bin),
-                $this->pathOfId($pdf_id)
+                $path,
+                $path
             )));
         } catch (\Throwable $t) {
-            return 1;
+            return null;
         }
     }
 

@@ -195,7 +195,7 @@ class Service implements FullService
                 if ($id !== null) {
                     $pdf_ids[] = $id;
                     $options = $options->withStartPageNumber(
-                        $options->getStartPageNumber() + $this->processor->count($id)
+                        $options->getStartPageNumber() + $this->processor->count($id) ?? 0
                     );
                 }
             }

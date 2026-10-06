@@ -25,8 +25,9 @@ interface FullService
 
     /**
      * Count the pages of a pdf file
+     * null is returned if the page count can't be read
      */
-    public function count(string $pdf_id): int;
+    public function count(string $pdf_id): ?int;
 
     /**
      * Print two pdf files on top of each other
