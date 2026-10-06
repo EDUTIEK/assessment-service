@@ -96,11 +96,15 @@ class Service implements FullService
     {
         // Cannot use escapeshellarg. The file is used inside the PS command and not as a standalone argument.
         // This means that it is currently vulnerable to command injecting attacks.
-        return (int) current($this->exec(sprintf(
-            '%s -q -dNOSAFER -dNODISPLAY -c "(%s) (r) file runpdfbegin pdfpagecount = quit"',
-            escapeshellcmd($this->ghostscript_bin),
-            $this->pathOfId($pdf_id)
-        )));
+        try {
+            return (int) current($this->exec(sprintf(
+                '%s -q -dNOSAFER -dNODISPLAY -c "(%s) (r) file runpdfbegin pdfpagecount = quit"',
+                escapeshellcmd($this->ghostscript_bin),
+                $this->pathOfId($pdf_id)
+            )));
+        } catch (\Throwable $t) {
+            return 1;
+        }
     }
 
     public function onTopOfEachOther(string $pdf_top, string $pdf_bot): string
