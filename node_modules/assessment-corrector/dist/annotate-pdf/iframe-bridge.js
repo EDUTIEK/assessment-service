@@ -293,7 +293,7 @@ function setup(dispatch, ready){
                 });
             },
             setDefaultFreeFormType: type => {
-                if (!['line', 'circle', 'wave'].includes(type)) {
+                if (!['line', 'circle', 'wave', 'rect', 'dot'].includes(type)) {
                     throw new Error('Invalid free form type given: ' + JSON.stringify(type));
                 }
                 pdfjsLib.HighlightEditor.edutiekDefaultOutlinerType = type;
@@ -467,9 +467,9 @@ function createLabelDiv()
     d.classList.add('annotation-label');
     const c = document.createElement('span');
     c.classList.add('label-content');
-    d.appendChild(c);
     const t = document.createElement('div');
     d.appendChild(t);
+    d.appendChild(c);
     return d;
 }
 
@@ -534,12 +534,12 @@ function adjustLabelDiv(entry)
         }
     }
     if (entry.token) {
-        entry.labelDiv.lastChild.className = 'annotation-token annotation-token-' + entry.token;
+        entry.labelDiv.firstChild.className = 'annotation-token annotation-token-' + entry.token;
     } else {
-        entry.labelDiv.lastChild.className = '';
+        entry.labelDiv.firstChild.className = '';
     }
-    entry.labelDiv.children[0].textContent = entry.label || '';
-    entry.labelDiv.children[0].classList[entry.label ? 'add' : 'remove']('label-content');
+    entry.labelDiv.children[1].textContent = entry.label || '';
+    entry.labelDiv.children[1].classList[entry.label ? 'add' : 'remove']('label-content');
 }
 
 function updateButtons(editor, mode)

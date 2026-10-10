@@ -27189,6 +27189,7 @@ class Outline {
 
 // edutiek-patch: begin
 class CircleDrawOutliner {
+  static DEFAULT_RADIUS = 0.03;
   #start;
   #create;
   #outliner;
@@ -27196,12 +27197,14 @@ class CircleDrawOutliner {
   #box;
   #isLTR;
   #innerMargin;
+  #radius;
   constructor(startPoint, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
     this.#start = startPoint;
     this.#scale = scaleFactor;
     this.#box = box;
     this.#isLTR = isLTR;
     this.#innerMargin = this.#innerMargin;
+    this.#radius = CircleDrawOutliner.DEFAULT_RADIUS;
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;
     const pos = {
       x: (this.#start.x - layerX) / layerWidth,
@@ -27214,9 +27217,9 @@ class CircleDrawOutliner {
   }
 
   add(point) {
-    const width = 0.03 * (this.#box[2] - this.#box[0]);
+    const width = this.#radius * (this.#box[2] - this.#box[0]);
     const ratio = this.#box[2] / (this.#box[3] - this.#box[1]);
-    this.#start = {x: point.x - width, y: point.y - (0.04 * (this.#box[2] - this.#box[0])) * ratio};
+    this.#start = {x: point.x - width, y: point.y - (this.#radius + 0.01) * (this.#box[2] - this.#box[0]) * ratio};
     return true;
   }
 
@@ -27224,13 +27227,13 @@ class CircleDrawOutliner {
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;
 
     const ratio = layerWidth / layerHeight;
-    const w = 0.028;
+    const w = Math.max(0.001, this.#radius - 0.002);
     const pos = {
       x: (this.#start.x - layerX) / layerWidth,
       y: (this.#start.y - layerY) / layerHeight,
-    }
+    };
 
-    return `M ${pos.x + w} ${pos.y + 0.04} A ${w} ${w * ratio} 1 1 1 ${pos.x + w + 0.001} ${pos.y + 0.04}`;
+    return `M ${pos.x + w} ${pos.y + w * ratio * 2} A ${w} ${w * ratio} 1 1 1 ${pos.x + w + 0.001} ${pos.y + w * ratio * 2}`;
   }
 
   getOutlines() {
@@ -27239,7 +27242,11 @@ class CircleDrawOutliner {
       x: (this.#start.x - layerX) / layerWidth,
       y: (this.#start.y - layerY) / layerHeight,
     };
-    return new CircleDrawOutline({x: (this.#start.x - layerX) / layerWidth, y: (this.#start.y - layerY) / layerHeight}, this.#box, this.#scale, this.#innerMargin, this.#isLTR);
+    return new CircleDrawOutline({x: (this.#start.x - layerX) / layerWidth, y: (this.#start.y - layerY) / layerHeight}, this.#box, this.#scale, this.#innerMargin, this.#isLTR, this.#radius);
+  }
+
+  setRadius(radius) {
+    this.#radius = radius;
   }
 }
 
@@ -27249,24 +27256,28 @@ class CircleDrawOutline extends Outline {
   #scaleFactor;
   #innerMargin;
   #isLTR;
-  constructor(pos, box, scaleFactor, innerMargin, isLTR) {
+  #radius;
+  constructor(pos, box, scaleFactor, innerMargin, isLTR, radius) {
     super();
     this.#pos = pos;
     this.#box = box;
+    this.#radius = radius;
     this.#scaleFactor = scaleFactor;
     this.#innerMargin = innerMargin;
     this.#isLTR = isLTR;
   }
   toSVGPath() {
     const [x, y, w, h] = this.box;
-    return `M 0.5 0.96 A 0.46 0.46 1 1 1 0.501 0.96 z`;
+    const r = this.#radius;
+    return `M 0.5 ${1 - r} A ${0.5 - r} ${0.5 - r} 1 1 1 0.501 ${1 - r} z`;
+    // return `M 0.5 0.96 A 0.46 0.46 1 1 1 0.501 0.96 z`;
   }
 
   serialize([blX, blY, trX, trY], rotation) {
     const width = trX - blX;
     const height = trY - blY;
     return {
-      points: {pos: {x: blX, y: trY}},
+      points: {pos: {x: blX, y: trY}, radius: this.#radius},
     };
   }
 
@@ -27285,15 +27296,150 @@ class CircleDrawOutline extends Outline {
 
     const ratio = layerWidth / layerHeight;
 
-    const w = 0.06;
-    const h = 0.06 * ratio;
+    const w = this.#radius * 2;
 
     return [this.#pos.x, this.#pos.y, w, w * ratio];
   }
 
   getNewOutline(thickness, innerMargin) {
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;
-    return new CircleDrawOutliner({x: (this.#pos.x * layerWidth) + layerX, y: (this.#pos.y * layerHeight) + layerY}, this.#box, this.#scaleFactor, thickness, this.#isLTR, innerMargin ?? this.#innerMargin).getOutlines();
+    const outliner = new CircleDrawOutliner({x: (this.#pos.x * layerWidth) + layerX, y: (this.#pos.y * layerHeight) + layerY}, this.#box, this.#scaleFactor, thickness, this.#isLTR, innerMargin ?? this.#innerMargin);
+    outliner.setRadius(this.#radius);
+
+    return outliner.getOutlines();
+  }
+}
+
+class DotDrawOutliner extends CircleDrawOutliner {
+  constructor(...args) {
+    super(...args);
+    this.setRadius(0.001);
+  }
+}
+
+class RectDrawOutliner {
+  #start;
+  #create;
+  #outliner;
+  #scale;
+  #box;
+  #isLTR;
+  #innerMargin;
+  #end;
+  constructor(startPoint, box, scaleFactor, thickness, isLTR, innerMargin = 0) {
+    this.#start = startPoint;
+    this.#scale = scaleFactor;
+    this.#box = box;
+    this.#isLTR = isLTR;
+    this.#innerMargin = this.#innerMargin;
+    this.#end = null;
+    const [layerX, layerY, layerWidth, layerHeight] = this.#box;
+    const pos = {
+      x: (this.#start.x - layerX) / layerWidth,
+      y: (this.#start.y - layerY) / layerHeight,
+    };
+  }
+
+  isEmpty() {
+    return this.#end === null;
+  }
+
+  add(point) {
+    this.#end = {x: point.x, y: point.y};
+    return true;
+  }
+
+  toSVGPath() {
+    if (this.#end === null) {
+      return '';
+    }
+    const [layerX, layerY, layerWidth, layerHeight] = this.#box;
+
+    const ratio = layerWidth / layerHeight;
+    const w = 0.028;
+    const pos = {
+      x: (this.#start.x - layerX) / layerWidth,
+      y: (this.#start.y - layerY) / layerHeight,
+    };
+
+    const end = {
+      x: (this.#end.x - layerX) / layerWidth,
+      y: (this.#end.y - layerY) / layerHeight,
+    };
+
+    return `M ${pos.x} ${pos.y} L ${end.x} ${pos.y} ${end.x} ${end.y} ${pos.x} ${end.y} Z`;
+  }
+
+  getOutlines() {
+    const [layerX, layerY, layerWidth, layerHeight] = this.#box;
+    const start = {
+      x: (this.#start.x - layerX) / layerWidth,
+      y: (this.#start.y - layerY) / layerHeight,
+    };
+    const end = {
+      x: (this.#end.x - layerX) / layerWidth,
+      y: (this.#end.y - layerY) / layerHeight,
+    };
+    return new RectDrawOutline(start, end, this.#box, this.#scale, this.#innerMargin, this.#isLTR);
+  }
+}
+
+class RectDrawOutline extends Outline {
+  #start;
+  #end;
+  #box;
+  #scaleFactor;
+  #innerMargin;
+  #isLTR;
+  constructor(start, end, box, scaleFactor, innerMargin, isLTR) {
+    super();
+    this.#start = start;
+    this.#end = end;
+    this.#box = box;
+    this.#scaleFactor = scaleFactor;
+    this.#innerMargin = innerMargin;
+    this.#isLTR = isLTR;
+  }
+  toSVGPath() {
+    const [x, y, w, h] = this.box;
+    const wb = 0.001 / w;
+    const hb = 0.001 / h;
+    return `M ${wb} ${hb} L ${1 - wb} ${hb} ${1 - wb} ${1 - hb} ${wb} ${1 - hb} Z`;
+  }
+
+  serialize([blX, blY, trX, trY], rotation) {
+    const width = trX - blX;
+    const height = trY - blY;
+    return {
+      points: {start: {x: blX, y: trY}, end: {x: trX, y: blY}},
+    };
+  }
+
+  get firstPoint() {
+    const box = this.box;
+    return [box[0], box[1]];
+  }
+
+  get lastPoint() {
+    const box = this.box;
+    return [box[0] + box[2], box[1] + box[3]];
+  }
+
+  get box() {
+    return [
+      Math.min(this.#start.x, this.#end.x),
+      Math.min(this.#start.y, this.#end.y),
+      Math.abs(this.#end.x - this.#start.x),
+      Math.abs(this.#end.y - this.#start.y),
+    ];
+  }
+
+  getNewOutline(thickness, innerMargin) {
+    const [layerX, layerY, layerWidth, layerHeight] = this.#box;
+    const outline = new RectDrawOutliner({x: (this.#start.x * layerWidth) + layerX, y: (this.#start.y * layerHeight) + layerY}, this.#box, this.#scaleFactor, thickness, this.#isLTR, innerMargin ?? this.#innerMargin);
+    outline.add({x: (this.#end.x * layerWidth) + layerX, y: (this.#end.y * layerHeight) + layerY});
+
+    return outline.getOutlines();
   }
 }
 
@@ -28762,6 +28908,8 @@ class HighlightEditor extends AnnotationEditor {
       line: LineDrawOutliner,
       circle: CircleDrawOutliner,
       wave: WaveDrawOutliner,
+      rect: RectDrawOutliner,
+      dot: DotDrawOutliner,
     };
     const type = types[HighlightEditor.edutiekDefaultOutlinerType] || LineDrawOutliner;
     this._freeHighlight = new type({
@@ -28944,6 +29092,10 @@ class HighlightEditor extends AnnotationEditor {
       let outliner;
       if (inkLists.pos) {
         outliner = new CircleDrawOutliner({x: inkLists.pos.x - pageX, y: pageHeight - (inkLists.pos.y - pageY)}, [0, 0, pageWidth, pageHeight], 1, editor.#thickness / 2, true, 0.001);
+        inkLists.radius && outliner.setRadius(inkLists.radius);
+      } else if (inkLists.start) {
+        outliner = new RectDrawOutliner({x: inkLists.start.x - pageX, y: pageHeight - (inkLists.start.y - pageY)}, [0, 0, pageWidth, pageHeight], 1, editor.#thickness / 2, true, 0.001);
+        outliner.add({x: inkLists.end.x - pageX, y: pageHeight - (inkLists.end.y - pageY)});
       } else {
         const points = inkLists[0];
         const point = {
