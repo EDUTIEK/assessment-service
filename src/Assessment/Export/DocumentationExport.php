@@ -90,13 +90,13 @@ class DocumentationExport
                 $temp_files[] = $writing_pdf = $this->pdf->createWritingPdf($task_id, $writer_id, false);
                 $source = $this->storage->getReadablePath($writing_pdf);
                 $dest = $writer_dir . '/' . $this->filenames->build(ExportType::WRITING, '.pdf', $task_id, $writer_id);
-                $zip->addFile($source, $dest, ZipArchive::FL_ENC_UTF_8);
+                $zip->addFile($source, $dest, 0,0, ZipArchive::FL_ENC_UTF_8);
                 $hashes[$dest] = hash($hash_algo, file_get_contents($source));
 
                 $temp_files[] = $correction_pdf = $this->pdf->createCorrectionPdf($task_id, $writer_id, false, false);
                 $source = $this->storage->getReadablePath($correction_pdf);
                 $dest = $writer_dir . '/' . $this->filenames->build(ExportType::CORRECTION, '.pdf', $task_id, $writer_id);
-                $zip->addFile($source, $dest, ZipArchive::FL_ENC_UTF_8);
+                $zip->addFile($source, $dest, 0,0, ZipArchive::FL_ENC_UTF_8);
                 $hashes[$dest] = hash($hash_algo, file_get_contents($source));
             }
         }
@@ -105,20 +105,20 @@ class DocumentationExport
             $temp_files[] = $report = $this->pdf->createCorrectionReport();
             $source = $this->storage->getReadablePath($report);
             $dest = $this->filenames->build(ExportType::REPORTS, '.pdf');
-            $zip->addFile($source, $dest, ZipArchive::FL_ENC_UTF_8);
+            $zip->addFile($source, $dest, 0,0, ZipArchive::FL_ENC_UTF_8);
             $hashes[$dest] = hash($hash_algo, file_get_contents($source));
         }
 
         $temp_files[] = $results = $this->results_export->create();
         $source = $this->storage->getReadablePath($results);
         $dest = $this->filenames->build(ExportType::RESULTS, '.csv');
-        $zip->addFile($source, $dest, ZipArchive::FL_ENC_UTF_8);
+        $zip->addFile($source, $dest, 0,0, ZipArchive::FL_ENC_UTF_8);
         $hashes[$dest] = hash($hash_algo, file_get_contents($source));
 
         $temp_files[] = $log = $this->log->export(SpreadsheetExportType::CSV);
         $source = $this->storage->getReadablePath($log);
         $dest = $this->filenames->build(ExportType::LOG, '.csv');
-        $zip->addFile($source, $dest, ZipArchive::FL_ENC_UTF_8);
+        $zip->addFile($source, $dest, 0,0, ZipArchive::FL_ENC_UTF_8);
         $hashes[$dest] = hash($hash_algo, file_get_contents($source));
 
         $zip->close();

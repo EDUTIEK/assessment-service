@@ -280,7 +280,7 @@ class Service implements FullService
                 $zip->addFile(
                     $this->storage->getReadablePath($pdf_id),
                     $multi_tasks ? $writer_dir . '/' . $filename : $filename,
-                    ZipArchive::FL_ENC_UTF_8
+                    0,0,ZipArchive::FL_ENC_UTF_8
                 );
                 $temp_files[] = $pdf_id;
             }
