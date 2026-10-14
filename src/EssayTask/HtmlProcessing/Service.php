@@ -14,6 +14,7 @@ use Edutiek\AssessmentService\System\HtmlProcessing\ServiceVersion;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Task\CorrectorComment\CorrectorCommentInfo;
 use Edutiek\AssessmentService\Task\CorrectorComment\InfoService as CommentsService;
+use Edutiek\AssessmentService\EssayTask\Data\CorrectionMark;
 
 /**
  * Tool for processing HTML code coming from the rich text editor
@@ -37,6 +38,13 @@ class Service implements FullService
      * @var CorrectorCommentInfo[]
      */
     private array $current_infos = [];
+
+    /**
+     * Cached dompdf styles for wavy underlines, keyed by color
+     * dompdf draws only solid text-decoration, so each color is a PNG tile
+     * @var array<string, string>
+     */
+    private array $wave_underline_styles = [];
 
     public function __construct(
         private readonly WritingSettings $writing_settings,
@@ -170,6 +178,142 @@ class Service implements FullService
     }
 
     /**
+     * Get the background color for marking text
+     * If multiple correctors marked the same text then the latest wins
+     * @param CorrectorCommentInfo[] $infos
+     */
+    private function getCommentStyle(array $infos): string
+    {
+        if (empty($infos)) {
+            return '';
+        }
+
+        /** @var CorrectorCommentInfo $info */
+        usort($infos, fn(CorrectorCommentInfo $a, CorrectorCommentInfo $b) => $a->getPosition() <=> $b->getPosition());
+        $info = end($infos);
+
+        $color = '#' . match($info->getPosition()) {
+            GradingPosition::FIRST => $this->config->getCorrector1Color() ?? Config::DEFAULT_CORRECTOR1_COLOR,
+            GradingPosition::SECOND => $this->config->getCorrector2Color() ?? Config::DEFAULT_CORRECTOR2_COLOR,
+            GradingPosition::STITCH => $this->config->getCorrector3Color() ?? Config::DEFAULT_CORRECTOR3_COLOR,
+        };
+
+        $list_marks = $info->getMarks();
+        $mark = reset($list_marks);
+
+        switch ($mark?->getShape()) {
+            case CorrectionMark::SHAPE_TEXT_UNDERLINE:
+                return 'border-bottom: 2px solid ' .  $color . ';';
+
+            case CorrectionMark::SHAPE_TEXT_WAVE:
+                return $this->getWaveUnderlineStyle($color);
+
+            case CorrectionMark::SHAPE_TEXT_VLINE:
+                return '';
+
+            case CorrectionMark::SHAPE_TEXT_MARKER:
+            default:
+                return 'background-color: ' . $color . ';';
+        }
+    }
+
+    /**
+     * Wavy underline that dompdf can paint.
+     * text-decoration: wavy is ignored, and SVG backgrounds are not supported.
+     * A transparent PNG of one sine period is repeated along the bottom of the span.
+     */
+    private function getWaveUnderlineStyle(string $color): string
+    {
+        if (isset($this->wave_underline_styles[$color])) {
+            return $this->wave_underline_styles[$color];
+        }
+
+        $png = $this->createWaveUnderlinePng($color);
+        if ($png === null) {
+            $style = 'border-bottom: 2px dashed ' . $color . ';';
+        } else {
+            // The tile is drawn larger than these CSS sizes. dompdf scales it down,
+            // which keeps the sine smooth. The padding holds the wave under the glyphs.
+            $uri = 'data:image/png;base64,' . base64_encode($png);
+            $style = "background-image:url('" . $uri . "');"
+                . 'background-repeat:repeat-x;'
+                . 'background-position:left bottom;'
+                . 'background-size:9px 4px;'
+                . 'padding-bottom:2px;';
+        }
+
+        $this->wave_underline_styles[$color] = $style;
+        return $style;
+    }
+
+    /**
+     * One horizontal period of a wavy underline in $color (#rrggbb)
+     * Canvas is 54×24 px and is displayed at 9×4 px, so the stroke is about 1.6 px.
+     */
+    private function createWaveUnderlinePng(string $color): ?string
+    {
+        if (!function_exists('imagecreatetruecolor') || !preg_match('/^#([0-9a-fA-F]{6})$/', $color, $match)) {
+            return null;
+        }
+
+        $red = hexdec(substr($match[1], 0, 2));
+        $green = hexdec(substr($match[1], 2, 2));
+        $blue = hexdec(substr($match[1], 4, 2));
+
+        $width = 54;
+        $height = 24;
+        $stroke = 9.6;
+
+        $image = imagecreatetruecolor($width, $height);
+        imagealphablending($image, false);
+        imagesavealpha($image, true);
+        $clear = imagecolorallocatealpha($image, 0, 0, 0, 127);
+        imagefilledrectangle($image, 0, 0, $width - 1, $height - 1, $clear);
+
+        $half = $stroke / 2;
+        $amplitude = ($height - $stroke) / 2;
+        $middle = ($height - 1) / 2;
+        $reach = (int) ceil($half + 2);
+        $edge = 1.15;
+
+        for ($y = 0; $y < $height; $y++) {
+            for ($x = 0; $x < $width; $x++) {
+                $distance = INF;
+                for ($dx = -$reach; $dx <= $reach; $dx++) {
+                    $sample_x = ($x + $dx) % $width;
+                    if ($sample_x < 0) {
+                        $sample_x += $width;
+                    }
+                    $curve_y = $middle - cos(2 * M_PI * $sample_x / $width) * $amplitude;
+                    $distance = min($distance, hypot($dx, $y - $curve_y));
+                }
+
+                if ($distance >= $half + $edge) {
+                    continue;
+                }
+
+                $alpha = $distance <= $half - $edge
+                    ? 0
+                    : (int) round(($distance - ($half - $edge)) / (2 * $edge) * 127);
+                imagesetpixel($image, $x, $y, imagecolorallocatealpha($image, $red, $green, $blue, $alpha));
+            }
+        }
+
+        ob_start();
+        $written = imagepng($image);
+        $png = ob_get_clean();
+        if (PHP_MAJOR_VERSION < 8) {
+            imagedestroy($image);
+        }
+
+        if ($written === false || $png === false || $png === '') {
+            return null;
+        }
+
+        return $png;
+    }
+
+    /**
      * Initialize the collection of comments for the current paragraph
      */
     public static function initCurrentComments(string $paraNumber)
@@ -187,17 +331,28 @@ class Service implements FullService
     {
         $labels = [];
         foreach (self::$instance->current_infos as $info) {
-            if ((int) $wordNumber == $info->getComment()->getStartPosition() && !empty($info->getLabel())) {
-                $labels[] = $info->getLabel();
+
+            if ((int) $wordNumber == $info->getComment()->getStartPosition()) {
+                $parts = [];
+                if (!empty($info->getLabel())) {
+                    $parts[] = $info->getLabel();
+                }
+                if (!empty($info->getSymbol())) {
+                    $parts[] = self::$instance->comments_service->getSymbolForLabel($info->getSymbol());
+                }
+                if (!empty($parts)) {
+                    $labels[] = implode(' ', $parts);
+                }
             }
         }
         return (implode(', ', $labels));
     }
 
+
     /**
      * Get the background color for the word
      */
-    public static function commentColor(string $wordNumber): string
+    public static function commentStyle(string $wordNumber): string
     {
         $infos = [];
         foreach (self::$instance->current_infos as $info) {
@@ -205,7 +360,7 @@ class Service implements FullService
                 $infos[] = $info;
             }
         }
-        return self::$instance->getTextBackgroundColor($infos);
+        return self::$instance->getCommentStyle($infos);
     }
 
     /**

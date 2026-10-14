@@ -45,16 +45,16 @@
         <xsl:choose>
             <xsl:when test="@data-w">
                 <xsl:variable name="label" select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::commentLabel',string(@data-w))" />
-                <xsl:variable name="color" select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::commentColor',string(@data-w))" />
+                <xsl:variable name="style" select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::commentStyle',string(@data-w))" />
                 <xsl:if test="$label">
                     <sup class="xlas-label">
                         <xsl:value-of select="$label" />
                     </sup>
                 </xsl:if>
                 <xsl:choose>
-                    <xsl:when test="$color">
+                    <xsl:when test="$style">
                         <span>
-                            <xsl:attribute name="style">background-color: <xsl:value-of select="$color" />;</xsl:attribute>
+                            <xsl:attribute name="style"><xsl:value-of select="$style" /></xsl:attribute>
                             <xsl:value-of select="text()" />
                         </span>
                     </xsl:when>

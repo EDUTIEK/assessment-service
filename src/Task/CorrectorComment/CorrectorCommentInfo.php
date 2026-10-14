@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\Task\CorrectorComment;
 
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\Task\Data\CorrectorComment;
+use Edutiek\AssessmentService\EssayTask\Data\CorrectionMark;
 
 /**
  * Enhanced documentation of a corrector comment
@@ -14,10 +15,13 @@ class CorrectorCommentInfo
 {
     protected string $label = '';
 
-
+    /**
+     * @param CorrectionMark[] $marks
+     */
     public function __construct(
         private readonly CorrectorComment $comment,
         private readonly GradingPosition $position,
+        private readonly array $marks,
         private readonly float $points,
         private readonly string $symbol,
         private readonly string $rating_text,
@@ -103,6 +107,15 @@ class CorrectorCommentInfo
             || (!empty($this->getRatingText()))
             || (!empty($this->getSymbol()))
             || (!empty($this->getPoints()));
+    }
+
+    /**
+     * Get the list of correction marks
+     * @return CorrectionMark[]
+     */
+    public function getMarks(): array
+    {
+        return $this->marks;
     }
 
 }

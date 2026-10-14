@@ -73,6 +73,7 @@ readonly class Service implements InfoService
                     $infos[] = new CorrectorCommentInfo(
                         $comment,
                         $assignment->getPosition(),
+                        $marks,
                         $sum_of_points,
                         $symbol,
                         $rating_text,
