@@ -209,7 +209,9 @@ class Service implements FullService
                 return $this->getWaveUnderlineStyle($color);
 
             case CorrectionMark::SHAPE_TEXT_VLINE:
-                return '';
+                // Drawn by .xlas-vline::after in correction.css. The custom property
+                // carries the color; dompdf has no other way to pass it to the pseudo element.
+                return '--xlas-vline: ' . $color . ';';
 
             case CorrectionMark::SHAPE_TEXT_MARKER:
             default:
@@ -311,6 +313,62 @@ class Service implements FullService
         }
 
         return $png;
+    }
+
+    /**
+     * Marked spans for a vertical line in the left margin.
+     * Called from comments.xsl. A long word is split into short spans: dompdf
+     * paints the line only on the line box where a span ends, so each piece of
+     * a wrapped word has to be its own span. Short words stay in one span.
+     */
+    public static function vlineSpans(string $style, string $text): \DOMElement
+    {
+        $doc = new DOMDocument('1.0', 'UTF-8');
+        $root = $doc->createElement('root');
+        $doc->appendChild($root);
+
+        foreach (self::vlineChunks($text) as $chunk) {
+            $span = $doc->createElement('span');
+            $span->setAttribute('class', 'xlas-vline');
+            $span->setAttribute('style', $style);
+            $span->appendChild($doc->createTextNode($chunk));
+            $root->appendChild($span);
+        }
+
+        return $root;
+    }
+
+    /**
+     * @return string[]
+     */
+    private static function vlineChunks(string $text): array
+    {
+        if ($text === '') {
+            return [];
+        }
+
+        if (preg_match('/^(.*?)(\s*)$/u', $text, $match)) {
+            $word = $match[1];
+            $space = $match[2];
+        } else {
+            $word = $text;
+            $space = '';
+        }
+
+        // 12 characters stay on one line even in the narrow comment column.
+        $size = 12;
+        if (mb_strlen($word) <= $size * 2) {
+            return [$text];
+        }
+
+        $chunks = [];
+        $length = mb_strlen($word);
+        for ($offset = 0; $offset < $length; $offset += $size) {
+            $chunks[] = mb_substr($word, $offset, $size);
+        }
+        $chunks[array_key_last($chunks)] .= $space;
+
+        return $chunks;
     }
 
     /**

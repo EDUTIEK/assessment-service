@@ -94,3 +94,20 @@ Specific styles for the correction output
     font-family: sans-serif;
     font-size: 0.8rem;
 }
+
+/*
+ * Vertical correction line in the left page margin.
+ * Each marked span paints one bar on the line it sits on. The bar is slightly
+ * taller than the line box, so a wrapped span and the following spans with the
+ * same color meet without a gap. dompdf ignores text-decoration and fixed
+ * backgrounds, and it does place an absolutely positioned ::after on the
+ * current line.
+ */
+.xlas-vline::after {
+    content: "";
+    position: absolute;
+    left: -3mm;
+    width: 0.7mm;
+    height: 1.6em;
+    background-color: var(--xlas-vline);
+}

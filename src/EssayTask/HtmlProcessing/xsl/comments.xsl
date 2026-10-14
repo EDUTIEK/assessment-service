@@ -52,6 +52,11 @@
                     </sup>
                 </xsl:if>
                 <xsl:choose>
+                    <xsl:when test="contains($style, '--xlas-vline')">
+                        <xsl:for-each select="php:function('Edutiek\AssessmentService\EssayTask\HtmlProcessing\Service::vlineSpans', string($style), string(text()))/node()">
+                            <xsl:copy-of select="." />
+                        </xsl:for-each>
+                    </xsl:when>
                     <xsl:when test="$style">
                         <span>
                             <xsl:attribute name="style"><xsl:value-of select="$style" /></xsl:attribute>
