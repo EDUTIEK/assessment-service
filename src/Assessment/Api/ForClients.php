@@ -33,6 +33,7 @@ use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterFullService
 use Edutiek\AssessmentService\Assessment\WriterClient\ReadService as WriterClientService;
 use Edutiek\AssessmentService\Assessment\WritingTask\ReadService as WritingTaskReadService;
 use Edutiek\AssessmentService\System\Language\ReadService as LanguageService;
+use Edutiek\AssessmentService\Assessment\PersonalDataExport;
 
 readonly class ForClients
 {
@@ -174,5 +175,10 @@ readonly class ForClients
     public function language(int $user_id)
     {
         return $this->internal->language($user_id);
+    }
+
+    public function personalDataExport(): PersonalDataExport\Export
+    {
+        return $this->internal->personalDataExport();
     }
 }

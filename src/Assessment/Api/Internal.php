@@ -679,4 +679,19 @@ class Internal implements ComponentApi, ComponentApiFactory
         return $this->instances[PersonalDataExport\AssessmentUsageResolver::class] ??=
             new PersonalDataExport\AssessmentUsageResolver($this->dependencies->repositories(), $this->dependencies->systemApi()->user());
     }
+
+    public function personalDataExport(): PersonalDataExport\Export
+    {
+        $task_components = array_map(fn (TaskType $task_type) => $task_type->component(), TaskType::cases());
+
+        return $this->instances[PersonalDataExport\Export::class] ??= new PersonalDataExport\Export(
+            $this->api('Assessment')->personalDataCollector(),
+            $this->api('Task')->personalDataCollector(),
+            array_map(fn ($component) => $this->api($component)->personalDataCollector(), $task_components),
+            $this->dependencies->systemApi()->user(),
+            $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->systemApi()->fileDelivery(),
+            $this->dependencies->systemApi()->config()
+        );
+    }
 }
