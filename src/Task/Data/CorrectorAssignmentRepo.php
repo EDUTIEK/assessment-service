@@ -25,7 +25,8 @@ interface CorrectorAssignmentRepo
     public function allByWriterId(int $writer_id): array;
     /** @return CorrectorAssignment[] */
     public function allByTaskIdAndWriterId(int $task_id, int $writer_id): array;
-
+    /** @return CorrectorAssignment[] */
+    public function allByTaskIdAndCorrectorId(int $task_id, int $corrector_id): array;
     /** @return CorrectorAssignment[] */
     public function allByCorrectorId(int $corrector_id): array;
     public function save(CorrectorAssignment $entity): void;

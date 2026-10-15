@@ -13,6 +13,8 @@ interface WriterAnnotationRepo
     public function allByTaskId(int $task_id): array;
     /** @return WriterAnnotation[] */
     public function allByWriterId(int $writer_id): array;
+    /** @return WriterAnnotation[] */
+    public function allByWriterIdAndTaskId(int $writer_id, int $task_id): array;
     public function save(WriterAnnotation $entity): void;
     public function delete(int $id): void;
     public function deleteByTaskId(int $task_id): void;

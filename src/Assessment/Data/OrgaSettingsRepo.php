@@ -10,4 +10,9 @@ interface OrgaSettingsRepo
     public function one(int $ass_id): ?OrgaSettings;
     public function save(OrgaSettings $entity): void;
     public function delete(int $ass_id): void;
+
+    /**
+     * @return OrgaSettings[]
+     */
+    public function all(): array;
 }

@@ -16,6 +16,8 @@ interface WriterRepo
     public function allByUserIdsAndAssId(array $user_ids, int $ass_id): array;
     /** @return Writer[] */
     public function allByWriterIdsAndAssId(array $writer_ids, int $ass_id): array;
+    /** @return Writer[] */
+    public function allByAssIdAndUserIdMentioned(int $ass_id, int $user_id): array;
     /** @return int[] */
     public function idsByAssId(int $ass_id): array;
     /** @return Writer[] */

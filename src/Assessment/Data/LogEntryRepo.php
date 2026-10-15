@@ -13,4 +13,6 @@ interface LogEntryRepo
     public function create(LogEntry $entity): void;
     public function delete(int $id): void;
     public function deleteByAssId(int $ass_id): void;
+    /** @return LogEntry[] */
+    public function allByAssIdAndLoginMentioned(int $ass_id, string $login): array;
 }

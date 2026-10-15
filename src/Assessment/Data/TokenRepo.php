@@ -9,6 +9,8 @@ use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 interface TokenRepo
 {
     public function new(): Token;
+    /** @retrun Token[]  */
+    public function allByUserIdAndAssId(int $user_id, int $ass_id): array;
     public function oneByIdsAndPurpose(int $user_id, int $ass_id, TokenPurpose $purpose): ?Token;
     public function save(Token $entity): void;
     public function delete(int $id): void;

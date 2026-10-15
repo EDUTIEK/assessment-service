@@ -19,4 +19,8 @@ interface RatingCriterionRepo
     public function delete(int $id): void;
     public function deleteByTaskId(int $task_id): void;
     public function deleteByCorrectorId(int $corrector_id): void;
+    /**
+     * @return RatingCriterion[]
+     */
+    public function allByTaskId(int $task_id): array;
 }
