@@ -8074,7 +8074,7 @@ class EditorToolbar {
   addEdutiekTokenButton() {
     const {_uiManager} = this.#editor;
     const buttons = [];
-    ['question-mark', 'cross', 'check', 'missing'].forEach(addButton.bind(this));
+    ['check', 'cross', 'question-mark', 'missing'].forEach(addButton.bind(this));
     this.#editor.selectTokenButton = selectButton;
     this.#buttons.append(this.#divider);
 
@@ -27205,11 +27205,6 @@ class CircleDrawOutliner {
     this.#isLTR = isLTR;
     this.#innerMargin = this.#innerMargin;
     this.#radius = CircleDrawOutliner.DEFAULT_RADIUS;
-    const [layerX, layerY, layerWidth, layerHeight] = this.#box;
-    const pos = {
-      x: (this.#start.x - layerX) / layerWidth,
-      y: (this.#start.y - layerY) / layerHeight,
-    };
   }
 
   isEmpty() {
@@ -27219,11 +27214,14 @@ class CircleDrawOutliner {
   add(point) {
     const width = this.#radius * (this.#box[2] - this.#box[0]);
     const ratio = this.#box[2] / (this.#box[3] - this.#box[1]);
-    this.#start = {x: point.x - width, y: point.y - (this.#radius + 0.01) * (this.#box[2] - this.#box[0]) * ratio};
+    this.#start = {x: Math.min(point.x - width, this.#box[0] + this.#box[2] - 40), y: Math.max(75, point.y - (this.#radius + 0.01) * (this.#box[2] - this.#box[0]) * ratio)};
     return true;
   }
 
   toSVGPath() {
+    if (this.#radius === 0) {
+      return '';
+    }
     const [layerX, layerY, layerWidth, layerHeight] = this.#box;
 
     const ratio = layerWidth / layerHeight;
@@ -27269,6 +27267,9 @@ class CircleDrawOutline extends Outline {
   toSVGPath() {
     const [x, y, w, h] = this.box;
     const r = this.#radius;
+    if (r === 0) {
+      return '';
+    }
     return `M 0.5 ${1 - r} A ${0.5 - r} ${0.5 - r} 1 1 1 0.501 ${1 - r} z`;
     // return `M 0.5 0.96 A 0.46 0.46 1 1 1 0.501 0.96 z`;
   }
@@ -27296,8 +27297,7 @@ class CircleDrawOutline extends Outline {
 
     const ratio = layerWidth / layerHeight;
 
-    const w = this.#radius * 2;
-
+    const w = (this.#radius || 0.01) * 2;
     return [this.#pos.x, this.#pos.y, w, w * ratio];
   }
 
@@ -27313,7 +27313,7 @@ class CircleDrawOutline extends Outline {
 class DotDrawOutliner extends CircleDrawOutliner {
   constructor(...args) {
     super(...args);
-    this.setRadius(0.001);
+    this.setRadius(0);
   }
 }
 
@@ -28913,10 +28913,13 @@ class HighlightEditor extends AnnotationEditor {
     };
     const type = types[HighlightEditor.edutiekDefaultOutlinerType] || LineDrawOutliner;
     this._freeHighlight = new type({
-      // edutiek-patch: end
       x,
       y
     }, [layerX, layerY, parentWidth, parentHeight], parent.scale, this._defaultThickness / 2, isLTR, 0.001);
+    if (type === DotDrawOutliner) {
+      this._freeHighlight.add({x, y});
+    }
+    // edutiek-patch: end
     ({
       id: this._freeHighlightId,
       clipPathId: this._freeHighlightClipId
@@ -29092,7 +29095,7 @@ class HighlightEditor extends AnnotationEditor {
       let outliner;
       if (inkLists.pos) {
         outliner = new CircleDrawOutliner({x: inkLists.pos.x - pageX, y: pageHeight - (inkLists.pos.y - pageY)}, [0, 0, pageWidth, pageHeight], 1, editor.#thickness / 2, true, 0.001);
-        inkLists.radius && outliner.setRadius(inkLists.radius);
+        typeof(inkLists.radius) === 'number' && outliner.setRadius(inkLists.radius);
       } else if (inkLists.start) {
         outliner = new RectDrawOutliner({x: inkLists.start.x - pageX, y: pageHeight - (inkLists.start.y - pageY)}, [0, 0, pageWidth, pageHeight], 1, editor.#thickness / 2, true, 0.001);
         outliner.add({x: inkLists.end.x - pageX, y: pageHeight - (inkLists.end.y - pageY)});

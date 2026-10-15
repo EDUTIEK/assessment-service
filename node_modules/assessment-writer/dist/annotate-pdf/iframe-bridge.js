@@ -39,6 +39,7 @@ function setup(dispatch, ready){
     const switchPage = switchPageWhenReady();
 
     uiManager(manager => {
+        pdfjsLib.HighlightEditor.edutiekDefaultOutlinerType = 'line';
         pdfOn('annotationeditorparamschanged', checkForChanges);
         pdfOn('switchannotationeditorparams', checkForChanges);
         pdfOn('outlineloaded', event => event.currentOutlineItemPromise.then(enabled => {
@@ -52,6 +53,9 @@ function setup(dispatch, ready){
         });
         pdfOn('edutiek-token-button', x => {
             const entry = entryByEditor(x.source);
+            if (entry.type === 'freeform-dot' && x.type === entry.token) {
+                return;
+            }
             actions.setToken(entry.id, x.type === entry.token ? null : x.type);
             dispatch('update', externEntry(entry));
         });
@@ -60,7 +64,7 @@ function setup(dispatch, ready){
             if (entry) {
                 dispatch('focus-end', externEntry(entry));
             }
-        })
+        });
 
         const actions = {
             getAll: () => entries.map(externEntry),
@@ -142,12 +146,12 @@ function setup(dispatch, ready){
                         manager.setSelected(entry.editor);
                     }
                     window.requestAnimationFrame(() => {
-                        if (!entry.editor) {
+                        if (!entry.editor || !entry.getHighlightDiv) {
                             return;
                         }
-                        const rect = entry.editor.getHightligtDiv().getBoundingClientRect();
+                        const rect = entry.editor.getHighlightDiv().getBoundingClientRect();
                         if (rect.top - rect.height < 0 || rect.top >= window.innerHeight) {
-                            entry.editor.getHightligtDiv().scrollIntoView({
+                            entry.editor.getHighlightDiv().scrollIntoView({
                                 block: 'center',
                                 behaviour: 'instant',
                             });
@@ -171,9 +175,14 @@ function setup(dispatch, ready){
                     pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR,
                     color
                 );
+                pdfjsLib.HighlightEditor.updateDefaultParams(
+                    pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_THICKNESS,
+                    1
+                );
             },
             setDefaultLineColor: color => {
                 defaultColors.line = color;
+                pdfjsLib.HighlightEditor.edutiekDefaultLineColor = color;
             },
             buildBlob: () => {
                 const origPage = pdfCurrentPageIndex();
@@ -224,6 +233,7 @@ function setup(dispatch, ready){
             setColor: (id, color) => {
                 const entry = entryById(id);
                 sync(entry, 'setColor', () => {
+                    entry.editor.updateParams(pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_THICKNESS, 1);
                     entry.color = color;
                     entry.editor.updateParams(pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR, color);
                     adjustForType(entry);
@@ -285,6 +295,12 @@ function setup(dispatch, ready){
                     entry.intern = pdfSerializeEditor(entry.editor);
                 });
             },
+            setDefaultFreeFormType: type => {
+                if (!['line', 'circle', 'wave', 'rect', 'dot'].includes(type)) {
+                    throw new Error('Invalid free form type given: ' + JSON.stringify(type));
+                }
+                pdfjsLib.HighlightEditor.edutiekDefaultOutlinerType = type;
+            }
         };
 
         actions.viewOnly(Boolean(new URLSearchParams(window.location.search).get('viewOnly')));
@@ -354,17 +370,26 @@ function setup(dispatch, ready){
             if(!entry){
                 Promise.all(entries.filter(x => x.page === page).map(x => sync(x, 'checkCreate', Void))).then(() => {
                     if(entryByEditor(editor)){return;}
+                    if (editorIsFreeForm(editor) && defaultColors.line) {
+                        editor.updateParams(pdfjsLib.AnnotationEditorParamsType.HIGHLIGHT_COLOR, defaultColors.line);
+                    }
                     editor.edutiekLineColor = defaultColors.line;
                     const id = lastDeleted.internId === editor.id ? lastDeleted.id : uuid();
+                    const type = editorIsFreeForm(editor) ?
+                          ('freeform-' + pdfjsLib.HighlightEditor.edutiekDefaultOutlinerType) :
+                          currentMode;
                     const entry = {
                         id,
                         page,
                         editor,
                         intern: null,
-                        type: currentMode,
+                        type,
                         lineColor: defaultColors.line,
                         color: editor.color,
                     };
+                    if (type === 'freeform-dot') {
+                        entry.token = 'check';
+                    }
                     adjustForType(entry, pdfjsLib.HighlightEditor._defaultColor);
                     entry.intern = pdfSerializeEditor(editor);
                     const extern = externEntry(entry);
@@ -448,9 +473,9 @@ function createLabelDiv()
     d.classList.add('annotation-label');
     const c = document.createElement('span');
     c.classList.add('label-content');
-    d.appendChild(c);
     const t = document.createElement('div');
     d.appendChild(t);
+    d.appendChild(c);
     return d;
 }
 
@@ -458,6 +483,7 @@ function adjustForType(entry, color)
 {
     color = color || entry.color;
     entry.editor.edutiekType = entry.type;
+    if (!entry.editor.getSvgNode) {return;}
     if (!entry.editor.edutiekOriginalSvgData) {
         const svg = entry.editor.getSvgNode();
         const path = entry.editor.getPathNode();
@@ -492,32 +518,55 @@ function adjustLabelDiv(entry)
     }
     if (!entry.labelDiv) {
         entry.labelDiv = createLabelDiv();
-        entry.editor.getHightligtDiv().parentNode.appendChild(entry.labelDiv);
+        entry.editor.getHighlightDiv().parentNode.appendChild(entry.labelDiv);
     }
-    const e = entry.editor.getVerticalEdges();
     if (entry.editor.leftAlign && entry.type === 'vline') {
         animationFrameWihLabel(entry, () => {
             const r = entry.labelDiv.closest('.page').getBoundingClientRect();
-            const hr = entry.editor.getHightligtDiv().getBoundingClientRect();
+            const hr = entry.editor.getHighlightDiv().getBoundingClientRect();
             const x = r.x;
             const w = r.width;
             const xc = hr.x;
             entry.labelDiv.style.left = (((x + (w * (entry.editor.leftAlign / 100)) - xc) / hr.width) * 100) + '%';
         });
     } else {
-        entry.labelDiv.style.left = '';
-        animationFrameWihLabel(entry, () => {
-            const r = entry.labelDiv.closest('.page').getBoundingClientRect();
-            entry.labelDiv.style.left = (e[0][0] * r.width / 10) + '%';
-        });
+        if (!editorIsFreeForm(entry.editor)) {
+            const e = entry.editor.getVerticalEdges();
+            entry.labelDiv.style.left = '';
+            animationFrameWihLabel(entry, () => {
+                const r = entry.labelDiv.closest('.page').getBoundingClientRect();
+                entry.labelDiv.style.left = (e[0][0] * r.width / 10) + '%';
+            });
+        }
     }
     if (entry.token) {
-        entry.labelDiv.lastChild.className = 'annotation-token annotation-token-' + entry.token;
+        entry.labelDiv.firstChild.className = 'annotation-token annotation-token-' + entry.token;
     } else {
-        entry.labelDiv.lastChild.className = '';
+        entry.labelDiv.firstChild.className = '';
     }
-    entry.labelDiv.children[0].textContent = entry.label || '';
-    entry.labelDiv.children[0].classList[entry.label ? 'add' : 'remove']('label-content');
+    entry.labelDiv.children[1].textContent = entry.label || '';
+    entry.labelDiv.children[1].classList[entry.label ? 'add' : 'remove']('label-content');
+    entry.labelDiv.classList[entry.type === 'freeform-dot' ? 'add' : 'remove']('freeform-dot');
+    entry.labelDiv.style.setProperty('--dot-color', entry.color);
+    entry.labelDiv.style.transform = '';
+    entry.labelDiv.lastChild.style.transform = '';
+    window.requestAnimationFrame(() => {
+        if (!entry.labelDiv) { // Entry removed
+            return;
+        }
+        const r = entry.labelDiv.getBoundingClientRect();
+        const p = entry.labelDiv.closest('.annotationEditorLayer');
+        if (!p) { // Entry removed / page not shown anymore.
+            return;
+        }
+        const pr = p.getBoundingClientRect();
+        const pos = {x: Math.min(0, pr.right - r.right), y: Math.min(0, r.top - pr.top)};
+        if (entry.type === 'freeform-dot') {
+            entry.labelDiv.lastChild.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+        } else {
+            entry.labelDiv.style.transform = `translate(${pos.x}px, calc(1px - 100% - ${pos.y}px))`;
+        }
+    });
 }
 
 function updateButtons(editor, mode)
@@ -537,7 +586,7 @@ function validTokenTypes()
 
 function changeSvg(editor, mode, color)
 {
-    if(!editor._mustFixPosition){ // If it is a freeform highlight.
+    if(editorIsFreeForm(editor)){
         return;
     }
 
@@ -554,6 +603,7 @@ function changeSvg(editor, mode, color)
 
 function resetSvg(editor)
 {
+    if (!editor.getSvgNode) {return;}
     const svg = editor.getSvgNode();
     const path = editor.getPathNode();
     svg.setAttribute('viewBox', '0 0 1 1');
@@ -707,6 +757,11 @@ function animationFrameWihLabel(entry, proc)
         }
         proc();
     });
+}
+
+function editorIsFreeForm(editor)
+{
+    return !editor._mustFixPosition;
 }
 
 function uuid()
@@ -894,6 +949,10 @@ function pdfSerializeEditor(editor)
         // HighlightEditor.deserialize method expects this to be an
         // array...
         obj.quadPoints = Object.values(obj.quadPoints);
+    }else if(obj.paths) {
+        obj.paths.lines = obj.paths.lines.map(Object.values);
+        obj.paths.points = obj.paths.points.map(Object.values);
+        obj.inkLists = obj.paths;
     }else{ // free hand drawing
         // This is guess work:
         // The HighlightEditor.deserialize method checks for a
@@ -948,6 +1007,11 @@ function PDF_EDIT_MODE()
 function PDF_VIEW_MODE()
 {
     return 0;
+}
+
+function PDF_INK_MODE()
+{
+    return 15;
 }
 
 function pdfSwitchToMode(mode, editId = null)

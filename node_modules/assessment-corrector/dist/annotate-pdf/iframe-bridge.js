@@ -53,6 +53,9 @@ function setup(dispatch, ready){
         });
         pdfOn('edutiek-token-button', x => {
             const entry = entryByEditor(x.source);
+            if (entry.type === 'freeform-dot' && x.type === entry.token) {
+                return;
+            }
             actions.setToken(entry.id, x.type === entry.token ? null : x.type);
             dispatch('update', externEntry(entry));
         });
@@ -61,7 +64,7 @@ function setup(dispatch, ready){
             if (entry) {
                 dispatch('focus-end', externEntry(entry));
             }
-        })
+        });
 
         const actions = {
             getAll: () => entries.map(externEntry),
@@ -384,6 +387,9 @@ function setup(dispatch, ready){
                         lineColor: defaultColors.line,
                         color: editor.color,
                     };
+                    if (type === 'freeform-dot') {
+                        entry.token = 'check';
+                    }
                     adjustForType(entry, pdfjsLib.HighlightEditor._defaultColor);
                     entry.intern = pdfSerializeEditor(editor);
                     const extern = externEntry(entry);
@@ -540,6 +546,27 @@ function adjustLabelDiv(entry)
     }
     entry.labelDiv.children[1].textContent = entry.label || '';
     entry.labelDiv.children[1].classList[entry.label ? 'add' : 'remove']('label-content');
+    entry.labelDiv.classList[entry.type === 'freeform-dot' ? 'add' : 'remove']('freeform-dot');
+    entry.labelDiv.style.setProperty('--dot-color', entry.color);
+    entry.labelDiv.style.transform = '';
+    entry.labelDiv.lastChild.style.transform = '';
+    window.requestAnimationFrame(() => {
+        if (!entry.labelDiv) { // Entry removed
+            return;
+        }
+        const r = entry.labelDiv.getBoundingClientRect();
+        const p = entry.labelDiv.closest('.annotationEditorLayer');
+        if (!p) { // Entry removed / page not shown anymore.
+            return;
+        }
+        const pr = p.getBoundingClientRect();
+        const pos = {x: Math.min(0, pr.right - r.right), y: Math.min(0, r.top - pr.top)};
+        if (entry.type === 'freeform-dot') {
+            entry.labelDiv.lastChild.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+        } else {
+            entry.labelDiv.style.transform = `translate(${pos.x}px, calc(1px - 100% - ${pos.y}px))`;
+        }
+    });
 }
 
 function updateButtons(editor, mode)

@@ -40,12 +40,16 @@
     transform: translate(0, calc(1px - 100%));
     padding: 1px;
     display: flex;
+    height: 1.5em; /* height of annotation-token */
+    pointer-events: auto;
+    cursor: pointer;
 }
 
 .annotation-label .label-content
 {
     background-color: lightgray;
     padding: 1px;
+    white-space: nowrap;
 }
 
 .selectedEditor .annotation-label .label-content
@@ -71,12 +75,33 @@
     position: relative;
 }
 
+.freeform-dot.annotation-label
+{
+    top: -14px;
+    left: -4px;
+}
+
+.freeform-dot .annotation-token
+{
+    background: transparent;
+    width: 2.5em;
+    height: 2.5em;
+    position: absolute;
+    top: 16px;
+    left: 8px;
+}
+
 .selectedEditor .annotation-token
 {
     background-color: #606060;
 }
 
-.label-content + .annotation-token
+.selectedEditor .freeform-dot .annotation-token
+{
+    background-color: transparent;
+}
+
+.annotation-token + .label-content
 {
     margin-left: 0.5em;
 }
@@ -95,9 +120,21 @@
     transform: translate(-50%, 5%);
 }
 
+.freeform-dot .annotation-token::before
+{
+    background-color: var(--dot-color);
+    width: 2.2em;
+    height: 2.5em;
+}
+
 .selectedEditor .annotation-token::before
 {
     background-color: white;
+}
+
+.selectedEditor .freeform-dot .annotation-token::before
+{
+    background-color: var(--dot-color);
 }
 
 .edutiek-button-wave::before
