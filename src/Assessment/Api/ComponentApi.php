@@ -8,6 +8,7 @@ use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 use Edutiek\AssessmentService\System\File\FileUsageFinder;
+use Edutiek\AssessmentService\Assessment\PersonalDataExport;
 
 /**
  * Common API for components used by the Assessment component
@@ -45,4 +46,9 @@ interface ComponentApi
      * Get the finder for file ids which are used in this component
      */
     public function fileUsageFinder(): FileUsageFinder;
+
+    /**
+     * @return PersonalDataExport\UsageResolver
+     */
+    public function personalDataCollector(): PersonalDataExport\UsageResolver;
 }

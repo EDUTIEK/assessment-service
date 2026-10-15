@@ -31,6 +31,8 @@ use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\System\File\FileUsageFinder;
 use Edutiek\AssessmentService\EssayTask\FileUsage\Finder;
 use Edutiek\AssessmentService\EssayTask\EssayImport\ImportTypeBerlinBrandenburg;
+use Edutiek\AssessmentService\EssayTask\PersonalDataExport\EssayTaskUsageResolver;
+use Edutiek\AssessmentService\Assessment\PersonalDataExport;
 
 class Internal
 {
@@ -284,4 +286,8 @@ class Internal
         );
     }
 
+    public function personalDataCollector(): PersonalDataExport\UsageResolver
+    {
+        return $this->instances[EssayTaskUsageResolver::class] ??= new EssayTaskUsageResolver($this->dependencies->repositories());
+    }
 }

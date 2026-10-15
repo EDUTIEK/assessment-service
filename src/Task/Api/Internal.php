@@ -30,6 +30,8 @@ use Edutiek\AssessmentService\Task\CorrectorAssignments\ExcelAssignmentData;
 use Edutiek\AssessmentService\Task\CorrectorTaskPrefs\Service as CorrectorTaskPrefsService;
 use Edutiek\AssessmentService\System\File\FileUsageFinder;
 use Edutiek\AssessmentService\Task\FileUsage\Finder;
+use Edutiek\AssessmentService\Task\PersonalDataExport\TaskUsageResolver;
+use Edutiek\AssessmentService\Assessment\PersonalDataExport;
 
 class Internal implements RatingCriterionServiceFactory
 {
@@ -312,5 +314,10 @@ class Internal implements RatingCriterionServiceFactory
         return  $this->instances[Finder::class] = new Finder(
             $this->dependencies->repositories()
         );
+    }
+
+    public function personalDataCollector(): PersonalDataExport\UsageResolver
+    {
+        return $this->instances[TaskUsageResolver::class] ??= new TaskUsageResolver($this->dependencies->repositories());
     }
 }

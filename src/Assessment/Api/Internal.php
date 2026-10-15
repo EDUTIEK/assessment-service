@@ -59,6 +59,7 @@ use Edutiek\AssessmentService\Assessment\Export\ResultsExport;
 use Edutiek\AssessmentService\Assessment\Apps\SlimLogger;
 use Edutiek\AssessmentService\System\File\FileUsageFinder;
 use Edutiek\AssessmentService\Assessment\FileUsage\FileCleanupHandler;
+use Edutiek\AssessmentService\Assessment\PersonalDataExport;
 
 class Internal implements ComponentApi, ComponentApiFactory
 {
@@ -671,5 +672,11 @@ class Internal implements ComponentApi, ComponentApiFactory
             array_map(fn(string $component) => $this->api($component)->fileUsageFinder(), $this->allComponents()),
             $this->language($user_id)
         );
+    }
+
+    public function personalDataCollector(): PersonalDataExport\UsageResolver
+    {
+        return $this->instances[PersonalDataExport\AssessmentUsageResolver::class] ??=
+            new PersonalDataExport\AssessmentUsageResolver($this->dependencies->repositories(), $this->dependencies->systemApi()->user());
     }
 }

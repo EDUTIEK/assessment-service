@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskApi as TaskApi;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager as ManagerInterface;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 use Edutiek\AssessmentService\System\File\FileUsageFinder;
+use Edutiek\AssessmentService\Assessment\PersonalDataExport;
 
 readonly class ForAssessment implements TaskApi
 {
@@ -54,4 +55,10 @@ readonly class ForAssessment implements TaskApi
     {
         return $this->internal->fileUsageFinder();
     }
+
+    public function personalDataCollector(): PersonalDataExport\UsageResolver
+    {
+        return $this->internal->personalDataCollector();
+    }
+
 }

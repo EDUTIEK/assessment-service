@@ -12,6 +12,8 @@ use Edutiek\AssessmentService\EssayTask\AppBridges\WriterBridge as WriterBridgeS
 use Edutiek\AssessmentService\EssayTask\Manager\Service as ManagerService;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 use Edutiek\AssessmentService\System\File\FileUsageFinder;
+use Edutiek\AssessmentService\EssayTask\PersonalDataExport\GroupFactory;
+use Edutiek\AssessmentService\Assessment\PersonalDataExport;
 
 readonly class ForServices implements TypeApi
 {
@@ -48,5 +50,10 @@ readonly class ForServices implements TypeApi
     public function fileUsageFinder(): FileUsageFinder
     {
         return $this->internal->fileUsageFinder();
+    }
+
+    public function personalDataCollector(): PersonalDataExport\UsageResolver
+    {
+        return $this->internal->personalDataCollector();
     }
 }
