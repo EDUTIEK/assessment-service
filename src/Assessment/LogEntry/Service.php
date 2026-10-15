@@ -35,8 +35,8 @@ class Service implements FullService
             null => null
         };
         $user_data = $id !== null ? $this->user_service->getUser($id) : null;
-
-        return $user_data?->getListname(true) ?? $this->lang->txt('unknown');
+        // quotes are needed for anonymization in personal data exports
+        return "«" . $user_data?->getListname(true) . "»" ?? $this->lang->txt('unknown');
     }
 
     public function addEntry(
