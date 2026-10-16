@@ -223,13 +223,14 @@ readonly class CorrectionProvider implements PdfPartProvider
      */
     private function renderFromText(string $key, Essay $essay, array $infos, bool $anonymous_corrector, Options $options): ?string
     {
-        $options = $options->withPortrait($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SEQUENCE);
+        $options = $options->withPortrait($this->pdf_settings->getFeedbackMode() !== PdfFeedbackMode::SIDE_LANDSCAPE);
         $data = [
             'partTitle' => $this->getCorrectionTitle($key),
             'partComments' => $this->html_processing->getCorrectedTextForPdf(
                 $essay,
                 $infos,
-                $this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE
+                $this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_LANDSCAPE
+                || $this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_PORTRAIT
             )
         ];
 
@@ -238,7 +239,8 @@ readonly class CorrectionProvider implements PdfPartProvider
 
         $marked_pdf = $this->pdf_processing->create($html, $options);
 
-        if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE || empty($infos)) {
+        if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_LANDSCAPE
+            || $this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_PORTRAIT || empty($infos)) {
             return $marked_pdf;
         } else {
             $start_page = $options->getStartPageNumber() + $this->pdf_processing->count($marked_pdf) ?? 0;
@@ -284,7 +286,7 @@ readonly class CorrectionProvider implements PdfPartProvider
 
                 $image_ids[] = $image_id = $this->temp_storage->saveFile($applied_image->stream())->getId();
 
-                if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
+                if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_LANDSCAPE) {
                     // print image and comments beneath each other
                     $data['pages'][] = [
                         'partTitle' => $page_no == 1 ? $this->getCorrectionTitle($key) : '',
@@ -303,7 +305,7 @@ readonly class CorrectionProvider implements PdfPartProvider
             }
         }
 
-        if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_BY_SIDE) {
+        if ($this->pdf_settings->getFeedbackMode() == PdfFeedbackMode::SIDE_LANDSCAPE) {
             $html = $this->system_processing->fillTemplate(__DIR__ . '/templates/image_comments.html', $data);
             $html = $this->system_processing->addCorrectionStyles($html);
             $final_pdf_id = $this->pdf_processing->create($html, $options->withPortrait(false));
