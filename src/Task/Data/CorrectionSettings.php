@@ -26,4 +26,6 @@ abstract class CorrectionSettings implements TaskEntity
     abstract public function setSummaryPdfAdvice(?string $summary_pdf_advice): self;
     abstract public function getPdfMarking(): PdfMarking;
     abstract public function setPdfMarking(PdfMarking $pdf_marking);
+    abstract public function getFreeMarking(): bool;
+    abstract public function setFreeMarking(bool $free_marking): CorrectionSettings;
 }
