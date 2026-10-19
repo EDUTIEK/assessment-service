@@ -162,7 +162,7 @@ readonly class Service implements FullService
 
                 if ($first?->isAuthorized() && $second?->isAuthorized()) {
                     if ($settings->getProcedureWhenDistance()) {
-                        if ($distance > $settings->getMaxAutoDistance()) {
+                        if ($distance > $settings->getMaxNoProcedureDistance()) {
                             switch ($settings->getProcedure()) {
                                 case CorrectionProcedure::APPROXIMATION:
                                     return [CorrectionStatus::APPROXIMATION, null];
@@ -171,7 +171,7 @@ readonly class Service implements FullService
                                     return [CorrectionStatus::CONSULTING, null];
 
                                 case CorrectionProcedure::NONE:
-                                    if ($settings->getStitchAfterProcedure()) {
+                                    if ($settings->getStitchWhenDistance()) {
                                         return [CorrectionStatus::STITCH, null];
                                     }
                             }
@@ -188,7 +188,7 @@ readonly class Service implements FullService
                 if (!$second?->isRevised() && $first?->getRequireOtherRevision()) {
                     return [CorrectionStatus::APPROXIMATION, null];
                 }
-                if ($distance > $settings->getMaxAutoDistance() && $settings->getStitchAfterProcedure()) {
+                if ($distance > $settings->getMaxNoProcedureDistance() && $settings->getStitchWhenDistance()) {
                     return [CorrectionStatus::STITCH, null];
                 }
                 return [CorrectionStatus::FINALIZED, $average];
@@ -197,7 +197,7 @@ readonly class Service implements FullService
                 if (!$first?->isRevised() || !$second?->isRevised()) {
                     return [CorrectionStatus::CONSULTING, null];
                 }
-                if ($distance > $settings->getMaxAutoDistance() && $settings->getStitchAfterProcedure()) {
+                if ($distance > $settings->getMaxNoProcedureDistance() && $settings->getStitchWhenDistance()) {
                     return [CorrectionStatus::STITCH, null];
                 }
                 return [CorrectionStatus::FINALIZED, $average];

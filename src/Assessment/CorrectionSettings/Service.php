@@ -36,8 +36,7 @@ readonly class Service implements FullService
         $this->checkScope($settings);
         $result = new Result();
 
-        if ($settings->getRequiredCorrectors() === 1
-            && ($settings->getProcedureWhenDecimals() || $settings->getProcedureWhenDistance())) {
+        if ($settings->getRequiredCorrectors() === 1 && $settings->getProcedureWhenDistance()) {
             $result->addFailure($this->language->txt('correction_procedure_needs_two_correctors'));
         }
 

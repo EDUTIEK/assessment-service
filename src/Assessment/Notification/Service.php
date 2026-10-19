@@ -92,7 +92,7 @@ readonly class Service implements FullService
         if ($correction->getProcedure() !== CorrectionProcedure::CONSULTING) {
             unset($settings[NotificationType::CORRECTOR_CONSULTING_STARTED->value]);
         }
-        if (!$correction->getStitchAfterProcedure()) {
+        if (!$correction->getStitchWhenDistance()) {
             unset($settings[NotificationType::CORRECTOR_STITCH_NEEDED->value]);
             unset($settings[NotificationType::ADMIN_STITCH_NEEDED->value]);
         }

@@ -17,8 +17,6 @@ abstract class CorrectionSettings implements AssessmentEntity
     abstract public function setRequiredCorrectors(int $required_correctors): self;
     abstract public function getNoManualDecimals(): bool;
     abstract public function setNoManualDecimals(bool $no_manual_decimals): self;
-    abstract public function getMaxAutoDistance(): float;
-    abstract public function setMaxAutoDistance(float $max_auto_distance): self;
     abstract public function getMutualVisibility(): bool;
     abstract public function setMutualVisibility(bool $mutual_visibility): self;
     abstract public function getWaitForFirst(): bool;
@@ -27,16 +25,18 @@ abstract class CorrectionSettings implements AssessmentEntity
     abstract public function setAssignMode(AssignMode $assign_mode): self;
     abstract public function getProcedureWhenDistance(): bool;
     abstract public function setProcedureWhenDistance(bool $procedure_when_distance): self;
-    abstract public function getProcedureWhenDecimals(): bool;
-    abstract public function setProcedureWhenDecimals(bool $procedure_when_decimals): self;
+    abstract public function getMaxNoProcedureDistance(): float;
+    abstract public function setMaxNoProcedureDistance(float $max_no_procedure_distance): self;
     abstract public function getProcedure(): CorrectionProcedure;
     abstract public function setProcedure(CorrectionProcedure $procedure): self;
     abstract public function getApproximation(): CorrectionApproximation;
     abstract public function setApproximation(CorrectionApproximation $approximation): self;
     abstract public function getRevisionBetween(): bool;
     abstract public function setRevisionBetween(bool $revision_between): self;
-    abstract public function getStitchAfterProcedure(): bool;
-    abstract public function setStitchAfterProcedure(bool $stitch_after_procedure): self;
+    abstract public function getStitchWhenDistance(): bool;
+    abstract public function setStitchWhenDistance(bool $stitch_when_distance): self;
+    abstract public function getMaxNoStitchDistance(): float;
+    abstract public function setMaxNoStitchDistance(float $max_no_stitch_distance): self;
     abstract public function getUndoAuthorization(): bool;
     abstract public function setUndoAuthorization(bool $undo_authorization): self;
     abstract public function getUndoFirstAuthorization(): bool;
@@ -65,6 +65,6 @@ abstract class CorrectionSettings implements AssessmentEntity
 
     public function isStitchPossible(): bool
     {
-        return $this->getRequiredCorrectors() > 1 && ($this->getProcedureWhenDecimals() || $this->getProcedureWhenDistance());
+        return $this->getRequiredCorrectors() > 1 && ($this->getProcedureWhenDistance());
     }
 }
