@@ -609,8 +609,11 @@ readonly class Service implements FullService
         };
 
         if ($message) {
-            $message .= ' ' . $this->language->txt('authorization_warning_points_difference', ['points' => $this->correction_settings->getMaxNoProcedureDistance()]);
-
+            $message .= ' ' . $this->language->txt('authorization_warning_points_difference', [
+                'points' => match ($status) {
+                    CorrectionStatus::STITCH => $this->correction_settings->getMaxNoStitchDistance(),
+                    default => $this->correction_settings->getMaxNoProcedureDistance()
+                }]);
         }
 
         return $message;

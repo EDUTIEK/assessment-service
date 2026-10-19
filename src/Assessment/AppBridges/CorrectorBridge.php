@@ -78,6 +78,7 @@ class CorrectorBridge implements AppCorrectorBridge
             'max_no_procedure_distance' => $settings->getMaxNoProcedureDistance(),
             'revision_between' => $settings->getRevisionBetween(),
             'stitch_when_distance' => $settings->getStitchWhenDistance(),
+            'max_no_stitch_distance' => $settings->getMaxNoStitchDistance(),
             'max_points' => $settings->getMaxPoints(),
             'no_manual_decimals' => $settings->getNoManualDecimals(),
             'download_writing' => $this->is_admin || $settings->getDownloadWriting(),

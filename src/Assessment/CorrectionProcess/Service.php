@@ -159,28 +159,19 @@ readonly class Service implements FullService
         // multi correctors
         switch ($writer->getCorrectionStatus()) {
             case CorrectionStatus::OPEN:
-
-                if ($first?->isAuthorized() && $second?->isAuthorized()) {
-                    if ($settings->getProcedureWhenDistance()) {
-                        if ($distance > $settings->getMaxNoProcedureDistance()) {
-                            switch ($settings->getProcedure()) {
-                                case CorrectionProcedure::APPROXIMATION:
-                                    return [CorrectionStatus::APPROXIMATION, null];
-
-                                case CorrectionProcedure::CONSULTING:
-                                    return [CorrectionStatus::CONSULTING, null];
-
-                                case CorrectionProcedure::NONE:
-                                    if ($settings->getStitchWhenDistance()) {
-                                        return [CorrectionStatus::STITCH, null];
-                                    }
-                            }
-                        }
-                    }
-                    return [CorrectionStatus::FINALIZED, $average];
+                if (!$first?->isAuthorized() || !$second?->isAuthorized()) {
+                    return [CorrectionStatus::OPEN, null];
                 }
-                return [CorrectionStatus::OPEN, null];
+                if ($settings->getProcedureWhenDistance() && $distance > $settings->getMaxNoProcedureDistance()) {
+                    if ($settings->getProcedure() === CorrectionProcedure::APPROXIMATION) {
+                        return [CorrectionStatus::APPROXIMATION, null];
+                    }
+                    if ($settings->getProcedure() === CorrectionProcedure::CONSULTING) {
+                        return [CorrectionStatus::CONSULTING, null];
+                    }
+                }
 
+                // no break
             case CorrectionStatus::APPROXIMATION:
                 if (!$first?->isRevised()) {
                     return [CorrectionStatus::APPROXIMATION, null];
@@ -188,20 +179,14 @@ readonly class Service implements FullService
                 if (!$second?->isRevised() && $first?->getRequireOtherRevision()) {
                     return [CorrectionStatus::APPROXIMATION, null];
                 }
-                if ($distance > $settings->getMaxNoProcedureDistance() && $settings->getStitchWhenDistance()) {
-                    return [CorrectionStatus::STITCH, null];
-                }
-                return [CorrectionStatus::FINALIZED, $average];
 
+                // no break
             case CorrectionStatus::CONSULTING:
                 if (!$first?->isRevised() || !$second?->isRevised()) {
                     return [CorrectionStatus::CONSULTING, null];
                 }
-                if ($distance > $settings->getMaxNoProcedureDistance() && $settings->getStitchWhenDistance()) {
-                    return [CorrectionStatus::STITCH, null];
-                }
-                return [CorrectionStatus::FINALIZED, $average];
 
+                // no break
             case CorrectionStatus::STITCH:
                 if (!$stitch->isAuthorized()) {
                     return [CorrectionStatus::STITCH, null];
@@ -209,8 +194,13 @@ readonly class Service implements FullService
                 return [CorrectionStatus::FINALIZED, $stitch->getPoints()];
 
             case CorrectionStatus::FINALIZED:
-            default:
                 return [CorrectionStatus::FINALIZED, $writer->getFinalPoints()];
         }
+
+        // check required stitch decision at the end if no other status is determined
+        if ($settings->getStitchWhenDistance() && $distance > $settings->getMaxNoStitchDistance()) {
+            return [CorrectionStatus::STITCH, null];
+        }
+        return [CorrectionStatus::FINALIZED, $average];
     }
 }
