@@ -65,6 +65,6 @@ abstract class CorrectionSettings implements AssessmentEntity
 
     public function isStitchPossible(): bool
     {
-        return $this->getRequiredCorrectors() > 1 && ($this->getProcedureWhenDistance());
+        return $this->getRequiredCorrectors() > 1 && $this->getStitchWhenDistance();
     }
 }

@@ -170,8 +170,8 @@ readonly class Service implements FullService
                         return [CorrectionStatus::CONSULTING, null];
                     }
                 }
+                break;
 
-                // no break
             case CorrectionStatus::APPROXIMATION:
                 if (!$first?->isRevised()) {
                     return [CorrectionStatus::APPROXIMATION, null];
@@ -179,14 +179,14 @@ readonly class Service implements FullService
                 if (!$second?->isRevised() && $first?->getRequireOtherRevision()) {
                     return [CorrectionStatus::APPROXIMATION, null];
                 }
+                break;
 
-                // no break
             case CorrectionStatus::CONSULTING:
                 if (!$first?->isRevised() || !$second?->isRevised()) {
                     return [CorrectionStatus::CONSULTING, null];
                 }
+                break;
 
-                // no break
             case CorrectionStatus::STITCH:
                 if (!$stitch->isAuthorized()) {
                     return [CorrectionStatus::STITCH, null];
