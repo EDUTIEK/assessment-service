@@ -126,17 +126,15 @@ class Service implements ReadService
             $this->orga_settings->getSolutionAvailableDate()->getTimestamp() <= time();
     }
 
-    public function canViewWriterStatistics(): bool
+    public function canWriterViewWriterStatistics(): bool
     {
         return $this->canViewResult() && $this->orga_settings->getStatisticsAvailable();
     }
 
-    /**
-     *  Check if the current user can view the statistics
-     */
-    public function canViewCorrectionStatistics(): bool
+    public function canCorrectorViewCorrectionStatistics(): bool
     {
-        return ($this->canCorrect() || $this->canMaintainCorrectors()) && !$this->orga_settings->getMultiTasks();
+        return $this->canCorrect() && $this->correction_settings->getAccessStatistics()
+            && !$this->orga_settings->getMultiTasks();
     }
 
     public function canViewResult(): bool
@@ -152,7 +150,7 @@ class Service implements ReadService
                 return $this->canReviewCorrectedAssessment();
             case ResultAvailableType::DATE:
                 return $this->orga_settings->getResultAvailableDate() === null ||
-                    $this->orga_settings->getResultAvailableDate()->getTimestamp() >= time();
+                    $this->orga_settings->getResultAvailableDate()->getTimestamp() <= time();
         }
         return false;
 
