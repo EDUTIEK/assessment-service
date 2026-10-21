@@ -57,6 +57,8 @@ abstract class CorrectionSettings implements AssessmentEntity
     abstract public function setDownloadWriting(bool $download_writing): self;
     abstract public function getDownloadCorrection(): bool;
     abstract public function setDownloadCorrection(bool $download_correction): self;
+    abstract public function getAccessStatistics(): bool;
+    abstract public function setAccessStatistics(bool $access_statistics): CorrectionSettings;
 
     public function hasMultipleCorrectors(): bool
     {
