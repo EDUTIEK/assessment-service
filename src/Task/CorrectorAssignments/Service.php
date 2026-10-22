@@ -160,6 +160,10 @@ readonly class Service implements FullService
 
     public function getCorrectionFilter(int $corrector_id): array
     {
+        if ($this->correction_settings->getStartpageFixed()) {
+            return [null, null, null];
+        }
+
         $prefs = $this->repos->correctorPrefs()->one($corrector_id) ??
             $this->repos->correctorPrefs()->new()->setCorrectorId($corrector_id);
 
