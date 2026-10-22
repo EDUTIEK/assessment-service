@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymService;
 use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionSort;
 
 readonly class Service implements FullService
 {
@@ -52,6 +53,15 @@ readonly class Service implements FullService
         if ($settings->getPseudonymization() !== $existing?->getPseudonymization()) {
             $this->pseudonym_service->changeForAll($settings->getPseudonymization());
         }
+    }
+
+    public function sortOptions(): array
+    {
+        $options = [];
+        foreach (CorrectionSort::cases() as $case) {
+            $options[$case->value] = $this->language->txt($case->langVar());
+        }
+        return $options;
     }
 
     private function checkScope(CorrectionSettings $settings)

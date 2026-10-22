@@ -82,7 +82,8 @@ class CorrectorBridge implements AppCorrectorBridge
             'max_points' => $settings->getMaxPoints(),
             'no_manual_decimals' => $settings->getNoManualDecimals(),
             'download_writing' => $this->is_admin || $settings->getDownloadWriting(),
-            'download_correction' => $this->is_admin || $settings->getDownloadCorrection()
+            'download_correction' => $this->is_admin || $settings->getDownloadCorrection(),
+            'fixed_items_order' => $settings->getStartpageFixed()
         ]);
 
         return $data;
