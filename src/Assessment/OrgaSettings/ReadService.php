@@ -12,4 +12,9 @@ interface ReadService
      * Get if a review of corrections is possible (user independent)
      */
     public function reviewPossible(): bool;
+
+    /**
+     * Get the options to select a review miode
+     */
+    public function reviewModeOptions(): array;
 }

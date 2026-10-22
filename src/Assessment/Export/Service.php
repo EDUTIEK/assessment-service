@@ -42,8 +42,11 @@ class Service implements FullService
     /**
      * @param WritingTask[] $writings
      */
-    public function downloadWritings(array $writings, bool $anonymous): bool
-    {
+    public function downloadWritings(
+        array $writings,
+        bool $anonymous,
+        Disposition $disposition = Disposition::ATTACHMENT
+    ): bool {
         if (count($writings) > 1) {
             $this->background_tasks->downloadWritings(
                 $writings,
@@ -62,15 +65,19 @@ class Service implements FullService
             ->setMimeType('application/pdf')
             ->setDisposable(true);
 
-        $this->delivery->sendFile($file_id, Disposition::ATTACHMENT, $file_info);
+        $this->delivery->sendFile($file_id, $disposition, $file_info);
         return false;
     }
 
     /**
      * @param WritingTask[] $writings
      */
-    public function downloadCorrections(array $writings, bool $anonymous_writer, bool $anonymous_corrector): bool
-    {
+    public function downloadCorrections(
+        array $writings,
+        bool $anonymous_writer,
+        bool $anonymous_corrector,
+        Disposition $disposition = Disposition::ATTACHMENT
+    ): bool {
         if (count($writings) > 1) {
             $this->background_tasks->downloadCorrections(
                 $writings,
@@ -95,7 +102,7 @@ class Service implements FullService
             ->setMimeType('application/pdf')
             ->setDisposable(true);
 
-        $this->delivery->sendFile($file_id, Disposition::ATTACHMENT, $file_info);
+        $this->delivery->sendFile($file_id, $disposition, $file_info);
         return false;
     }
 

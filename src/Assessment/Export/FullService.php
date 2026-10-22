@@ -9,6 +9,7 @@ use Edutiek\AssessmentService\Assessment\Data\ExportSettings;
 use Edutiek\AssessmentService\Assessment\Data\ExportType;
 use Edutiek\AssessmentService\Assessment\Data\ExportFile;
 use Edutiek\AssessmentService\System\Data\Result;
+use Edutiek\AssessmentService\System\File\Disposition;
 
 interface FullService
 {
@@ -20,14 +21,23 @@ interface FullService
      * @param WritingTask[] $writings
      * @return bool true, if a background task has started
      */
-    public function downloadWritings(array $writings, bool $anonymous): bool;
+    public function downloadWritings(
+        array $writings,
+        bool $anonymous,
+        Disposition $disposition = Disposition::ATTACHMENT
+    ): bool;
 
     /**
      * Download the corrected texts as PDFs
      * @param WritingTask[] $writings
      * @return bool true, if a background task has started
      */
-    public function downloadCorrections(array $writings, bool $anonymous_writer, bool $anonymous_corrector): bool;
+    public function downloadCorrections(
+        array $writings,
+        bool $anonymous_writer,
+        bool $anonymous_corrector,
+        Disposition $disposition = Disposition::ATTACHMENT
+    ): bool;
 
     /**
      * Create an export file

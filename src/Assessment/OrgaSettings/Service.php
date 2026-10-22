@@ -7,6 +7,7 @@ namespace Edutiek\AssessmentService\Assessment\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\Data\ReviewMode;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
 use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
@@ -41,6 +42,15 @@ readonly class Service implements FullService
         }
 
         return true;
+    }
+
+    public function reviewModeOptions(): array
+    {
+        $options = [];
+        foreach (ReviewMode::cases() as $case) {
+            $options[$case->value] = $this->language->txt($case->langVar());
+        }
+        return $options;
     }
 
     public function validate(OrgaSettings $settings): Result
