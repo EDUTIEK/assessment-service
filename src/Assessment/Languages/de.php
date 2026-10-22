@@ -183,4 +183,8 @@ return [
     'export_type_dashboard' => 'Aufsicht',
     'export_type_writing_statistics' => 'Teilnahme-Notenstatistik',
     'export_type_correction_statistics' => 'Korrektur-Notenstatistik',
+    'correction_sort_grading_position' => 'Funktion (Erstkorrektur, Zweitkorrektur, Stichentscheid)',
+    'correction_sort_own_state' => 'Eigener Korrekturstatus (nicht gestartet, offen, vorbenotet, freigegeben, angenähert)',
+    'correction_sort_pseudonym_asc' => 'Pseudonym (aufsteigend)',
+    'correction_sort_pseudonym_desc' => 'Pseudonym (absteigend)'
 ];

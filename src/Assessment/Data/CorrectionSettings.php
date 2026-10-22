@@ -59,6 +59,12 @@ abstract class CorrectionSettings implements AssessmentEntity
     abstract public function setDownloadCorrection(bool $download_correction): self;
     abstract public function getAccessStatistics(): bool;
     abstract public function setAccessStatistics(bool $access_statistics): CorrectionSettings;
+    abstract public function getStartpageFixed(): bool;
+    abstract public function setStartpageFixed(bool $startpage_fixed): CorrectionSettings;
+    abstract public function getFixedSort1(): CorrectionSort;
+    abstract public function setFixedSort1(CorrectionSort $fixed_sort1): CorrectionSettings;
+    abstract public function getFixedSort2(): CorrectionSort;
+    abstract public function setFixedSort2(CorrectionSort $fixed_sort2): CorrectionSettings;
 
     public function hasMultipleCorrectors(): bool
     {
