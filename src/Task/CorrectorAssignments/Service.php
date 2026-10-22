@@ -28,6 +28,7 @@ use Edutiek\AssessmentService\System\Spreadsheet\ExportType as SpreadsheetExport
 use Edutiek\AssessmentService\System\File\Disposition;
 use Edutiek\AssessmentService\Assessment\Data\NotificationType;
 use Edutiek\AssessmentService\System\Data\Result;
+use Edutiek\AssessmentService\Assessment\Data\CorrectionSort;
 
 readonly class Service implements FullService
 {
@@ -190,34 +191,85 @@ readonly class Service implements FullService
         [$status, $combined, $pos] = $this->getCorrectionFilter($corrector_id);
 
         $filtered = [];
+
+        /** @var CorrectorAssignment $assignment */
         foreach ($assignments as $assignment) {
+            $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
+            $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
+                $assignment->getTaskId(),
+                $assignment->getWriterId(),
+                $assignment->getCorrectorId()
+            );
+
             if ($pos !== null && $assignment->getPosition()->value !== $pos) {
                 continue;
             }
             if ($status !== null) {
-                $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
-                    $assignment->getTaskId(),
-                    $assignment->getWriterId(),
-                    $assignment->getCorrectorId()
-                );
                 $value = $summary?->getGradingStatus()?->value ?? GradingStatus::NOT_STARTED->value;
-
                 if (!in_array($value, $status)) {
                     continue;
                 }
             }
             if ($combined !== null) {
-                $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
                 $value = $writer?->getCombinedStatus()?->value ?? CombinedStatus::WRITING_NOT_STARTED->value;
-
                 if (!in_array($value, $combined)) {
                     continue;
                 }
             }
-            $filtered[] = $assignment;
+
+            $filtered[] = [
+                'assignment' => $assignment,
+                'summary' => $summary,
+                'writer' => $writer
+            ];
         }
 
-        return $filtered;
+        if ($this->correction_settings->getStartpageFixed()) {
+            usort($filtered, $this->sortAssignments(...));
+        }
+
+        return array_column($filtered, 'assignment');
+    }
+
+
+    /**
+     * Internal sort function for assignments
+     * @return \Closure(array, array): int
+     */
+    private function sortAssignments(array $left, array $right): int
+    {
+        $primary = $this->correction_settings->getFixedSort1();
+        $secondary = $this->correction_settings->getFixedSort2();
+
+        return $this->compareAssignments($left, $right, $primary)
+            ?: $this->compareAssignments($left, $right, $secondary)
+                ?: $this->compareAssignments($left, $right, CorrectionSort::PSEUDONYM_ASC);
+    }
+
+    /**
+     * Internal compare function for assignments
+     * @return \Closure(array, array): int
+     */
+    private function compareAssignments(array $left, array $right, CorrectionSort $sort): int
+    {
+        return match ($sort) {
+            CorrectionSort::GRADING_POSITION => GradingPosition::order(
+                $left['assignment']->getPosition(),
+                $right['assignment']->getPosition()
+            ),
+            CorrectionSort::OWN_STATE => GradingStatus::order(
+                $left['summary']?->getGradingStatus() ?? GradingStatus::NOT_STARTED,
+                $right['summary']?->getGradingStatus() ?? GradingStatus::NOT_STARTED,
+            ),
+            CorrectionSort::PSEUDONYM_ASC => strnatcasecmp(
+                $left['writer']?->getPseudonym() ?? '',
+                $right['writer']?->getPseudonym() ?? ''
+            ),
+            CorrectionSort::PSEUDONYM_DESC => strnatcasecmp(
+                $right['writer']?->getPseudonym() ?? '',
+                $left['writer']?->getPseudonym() ?? ''
+            ),
+        };
     }
 
     public function allForCorrectorAdminFiltered(): array
