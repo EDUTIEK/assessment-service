@@ -16,7 +16,9 @@ use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
 use Edutiek\AssessmentService\Assessment\Notification\FullService as NotificationService;
 use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
+use Edutiek\AssessmentService\System\ConstraintHandling\Actions\RemoveWritingAuthorization;
 use Edutiek\AssessmentService\System\Data\Result;
+use Edutiek\AssessmentService\System\ConstraintHandling\Collector;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
 use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingAuthorizationRemoved;
@@ -34,6 +36,7 @@ readonly class Service implements ReadService, FullService
         private LogEntryService $log_entry_service,
         private NotificationService $notification_service,
         private PseudonymService $pseudonym_service,
+        private Collector $constraints,
         private Dispatcher $events
     ) {
     }
@@ -149,6 +152,11 @@ readonly class Service implements ReadService, FullService
 
     public function removeWritingAuthorization(Writer $writer): Result
     {
+        $constraint_result = $this->constraints->check(new RemoveWritingAuthorization($writer->getId()));
+        if ($constraint_result->isBlocked()) {
+            return $constraint_result->toSimpleResult();
+        }
+
         $was_authorized = ($writer->getWritingAuthorized() !== null);
         $writer->setWritingAuthorized(null);
         $writer->setWritingAuthorizedBy(null);

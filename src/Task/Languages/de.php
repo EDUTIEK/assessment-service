@@ -113,5 +113,7 @@ return [
     'x_stitch_decisions' => "{x} Stichentscheide",
     'failure_corrector_assigned_twice' => "Ein Korrektor würde mehrfach zugewiesen",
     'failure_change_assigment_of_authorized' => "Eine freigegebene Korrektur würde geändert",
-    'failure_assignment_unchanged' => "Keine Änderung nötig"
+    'failure_assignment_unchanged' => "Keine Änderung nötig",
+    'text_to_pdf_correction_is_authorized' => "Nicht möglich - es gibt freigegebene Korrekturen!",
+    'text_to_pdf_correction_has_data' => "VORSICHT - es sind bereits Korrektureingaben vorhanden!"
 ];

@@ -11,8 +11,11 @@ use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImage;
 use Edutiek\AssessmentService\EssayTask\PdfCreation\WritingProvider;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\Service as BackgroundTaskManager;
 use Edutiek\AssessmentService\System\ConstraintHandling\Actions\ChangeWritingContent;
+use Edutiek\AssessmentService\System\ConstraintHandling\Actions\ChangeWritingTextToPdf;
 use Edutiek\AssessmentService\System\ConstraintHandling\Collector;
 use Edutiek\AssessmentService\System\ConstraintHandling\ConstraintResult;
+use Edutiek\AssessmentService\System\ConstraintHandling\ResultCollection;
+use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\ConstraintHandling\ResultStatus;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
@@ -136,19 +139,30 @@ readonly class Service implements ClientService, EventService
         return $this->constraints->check(new ChangeWritingContent(
             $essay->getWriterId(),
             $essay->getTaskId(),
-            $this->as_admin
         ));
     }
 
-    public function textToPdf(Essay $essay): void
+    public function canChangeTextToPdf(int $writer_id): ConstraintResult
     {
-        $result = $this->canChange($essay);
-        if ($result->status() == ResultStatus::BLOCK) {
-            throw new ApiException(implode("/n", $result->messages()), ApiException::CONSTRAINT);
+        $this->checkWriterScope($writer_id);
+        return $this->constraints->check(new ChangeWritingTextToPdf($writer_id));
+    }
+
+    public function textToPdf(Essay $essay): Result
+    {
+        $result = new Result(true);
+        if (empty($essay?->getWrittenText())) {
+            $result->addFailure($this->language->txt('essay_written_text_missing'));
+            return $result;
+        } elseif (!empty($essay->getPdfVersion()) && !$essay->hasPdfFromWrittenText()) {
+            $result->addFailure($this->language->txt('essay_pdf_file_exists'));
+            return $result;
         }
 
         $file_id = $this->pdf_provider->renderWrittenText($essay, true, new Options());
         $this->updatePdf($essay, $file_id, true, null);
+
+        return $result;
     }
 
     public function replacePdf(Essay $essay, string $file_id, ?string $hash): void

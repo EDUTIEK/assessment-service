@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\EssayTask\Essay;
 
 use Edutiek\AssessmentService\EssayTask\Data\Essay;
 use Edutiek\AssessmentService\System\ConstraintHandling\ConstraintResult;
+use Edutiek\AssessmentService\System\Data\Result;
 
 interface ClientService
 {
@@ -41,7 +42,12 @@ interface ClientService
      */
     public function canChange(Essay $essay): ConstraintResult;
 
-    public function textToPdf(Essay $essay): void;
+    /**
+     * Check if a text content of all essays can be changed to a PDF
+     */
+    public function canChangeTextToPdf(int $writer_id): ConstraintResult;
+
+    public function textToPdf(Essay $essay): Result;
     public function replacePdf(Essay $essay, string $file_id, ?string $hash): void;
     public function deletePdf(Essay $essay): void;
 }

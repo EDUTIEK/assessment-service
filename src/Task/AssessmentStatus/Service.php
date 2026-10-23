@@ -76,7 +76,7 @@ readonly class Service implements FullService
 
     public function hasAuthorizedSummaries(?int $corrector_id = null)
     {
-        return $this->repos->correctorSummary()->hasAuthorizedByAssId($this->ass_id, $corrector_id);
+        return $this->repos->correctorSummary()->hasAuthorizedByAssId($this->ass_id, null, $corrector_id);
     }
 
     public function allCorrectorCorrectionSummaries(?array $corrector_ids = null): array

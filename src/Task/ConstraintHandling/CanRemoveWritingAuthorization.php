@@ -14,12 +14,13 @@ use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\System\ConstraintHandling\Actions\RemoveWritingAuthorization;
 
 /**
- * CCheck if content of an essay (text or pdf) can be changed
+ * Check if content of an essay (text or pdf) can be changed
  * - BLOCK if authorized corrections exist
  */
-class CanRemoveWritingAuthorization implements Constraint
+readonly class CanRemoveWritingAuthorization implements Constraint
 {
     public function __construct(
+        private int $ass_id,
         private Repositories $repos,
         private LanguageService $language,
     ) {
@@ -37,12 +38,10 @@ class CanRemoveWritingAuthorization implements Constraint
      */
     public function check(Action $action, ResultCollection $results): void
     {
-        foreach ($this->repos->correctorSummary()->allByTaskIdAndWriterId($action->getTaskId(), $action->getWriterId()) as $summary) {
-            if ($summary->isAuthorized()) {
-                $results->add(new ConstraintResult(ResultStatus::BLOCK, [
-                    $this->language->txt('correction_prevents_remove_of_writing_authorization')
-                ]));
-            }
+        if ($this->repos->correctorSummary()->hasAuthorizedByAssId($this->ass_id, $action->getWriterId(), null)) {
+            $results->add(new ConstraintResult(ResultStatus::BLOCK, [
+                $this->language->txt('correction_prevents_remove_of_writing_authorization')
+            ]));
         }
     }
 }

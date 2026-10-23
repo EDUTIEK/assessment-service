@@ -15,18 +15,12 @@ use Edutiek\AssessmentService\System\ConstraintHandling\Action;
 readonly class RemoveWritingAuthorization implements Action
 {
     public function __construct(
-        private int $writer_id,
-        private int $task_id
+        private int $writer_id
     ) {
     }
 
     public function getWriterId(): int
     {
         return $this->writer_id;
-    }
-
-    public function getTaskId(): int
-    {
-        return $this->task_id;
     }
 }

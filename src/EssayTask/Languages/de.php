@@ -38,4 +38,6 @@ return [
     'comments_corrector3' => 'Anmerkungen (Stichentscheid)',
     'comments_corrector_all' => 'Korrektur-Anmerkungen',
     'generate_essay_images' => 'Erstelle Seitenbilder',
+    'essay_written_text_missing' => 'Geschriebener Text fehlt!',
+    'essay_pdf_file_exists' => 'Es gibt bereits eine PDF-Datei!'
 ];

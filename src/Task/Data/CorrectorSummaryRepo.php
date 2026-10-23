@@ -9,7 +9,7 @@ interface CorrectorSummaryRepo
     public function new(): CorrectorSummary;
     public function one(int $id): ?CorrectorSummary;
     public function hasByTaskIdAndWriterId(int $task_id, int $writer_id): bool;
-    public function hasAuthorizedByAssId(int $ass_id, ?int $corrector_id = null): bool;
+    public function hasAuthorizedByAssId(int $ass_id, ?int $writer_id = null, ?int $corrector_id = null): bool;
     /** @return string[] */
     public function allFileIds(): array;
     /** @return CorrectorSummary[] */

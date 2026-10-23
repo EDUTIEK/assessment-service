@@ -4,7 +4,6 @@ namespace Edutiek\AssessmentService\System\Data;
 
 /**
  * Simple Result of an action or validation
- *
  */
 class Result
 {

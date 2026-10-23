@@ -15,6 +15,12 @@ class Provider extends AbstractProvider
         private readonly Repositories $repos,
     ) {
         $this->registerConstraint(CanRemoveWritingAuthorization::class, fn() => new CanRemoveWritingAuthorization(
+            $ass_id,
+            $this->repos,
+            $this->internal->language($user_id),
+        ));
+        $this->registerConstraint(CanChangeWritingTextToPdf::class, fn() => new CanChangeWritingTextToPdf(
+            $ass_id,
             $this->repos,
             $this->internal->language($user_id),
         ));

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\ConstraintHandling;
 
+use Edutiek\AssessmentService\System\Data\Result;
+
 readonly class ConstraintResult
 {
     /**
@@ -24,6 +26,16 @@ readonly class ConstraintResult
         return $this->status === ResultStatus::OK;
     }
 
+    public function isAsking(): bool
+    {
+        return $this->status === ResultStatus::ASK;
+    }
+
+    public function isBlocked(): bool
+    {
+        return $this->status === ResultStatus::BLOCK;
+    }
+
     public function status(): ResultStatus
     {
         return $this->status;
@@ -34,4 +46,25 @@ readonly class ConstraintResult
         return $this->messages;
     }
 
+    public function toSimpleResult(): Result
+    {
+        $result = new Result(true);
+
+        switch ($this->status()) {
+            case ResultStatus::OK:
+                break;
+            case ResultStatus::ASK:
+                foreach ($this->messages() as $message) {
+                    $result->addNote($message);
+                }
+                break;
+            case ResultStatus::BLOCK:
+                foreach ($this->messages() as $message) {
+                    $result->addFailure($message);
+                }
+                break;
+        }
+
+        return $result;
+    }
 }

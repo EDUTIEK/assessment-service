@@ -240,6 +240,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->logEntry($ass_id),
             $this->notification($ass_id, $user_id),
             $this->pseudonym($ass_id),
+            $this->dependencies->constraintCollector($ass_id, $user_id),
             $this->dependencies->eventDispatcher($ass_id, $user_id),
         );
     }

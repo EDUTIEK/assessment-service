@@ -35,7 +35,7 @@ class ResultCollection
                 foreach ($this->results[$status->value] as $result) {
                     $messages = array_merge($messages, $result->messages());
                 }
-                return new ConstraintResult($status, $messages);
+                return new ConstraintResult($status, array_unique($messages));
             }
         }
         return new ConstraintResult(ResultStatus::OK, []);
