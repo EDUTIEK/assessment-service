@@ -18,10 +18,5 @@ class Provider extends AbstractProvider
             $this->internal->writer($ass_id, $user_id),
             $this->internal->language($user_id),
         ));
-
-        $this->registerConstraint(CanRemoveWritingAuthorization::class, fn() => new CanRemoveWritingAuthorization(
-            $this->internal->writer($ass_id, $user_id),
-            $this->internal->language($user_id),
-        ));
     }
 }

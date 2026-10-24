@@ -7,12 +7,16 @@ namespace Edutiek\AssessmentService\System\ConstraintHandling\Actions;
 use Edutiek\AssessmentService\System\ConstraintHandling\Action;
 
 /**
- * This action must be checked before a writing text is changed to PDF
+ * This action must be checked before the status of a writing is changed
+ * - Remove writing authorization
+ * - Remove writer
+ * - Convert text to PDF
  *
+ * Result is:
  * - BLOCK if a correction is authorized
  * - ASK if correction data exists
  */
-readonly class ChangeWritingTextToPdf implements Action
+readonly class ChangeWritingStatus implements Action
 {
     public function __construct(
         private int $writer_id

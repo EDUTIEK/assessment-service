@@ -4,6 +4,7 @@ namespace Edutiek\AssessmentService\Assessment\Writer;
 
 use Edutiek\AssessmentService\Assessment\Data\CorrectionStatus;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
+use Edutiek\AssessmentService\System\ConstraintHandling\ConstraintResult;
 use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\Assessment\Data\GradeLevel;
 
@@ -22,6 +23,11 @@ interface FullService extends ReadService
     public function authorizeWriting(Writer $writer, bool $as_admin): Result;
     public function removeWritingAuthorization(Writer $writer): Result;
 
+    /**
+     * Check by constraint if the status of a writing can be changed
+     */
+    public function canChangeWritingStatus(int $writer_id): ConstraintResult;
+
     public function changeCorrectionStatus(Writer $writer, CorrectionStatus $status, int $by_user_id): void;
 
     public function setUnsubmittedAsGraded(Writer $writer): bool;
@@ -38,13 +44,13 @@ interface FullService extends ReadService
      * Remove all data of a writer from the assessment
      * This action is logged with a reason note
      */
-    public function remove(Writer $writer, ?string $reason = null): void;
+    public function remove(Writer $writer, ?string $reason = null): Result;
 
     /**
      * Exclude a writer from the assessment
      * This action is logged with a reason note
      */
-    public function exclude(Writer $writer, ?string $reason = null): void;
+    public function exclude(Writer $writer, ?string $reason = null): Result;
 
     /**
      * Repeal the exclusion a writer from the assessment

@@ -11,7 +11,7 @@ use Edutiek\AssessmentService\EssayTask\EssayImage\Service as EssayImage;
 use Edutiek\AssessmentService\EssayTask\PdfCreation\WritingProvider;
 use Edutiek\AssessmentService\EssayTask\BackgroundTask\Service as BackgroundTaskManager;
 use Edutiek\AssessmentService\System\ConstraintHandling\Actions\ChangeWritingContent;
-use Edutiek\AssessmentService\System\ConstraintHandling\Actions\ChangeWritingTextToPdf;
+use Edutiek\AssessmentService\System\ConstraintHandling\Actions\ChangeWritingStatus;
 use Edutiek\AssessmentService\System\ConstraintHandling\Collector;
 use Edutiek\AssessmentService\System\ConstraintHandling\ConstraintResult;
 use Edutiek\AssessmentService\System\ConstraintHandling\ResultCollection;
@@ -140,12 +140,6 @@ readonly class Service implements ClientService, EventService
             $essay->getWriterId(),
             $essay->getTaskId(),
         ));
-    }
-
-    public function canChangeTextToPdf(int $writer_id): ConstraintResult
-    {
-        $this->checkWriterScope($writer_id);
-        return $this->constraints->check(new ChangeWritingTextToPdf($writer_id));
     }
 
     public function textToPdf(Essay $essay): Result

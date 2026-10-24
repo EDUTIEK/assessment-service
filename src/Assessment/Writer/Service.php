@@ -16,15 +16,14 @@ use Edutiek\AssessmentService\Assessment\LogEntry\Type as LogEntryType;
 use Edutiek\AssessmentService\Assessment\Notification\FullService as NotificationService;
 use Edutiek\AssessmentService\Assessment\Pseudonym\FullService as PseudonymService;
 use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
-use Edutiek\AssessmentService\System\ConstraintHandling\Actions\RemoveWritingAuthorization;
-use Edutiek\AssessmentService\System\Data\Result;
+use Edutiek\AssessmentService\System\ConstraintHandling\Actions\ChangeWritingStatus;
 use Edutiek\AssessmentService\System\ConstraintHandling\Collector;
+use Edutiek\AssessmentService\System\ConstraintHandling\ConstraintResult;
+use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
+use Edutiek\AssessmentService\System\EventHandling\Events\WriterAdded;
 use Edutiek\AssessmentService\System\EventHandling\Events\WriterRemoved;
 use Edutiek\AssessmentService\System\EventHandling\Events\WritingAuthorizationRemoved;
-use Edutiek\AssessmentService\System\EventHandling\Events\WritingContentChanged;
-use Edutiek\AssessmentService\System\EventHandling\Events\WriterAdded;
-use Edutiek\AssessmentService\Assessment\Data\GradeLevel;
 
 readonly class Service implements ReadService, FullService
 {
@@ -110,6 +109,7 @@ readonly class Service implements ReadService, FullService
 
     public function setWorkingStart(Writer $writer): void
     {
+        $this->checkScope($writer);
         if (empty($writer->getPseudonym())) {
             // ensure writer has an id, if the pseudonym is generated from the writer id
             $this->save($writer);
@@ -125,6 +125,7 @@ readonly class Service implements ReadService, FullService
 
     public function authorizeWriting(Writer $writer, bool $as_admin): Result
     {
+        $this->checkScope($writer);
         $now = new DateTimeImmutable();
 
         $was_authorized = ($writer->getWritingAuthorized() !== null);
@@ -152,7 +153,8 @@ readonly class Service implements ReadService, FullService
 
     public function removeWritingAuthorization(Writer $writer): Result
     {
-        $constraint_result = $this->constraints->check(new RemoveWritingAuthorization($writer->getId()));
+        $this->checkScope($writer);
+        $constraint_result = $this->constraints->check(new ChangeWritingStatus($writer->getId()));
         if ($constraint_result->isBlocked()) {
             return $constraint_result->toSimpleResult();
         }
@@ -177,6 +179,7 @@ readonly class Service implements ReadService, FullService
 
     public function setUnsubmittedAsGraded(Writer $writer): bool
     {
+        $this->checkScope($writer);
         if (!$writer->canFinalizedUnsubmitted()) {
             return false;
         }
@@ -185,8 +188,17 @@ readonly class Service implements ReadService, FullService
         return true;
     }
 
+    public function canChangeWritingStatus(int $writer_id): ConstraintResult
+    {
+        if (!$this->has($writer_id)) {
+            throw new ApiException("wrong writer_id", ApiException::ID_SCOPE);
+        }
+        return $this->constraints->check(new ChangeWritingStatus($writer_id));
+    }
+
     public function changeCorrectionStatus(Writer $writer, CorrectionStatus $status, int $by_user_id): void
     {
+        $this->checkScope($writer);
         $old_status = $writer->getCorrectionStatus();
         if ($status === CorrectionStatus::FINALIZED && in_array(
             $old_status,
@@ -223,6 +235,7 @@ readonly class Service implements ReadService, FullService
         ?\DateTimeImmutable $latest_end,
         ?int $time_limit_minutes,
     ): Result {
+        $this->checkScope($writer);
         $writer->setEarliestStart($earliest_start);
         $writer->setLatestEnd($latest_end);
         $writer->setTimeLimitMinutes($time_limit_minutes);
@@ -240,6 +253,7 @@ readonly class Service implements ReadService, FullService
 
     public function removeWorkingTime(Writer $writer): void
     {
+        $this->checkScope($writer);
         $writer->setEarliestStart(null);
         $writer->setLatestEnd(null);
         $writer->setTimeLimitMinutes(null);
@@ -253,6 +267,7 @@ readonly class Service implements ReadService, FullService
 
     public function repealExclusion(Writer $writer, ?string $reason = null): void
     {
+        $this->checkScope($writer);
         $writer->setWritingExcluded(null);
         $writer->setWritingExcludedBy(null);
         $this->save($writer);
@@ -264,8 +279,14 @@ readonly class Service implements ReadService, FullService
         );
     }
 
-    public function exclude(Writer $writer, ?string $reason = null): void
+    public function exclude(Writer $writer, ?string $reason = null): Result
     {
+        $this->checkScope($writer);
+        $constraintResult = $this->canChangeWritingStatus($writer->getId());
+        if (!$constraintResult->isOk()) {
+            return $constraintResult->toSimpleResult();
+        }
+
         $writer->setWritingExcluded(new \DateTimeImmutable());
         $writer->setWritingExcludedBy($this->user_id);
         $this->save($writer);
@@ -275,11 +296,18 @@ readonly class Service implements ReadService, FullService
             LogEntryMention::fromWriter($writer),
             $reason
         );
+
+        return new Result(true);
     }
 
-    public function remove(Writer $writer, ?string $reason = null): void
+    public function remove(Writer $writer, ?string $reason = null): Result
     {
         $this->checkScope($writer);
+        $constraintResult = $this->canChangeWritingStatus($writer->getId());
+        if (!$constraintResult->isOk()) {
+            return $constraintResult->toSimpleResult();
+        }
+
         $this->repos->writer()->delete($writer->getId());
         $this->events->dispatchEvent(new WriterRemoved($writer->getId(), $this->ass_id));
 
@@ -289,6 +317,8 @@ readonly class Service implements ReadService, FullService
             LogEntryMention::fromWriter($writer),
             $reason
         );
+
+        return new Result(true);
     }
 
     private function checkScope(Writer $writer)
