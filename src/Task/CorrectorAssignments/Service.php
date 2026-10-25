@@ -356,10 +356,12 @@ readonly class Service implements FullService
 
         $change_any = false;
         $change_authorized = false;
+        $delete_with_data = false;
         $ids = [];
 
         foreach ($corrector_ids as $position => $corrector_id) {
             $to_change = false;
+            $to_delete = false;
             $old_assignment = $old_assignments[$position] ?? null;
 
             switch ($corrector_id) {
@@ -371,6 +373,7 @@ readonly class Service implements FullService
                 case self::BLANK_CORRECTOR_ASSIGNMENT:
                     $new_assignment = null;
                     $to_change = $old_assignment !== null;
+                    $to_delete = $old_assignment !== null;
                     break;
 
                 default:
@@ -390,6 +393,22 @@ readonly class Service implements FullService
             $summary = $summaries[$old_assignment?->getCorrectorId()] ?? null;
             if ($to_change && $summary?->isAuthorized()) {
                 $change_authorized = true;
+            }
+            if ($to_delete && (
+                $summary?->hasData()
+                || $this->repos->correctorComment()->hasByTaskIdAndWriterIdAndCorrectorId(
+                    $old_assignment->getTaskId(),
+                    $assignment->getWriterId(),
+                    $assignment->getCorrectorId()
+                )
+                || $this->repos->correctorComment()->hasByTaskIdAndWriterIdAndCorrectorId(
+                    $old_assignment->getTaskId(),
+                    $assignment->getWriterId(),
+                    $assignment->getCorrectorId()
+                )
+            )
+            ) {
+                $delete_with_data = true;
             }
 
             $new_assignments[$position] = $new_assignment;
@@ -411,6 +430,9 @@ readonly class Service implements FullService
 
         if ($change_authorized) {
             $result->addFailure($this->lang->txt('failure_change_assigment_of_authorized'));
+        }
+        if ($delete_with_data) {
+            $result->addFailure($this->lang->txt('failure_delete_assignment_with_data'));
         }
         if (!$change_any && !$ignore_unchanged) {
             $result->addFailure($this->lang->txt('failure_assignment_unchanged'));

@@ -113,6 +113,7 @@ return [
     'x_stitch_decisions' => "{x} Stichentscheide",
     'failure_corrector_assigned_twice' => "Ein Korrektor würde mehrfach zugewiesen",
     'failure_change_assigment_of_authorized' => "Eine freigegebene Korrektur würde geändert",
+    'failure_delete_assignment_with_data' => "Eine Korrektur mit Daten kann nicht gelöscht werden",
     'failure_assignment_unchanged' => "Keine Änderung nötig",
     'constraint_block_correction_is_authorized' => "NICHT MÖGLICH - es gibt freigegebene Korrekturen!",
     'constraint_ask_correction_has_data' => "VORSICHT - es sind bereits Korrektureingaben vorhanden!"
