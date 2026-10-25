@@ -177,6 +177,13 @@ readonly class CorrectionProvider implements PdfPartProvider
 
         if ($summary->hasPdf()) {
             $pdf1 = $this->renderContent($title, $this->language->txt('pdf_summary_follows'), [], $options);
+
+            $options = $options->withStartPageNumber(
+                $options->getStartPageNumber()
+                + ($this->pdf_processing->count($pdf1) ?? 0)
+                + ($this->pdf_processing->count($summary->getSummaryPdf()) ?? 0)
+            );
+
             $pdf2 = $this->renderContent(null, null, [$summary->getPoints()], $options);
 
             $joined = $this->pdf_processing->join([$pdf1, $summary->getSummaryPdf(), $pdf2]);
