@@ -77,9 +77,24 @@ class Service implements OpenService, RestService
     /**
      * Init the service from a REST call
      * Here the properties have to be extracted from the call
+     * @return bool start handler is required
      */
-    private function initForRestCall(): void
+    private function initForRestCall(): bool
     {
+        // init the hosting system for the REST call (e.g. set the current user)
+        $this->context->initCall();
+
+        $parts = explode('/', $this->context->getRoute());
+        $this->frontend = Frontend::fromRoutePart($parts[1]);
+        if ($this->frontend === null) {
+            throw new RestException("Frontend not found by the REST route", RestException::NOT_FOUND);
+        }
+
+        // App start detected
+        if (($parts[2] ?? '') == 'start') {
+            return true;
+        }
+
         $params = $this->context->getParams();
         foreach (['ass_id', 'context_id', 'user_id'] as $key) {
             if (!isset($params[$key])) {
@@ -90,14 +105,7 @@ class Service implements OpenService, RestService
         $this->context_id = (int) $params['context_id'];
         $this->user_id = (int) $params['user_id'];
 
-        $parts = explode('/', $this->context->getRoute());
-        $this->frontend = Frontend::fromRoutePart($parts[1]);
-        if ($this->frontend === null) {
-            throw new RestException("Frontend not found by the REST route", RestException::NOT_FOUND);
-        }
-
-        // init the hosting system for the REST call (e.g. set the current user)
-        $this->context->initCall($this->ass_id, $this->context_id, $this->user_id);
+        return false;
     }
 
     /**
@@ -106,8 +114,12 @@ class Service implements OpenService, RestService
     public function handle(): never
     {
         try {
-            $this->initForRestCall();
-            $this->getApp()->handle();
+            if ($this->initForRestCall()) {
+                $this->getAppStart()->handle();
+            } else {
+                $this->getApp()->handle();
+            }
+
         } catch (RestException $e) {
             $this->context->sendResponse($e->getCode(), $e->getMessage());
         } catch (Throwable $e) {
@@ -117,6 +129,17 @@ class Service implements OpenService, RestService
             );
         }
         exit;
+    }
+
+    /**
+     * Get the app start handler (handling login, logout, assessments)
+     */
+    private function getAppStart(): AppStart
+    {
+        if ($this->frontend === Frontend::CORRECTOR) {
+            return $this->internal->appStart($this->frontend);
+        }
+        $this->context->sendResponse(RestException::NOT_IMPLEMENTED, "Handler for frontend '{$this->frontend->value}' not implemented.");
     }
 
     /**
