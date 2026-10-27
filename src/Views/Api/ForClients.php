@@ -6,10 +6,26 @@ namespace Edutiek\AssessmentService\Views\Api;
 
 use Edutiek\AssessmentService\Views\Data\WriterViewRepo;
 use Edutiek\AssessmentService\Views\Data\CorrectionsViewRepo;
+use Edutiek\AssessmentService\Views\Api\Dependencies;
+use Edutiek\AssessmentService\Views\Data\AssessmentViewRepo;
 
-interface ForClients
+readonly class ForClients
 {
-    public function writer(): WriterViewRepo;
-    public function corrections(): CorrectionsViewRepo;
-    public function statistic();
+    public function __construct(
+        private Dependencies $dependencies,
+    ) {
+    }
+
+    public function writer(): WriterViewRepo
+    {
+        return $this->dependencies->writer();
+    }
+    public function corrections(): CorrectionsViewRepo
+    {
+        return $this->dependencies->corrections();
+    }
+    public function statistic()
+    {
+        return $this->dependencies->statistic();
+    }
 }
