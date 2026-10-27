@@ -59,6 +59,8 @@ use Edutiek\AssessmentService\Assessment\Export\ResultsExport;
 use Edutiek\AssessmentService\Assessment\Apps\SlimLogger;
 use Edutiek\AssessmentService\System\File\FileUsageFinder;
 use Edutiek\AssessmentService\Assessment\FileUsage\FileCleanupHandler;
+use Edutiek\AssessmentService\Assessment\Apps\AppStart;
+use Edutiek\AssessmentService\System\Config\Frontend;
 
 class Internal implements ComponentApi, ComponentApiFactory
 {
@@ -115,6 +117,19 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->dependencies->systemApi()->config(),
             $this->dependencies->restContext(),
             $this
+        );
+    }
+
+    /**
+     * REST handler for corrector web app
+     * (no caching needed, created once per request)
+     */
+    public function appStart(Frontend $frontend): AppStart
+    {
+        return new AppStart(
+            $frontend,
+            $this->slimApp(),
+            $this->dependencies->viewsApi()
         );
     }
 

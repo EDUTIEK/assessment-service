@@ -28,7 +28,7 @@ interface RestContext
     /**
      * Initialize the client system for a REST call
      */
-    public function initCall(int $ass_id, int $context_id, int $user_id): void;
+    public function initCall(): void;
 
     /**
      * Extend a user session in the client system
