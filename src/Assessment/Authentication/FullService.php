@@ -22,6 +22,11 @@ interface FullService
     public function newToken(int $user_id, TokenPurpose $purpose): Token;
 
     /**
+     * Get a token by its value
+     */
+    public function getByValue(string $value): ?Token;
+
+    /**
      * Get the token of a user, assessment and purpose
      * This is used for the authorization of REST calls
      * Only one valid token should exist for the current user, assessment and purpose
@@ -50,4 +55,9 @@ interface FullService
      * Check if a token is still valid
      */
     public function checkValidity(Token $token): bool;
+
+    /**
+     * Delete the token of a user for a purpose
+     */
+    public function deleteToken(int $user_id, TokenPurpose $purpose): void;
 }

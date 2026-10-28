@@ -21,7 +21,7 @@ use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreatorFullSer
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingService;
 use Edutiek\AssessmentService\System\Session\Storage as SessionStorage;
 use Edutiek\AssessmentService\System\Spreadsheet\FullService as SpreadsheetService;
-use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
+use Edutiek\AssessmentService\System\User\AuthService as UserAuthService;
 
 class ForServices
 {
@@ -73,7 +73,7 @@ class ForServices
         return $this->internal->htmlProcessing();
     }
 
-    public function user(): UserReadService
+    public function user(): UserAuthService
     {
         return $this->internal->user();
     }

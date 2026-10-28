@@ -19,6 +19,7 @@ readonly class Service implements FullService
     public function newValitity(TokenPurpose $purpose): ?DateTimeImmutable
     {
         switch ($purpose) {
+            case TokenPurpose::LOGIN:
             case TokenPurpose::FILE:
             case TokenPurpose::DATA:
                 return null;     // todo: temporary solution for both until re-authentication is possible
@@ -51,6 +52,11 @@ readonly class Service implements FullService
             ->setValidUntil($this->newValitity($purpose));
     }
 
+    public function getByValue(string $value): ?Token
+    {
+        return $this->repos->token()->oneByToken($value);
+    }
+
     public function getToken(int $user_id, TokenPurpose $purpose): ?Token
     {
         return $this->repos->token()->oneByIdsAndPurpose($user_id, $this->ass_id, $purpose);
@@ -75,5 +81,10 @@ readonly class Service implements FullService
     public function checkValidity(Token $token): bool
     {
         return $token->getValidUntil() === null || $token->getValidUntil()->getTimestamp() > time();
+    }
+
+    public function deleteToken(int $user_id, TokenPurpose $purpose): void
+    {
+        $this->repos->token()->deleteByIdsAndPurpose($user_id, $this->ass_id, $purpose);
     }
 }
