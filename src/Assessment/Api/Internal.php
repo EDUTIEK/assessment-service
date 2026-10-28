@@ -121,7 +121,7 @@ class Internal implements ComponentApi, ComponentApiFactory
     }
 
     /**
-     * REST handler for corrector web app
+     * REST handler for starting functionality of apps (login, logout, list of assessments)
      * (no caching needed, created once per request)
      */
     public function appStart(Frontend $frontend): AppStart
@@ -129,7 +129,9 @@ class Internal implements ComponentApi, ComponentApiFactory
         return new AppStart(
             $frontend,
             $this->slimApp(),
-            $this->dependencies->viewsApi()
+            $this->dependencies->viewsApi(),
+            $this->dependencies->systemApi(),
+            $this->authentication(0, 0)
         );
     }
 

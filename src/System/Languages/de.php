@@ -1,4 +1,6 @@
-<?php return [
+<?php
+
+return [
     'period_only_from' => 'Seit',
     'period_only_until' => 'Bis',
     'period_from' => 'Von',
@@ -16,4 +18,6 @@
     'corr_x' => 'K%s',
     'decimal_separator' => ',',
     'thousands_separator' => '.',
+    'login_failed_short' => 'Der Anmeldename oder das Passwort sind ungültig.',
+    'login_failed_long' => 'Die Anmeldung ist fehlgeschlagen. Bitte überprüfen Sie, ob Sie Ihren Anmeldenamen und Ihr Passwort korrekt eingegeben haben. Wenn das Problem weiterhin besteht, ist Ihr Konto möglicherweise inaktiv oder abgelaufen.'
 ];

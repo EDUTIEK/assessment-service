@@ -160,7 +160,8 @@ class Internal
     {
         return $this->instances[UserService::class] ??= new UserService(
             $this->dependencies->userDataRepo(),
-            $this->dependencies->userDisplayRepo()
+            $this->dependencies->userDisplayRepo(),
+            $this->dependencies->authHandler()
         );
     }
 
