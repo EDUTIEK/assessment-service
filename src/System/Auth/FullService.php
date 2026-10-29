@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\System\User;
+namespace Edutiek\AssessmentService\System\Auth;
 
-interface AuthService extends ReadService
+interface FullService
 {
     /**
      * Authenticate a user with given credentials

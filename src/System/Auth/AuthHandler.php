@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\System\User;
+namespace Edutiek\AssessmentService\System\Auth;
 
 /**
  * Authentication functions needed from the hosting system

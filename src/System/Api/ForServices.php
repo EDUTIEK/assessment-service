@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Api;
 
+use Edutiek\AssessmentService\System\Auth\FullService as AuthService;
 use Edutiek\AssessmentService\System\BackgroundTask\FullService as BackgroundTaskService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigReadService;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
@@ -21,7 +22,7 @@ use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreatorFullSer
 use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingService;
 use Edutiek\AssessmentService\System\Session\Storage as SessionStorage;
 use Edutiek\AssessmentService\System\Spreadsheet\FullService as SpreadsheetService;
-use Edutiek\AssessmentService\System\User\AuthService as UserAuthService;
+use Edutiek\AssessmentService\System\User\ReadService as UserService;
 
 class ForServices
 {
@@ -31,6 +32,11 @@ class ForServices
         private readonly Dependencies $dependencies,
         private readonly Internal $internal
     ) {
+    }
+
+    public function auth(): AuthService
+    {
+        return $this->internal->auth();
     }
 
     public function config(): ConfigReadService
@@ -73,7 +79,7 @@ class ForServices
         return $this->internal->htmlProcessing();
     }
 
-    public function user(): UserAuthService
+    public function user(): UserService
     {
         return $this->internal->user();
     }
