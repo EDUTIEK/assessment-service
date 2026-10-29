@@ -70,7 +70,7 @@ readonly class OpenHelper
     }
 
     /**
-     * Generate a new data token and save it
+     * Generate a new token and save it
      */
     private function createToken(TokenPurpose $purpose): Token
     {

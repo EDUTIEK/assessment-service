@@ -15,7 +15,7 @@ use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Log\FullService as Logger;
 use Edutiek\AssessmentService\System\Mail\Delivery as MailDelivery;
 use Edutiek\AssessmentService\System\Session\Storage as SessionStorage;
-use Edutiek\AssessmentService\System\User\AuthHandler;
+use Edutiek\AssessmentService\System\Auth\AuthHandler;
 use ILIAS\Mail;
 
 interface Dependencies

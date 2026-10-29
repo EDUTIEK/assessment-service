@@ -22,6 +22,7 @@ namespace Edutiek\AssessmentService\System\Api;
 
 use DateTimeZone;
 use Dompdf\Dompdf;
+use Edutiek\AssessmentService\System\Auth\Service as AuthService;
 use Edutiek\AssessmentService\System\BackgroundTask\Service as BackgroundTaskService;
 use Edutiek\AssessmentService\System\Config\Service as ConfigService;
 use Edutiek\AssessmentService\System\Entity\Service as EntityService;
@@ -44,6 +45,15 @@ class Internal
 
     public function __construct(private readonly Dependencies $dependencies)
     {
+    }
+
+    public function auth(): AuthService
+    {
+        return $this->instances[AuthService::class] ??= new AuthService(
+            $this->dependencies->userDataRepo(),
+            $this->dependencies->authHandler(),
+            $this->language(0, __DIR__ . '/../Languages/')
+        );
     }
 
     public function config(): ConfigService
@@ -161,7 +171,6 @@ class Internal
         return $this->instances[UserService::class] ??= new UserService(
             $this->dependencies->userDataRepo(),
             $this->dependencies->userDisplayRepo(),
-            $this->dependencies->authHandler()
         );
     }
 

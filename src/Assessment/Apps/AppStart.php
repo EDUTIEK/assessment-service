@@ -11,14 +11,16 @@ use Slim\App as SlimApp;
 use Edutiek\AssessmentService\Assessment\Authentication\FullService as Tokens;
 use Edutiek\AssessmentService\System\Api\ForServices as SystemApi;
 use Edutiek\AssessmentService\System\Config\Frontend;
-use Edutiek\AssessmentService\System\User\AuthService;
+use Edutiek\AssessmentService\System\Auth\FullService as AuthService;
+use Edutiek\AssessmentService\System\User\ReadService as UserService;
 use Edutiek\AssessmentService\Views\Api\ForRest as ViewsRestApi;
 use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 
 class AppStart implements RestService
 {
     protected ?int $user_id;
-    protected AuthService $users;
+    protected AuthService $auth;
+    protected UserService $users;
 
 
     public function __construct(
@@ -28,6 +30,7 @@ class AppStart implements RestService
         protected readonly SystemApi $system,
         protected readonly Tokens $tokens
     ) {
+        $this->auth = $system->auth();
         $this->users = $system->user();
     }
 
@@ -51,7 +54,11 @@ class AppStart implements RestService
      */
     private function prepare(Request $request, bool $check_active = true, bool $check_agreement = true): void
     {
-        $token = $this->tokens->getByValue($request->getHeaderLine('Xlas-Token'));
+        $header = $request->getHeaderLine('Authorization');
+        $token = null;
+        if (preg_match('/Bearer\s(\S+)/', $header, $matches)) {
+            $token = $matches[1];
+        }
 
         if ($token === null) {
             throw new RestException('current token is not found', RestException::UNAUTHORIZED);
@@ -62,11 +69,11 @@ class AppStart implements RestService
 
         $this->user_id = $token->getUserId();
 
-        if ($check_active && !$this->users->isActive($this->user_id)) {
+        if ($check_active && !$this->auth->isActive($this->user_id)) {
             throw new RestException('user is not active', RestException::UNAUTHORIZED);
         }
 
-        if ($check_agreement && !$this->users->hasAcceptedAgreement($this->user_id)) {
+        if ($check_agreement && !$this->auth->hasAcceptedAgreement($this->user_id)) {
             throw new RestException('user is not active', RestException::UNAUTHORIZED);
         }
     }
@@ -82,10 +89,10 @@ class AppStart implements RestService
         $login = $body['login'];
         $password = $body['password'];
 
-        $this->user_id = $this->users->authenticate($login, $password, null);
+        $this->user_id = $this->auth->authenticate($login, $password, null);
 
         if (empty($user_id)) {
-            $data = ['failed_message' => $this->users->failedMessage($login)];
+            $data = ['failed_message' => $this->auth->failedMessage($login)];
             return $this->setResponse($response, StatusCodeInterface::STATUS_UNAUTHORIZED, $data);
         }
 
@@ -97,11 +104,12 @@ class AppStart implements RestService
             'user_id' => $this->user_id,
             'token' => $token->getToken(),
             'full_name' => $user_data->getFullname(false),
-            'agreement' => $this->users->getAgreement($this->user_id),
-            'accepted' => $this->users->hasAcceptedAgreement($this->user_id),
+            'agreement' => $this->auth->getAgreement($this->user_id),
+            'accepted' => $this->auth->hasAcceptedAgreement($this->user_id),
         ];
 
-        return $this->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
+        return $this->setResponse($response, StatusCodeInterface::STATUS_OK, $data)
+            ->withHeader('xlaslogintoken', $token->getToken());
     }
 
     /**
@@ -122,7 +130,7 @@ class AppStart implements RestService
     {
         $this->prepare($request, true, false);
 
-        $this->users->acceptAgreement($this->user_id);
+        $this->auth->acceptAgreement($this->user_id);
         return $this->setResponse($response, StatusCodeInterface::STATUS_OK, []);
     }
 
