@@ -57,7 +57,7 @@ class AppStart implements RestService
         $header = $request->getHeaderLine('Authorization');
         $token = null;
         if (preg_match('/Bearer\s(\S+)/', $header, $matches)) {
-            $token = $matches[1];
+            $token = $this->tokens->getByValue($matches[1]);
         }
 
         if ($token === null) {
