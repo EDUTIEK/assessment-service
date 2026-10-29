@@ -91,7 +91,7 @@ class AppStart implements RestService
 
         $this->user_id = $this->auth->authenticate($login, $password, null);
 
-        if (empty($user_id)) {
+        if (empty($this->user_id)) {
             $data = ['failed_message' => $this->auth->failedMessage($login)];
             return $this->setResponse($response, StatusCodeInterface::STATUS_UNAUTHORIZED, $data);
         }
