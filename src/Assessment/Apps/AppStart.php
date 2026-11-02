@@ -117,8 +117,11 @@ class AppStart implements RestService
      */
     public function logout(Request $request, Response $response, array $args): Response
     {
-        $this->prepare($request, false, false);
-        $this->tokens->deleteToken($this->user_id, TokenPurpose::LOGIN);
+        try {
+            $this->prepare($request, false, false);
+            $this->tokens->deleteToken($this->user_id, TokenPurpose::LOGIN);
+        }
+        catch (RestException $e) {}
 
         return $this->setResponse($response, StatusCodeInterface::STATUS_OK, []);
     }
