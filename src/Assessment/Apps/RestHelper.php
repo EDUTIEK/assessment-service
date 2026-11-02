@@ -6,7 +6,6 @@ namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Authentication\FullService as Authentication;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as Permissions;
-use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigReadService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
@@ -31,12 +30,28 @@ readonly class RestHelper
     ) {
     }
 
+    // public function checkHeaderAuth($r)
+    // {
+    //     $auth = $r->getHeaders()['Authorization'] ?? [];
+    //     if (count($auth) == 1) {
+    //         $authParts = explode(' ', current($auth));
+    //         if (count($authParts) === 2 && $authParts[0] === 'Bearer') {
+    //             // $t = $this->auth->getTokenByName($authParts[1]);
+    //             $token = $this->auth->getToken($this->user_id);
+    //             if ($this->auth->checkValidity($token) && $token->getToken() === $authParts[1]) {
+    //                 return;
+    //             }
+    //         }
+    //     }
+    //     throw new RestException('Nope');
+    // }
+
     /**
      * Check the authentication of the rwquesr
      */
-    public function checkAuth(TokenPurpose $purpose, string $signature): void
+    public function checkAuth(string $signature): void
     {
-        $token = $this->auth->getToken($this->user_id, $purpose);
+        $token = $this->auth->getToken($this->user_id);
         if ($token === null) {
             throw new RestException('current token is not found', RestException::UNAUTHORIZED);
         }
@@ -88,8 +103,8 @@ readonly class RestHelper
      */
     public function extendDataToken(Response $response): Response
     {
-        $token = $this->auth->getToken($this->user_id, TokenPurpose::DATA);
-        $token->setValidUntil($this->auth->newValitity(TokenPurpose::DATA));
+        $token = $this->auth->getToken($this->user_id);
+        $token->setValidUntil($this->auth->newValitity());
         $this->auth->saveToken($token);
         return $response->withHeader('xlasDataToken', $token->getToken());
     }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Api\Internal;
-use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Throwable;
 use Edutiek\AssessmentService\System\Config\Frontend;
@@ -21,6 +20,7 @@ class Service implements OpenService, RestService
     public function __construct(
         private readonly ConfigService $config,
         private readonly RestContext $context,
+        private readonly object $token_repo,
         private readonly Internal $internal
     ) {
     }
@@ -80,15 +80,30 @@ class Service implements OpenService, RestService
      */
     private function initForRestCall(): void
     {
-        $params = $this->context->getParams();
-        foreach (['ass_id', 'context_id', 'user_id'] as $key) {
-            if (!isset($params[$key])) {
-                throw new RestException("Query parameter $key is missing", RestException::NOT_FOUND);
-            }
+        if ($this->context->getRequestMethod() === 'OPTIONS') {
+            $this->context->sendResponse(200, '', [
+                'Access-Control-Allow-Origin' => '*',
+                'Access-Control-Allow-Headers' => '*',
+                'Access-Control-Expose-Headers' => 'X-Edutiek-Token'
+            ]);
         }
-        $this->ass_id = (int) $params['ass_id'];
-        $this->context_id = (int) $params['context_id'];
-        $this->user_id = (int) $params['user_id'];
+        $repo = ($this->token_repo)();
+        $auth_parts = explode(' ', current($this->context->getHeaders()['Authorization'] ?? []) ?: '');
+        if (count($auth_parts) !== 2 || $auth_parts[0] !== 'Bearer') {
+            throw new RestException("Invalid authentication parameters", RestException::NOT_FOUND);
+        }
+        $token = $repo->oneByToken($auth_parts[1]);
+        if (!$token) {
+            throw new RestException("Invalid token", RestException::NOT_FOUND);
+        }
+        $context_id = $this->context->getParams()['context_id'] ?? '';
+        if (!is_numeric($context_id)) {
+            throw new RestException('Query parameter context_id is missing', RestException::NOT_FOUND);
+        }
+
+        $this->ass_id = $token->getAssId();
+        $this->context_id = (int) $context_id;
+        $this->user_id = $token->getUserId();
 
         $parts = explode('/', $this->context->getRoute());
         $this->frontend = Frontend::fromRoutePart($parts[1]);

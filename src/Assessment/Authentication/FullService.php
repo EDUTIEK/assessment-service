@@ -6,27 +6,26 @@ namespace Edutiek\AssessmentService\Assessment\Authentication;
 
 use DateTimeImmutable;
 use Edutiek\AssessmentService\Assessment\Data\Token;
-use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 
 interface FullService
 {
     /**
-     * Create a new validity date for a token purpose
+     * Create a new validity date for a token.
      * A null value means endless validity
      */
-    public function newValitity(TokenPurpose $purpose): ?DateTimeImmutable;
+    public function newValitity(): ?DateTimeImmutable;
 
     /**
      * Create a new token of a user, assessment and purpose (not yet saved)
      */
-    public function newToken(int $user_id, TokenPurpose $purpose): Token;
+    public function newToken(int $user_id): Token;
 
     /**
      * Get the token of a user, assessment and purpose
      * This is used for the authorization of REST calls
      * Only one valid token should exist for the current user, assessment and purpose
      */
-    public function getToken(int $user_id, TokenPurpose $purpose): ?Token;
+    public function getToken(int $user_id): ?Token;
 
     /**
      * Save a token

@@ -114,6 +114,7 @@ class Internal implements ComponentApi, ComponentApiFactory
         return $this->instances[AppService::class] ??= new AppService(
             $this->dependencies->systemApi()->config(),
             $this->dependencies->restContext(),
+            fn() => $this->dependencies->repositories()->token(),
             $this
         );
     }
