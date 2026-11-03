@@ -10,8 +10,7 @@ final class UsageScope
         private readonly ?int $ass_id = null,
         private readonly ?int $task_id = null,
         private readonly ?int $writer_id = null,
-        private readonly ?int $corrector_id = null,
-        private readonly bool $user_id_used = false,
+        private readonly ?int $corrector_id = null
     ) {
     }
 
@@ -43,11 +42,6 @@ final class UsageScope
     public function getCorrectorId(): ?int
     {
         return $this->corrector_id;
-    }
-
-    public function isUserIdUsed(): bool
-    {
-        return $this->user_id_used;
     }
 
     public function isWriter(): bool

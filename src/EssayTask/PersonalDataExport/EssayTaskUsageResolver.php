@@ -50,8 +50,7 @@ class EssayTaskUsageResolver extends AbstractUsageResolver
             : null;
 
         if (
-            $query->isUserIdUsedUpstream()
-            || $essay !== null
+            $essay !== null
             || count($writer_notices) > 0
             || count($writing_step) > 0
             || $writer_prefs !== null) {

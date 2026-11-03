@@ -33,8 +33,7 @@ abstract class AbstractUsageResolver implements UsageResolver
             $current_scope->getAssId(),
             $current_scope->getTaskId(),
             $current_scope->getWriterId(),
-            $current_scope->getCorrectorId(),
-            $current_scope->isUserIdUsed()
+            $current_scope->getCorrectorId()
         );
     }
 
@@ -52,8 +51,7 @@ abstract class AbstractUsageResolver implements UsageResolver
             $ass_id ?? $current_query->getAssId(),
             $task_id ?? $current_query->getTaskId(),
             $writer_id ?? $current_query->getWriterId(),
-            $corrector_id ?? $current_query->getCorrectorId(),
-            $is_user_id_used || $current_query->isUserIdUsedUpstream()
+            $corrector_id ?? $current_query->getCorrectorId()
         );
     }
 

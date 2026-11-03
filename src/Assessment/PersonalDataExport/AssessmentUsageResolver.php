@@ -50,32 +50,6 @@ class AssessmentUsageResolver extends AbstractUsageResolver
             $writer = $this->writer_by_ass_id[$ass_id] ?? null;
             $writer_id = $writer?->getId() ?? null;
             $corrector_id = ($this->corrector_by_ass_id[$ass_id] ?? null)?->getId() ?? null;
-            $user_id_used = false;
-
-            $this->repositories->token()->oneByIdsAndPurpose($ass_id, $query->getUserId(), TokenPurpose::DATA);
-            $this->repositories->token()->oneByIdsAndPurpose($ass_id, $query->getUserId(), TokenPurpose::FILE);
-
-            $login = $this->user_service->getLoginByUserId($query->getUserId());
-            $log_entries = $this->repositories->logEntry()->allByAssIdAndLoginMentioned($ass_id, $login);
-
-            if (!empty($log_entries)) {
-                $user_id_used = true;
-            }
-
-            $mentioned_writer = $this->repositories->writer()->allByAssIdAndUserIdMentioned($ass_id, $query->getUserId());
-
-            if (!empty($mentioned_writer)) {
-                $user_id_used = true;
-            }
-
-            $token = $this->repositories->token()->allByUserIdAndAssId($query->getUserId(), $ass_id);
-            if (!empty($token)) {
-                $user_id_used = true;
-            }
-
-            // NotificationQueue (Technical)
-            // NotificationUser (Technical)
-
             $scopes[] = $this->createScope($query, $ass_id, null, $writer_id, $corrector_id);
         }
 
@@ -84,19 +58,17 @@ class AssessmentUsageResolver extends AbstractUsageResolver
 
     public function collectData(UsageScope $scope, array $sub_nodes): UsageNode
     {
+        $assessment_contains_data = false;
+
         $assembly = new AssessmentGroupAssembly($scope);
         $assembly->setLocations($this->repositories->location()->allByAssId($scope->getAssId()));
         $assembly->setGrades($this->repositories->gradeLevel()->allByAssId($scope->getAssId()));
-
-        $assembly->addAssmentInfo(
-            $this->repositories->orgaSettings()->one($scope->getAssId()),
-            $this->repositories->properties()->one($scope->getAssId())
-        );
 
         if ($scope->isCorrector()) {
             $assembly->addCorrector(
                 $this->repositories->corrector()->one($scope->getCorrectorId())
             );
+            $assessment_contains_data = true;
         }
 
         if ($scope->isWriter()) {
@@ -112,40 +84,53 @@ class AssessmentUsageResolver extends AbstractUsageResolver
             if (!empty($alerts)) {
                 $assembly->addAlerts($alerts);
             }
+            $assessment_contains_data = true;
         }
 
         $login = $this->user_service->getLoginByUserId($scope->getUserId());
         $log_entries = $this->repositories->logEntry()->allByAssIdAndLoginMentioned($scope->getAssId(), $login);
         if (!empty($log_entries)) {
             $assembly->addLogEntries($log_entries, $login);
+            $assessment_contains_data = true;
         }
-
-        $assembly->addPermissions(
-            $this->repositories->permissions()->allByAssIdAndUserId($scope->getAssId(), $scope->getUserId())
-        );
 
         $mentioned_writer = $this->repositories->writer()->allByAssIdAndUserIdMentioned($scope->getAssId(), $scope->getUserId());
         if (!empty($mentioned_writer)) {
             $assembly->addMentionsInWriter($mentioned_writer);
+            $assessment_contains_data = true;
         }
 
         $token = $this->repositories->token()->allByUserIdAndAssId($scope->getUserId(), $scope->getAssId());
         if (!empty($token)) {
             $assembly->addTokens($token);
+            $assessment_contains_data = true;
         }
 
         $final_nodes = [];
         foreach ($sub_nodes as $node) {
             foreach ($node->getGroupsForAssessment() as $group) {
                 $assembly->addSubGroup($group);
+                $assessment_contains_data = true;
             }
             foreach ($node->getGroupsFinal() as $group) {
                 $final_nodes[] = $group;
             }
         }
 
-        return new UsageNode($scope, array_merge([$assembly->getGroup()], $final_nodes), [], []);
-        //NotificationQueue W C A uid aid // Technical
-        //NotificationUser W C A uid aid // Technical
+        if($assessment_contains_data) {
+            $assembly->addAssmentInfo(
+                $this->repositories->orgaSettings()->one($scope->getAssId()),
+                $this->repositories->properties()->one($scope->getAssId())
+            );
+
+            $assembly->addPermissions(
+                $this->repositories->permissions()->allByAssIdAndUserId($scope->getAssId(), $scope->getUserId())
+            );
+
+            $final_nodes[] = $assembly->getGroup();
+        }
+
+
+        return $this->createNode($scope, $final_nodes, [], []);
     }
 }

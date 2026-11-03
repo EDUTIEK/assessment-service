@@ -29,7 +29,7 @@ class Export
      */
     public function createExportGroup($user_id): Group
     {
-        $query = new UsageQuery($user_id, null, null, null, null, false, [[$this->task_usage_resolver], $this->components_usage_resolver]);
+        $query = new UsageQuery($user_id, null, null, null, null, [[$this->task_usage_resolver], $this->components_usage_resolver]);
         $nodes = $this->assessment_usage_resolver->collectUsage($query);
         $groups = array_merge(...array_map(fn (UsageNode $node) => $node->getGroupsFinal(), $nodes));
 
@@ -77,7 +77,6 @@ class Export
         $this->delivery->sendFile($info->getId(), Disposition::INLINE, $info);
 
         $this->storage->deleteFile($info->getId());
-        #return $info->getId();
     }
 
 }

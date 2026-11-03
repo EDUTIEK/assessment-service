@@ -10,7 +10,6 @@ final class UsageQuery
         private readonly ?int $task_id = null,
         private readonly ?int $writer_id = null,
         private readonly ?int $corrector_id = null,
-        private readonly bool $user_id_used_upstream = false,
         /**
          * Aufrufkette der NÄCHSTEN Ebenen, als Stapel von Ebenen-Gruppen:
          *   steps[0] = UsageResolver[] der direkt nächsten Ebene
@@ -50,11 +49,6 @@ final class UsageQuery
         return $this->task_id;
     }
 
-    public function isUserIdUsedUpstream(): bool
-    {
-        return $this->user_id_used_upstream;
-    }
-
     /**
      * @return UsageResolver[]
      */
@@ -68,7 +62,6 @@ final class UsageQuery
         ?int $task_id = null,
         ?int $writer_id = null,
         ?int $corrector_id = null,
-        bool $user_id_used_upstream = false
     ): self {
         return new self(
             $this->user_id,
@@ -76,7 +69,6 @@ final class UsageQuery
             $task_id ?? $this->task_id,
             $writer_id ?? $this->writer_id,
             $corrector_id ?? $this->corrector_id,
-            $user_id_used_upstream || $this->user_id_used_upstream,
             array_slice($this->steps, 1)
         );
     }

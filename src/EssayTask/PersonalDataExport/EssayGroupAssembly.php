@@ -34,7 +34,7 @@ class EssayGroupAssembly extends AbstractGroupAssembly
         $writer_notices_group = new Group("Writer Notices");
         
         foreach ($notices as $notice) {
-            $sub_group = new Group("Notice " . $notice->getId());
+            $sub_group = new Group($notice->getId());
             $this->addWriterNoticeToGroup($sub_group, $notice);
             $writer_notices_group->addSubGroup($sub_group);
         }
@@ -51,7 +51,7 @@ class EssayGroupAssembly extends AbstractGroupAssembly
         $writing_steps_group = new Group("Writing Steps");
         
         foreach ($steps as $step) {
-            $sub_group = new Group("Writing Step" . $step->getId());
+            $sub_group = new Group($step->getId());
             $this->addWritingStepToGroup($sub_group, $step);
             $writing_steps_group->addSubGroup($sub_group);
         }

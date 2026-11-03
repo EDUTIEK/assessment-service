@@ -99,6 +99,10 @@ class CorrectionGroupAssembly extends AbstractGroupAssembly
             $group->addAttribute($this->attribute_factory->text("Summary Text", $summary->getSummaryText()));
         }
 
+        if($summary->getSummaryPdf() !== null) {
+            $group->addAttribute($this->attribute_factory->file("Summary PDF", $summary->getSummaryPdf()));
+        }
+
         if ($summary->getPoints() !== null) {
             $group->addAttribute($this->attribute_factory->number("Points", $summary->getPoints()));
         }

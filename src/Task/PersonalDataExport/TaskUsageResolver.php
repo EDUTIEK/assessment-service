@@ -38,8 +38,6 @@ class TaskUsageResolver extends AbstractUsageResolver
      */
     public function resolveUsages(UsageQuery $query): array
     {
-        // Only fetch all task_ids for an assessment. No need to search for usages of user_id here
-        // because it is not used in this component as for now. Also no need to check for usages of writer
         return array_map(
             fn (int $task_id) => $this->createScope($query, null, $task_id),
             $this->repositories->settings()->idsByAssId($query->getAssId())
@@ -54,32 +52,29 @@ class TaskUsageResolver extends AbstractUsageResolver
         $task_id = $scope->getTaskId();
         $ass_id = $scope->getAssId();
         $groups_for_assessment = [];
+        $task_contains_data = false;
 
         $assembly = new TaskGroupAssembly($scope);
-
-        // Add task settings
-        $settings = $this->repositories->settings()->one($task_id);
-        if ($settings !== null) {
-            $assembly->addTaskSettings($settings);
-        }
-
 
         if ($scope->isCorrector()) {
             // Add CorrectorTaskPrefs for this task
             $corrector_task_prefs = $this->repositories->correctorTaskPrefs()->oneByCorrectorIdAndTaskId($scope->getCorrectorId(), $task_id);
             if ($corrector_task_prefs !== null) {
                 $assembly->addCorrectorTaskPrefs($corrector_task_prefs);
+                $task_contains_data = true;
             }
 
             // Add CorrectorTemplates for this task
             $corrector_template = $this->repositories->correctorTemplates()->oneByTaskIdAndCorrectorId($scope->getCorrectorId(), $task_id);
             if ($corrector_template !== null) {
                 $assembly->addCorrectorTemplates($corrector_template);
+                $task_contains_data = true;
             }
 
             $rating_criterion = $this->repositories->ratingCriterion()->allByTaskIdAndCorrectorId($task_id, $scope->getCorrectorId());
             if(!empty($rating_criterion)) {
                 $assembly->addOwnRatingCriterions($rating_criterion);
+                $task_contains_data = true;
             }
         }
 
@@ -88,6 +83,7 @@ class TaskUsageResolver extends AbstractUsageResolver
             $annotations = $this->repositories->writerAnnotation()->allByWriterIdAndTaskId($scope->getWriterId(), $task_id);
             if(!empty($annotations)) {
                 $assembly->addWriterAnnotations($annotations);
+                $task_contains_data = true;
             }
         }
 
@@ -114,6 +110,7 @@ class TaskUsageResolver extends AbstractUsageResolver
         // Add the correction group to the task assembly
         if(!empty($corrector_assignments)) {
             $assembly->addSubGroup($correction_assembly->getGroup());
+            $task_contains_data = true;
         }
 
         // Add CorrectorPrefs and CorrectorSnippets only once per assessment+writer_id or assessment+corrector_id
@@ -151,13 +148,27 @@ class TaskUsageResolver extends AbstractUsageResolver
             }
             foreach ($node->getGroupsForTask() as $group) {
                 $assembly->addSubGroup($group);
+                $task_contains_data = true;
             }
             foreach ($node->getGroupsFinal() as $group) {
                 $final_groups[] = $group;
             }
         }
-        $groups_for_assessment[] = $assembly->getGroup();
 
-        return new UsageNode($scope, $final_groups, $groups_for_assessment, []);
+        if($task_contains_data) {
+            // Add task settings
+            $settings = $this->repositories->settings()->one($task_id);
+            if ($settings !== null) {
+                $assembly->addTaskSettings($settings);
+            }
+            $groups_for_assessment[] = $assembly->getGroup();
+        }
+        // Add task settings
+        $settings = $this->repositories->settings()->one($task_id);
+        if ($settings !== null) {
+            $assembly->addTaskSettings($settings);
+        }
+
+        return $this->createNode($scope, $final_groups, $groups_for_assessment, []);
     }
 }
