@@ -32782,7 +32782,6 @@ class AnnotationEditorLayer {
       } = util_FeatureTest.platform;
       // edutiek-patch: begin
       if (this.#uiManager.disableFreeForm || event.button !== 0 || event.ctrlKey && isMac) {
-        event.preventDefault();
 	// edutiek-patch: end
         return;
       }
