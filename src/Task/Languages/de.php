@@ -48,6 +48,7 @@ return [
     'summary_not_found' => 'Korrektur nicht gefunden',
     'task_solution' => "Lösungshinweise",
     'invalid_import_assignment' => 'Fehlerhafte Zuweisung in Zeile %d',
+    'warning_import_assignment' => 'Das Entfernen der Zuweisung in Zeile %d löscht Daten',
     'writer_not_found' => 'Teilnehmer mit Anmeldename "%2$s" in Zeile %1$d nicht gefunden.',
     'corrector_not_found_pos' => 'Korrektor %3$d mit Anmeldename "%2$s" in Zeile %1$d nicht gefunden.',
     'corrector_not_found_task' => 'Korrektor für Aufgabe %3$s mit Anmeldename "%2$s" in Zeile %1$d nicht gefunden.',

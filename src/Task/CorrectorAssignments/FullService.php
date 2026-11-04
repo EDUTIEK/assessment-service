@@ -79,6 +79,6 @@ interface FullService extends ReadService
      * Assign correctors to writers from spreadsheet data created with self::importSpreadsheet
      * @return string[] error strings, good if empty
      */
-    public function assignSpreadsheetData(array $data, bool $dry_run = false): array;
+    public function assignSpreadsheetData(array $data, bool $dry_run = false): Result;
 
 }

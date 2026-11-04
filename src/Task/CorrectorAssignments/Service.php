@@ -530,10 +530,16 @@ readonly class Service implements FullService
         return $assignments = $ea->importAssignments($data);
     }
 
-    public function assignSpreadsheetData(array $data, bool $dry_run = false): array
+    public function assignSpreadsheetData(array $data, bool $dry_run = false): Result
     {
-        $errors = [];
+        $all_result = new Result();
         $ea = $this->internal->excelAssignmentData($this->ass_id, $this->user_id, false);
+        foreach ($ea->getErrors() as $error) {
+            $all_result->addFailure($error);
+        }
+        if ($all_result->isFailed()) {
+            return $all_result;
+        }
 
         if ($ea->isMultiTask()) {
             foreach ($data as $writer_id => $task_assignments) {
@@ -547,9 +553,13 @@ readonly class Service implements FullService
                         $dry_run,
                         true
                     );
-                    if ($result->isFailed()) {
-                        $errors[] = sprintf($this->lang->txt('invalid_import_assignment'), $row_id)
-                            . ': ' . implode('; ', $result->failures());
+                    if (!empty($result->failures())) {
+                        $all_result->addFailure(sprintf($this->lang->txt('invalid_import_assignment'), $row_id)
+                            . ': ' . implode('; ', $result->failures()));
+                    }
+                    if (!empty($result->notes())) {
+                        $all_result->addNote(sprintf($this->lang->txt('warning_import_assignment'), $row_id)
+                            . ': ' . implode('; ', $result->notes()));
                     }
                 }
             }
@@ -569,14 +579,18 @@ readonly class Service implements FullService
                 }
 
                 $result = $this->assignCorrectors($task, $writer_id, $first, $second, $stitch, $dry_run, true);
-                if ($result->isFailed()) {
-                    $errors[] = sprintf($this->lang->txt('invalid_import_assignment'), $row_id)
-                        . ': ' . implode('; ', $result->failures());
+                if (!empty($result->failures())) {
+                    $all_result->addFailure(sprintf($this->lang->txt('invalid_import_assignment'), $row_id)
+                        . ': ' . implode('; ', $result->failures()));
+                }
+                if (!empty($result->notes())) {
+                    $all_result->addNote(sprintf($this->lang->txt('warning_import_assignment'), $row_id)
+                        . ': ' . implode('; ', $result->notes()));
                 }
             }
         }
 
-        return array_merge($ea->getErrors(), $errors);
+        return $all_result;
     }
 
     /**
