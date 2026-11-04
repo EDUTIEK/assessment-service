@@ -69,6 +69,7 @@ readonly class Service implements FullService
         foreach ($this->repos->location()->allByAssId($this->ass_id) as $location) {
             if (!in_array($location->getTitle(), $titles)) {
                 $this->repos->location()->delete($location->getId());
+                $this->repos->writer()->removeLocation($this->ass_id, $location->getId());
             } else {
                 $existing[] = $location->getTitle();
             }
