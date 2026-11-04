@@ -331,7 +331,6 @@ readonly class Service implements FullService
         int $second_corrector_id,
         int $stitch_corrector_id,
         $dry_run = false,
-        $check_combination_only = false,
         $ignore_unchanged = false,
     ): Result {
         $corrector_ids = [
@@ -424,15 +423,11 @@ readonly class Service implements FullService
         if (count($ids) > 0 && count($ids) !== count(array_unique($ids))) {
             $result->addFailure($this->lang->txt('failure_corrector_assigned_twice'));
         }
-        if ($check_combination_only) {
-            return $result;
-        }
-
         if ($change_authorized) {
             $result->addFailure($this->lang->txt('failure_change_assigment_of_authorized'));
         }
         if ($delete_with_data) {
-            $result->addFailure($this->lang->txt('failure_delete_assignment_with_data'));
+            $result->addNote($this->lang->txt('warning_delete_assignment_with_data'));
         }
         if (!$change_any && !$ignore_unchanged) {
             $result->addFailure($this->lang->txt('failure_assignment_unchanged'));
@@ -550,7 +545,6 @@ readonly class Service implements FullService
                         self::BLANK_CORRECTOR_ASSIGNMENT,
                         self::BLANK_CORRECTOR_ASSIGNMENT,
                         $dry_run,
-                        false,
                         true
                     );
                     if ($result->isFailed()) {
@@ -574,7 +568,7 @@ readonly class Service implements FullService
                     $task = $task_id;
                 }
 
-                $result = $this->assignCorrectors($task, $writer_id, $first, $second, $stitch, $dry_run, false, true);
+                $result = $this->assignCorrectors($task, $writer_id, $first, $second, $stitch, $dry_run, true);
                 if ($result->isFailed()) {
                     $errors[] = sprintf($this->lang->txt('invalid_import_assignment'), $row_id)
                         . ': ' . implode('; ', $result->failures());
