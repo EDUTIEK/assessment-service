@@ -400,7 +400,7 @@ readonly class Service implements FullService
                     $assignment->getWriterId(),
                     $assignment->getCorrectorId()
                 )
-                || $this->repos->correctorComment()->hasByTaskIdAndWriterIdAndCorrectorId(
+                || $this->repos->correctorPoints()->hasByTaskIdAndWriterIdAndCorrectorId(
                     $old_assignment->getTaskId(),
                     $assignment->getWriterId(),
                     $assignment->getCorrectorId()
