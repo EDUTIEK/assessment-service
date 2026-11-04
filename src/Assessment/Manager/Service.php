@@ -90,11 +90,10 @@ readonly class Service implements FullService
     }
 
     /**
-     * Clone all data of an assessment with the id given in the constructor of this service
+     * Clone all settings data of an assessment with the id given in the constructor of this service
      */
     public function clone(int $new_ass_id): void
     {
-        // clone the settings
         $this->repos->orgaSettings()->save(
             ($this->repos->orgaSettings()->one($this->ass_id) ?? $this->repos->orgaSettings()->new())
             ->setAssId($new_ass_id)
@@ -117,9 +116,12 @@ readonly class Service implements FullService
             $this->repos->disabledGroup()->save($entity->setAssId($new_ass_id));
         }
 
-        // clone data that is not user-related
         foreach ($this->repos->notificationSettings()->allByAssId($this->ass_id) as $entity) {
             $this->repos->notificationSettings()->save($entity->setId(0)->setAssId($new_ass_id));
+        }
+
+        foreach ($this->repos->notificationUser()->allByAssId($this->ass_id) as $entity) {
+            $this->repos->notificationUser()->save($entity->setId(0)->setAssId($new_ass_id));
         }
 
         foreach ($this->repos->gradeLevel()->allByAssId($this->ass_id) as $entity) {
@@ -133,7 +135,6 @@ readonly class Service implements FullService
             $this->repos->pdfConfig()->save($entity->setId(0)->setAssId($new_ass_id));
         }
 
-        // clone the tasks
         foreach ($this->tasks->all() as $task) {
             $this->tasks->clone($task->getId(), $new_ass_id);
         }
