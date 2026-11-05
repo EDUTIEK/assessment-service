@@ -42,11 +42,11 @@ interface FullService extends ReadService
      * - an assignment to change has an authorized correction,
      * - all assignments are untouched
      *
-     * Existing correction summaries and comments are moved to the new corrector .
-     * If the assignment of an existing correction is removed, the summaries and comments are removed too!
-     * Criterion points are removed if an existing correction is changed or removed because they can be individual
-     *   and not reused by the new assigned corrector
-     */
+     * Existing correction summaries and comments are moved to the new corrector.
+     * Criterion points are removed because they can be individual and not reused by the new assigned corrector.
+     *
+     * If the assignment of an existing correction is removed, the summary, comments, and points are removed too!
+ */
     public function assignCorrectors(
         int $task_id,
         int $writer_id,
@@ -54,7 +54,6 @@ interface FullService extends ReadService
         int $second_corrector_id,
         int $stitch_corrector_id,
         $dry_run = false,
-        $check_combination_only = false,
         $ignore_unchanged = false
     ): Result;
 
@@ -80,6 +79,6 @@ interface FullService extends ReadService
      * Assign correctors to writers from spreadsheet data created with self::importSpreadsheet
      * @return string[] error strings, good if empty
      */
-    public function assignSpreadsheetData(array $data, bool $dry_run = false): array;
+    public function assignSpreadsheetData(array $data, bool $dry_run = false): Result;
 
 }
