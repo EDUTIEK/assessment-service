@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Api\Internal;
-use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Throwable;
 use Edutiek\AssessmentService\System\Config\Frontend;
@@ -81,6 +80,14 @@ class Service implements OpenService, RestService
      */
     private function initForRestCall(): bool
     {
+        if ($this->context->getRequestMethod() === 'OPTIONS') {
+            $this->context->sendResponse(200, '', [
+                'Access-Control-Allow-Origin' => '*',
+                'Access-Control-Allow-Headers' => '*',
+                'Access-Control-Expose-Headers' => 'X-Edutiek-Token'
+            ]);
+        }
+
         // init the hosting system for the REST call (e.g. set the current user)
         $this->context->initCall();
 

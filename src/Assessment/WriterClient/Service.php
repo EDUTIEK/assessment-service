@@ -7,7 +7,6 @@ namespace Edutiek\AssessmentService\Assessment\WriterClient;
 use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\WriterClient;
-use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\System\Entity\Service as EntityService;
 use Edutiek\AssessmentService\Assessment\Data\Token;
@@ -94,7 +93,7 @@ class Service implements ReadService, FullService
      */
     private function currentToken(Writer $writer): ?Token
     {
-        return $this->repos->token()->oneByIdsAndPurpose($writer->getUserId(), $writer->getAssId(), TokenPurpose::DATA);
+        return $this->repos->token()->oneByUserAndAssId($writer->getUserId(), $writer->getAssId());
     }
 
     private function checkScope(int $writer_id): void

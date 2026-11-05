@@ -12,6 +12,13 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 interface RestContext
 {
     /**
+     * @return array<string, string>
+     */
+    public function getHeaders(): array;
+
+    public function getRequestMethod(): string;
+
+    /**
      * Get the route of the current REST call
      * This is a path following the invoked skript
      * e.g. /writer/data
@@ -38,5 +45,5 @@ interface RestContext
     /**
      * Send a response to the front end application
      */
-    public function sendResponse(int $status_code, string $body): never;
+    public function sendResponse(int $status_code, string $body, array $headers = []): never;
 }

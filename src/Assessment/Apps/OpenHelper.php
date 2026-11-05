@@ -6,7 +6,6 @@ namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Authentication\FullService as Authentication;
 use Edutiek\AssessmentService\Assessment\Data\Token;
-use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigReadService;
 
 readonly class OpenHelper
@@ -30,8 +29,7 @@ readonly class OpenHelper
         $this->setFrontendParam('AssId', (string) $this->ass_id);
         $this->setFrontendParam('ContextId', (string) $this->context_id);
         $this->setFrontendParam('UserId', (string) $this->user_id);
-        $this->setFrontendParam('DataToken', $this->createToken(TokenPurpose::DATA)->getToken());
-        $this->setFrontendParam('FileToken', $this->createToken(TokenPurpose::FILE)->getToken());
+        $this->setFrontendParam('DataToken', $this->createToken()->getToken());
     }
 
     /**
@@ -72,9 +70,9 @@ readonly class OpenHelper
     /**
      * Generate a new token and save it
      */
-    private function createToken(TokenPurpose $purpose): Token
+    private function createToken(): Token
     {
-        $token = $this->auth->newToken($this->user_id, $purpose);
+        $token = $this->auth->newToken($this->user_id);
         $this->auth->saveToken($token);
         return $token;
     }

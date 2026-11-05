@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Api\ComponentApiFactory;
-use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\File\Disposition;
 use Fig\Http\Message\StatusCodeInterface;
@@ -33,6 +32,11 @@ abstract class BaseApp implements RestService
         protected readonly RestContext $rest_context,
         protected readonly Delivery $delivery
     ) {
+        $this->app->add(
+            fn($r, $h) => $h->handle($r)
+                        // ->withAddedHeader('X-Edutiek-Token', 'huhu') // Update token
+                        ->withAddedHeader('Access-Control-Expose-Headers', 'X-Edutiek-Token')
+        );
     }
 
     /**
@@ -44,12 +48,12 @@ abstract class BaseApp implements RestService
     /**
      * Prepare handling the REST call
      * This must be called by all functions assigned to routes
-     * It can't be done in handle() because the TokenPurpose depends on the function
      */
-    protected function prepare(Request $request, Response $response, array $args, TokenPurpose $purpose): void
+    protected function prepare(Request $request, Response $response, array $args): void
     {
         $params = $request->getQueryParams();
-        $this->rest_helper->checkAuth($purpose, $params['signature'] ?? '');
+        // $this->rest_helper->checkHeaderAuth($request);
+        // $this->rest_helper->checkAuth($purpose, $params['signature'] ?? '');
         $this->rest_helper->checkAccess();
     }
 
@@ -58,7 +62,7 @@ abstract class BaseApp implements RestService
      */
     public function getData(Request $request, Response $response, array $args): Response
     {
-        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+        $this->prepare($request, $response, $args);
 
         $data = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
@@ -78,7 +82,7 @@ abstract class BaseApp implements RestService
      */
     public function getUpdate(Request $request, Response $response, array $args): Response
     {
-        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+        $this->prepare($request, $response, $args);
 
         $data = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
@@ -99,7 +103,7 @@ abstract class BaseApp implements RestService
      */
     public function getFile(Request $request, Response $response, array $args): void
     {
-        $this->prepare($request, $response, $args, TokenPurpose::FILE);
+        $this->prepare($request, $response, $args);
 
         $component = $args['component'] ?? '';
         $entity = $args['entity'] ?? null;
@@ -132,7 +136,7 @@ abstract class BaseApp implements RestService
      */
     public function putChanges(Request $request, Response $response, array $args): Response
     {
-        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+        $this->prepare($request, $response, $args);
 
         $json = [];
 

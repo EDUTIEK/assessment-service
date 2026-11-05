@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
-use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\System\Config\Frontend;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -28,11 +27,10 @@ class AppCorrector extends BaseApp implements RestService
     /**
      * Prepare handling the REST call
      * This must be called by all functions assigned to routes
-     * It can't be done in handle() because the TokenPurpose depends on the function
      */
-    protected function prepare(Request $request, Response $response, array $args, TokenPurpose $purpose): void
+    protected function prepare(Request $request, Response $response, array $args): void
     {
-        parent::prepare($request, $response, $args, $purpose);
+        parent::prepare($request, $response, $args);
 
         // todo: check if user is corrector or has permission to maintain correctors
     }
@@ -45,7 +43,7 @@ class AppCorrector extends BaseApp implements RestService
         $task_id = (int) ($args['task_id'] ?? 0);
         $writer_id = (int) ($args['writer_id'] ?? 0);
 
-        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+        $this->prepare($request, $response, $args);
 
         $data = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
@@ -60,7 +58,7 @@ class AppCorrector extends BaseApp implements RestService
 
     public function postFile(Request $request, Response $response, array $args): Response
     {
-        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+        $this->prepare($request, $response, $args);
 
         $component = (string) ($args['component'] ?? null);
         $entity = (string) ($args['entity'] ?? null);
