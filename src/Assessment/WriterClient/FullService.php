@@ -6,7 +6,7 @@ namespace Edutiek\AssessmentService\Assessment\WriterClient;
 
 use Edutiek\AssessmentService\Assessment\Data\WriterClient;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
-use ILIAS\Plugin\LongEssayAssessment\System\Data\Token;
+use Edutiek\AssessmentService\System\Data\Token;
 
 interface FullService extends ReadService
 {
