@@ -4,16 +4,26 @@ function run()
 {
     window.localStorage.removeItem('pdfjs.history');
     window.localStorage.removeItem('pdfjs.preferences');
-    setup(forwardEvent, actions => {
-        window.addEventListener('message', event => {
-            const p = then(null, () => actions[event.data.name](...event.data.args));
-            p.then(value => window.parent.postMessage({response: {id: event.data.id, value}}));
-            p.catch(error => window.parent.postMessage({response: {id: event.data.id, value: error, error: true}}));
+    window.addEventListener('message', e => {
+        if (window.waitForEdutiekHeaders) {
+            window.waitForEdutiekHeaders(e.data.headers || {});
+        } else {
+            window.edutiekProvideHeaders = e.data.headers || {};
+        }
+        setup(forwardEvent, actions => {
+            window.addEventListener('message', event => {
+                const p = then(null, () => actions[event.data.name](...event.data.args));
+                p.then(value => window.parent.postMessage({response: {id: event.data.id, value}}));
+                p.catch(error => window.parent.postMessage({response: {id: event.data.id, value: error, error: true}}));
+            });
         });
-    });
+    }, {once: true});
+    window.parent.postMessage('init');
     
     window.addEventListener('beforeunload', () => {
-        PDFViewerApplication.pdfViewer.pdfDocument.annotationStorage.resetModified();
+        if (PDFViewerApplication.pdfViewer.pdfDocument) {
+            PDFViewerApplication.pdfViewer.pdfDocument.annotationStorage.resetModified();
+        }
     });
 
     function forwardEvent(name, detail)
