@@ -26,7 +26,8 @@ class Service implements RestHelper
 
     public function createToken(int $user_id): string
     {
-        return $this->repo->new($user_id)->getToken();
+        $this->token = $this->repo->new($user_id);
+        return $this->token->getToken();
     }
 
     public function deleteToken(): void
@@ -74,7 +75,9 @@ class Service implements RestHelper
         }
 
         $this->repo->save($this->token->setNewValidity());
+        $this->context->initUser($this->token->getUserId());
         $this->context->setAlive($this->token->getUserId());
+
         return $this->token->getUserId();
     }
 

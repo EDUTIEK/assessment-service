@@ -43,6 +43,11 @@ interface RestContext
     public function initCall(): void;
 
     /**
+     * Init a user account for the REST call
+     */
+    public function initUser(int $user_id): void;
+
+    /**
      * Extend a user session in the client system
      */
     public function setAlive(int $user_id): void;
