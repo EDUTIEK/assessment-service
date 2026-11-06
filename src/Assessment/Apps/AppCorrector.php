@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
+use Edutiek\AssessmentService\System\Rest\RestHandler;
+use Edutiek\AssessmentService\System\Rest\RestException;
 use Edutiek\AssessmentService\System\Config\Frontend;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class AppCorrector extends BaseApp implements RestService
+class AppCorrector extends BaseApp implements RestHandler
 {
     protected Frontend $frontend = Frontend::CORRECTOR;
 
@@ -52,8 +54,7 @@ class AppCorrector extends BaseApp implements RestService
                 $data[$component] = $bridge->getItem($task_id, $writer_id);
             }
         }
-        $this->rest_helper->extendDataToken($response);
-        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
+        return $this->rest_helper->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $data);
     }
 
     public function postFile(Request $request, Response $response, array $args): Response
@@ -85,8 +86,6 @@ class AppCorrector extends BaseApp implements RestService
             throw new RestException("Saving error", RestException::INTERNAL_SERVER_ERROR);
         }
 
-        $this->rest_helper->setAlive();
-        $this->rest_helper->extendDataToken($response);
-        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $json);
+        return $this->rest_helper->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $json);
     }
 }

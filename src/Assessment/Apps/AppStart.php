@@ -8,30 +8,31 @@ use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App as SlimApp;
-use Edutiek\AssessmentService\Assessment\Authentication\FullService as Tokens;
 use Edutiek\AssessmentService\System\Api\ForServices as SystemApi;
 use Edutiek\AssessmentService\System\Config\Frontend;
 use Edutiek\AssessmentService\System\Auth\FullService as AuthService;
 use Edutiek\AssessmentService\System\User\ReadService as UserService;
+use Edutiek\AssessmentService\System\Rest\RestHandler;
 use Edutiek\AssessmentService\Views\Api\ForRest as ViewsRestApi;
-use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
+use Edutiek\AssessmentService\System\Rest\RestHelper;
+use Edutiek\AssessmentService\System\Rest\RestException;
 
-class AppStart implements RestService
+class AppStart implements RestHandler
 {
     protected ?int $user_id;
     protected AuthService $auth;
     protected UserService $users;
-
+    protected RestHelper $rest;
 
     public function __construct(
         protected readonly Frontend $frontend,
         protected readonly SlimApp $app,
         protected readonly ViewsRestApi $views,
         protected readonly SystemApi $system,
-        protected readonly Tokens $tokens
     ) {
         $this->auth = $system->auth();
         $this->users = $system->user();
+        $this->rest = $system->restHelper();
     }
 
     public function handle(): never
@@ -54,27 +55,14 @@ class AppStart implements RestService
      */
     private function prepare(Request $request, bool $check_active = true, bool $check_agreement = true): void
     {
-        $header = $request->getHeaderLine('Authorization');
-        $token = null;
-        if (preg_match('/Bearer\s(\S+)/', $header, $matches)) {
-            $token = $this->tokens->getByValue($matches[1]);
-        }
-
-        if ($token === null) {
-            throw new RestException('current token is not found', RestException::UNAUTHORIZED);
-        }
-        if (!$this->tokens->checkValidity($token)) {
-            throw new RestException('current token is expired', RestException::UNAUTHORIZED);
-        }
-
-        $this->user_id = $token->getUserId();
+        $this->user_id = $this->rest->authenticate();
 
         if ($check_active && !$this->auth->isActive($this->user_id)) {
             throw new RestException('user is not active', RestException::UNAUTHORIZED);
         }
 
         if ($check_agreement && !$this->auth->hasAcceptedAgreement($this->user_id)) {
-            throw new RestException('user is not active', RestException::UNAUTHORIZED);
+            throw new RestException('user has not accepted the agreement', RestException::UNAUTHORIZED);
         }
     }
 
@@ -93,23 +81,19 @@ class AppStart implements RestService
 
         if (empty($this->user_id)) {
             $data = ['failed_message' => $this->auth->failedMessage($login)];
-            return $this->setResponse($response, StatusCodeInterface::STATUS_UNAUTHORIZED, $data);
+            return $this->rest->setJsonResponse($response, StatusCodeInterface::STATUS_UNAUTHORIZED, $data);
         }
 
         $user_data = $this->users->getUser($this->user_id);
-        $token = $this->tokens->newToken($this->user_id, TokenPurpose::LOGIN);
-        $this->tokens->saveToken($token);
-
         $data = [
             'user_id' => $this->user_id,
-            'token' => $token->getToken(),
             'full_name' => $user_data->getFullname(false),
             'agreement' => $this->auth->getAgreement($this->user_id),
             'accepted' => $this->auth->hasAcceptedAgreement($this->user_id),
         ];
 
-        return $this->setResponse($response, StatusCodeInterface::STATUS_OK, $data)
-            ->withHeader('xlaslogintoken', $token->getToken());
+        $this->rest->createToken($this->user_id);
+        return $this->rest->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $data);
     }
 
     /**
@@ -119,11 +103,11 @@ class AppStart implements RestService
     {
         try {
             $this->prepare($request, false, false);
-            $this->tokens->deleteToken($this->user_id, TokenPurpose::LOGIN);
+            $this->rest->deleteToken();
+        } catch (RestException $e) {
         }
-        catch (RestException $e) {}
 
-        return $this->setResponse($response, StatusCodeInterface::STATUS_OK, []);
+        return $this->rest->setJsonResponse($response, StatusCodeInterface::STATUS_OK, []);
     }
 
     /**
@@ -134,7 +118,7 @@ class AppStart implements RestService
         $this->prepare($request, true, false);
 
         $this->auth->acceptAgreement($this->user_id);
-        return $this->setResponse($response, StatusCodeInterface::STATUS_OK, []);
+        return  $this->rest->setJsonResponse($response, StatusCodeInterface::STATUS_OK, []);
     }
 
     /**
@@ -163,7 +147,7 @@ class AppStart implements RestService
             }
         }
 
-        return $this->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
+        return  $this->rest->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $data);
     }
 
     /**
@@ -180,21 +164,6 @@ class AppStart implements RestService
 
         // TODO: create and add the required data
 
-        return $this->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
+        return $this->rest->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $data);
     }
-
-    /**
-     * Modify the response with a status code and json return
-     * @param string|array $data
-     */
-    private function setResponse(Response $response, int $status, $data = []): Response
-    {
-        $response = $response
-            ->withHeader('Content-Type', 'application/json')
-            ->withHeader('xlasTime', (string) time())
-            ->withStatus($status);
-        $response->getBody()->write(json_encode($data, JSON_INVALID_UTF8_SUBSTITUTE));
-        return $response;
-    }
-
 }

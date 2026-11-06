@@ -15,7 +15,6 @@ use Edutiek\AssessmentService\System\HtmlProcessing\FullService as HtmlProcessin
 use Edutiek\AssessmentService\System\ImageSketch\FullService as ImageSketchFullService;
 use Edutiek\AssessmentService\System\ImageSketch\ImageMagick\Sketch;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageFullService;
-use Edutiek\AssessmentService\System\Log\FullService as LogService;
 use Edutiek\AssessmentService\System\Mail\Delivery as MailDelivery;
 use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverterFullService;
 use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreatorFullService;
@@ -23,6 +22,9 @@ use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessingS
 use Edutiek\AssessmentService\System\Session\Storage as SessionStorage;
 use Edutiek\AssessmentService\System\Spreadsheet\FullService as SpreadsheetService;
 use Edutiek\AssessmentService\System\User\ReadService as UserService;
+use Psr\Log\LoggerInterface;
+use Edutiek\AssessmentService\System\Rest\RestHelper;
+use Edutiek\AssessmentService\System\Rest\RestContext;
 
 class ForServices
 {
@@ -96,16 +98,16 @@ class ForServices
 
     /**
      * Service vor translating language variables
-     * Components using it must provide language files in the given directory (absolue path)
-     * A language file is named by the laoguage code, e.g. de.php
-     * it must return a php array with key/value pairs of language variables
+     * Components using it must provide language files in the given directory (absolute path)
+     * A language file is named by the language code, e.g., de.php
+     * it must return key/value pairs of language variables
      */
     public function language(int $user_id, string $dir): LanguageFullService
     {
         return $this->internal->language($user_id, $dir);
     }
 
-    public function log(): LogService
+    public function log(): LoggerInterface
     {
         return $this->dependencies->log();
     }
@@ -133,6 +135,11 @@ class ForServices
     public function pdfProcessing(): PdfProcessingService
     {
         return $this->internal->pdfProcessing();
+    }
+
+    public function restHelper(): RestHelper
+    {
+        return $this->internal->restHelper();
     }
 
     public function session(string $section): SessionStorage

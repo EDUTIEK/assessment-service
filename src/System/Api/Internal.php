@@ -38,6 +38,7 @@ use Edutiek\AssessmentService\System\Spreadsheet\Service as SpreadsheetService;
 use Edutiek\AssessmentService\System\Transform\Service as TransformService;
 use Edutiek\AssessmentService\System\User\Service as UserService;
 use Edutiek\AssessmentService\System\HtmlProcessing\Service as HtmlProcessingService;
+use Edutiek\AssessmentService\System\Rest\Service as RestHelperService;
 
 class Internal
 {
@@ -146,6 +147,16 @@ class Internal
     {
         return  $this->instances[BackgroundTaskService::class] ??= new BackgroundTaskService(
             $this->dependencies->backgroundTaskManager()
+        );
+    }
+
+    public function restHelper(): RestHelperService
+    {
+        return $this->instances[RestHelperService::class] ?? new RestHelperService(
+            $this->dependencies->tokenRepo(),
+            $this->config(),
+            $this->user(),
+            $this->dependencies->restContext()
         );
     }
 

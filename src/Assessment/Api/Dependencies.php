@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Api;
 
-use Edutiek\AssessmentService\Assessment\Apps\RestContext;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskApi as TaskApi;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TypeApiFactory as TypeApiFactory;
@@ -22,5 +21,4 @@ interface Dependencies
     public function eventDispatcher(int $ass_id, int $user_id): Dispatcher;
     public function constraintCollector(int $ass_id, int $user_id): Collector;
     public function repositories(): Repositories;
-    public function restContext(): RestContext;
 }

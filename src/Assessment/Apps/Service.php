@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Api\Internal;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Throwable;
 use Edutiek\AssessmentService\System\Config\Frontend;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
+use Edutiek\AssessmentService\System\Rest\RestHandler;
+use Edutiek\AssessmentService\System\Rest\RestException;
+use Edutiek\AssessmentService\System\Rest\RestHelper;
 
-class Service implements OpenService, RestService
+class Service implements OpenService, RestHandler
 {
     private Frontend $frontend;
     private int $ass_id;
@@ -19,14 +21,14 @@ class Service implements OpenService, RestService
 
     public function __construct(
         private readonly ConfigService $config,
-        private readonly RestContext $context,
+        private readonly RestHelper $rest,
         private readonly Internal $internal
     ) {
     }
 
     /**
      * Init the service properties for a use by the client api
-     * Here the assessment and user ids are already provided by the API
+     * the API already provides the assessment id and user id
      */
     public function initForClientApi(int $ass_id, int $user_id): self
     {
@@ -42,8 +44,7 @@ class Service implements OpenService, RestService
     {
         $this->frontend = Frontend::WRITER;
         $this->context_id = $context_id;
-        $helper = $this->internal->openHelper($this->ass_id, $this->context_id, $this->user_id);
-        $helper->setCommonFrontendParams($return_url);
+        $this->setCommonFrontendParams($return_url);
 
         // must be done after the token is created
         $settings = $this->internal->orgaSettings($this->ass_id, $this->user_id)->get();
@@ -54,7 +55,7 @@ class Service implements OpenService, RestService
             }
         }
 
-        $helper->openFrontend($this->config->getFrontendUrl($this->frontend));
+        $this->openFrontend($this->config->getFrontendUrl($this->frontend));
     }
 
     /**
@@ -65,54 +66,12 @@ class Service implements OpenService, RestService
         $this->frontend = Frontend::CORRECTOR;
         $this->context_id = $context_id;
         $permissions = $this->internal->permissions($this->ass_id, $this->context_id, $this->user_id);
-        $helper = $this->internal->openHelper($this->ass_id, $this->context_id, $this->user_id);
-        $helper->setCommonFrontendParams($return_url);
-        $helper->setFrontendParam('TaskId', (string) $task_id);
-        $helper->setFrontendParam('WriterId', (string) $writer_id);
-        $helper->setFrontendParam('AsAdmin', ($as_admin && $permissions->canMaintainCorrectors()) ? 'true' : 'false');
-        $helper->openFrontend($this->config->getFrontendUrl($this->frontend));
-    }
+        $this->setCommonFrontendParams($return_url);
+        $this->setFrontendParam('TaskId', (string) $task_id);
+        $this->setFrontendParam('WriterId', (string) $writer_id);
+        $this->setFrontendParam('AsAdmin', ($as_admin && $permissions->canMaintainCorrectors()) ? 'true' : 'false');
 
-    /**
-     * Init the service from a REST call
-     * Here the properties have to be extracted from the call
-     * @return bool start handler is required
-     */
-    private function initForRestCall(): bool
-    {
-        if ($this->context->getRequestMethod() === 'OPTIONS') {
-            $this->context->sendResponse(200, '', [
-                'Access-Control-Allow-Origin' => '*',
-                'Access-Control-Allow-Headers' => '*',
-                'Access-Control-Expose-Headers' => 'X-Edutiek-Token'
-            ]);
-        }
-
-        // init the hosting system for the REST call (e.g. set the current user)
-        $this->context->initCall();
-
-        $parts = explode('/', $this->context->getRoute());
-        $this->frontend = Frontend::fromRoutePart($parts[1]);
-        if ($this->frontend === null) {
-            throw new RestException("Frontend not found by the REST route", RestException::NOT_FOUND);
-        }
-
-        // App start detected
-        if (($parts[2] ?? '') == 'start') {
-            return true;
-        }
-
-        $params = $this->context->getParams();
-        foreach (['ass_id', 'context_id', 'user_id'] as $key) {
-            if (!isset($params[$key])) {
-                throw new RestException("Query parameter $key is missing", RestException::NOT_FOUND);
-            }
-        }
-        $this->ass_id = (int) $params['ass_id'];
-        $this->context_id = (int) $params['context_id'];
-        $this->user_id = (int) $params['user_id'];
-
-        return false;
+        $this->openFrontend($this->config->getFrontendUrl($this->frontend));
     }
 
     /**
@@ -121,16 +80,37 @@ class Service implements OpenService, RestService
     public function handle(): never
     {
         try {
-            if ($this->initForRestCall()) {
-                $this->getAppStart()->handle();
-            } else {
-                $this->getApp()->handle();
+            $this->rest->init();
+
+            $parts = explode('/', $this->rest->getRoute());
+            $this->frontend = Frontend::fromRoutePart($parts[1]);
+            if ($this->frontend === null) {
+                throw new RestException("Frontend not found by the REST route", RestException::NOT_FOUND);
             }
 
+            // Request is for the AppStart handler (no params required)
+            if (($parts[2] ?? '') == 'start') {
+                $this->getAppStart()->handle();
+            }
+
+            // Other requests need authentication and assessment params
+            $this->user_id = $this->rest->authenticate();
+
+            $params = $this->rest->getParams();
+            foreach (['ass_id', 'context_id'] as $key) {
+                if (!isset($params[$key])) {
+                    throw new RestException("Query parameter $key is missing", RestException::NOT_FOUND);
+                }
+            }
+            $this->ass_id = (int) $params['ass_id'];
+            $this->context_id = (int) $params['context_id'];
+
+            $this->getApp()->handle();
+
         } catch (RestException $e) {
-            $this->context->sendResponse($e->getCode(), $e->getMessage());
+            $this->rest->sendPlainResponse($e->getCode(), $e->getMessage());
         } catch (Throwable $e) {
-            $this->context->sendResponse(
+            $this->rest->sendPlainResponse(
                 RestException::INTERNAL_SERVER_ERROR,
                 $e->getMessage() . "\n" . $e->getTraceAsString()
             );
@@ -146,7 +126,7 @@ class Service implements OpenService, RestService
         if ($this->frontend === Frontend::CORRECTOR) {
             return $this->internal->appStart($this->frontend);
         }
-        $this->context->sendResponse(RestException::NOT_IMPLEMENTED, "Handler for frontend '{$this->frontend->value}' not implemented.");
+        $this->rest->sendPlainResponse(RestException::NOT_IMPLEMENTED, "Handler for frontend '{$this->frontend->value}' not implemented.");
     }
 
     /**
@@ -160,7 +140,54 @@ class Service implements OpenService, RestService
             case Frontend::CORRECTOR:
                 return $this->internal->appCorrector($this->ass_id, $this->context_id, $this->user_id);
         };
-        $this->context->sendResponse(RestException::NOT_IMPLEMENTED, "Handler for frontend '{$this->frontend->value}' not implemented.");
+        $this->rest->sendPlainResponse(RestException::NOT_IMPLEMENTED, "Handler for frontend '{$this->frontend->value}' not implemented.");
+    }
 
+    /**
+     * Set the parameters which are common to all frontends
+     */
+    public function setCommonFrontendParams(string $return_url): void
+    {
+        $this->setFrontendParam('ReturnUrl', $return_url);
+        $this->setFrontendParam('BackendUrl', $this->config->getSetup()->getBackendUrl());
+        $this->setFrontendParam('AssId', (string) $this->ass_id);
+        $this->setFrontendParam('ContextId', (string) $this->context_id);
+        $this->setFrontendParam('UserId', (string) $this->user_id);
+        $this->setFrontendParam('UserToken', $this->rest->createToken($this->user_id));
+    }
+
+    /**
+     * Set a parameter for the frontend
+     *
+     * Parameters are sent as cookies over https
+     * They are only needed when the frontend is initialized and can expire afterwards (1 minute)
+     * They should be set for the whole server path to allow a different frontend location during development
+     */
+    private function setFrontendParam(string $name, string $value): void
+    {
+        setcookie(
+            'xlas' . $name,
+            $value,
+            [
+                'expires' => time() + 60,
+                'path' => '/',
+                'domain' => '',
+                'secure' => !empty($_SERVER['HTTPS']),
+                'httponly' => false,
+                'sameSite' => 'Strict' // None, Lax, Strict
+            ]
+        );
+    }
+
+    /**
+     * Actually redirect to the frontend
+     */
+    private function openFrontend(string $frontend_url): never
+    {
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        header('Location: ' . $frontend_url);
+        exit;
     }
 }

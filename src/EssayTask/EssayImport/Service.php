@@ -11,10 +11,10 @@ use Edutiek\AssessmentService\EssayTask\Essay\ClientService as EssayService;
 use Edutiek\AssessmentService\System\Config\ReadService as SystemConfig;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
-use Edutiek\AssessmentService\System\Log\FullService as SystemLog;
 use Edutiek\AssessmentService\System\Session\Storage as SessionStorage;
 use Edutiek\AssessmentService\System\User\ReadService as UserService;
 use ZipArchive;
+use Psr\Log\LoggerInterface;
 
 class Service implements FullService
 {
@@ -34,7 +34,7 @@ class Service implements FullService
         private readonly Storage $temp_store,
         private readonly SessionStorage $session,
         private readonly SystemConfig $sys_config,
-        private readonly SystemLog $sys_log,
+        private readonly LoggerInterface $sys_log,
         private readonly UserService $user_service,
         private readonly WriterService $writer_service,
         private readonly EssayService $essay_service,
@@ -46,7 +46,7 @@ class Service implements FullService
         }
 
         if (!empty($this->session->get('files'))) {
-            // fore autoloading before unserilizing of session values
+            // fore autoloading before unserializing of session values
             $dummy = new ImportFile();
             $this->files = unserialize($this->session->get('files')) ?? [];
         }
@@ -143,8 +143,8 @@ class Service implements FullService
 
     /**
      * Check the relevant files
-     * - assign the user id
-     * - check of a pdf file already exists for the essay
+     * - Assign the user id
+     * - Check of a pdf file already exists for the essay
      * @param ImportFile[] $files
      */
     private function checkFiles(array $files): void

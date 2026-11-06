@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Api;
 
-use Edutiek\AssessmentService\Assessment\Apps\RestService as RestService;
+use Edutiek\AssessmentService\System\Rest\RestHandler;
 
 readonly class ForRest
 {
@@ -16,7 +16,7 @@ readonly class ForRest
     /**
      * Common handler for all REST calls
      */
-    public function service(): RestService
+    public function service(): RestHandler
     {
         return $this->internal->appService();
     }

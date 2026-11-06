@@ -20,7 +20,6 @@ interface Repositories
     public function contextInfo(): ContextInfoRepo;
     public function pdfConfig(): PdfConfigRepo;
     public function pdfSettings(): PdfSettingsRepo;
-    public function token(): TokenRepo;
     public function writer(): WriterRepo;
     public function writerClient(): WriterClientRepo;
     public function disabledGroup(): DisabledGroupRepo;
