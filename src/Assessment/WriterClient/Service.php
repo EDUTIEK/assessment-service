@@ -9,7 +9,8 @@ use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\Assessment\Data\WriterClient;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\System\Entity\Service as EntityService;
-use Edutiek\AssessmentService\Assessment\Data\Token;
+use Edutiek\AssessmentService\System\Data\Token;
+use Edutiek\AssessmentService\System\Rest\RestHelper;
 
 class Service implements ReadService, FullService
 {
@@ -17,7 +18,8 @@ class Service implements ReadService, FullService
         private int $ass_id,
         private int $user_id,
         private Repositories $repos,
-        private EntityService $entities
+        private EntityService $entities,
+        private RestHelper $rest
     ) {
     }
 
@@ -27,11 +29,10 @@ class Service implements ReadService, FullService
         return $this->repos->writerClient()->allByWriterId($writer_id);
     }
 
-    public function create(Writer $writer): WriterClient
+    public function create(Writer $writer, Token $token): WriterClient
     {
-        $token = $this->currentToken($writer);
-        if ($token === null) {
-            throw new ApiException("token missing for the writer", ApiException::ID_SCOPE);
+        if ($writer->getUserId() !== $token->getUserId()) {
+            throw new ApiException("token is for wrong user", ApiException::ID_SCOPE);
         }
 
         // reuse a client if found with current PHP session
@@ -73,7 +74,12 @@ class Service implements ReadService, FullService
 
     public function current(Writer $writer): ?WriterClient
     {
-        $token = $this->currentToken($writer);
+        $token = $this->rest->getToken();
+        // todo: check why token is not found
+        //        if ($writer->getUserId() !== $token?->getUserId()) {
+        //            throw new ApiException("token is for wrong user", ApiException::ID_SCOPE);
+        //        }
+
         if ($token !== null) {
             return $this->repos->writerClient()->oneByWriterIdAndTokenId($writer->getId(), $token->getId());
         }
@@ -88,13 +94,6 @@ class Service implements ReadService, FullService
         $this->repos->writerClient()->save($client);
     }
 
-    /**
-     * The token is needed to identify the client record in REST calls (session not available)
-     */
-    private function currentToken(Writer $writer): ?Token
-    {
-        return $this->repos->token()->oneByUserAndAssId($writer->getUserId(), $writer->getAssId());
-    }
 
     private function checkScope(int $writer_id): void
     {

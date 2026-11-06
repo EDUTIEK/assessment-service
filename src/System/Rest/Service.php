@@ -24,10 +24,15 @@ class Service implements RestHelper
     ) {
     }
 
-    public function createToken(int $user_id): string
+    public function createToken(int $user_id): Token
     {
         $this->token = $this->repo->new($user_id);
-        return $this->token->getToken();
+        return $this->token;
+    }
+
+    public function getToken(): ?Token
+    {
+        return $this->token;
     }
 
     public function deleteToken(): void

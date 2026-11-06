@@ -6,13 +6,19 @@ namespace Edutiek\AssessmentService\System\Rest;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Edutiek\AssessmentService\System\Data\Token;
 
 interface RestHelper
 {
     /**
      * Generate a new authentication token
      */
-    public function createToken(int $user_id): string;
+    public function createToken(int $user_id): Token;
+
+    /**
+     * Get the current authentication token
+     */
+    public function getToken(): ?Token;
 
     /**
      * Delete the current authentication token

@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\Rest\RestHandler;
 use Edutiek\AssessmentService\System\Rest\RestException;
 use Edutiek\AssessmentService\System\Rest\RestHelper;
+use Edutiek\AssessmentService\Assessment\Api\ApiException;
 
 class Service implements OpenService, RestHandler
 {
@@ -44,14 +45,16 @@ class Service implements OpenService, RestHandler
     {
         $this->frontend = Frontend::WRITER;
         $this->context_id = $context_id;
-        $this->setCommonFrontendParams($return_url);
+
+        $token = $this->rest->createToken($this->user_id);
+        $this->setCommonFrontendParams($return_url, $token->getToken());
 
         // must be done after the token is created
         $settings = $this->internal->orgaSettings($this->ass_id, $this->user_id)->get();
         if ($settings?->getDashboard()) {
             $writer = $this->internal->writer($this->ass_id, $this->user_id)->oneByUserId($this->user_id);
             if ($writer !== null) {
-                $this->internal->writerClient($this->ass_id, $this->user_id)->create($writer);
+                $this->internal->writerClient($this->ass_id, $this->user_id)->create($writer, $token);
             }
         }
 
@@ -66,7 +69,7 @@ class Service implements OpenService, RestHandler
         $this->frontend = Frontend::CORRECTOR;
         $this->context_id = $context_id;
         $permissions = $this->internal->permissions($this->ass_id, $this->context_id, $this->user_id);
-        $this->setCommonFrontendParams($return_url);
+        $this->setCommonFrontendParams($return_url, $this->rest->createToken($this->user_id)->getToken());
         $this->setFrontendParam('TaskId', (string) $task_id);
         $this->setFrontendParam('WriterId', (string) $writer_id);
         $this->setFrontendParam('AsAdmin', ($as_admin && $permissions->canMaintainCorrectors()) ? 'true' : 'false');
@@ -146,14 +149,14 @@ class Service implements OpenService, RestHandler
     /**
      * Set the parameters which are common to all frontends
      */
-    public function setCommonFrontendParams(string $return_url): void
+    public function setCommonFrontendParams(string $return_url, string $token): void
     {
         $this->setFrontendParam('ReturnUrl', $return_url);
+        $this->setFrontendParam('UserToken', $token);
         $this->setFrontendParam('BackendUrl', $this->config->getSetup()->getBackendUrl());
         $this->setFrontendParam('AssId', (string) $this->ass_id);
         $this->setFrontendParam('ContextId', (string) $this->context_id);
         $this->setFrontendParam('UserId', (string) $this->user_id);
-        $this->setFrontendParam('UserToken', $this->rest->createToken($this->user_id));
     }
 
     /**

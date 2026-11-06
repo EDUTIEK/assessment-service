@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\Assessment\WriterClient;
 
 use Edutiek\AssessmentService\Assessment\Data\WriterClient;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
+use ILIAS\Plugin\LongEssayAssessment\System\Data\Token;
 
 interface FullService extends ReadService
 {
@@ -15,7 +16,7 @@ interface FullService extends ReadService
      * - An entry with the current php session id is re-created
      * - The session, id, battery, and hidden status are set to null in older entries
      */
-    public function create(Writer $writer): WriterClient;
+    public function create(Writer $writer, Token $token): WriterClient;
 
     /**
      * Save a new client data entry
