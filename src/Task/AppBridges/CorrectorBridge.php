@@ -20,6 +20,7 @@ use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentService;
+use Edutiek\AssessmentService\Task\CorrectionItems\ReadService as ItemsService;
 use Edutiek\AssessmentService\Task\CorrectorSnippets\FullService as SnippetsService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\ReadService as SummaryService;
 use Edutiek\AssessmentService\Task\CorrectorTemplate\FullService as TemplateService;
@@ -71,6 +72,7 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly RatingCriterionServiceFactory $criteria_services,
         private readonly CorrectionSettingsService $correction_settings_service,
         private readonly AssignmentService $assignment_service,
+        private readonly ItemsService $items_service,
         private readonly SnippetsService $snippets_service,
         private readonly SummaryService $summary_service,
         private readonly TemplateService $template_service,
@@ -122,7 +124,7 @@ class CorrectorBridge implements AppCorrectorBridge
             // todo respect filter in correction admin
             // Items are keyed by writer and task (see WritingTask)
             // Currently items without assignment are left out
-            // A missing item with access is aded by the getItem call
+            // A missing item with access is added by the getItem call
             $assignments = $this->assignment_service->all();
         } elseif ($this->corrector !== null) {
             $assignments = $this->assignment_service->allByCorrectorIdFiltered($this->corrector->getId(), true);
@@ -136,31 +138,14 @@ class CorrectorBridge implements AppCorrectorBridge
             $writer = $writers[$assignment->getWriterId()] ?? null;
 
             if ($assignment->getCorrectorId() === $this->corrector?->getId()) {
-                $summary = $this->summary_service->getForAssignment($assignment);
-
-                $data['Items'][] = $this->entity->arrayToPrimitives([
-                    'task_id' => $assignment->getTaskId(),
-                    'writer_id' => $assignment->getWriterId(),
-                    'position' => $assignment->getPosition()->value,
-                    'pseudonym' => $writer->getPseudonym(),
-                    'correction_status' => $writer->getCorrectionStatus()->value,
-                    'grading_status' => $summary->getGradingStatus(),
-                    'can_correct' => $this->process_service->canCorrect($assignment),
-                    'can_authorize' => $this->process_service->canAuthorizeOwnCorrection($assignment),
-                    'can_revise' => $this->process_service->canRevise($assignment),
-                ]);
+                $item = $this->items_service->buildCorrectionItem($assignment);
+                $data['Items'][] = $this->entity->arrayToPrimitives(
+                    $this->items_service->getDisplayData($item)
+                );
             } elseif (!isset($added[$assignment->getTaskId()][$assignment->getWriterId()])) {
-                $data['Items'][] = $this->entity->arrayToPrimitives([
-                    'task_id' => $assignment->getTaskId(),
-                    'writer_id' => $assignment->getWriterId(),
-                    'position' => null,
-                    'pseudonym' => $writer->getPseudonym(),
-                    'correction_status' => $writer->getCorrectionStatus()->value,
-                    'grading_status' => null,
-                    'can_correct' => false,
-                    'can_authorize' => false,
-                    'can_revise' => false,
-                ]);
+                $data['Items'][] = $this->entity->arrayToPrimitives(
+                    $this->items_service->getAdminData($writer, $this->tasks[$assignment->getTaskId()])
+                );
             }
 
             $added[$assignment->getTaskId()][$assignment->getWriterId()] = true;
@@ -250,30 +235,17 @@ class CorrectorBridge implements AppCorrectorBridge
 
         $own_assignment = $this->assignment_service->oneByIds($writer_id, (int) $this->corrector?->getId(), $task_id);
         if ($own_assignment !== null) {
-            $summary = $this->summary_service->getForAssignment($own_assignment);
-            $data['Item'] = $this->entity->arrayToPrimitives([
-                'task_id' => $task_id,
-                'writer_id' => $writer_id,
-                'position' => $own_assignment->getPosition()->value,
-                'pseudonym' => $writer->getPseudonym(),
-                'correction_status' => $writer->getCorrectionStatus()->value,
-                'grading_status' => $summary->getGradingStatus(),
-                'can_correct' => $this->process_service->canCorrect($own_assignment),
-                'can_authorize' => $this->process_service->canAuthorizeOwnCorrection($own_assignment),
-                'can_revise' => $this->process_service->canRevise($own_assignment),
-            ]);
+            $item = $this->items_service->buildCorrectionItem($own_assignment);
+            $data['Item'] = $this->entity->arrayToPrimitives(
+                $this->items_service->getDisplayData($item)
+            );
         } elseif ($this->is_admin) {
-            $data['Item'] = $this->entity->arrayToPrimitives([
-                'task_id' => $task_id,
-                'writer_id' => $writer_id,
-                'position' => null,
-                'pseudonym' => $writer->getPseudonym(),
-                'correction_status' => $writer->getCorrectionStatus()->value,
-                'grading_status' => null,
-                'can_correct' => false,
-                'can_authorize' => false,
-                'can_revise' => false,
-            ]);
+            $data['Item'] = $this->entity->arrayToPrimitives(
+                $this->items_service->getAdminData(
+                    $writer,
+                    $this->tasks[$task_id]
+                )
+            );
         } else {
             return $data;
         }

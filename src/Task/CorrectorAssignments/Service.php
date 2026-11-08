@@ -217,6 +217,7 @@ readonly class Service implements FullService
                 }
             }
 
+            // summary and writer is needed for sorting
             $filtered[] = [
                 'assignment' => $assignment,
                 'summary' => $summary,

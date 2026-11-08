@@ -139,6 +139,8 @@ class AppStart implements RestHandler
                     'context_id' => $assessment->getContextId(),
                     'parent_title' => $assessment->getParentTitle(),
                     'title' => $assessment->getTitle(),
+                    'correction_start_ts' => $assessment->getCorrectionStart()?->getTimestamp(),
+                    'correction_end_ts' => $assessment->getCorrectionEnd()?->getTimestamp(),
                     'correction_start' => $formats->date($assessment->getCorrectionStart()?->setTimezone($user->getTimezone())),
                     'correction_end' => $formats->date($assessment->getCorrectionEnd()?->setTimezone($user->getTimezone())),
                     'assigned_gradings' => $assessment->getAssignedGradings(),
