@@ -15,4 +15,6 @@ interface LogEntryRepo
     public function deleteByAssId(int $ass_id): void;
     /** @return LogEntry[] */
     public function allByAssIdAndLoginMentioned(int $ass_id, string $login): array;
+
+    public function removeUserName(string $login): void;
 }

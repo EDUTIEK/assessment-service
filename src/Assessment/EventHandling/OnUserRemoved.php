@@ -44,5 +44,8 @@ readonly class OnUserRemoved implements Handler
         foreach ($this->repos->corrector()->allByUserId($event->getUserId()) as $corrector) {
             $this->internal->corrector($corrector->getAssId(), $this->user_id)->remove($corrector);
         }
+
+        //needs to happen after corrector and user removed, because they may produce new log entries
+        $this->repos->logEntry()->removeUserName($event->getLogin());
     }
 }

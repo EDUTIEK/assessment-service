@@ -14,12 +14,18 @@ use Edutiek\AssessmentService\System\EventHandling\Event;
 readonly class UserRemoved implements Event
 {
     public function __construct(
-        private int $user_id
+        private int $user_id,
+        private string $login
     ) {
     }
 
     public function getUserId(): int
     {
         return $this->user_id;
+    }
+
+    public function getLogin(): string
+    {
+        return $this->login;
     }
 }
