@@ -661,6 +661,9 @@ class CorrectorBridge implements AppCorrectorBridge
             'default_shape' => $data['default_shape'] ?? null,
             'display_labels' => $data['display_labels'] ?? false,
             'select_words' => $data['select_words'] ?? false,
+            'filter_grading_status' => $data['filter_grading_status'] ?? null,
+            'filter_combined_status' => $data['filter_correction_status'] ?? null,
+            'filter_assigned_position' => $data['filter_assigned_position'] ?? null
 
         ], $prefs, CorrectorPrefs::class);
         $this->entity->secure($prefs, CorrectorPrefs::class);
