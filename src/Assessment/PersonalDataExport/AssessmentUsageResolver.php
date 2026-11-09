@@ -100,12 +100,6 @@ class AssessmentUsageResolver extends AbstractUsageResolver
             $assessment_contains_data = true;
         }
 
-        $token = $this->repositories->token()->allByUserIdAndAssId($scope->getUserId(), $scope->getAssId());
-        if (!empty($token)) {
-            $assembly->addTokens($token);
-            $assessment_contains_data = true;
-        }
-
         $final_nodes = [];
         foreach ($sub_nodes as $node) {
             foreach ($node->getGroupsForAssessment() as $group) {

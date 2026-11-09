@@ -7,7 +7,6 @@ use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\Data\LogEntry;
 use Edutiek\AssessmentService\Assessment\Data\NotificationQueue;
 use Edutiek\AssessmentService\Assessment\Data\NotificationUser;
-use Edutiek\AssessmentService\Assessment\Data\Token;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\Data\WriterClient;
 use Edutiek\AssessmentService\Assessment\Data\Permissions;
@@ -134,24 +133,6 @@ class AssessmentGroupAssembly extends AbstractGroupAssembly
             $notification_users_group->addSubGroup($sub_group);
         }
         $this->group->addSubGroup($notification_users_group);
-    }
-
-    /**
-     * @param Token[] $tokens
-     * @return void
-     */
-    public function addTokens(array $tokens): void
-    {
-        $tokens_group = new Group("Token");
-        /**
-         * @var Token $token
-         */
-        foreach ($tokens as $token) {
-            $sub_group = new Group((string) $token->getId());
-            $this->addTokenToGroup($sub_group, $token);
-            $tokens_group->addSubGroup($sub_group);
-        }
-        $this->group->addSubGroup($tokens_group);
     }
 
     /**
@@ -316,18 +297,6 @@ class AssessmentGroupAssembly extends AbstractGroupAssembly
         #$group->addAttribute($this->attribute_factory->number("Ass Id", $notification_user->getAssId()));
         $group->addAttribute($this->attribute_factory->number("User Id", $notification_user->getUserId()));
         $group->addAttribute($this->attribute_factory->text("Type", $notification_user->getType()->value));
-    }
-
-    private function addTokenToGroup(Group $group, Token $token): void
-    {
-        #$group->addAttribute($this->attribute_factory->number("Ass Id", $token->getAssId()));
-        $group->addAttribute($this->attribute_factory->number("User Id", $token->getUserId()));
-        $group->addAttribute($this->attribute_factory->text("Token", $token->getToken()));
-        $group->addAttribute($this->attribute_factory->text("Ip", $token->getIp()));
-        $group->addAttribute($this->attribute_factory->text("Purpose", $token->getPurpose()->value));
-        if ($token->getValidUntil() !== null) {
-            $group->addAttribute($this->attribute_factory->dateTime("Valid Until", $token->getValidUntil()));
-        }
     }
 
     private function addWriterToGroup(Group $group, Writer $writer): void
