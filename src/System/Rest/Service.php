@@ -51,6 +51,7 @@ class Service implements RestHelper
             $this->context->sendResponse(StatusCodeInterface::STATUS_OK, '', [
                 'Access-Control-Allow-Origin' => '*',
                 'Access-Control-Allow-Headers' => '*',
+                'Access-Control-Allow-Methods' => '*',
                 'Access-Control-Expose-Headers' => ['X-Access-Token', 'X-Server-Time']
             ]);
         }
@@ -111,6 +112,7 @@ class Service implements RestHelper
     public function setJsonResponse(Response $response, int $status, $data = []): Response
     {
         $response = $response
+            ->withHeader('Access-Control-Allow-Headers', '*')
             ->withHeader('Access-Control-Expose-Headers', ['X-Access-Token', 'X-Server-Time'])
             ->withHeader('Content-Type', 'application/json')
             ->withHeader('X-Server-Time', (string) time())
