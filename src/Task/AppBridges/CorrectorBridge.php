@@ -210,6 +210,9 @@ class CorrectorBridge implements AppCorrectorBridge
             'default_shape' => $preferences->getDefaultShape(),
             'display_labels' => $preferences->getDisplayLabels(),
             'select_words' => $preferences->getSelectWords(),
+            'filter_grading_status' => $preferences->getFilterGradingStatus(),
+            'filter_correction_status' => $preferences->getFilterCombinedStatus(),
+            'filter_assigned_position' => $preferences->getFilterAssignedPosition()
         ]);
 
         $data['Snippets'] = $this->snippets_service->json($this->corrector?->getId() ?? 0);
