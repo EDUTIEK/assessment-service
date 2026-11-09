@@ -30,6 +30,11 @@ interface FullService
     public function gradingStatusOptions(): array;
 
     /**
+     * Get the display value of a grading position
+     */
+    public function gradingPosition(GradingPosition $position): string;
+
+    /**
      * Get the available options for a grading position, indexed by backt position values
      * @return array<int, string>
      */

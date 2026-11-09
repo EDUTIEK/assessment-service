@@ -5,6 +5,7 @@ namespace Edutiek\AssessmentService\Assessment\EventHandling;
 use Edutiek\AssessmentService\Assessment\Api\Internal;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
 use Edutiek\AssessmentService\System\EventHandling\AbstractObserver;
+use Edutiek\AssessmentService\System\Rest\RestHelper;
 
 class SystemObserver extends AbstractObserver
 {

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
-use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\System\Config\Frontend;
+use Edutiek\AssessmentService\System\Rest\RestHandler;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class AppWriter extends BaseApp implements RestService
+class AppWriter extends BaseApp implements RestHandler
 {
     protected Frontend $frontend = Frontend::WRITER;
 
@@ -30,7 +30,7 @@ class AppWriter extends BaseApp implements RestService
      */
     public function putSync(Request $request, Response $response, array $args): Response
     {
-        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+        $this->prepare($request, $response, $args);
 
         $json_data = $this->rest_helper->getJsonData($request);
 
@@ -67,9 +67,7 @@ class AppWriter extends BaseApp implements RestService
             $response_json['Update'][$component] = $bridge?->getData(true) ?? [];
         }
 
-        $this->rest_helper->setAlive();
-        $this->rest_helper->extendDataToken($response);
-        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $response_json);
+        return $this->rest_helper->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $response_json);
     }
 
 }

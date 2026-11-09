@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
-use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
+use Edutiek\AssessmentService\System\Rest\RestHandler;
+use Edutiek\AssessmentService\System\Rest\RestException;
 use Edutiek\AssessmentService\System\Config\Frontend;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
-class AppCorrector extends BaseApp implements RestService
+class AppCorrector extends BaseApp implements RestHandler
 {
     protected Frontend $frontend = Frontend::CORRECTOR;
 
@@ -28,11 +29,10 @@ class AppCorrector extends BaseApp implements RestService
     /**
      * Prepare handling the REST call
      * This must be called by all functions assigned to routes
-     * It can't be done in handle() because the TokenPurpose depends on the function
      */
-    protected function prepare(Request $request, Response $response, array $args, TokenPurpose $purpose): void
+    protected function prepare(Request $request, Response $response, array $args): void
     {
-        parent::prepare($request, $response, $args, $purpose);
+        parent::prepare($request, $response, $args);
 
         // todo: check if user is corrector or has permission to maintain correctors
     }
@@ -45,7 +45,7 @@ class AppCorrector extends BaseApp implements RestService
         $task_id = (int) ($args['task_id'] ?? 0);
         $writer_id = (int) ($args['writer_id'] ?? 0);
 
-        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+        $this->prepare($request, $response, $args);
 
         $data = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
@@ -54,13 +54,12 @@ class AppCorrector extends BaseApp implements RestService
                 $data[$component] = $bridge->getItem($task_id, $writer_id);
             }
         }
-        $this->rest_helper->extendDataToken($response);
-        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
+        return $this->rest_helper->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $data);
     }
 
     public function postFile(Request $request, Response $response, array $args): Response
     {
-        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+        $this->prepare($request, $response, $args);
 
         $component = (string) ($args['component'] ?? null);
         $entity = (string) ($args['entity'] ?? null);
@@ -87,8 +86,6 @@ class AppCorrector extends BaseApp implements RestService
             throw new RestException("Saving error", RestException::INTERNAL_SERVER_ERROR);
         }
 
-        $this->rest_helper->setAlive();
-        $this->rest_helper->extendDataToken($response);
-        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $json);
+        return $this->rest_helper->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $json);
     }
 }

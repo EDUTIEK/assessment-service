@@ -53,7 +53,15 @@ class Result
     }
 
     /**
-     * Add a translates note
+     * Check if a result has notes
+     */
+    public function hasNotes(): bool
+    {
+        return !empty($this->notes());
+    }
+
+    /**
+     * Add a translated note
      */
     public function addNote(string $note): void
     {

@@ -11,6 +11,7 @@ use Edutiek\AssessmentService\Task\AssessmentStatus\Service as StatusService;
 use Edutiek\AssessmentService\Task\Checks\Service as ChecksService;
 use Edutiek\AssessmentService\Task\ConstraintHandling\Provider as ConstraintProvider;
 use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
+use Edutiek\AssessmentService\Task\CorrectionItems\Service as CorrectionItemsService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\Service as CorrectionSettingsService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\Service as CorrectorAssignmentsService;
 use Edutiek\AssessmentService\Task\CorrectorComment\Service as CorrectorCommentService;
@@ -103,6 +104,24 @@ class Internal implements RatingCriterionServiceFactory
         );
     }
 
+    public function correctionItems(int $ass_id, int $user_id): CorrectionItemsService
+    {
+        return $this->instances[CorrectionItemsService::class][$ass_id][$user_id] ??= new CorrectionItemsService(
+            $user_id,
+            $this->correctorAssignments($ass_id, $user_id),
+            $this->correctionProcess($ass_id, $user_id),
+            $this->format($ass_id, $user_id),
+            $this->dependencies->repositories(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->format(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->assessmentGrading(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
+            $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
+            $this->dependencies->systemApi()->language($user_id, __DIR__ . '/../Languages/'),
+            $this->dependencies->systemApi()->user(),
+        );
+    }
+
     public function excelAssignmentData(int $ass_id, int $user_id, bool $only_authorized = false): ExcelAssignmentData
     {
         return $this->instances[ExcelAssignmentData::class][$ass_id][$user_id][$only_authorized] ??= new ExcelAssignmentData(
@@ -151,6 +170,7 @@ class Internal implements RatingCriterionServiceFactory
             $this,
             $this->correctionSettings($ass_id, $user_id),
             $this->correctorAssignments($ass_id, $user_id),
+            $this->correctionItems($ass_id, $user_id),
             $this->correctorSnippets($ass_id, $user_id),
             $this->correctorSummary($ass_id, $user_id),
             $this->correctorTemplate($ass_id, $user_id),

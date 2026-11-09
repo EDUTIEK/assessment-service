@@ -8,6 +8,8 @@ interface NotificationUserRepo
 {
     public function new(): NotificationUser;
     /** @return NotificationUser[] */
+    public function allByAssId(int $ass_id): array;
+    /** @return NotificationUser[] */
     public function allByAssIdAndType(int $ass_id, NotificationType $type): array;
     public function save(NotificationUser $entity): void;
     public function deleteByAssIdAndType(int $ass_id, NotificationType $type);

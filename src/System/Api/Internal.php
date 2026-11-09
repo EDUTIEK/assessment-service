@@ -22,6 +22,7 @@ namespace Edutiek\AssessmentService\System\Api;
 
 use DateTimeZone;
 use Dompdf\Dompdf;
+use Edutiek\AssessmentService\System\Auth\Service as AuthService;
 use Edutiek\AssessmentService\System\BackgroundTask\Service as BackgroundTaskService;
 use Edutiek\AssessmentService\System\Config\Service as ConfigService;
 use Edutiek\AssessmentService\System\Entity\Service as EntityService;
@@ -37,6 +38,7 @@ use Edutiek\AssessmentService\System\Spreadsheet\Service as SpreadsheetService;
 use Edutiek\AssessmentService\System\Transform\Service as TransformService;
 use Edutiek\AssessmentService\System\User\Service as UserService;
 use Edutiek\AssessmentService\System\HtmlProcessing\Service as HtmlProcessingService;
+use Edutiek\AssessmentService\System\Rest\Service as RestHelperService;
 
 class Internal
 {
@@ -44,6 +46,15 @@ class Internal
 
     public function __construct(private readonly Dependencies $dependencies)
     {
+    }
+
+    public function auth(): AuthService
+    {
+        return $this->instances[AuthService::class] ??= new AuthService(
+            $this->dependencies->userDataRepo(),
+            $this->dependencies->authHandler(),
+            $this->language(0, __DIR__ . '/../Languages/')
+        );
     }
 
     public function config(): ConfigService
@@ -139,6 +150,16 @@ class Internal
         );
     }
 
+    public function restHelper(): RestHelperService
+    {
+        return $this->instances[RestHelperService::class] ?? new RestHelperService(
+            $this->dependencies->tokenRepo(),
+            $this->config(),
+            $this->user(),
+            $this->dependencies->restContext()
+        );
+    }
+
     public function pdfProcessing(): PdfProcessing
     {
         return $this->instances[PdfProcessing::class] ??= new PdfProcessing(
@@ -160,7 +181,7 @@ class Internal
     {
         return $this->instances[UserService::class] ??= new UserService(
             $this->dependencies->userDataRepo(),
-            $this->dependencies->userDisplayRepo()
+            $this->dependencies->userDisplayRepo(),
         );
     }
 

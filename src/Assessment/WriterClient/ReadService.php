@@ -20,7 +20,7 @@ interface ReadService
     public function all(int $writer_id);
 
     /**
-     * Get the entry that fits to the current writer web app
+     * Get the entry that fits to the current REST request
      * It is recognized by the id of the current authentication token
      */
     public function current(Writer $writer): ?WriterClient;

@@ -13,7 +13,7 @@ readonly class Service implements ReadService
 {
     public function __construct(
         private UserDataRepo $user_repo,
-        private UserDisplayRepo $user_display
+        private UserDisplayRepo $user_display,
     ) {
     }
 

@@ -81,6 +81,11 @@ readonly class Service implements FullService
         ];
     }
 
+    public function gradingPosition(GradingPosition $position): string
+    {
+        return $this->lang->txt($position->languageVariable());
+    }
+
     public function gradingPositionOptions(): array
     {
         return [

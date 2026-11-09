@@ -182,6 +182,10 @@ readonly class Service implements ClientService, EventService
         $this->storage->deleteFile($essay->getPdfVersion());
         $this->essay_image->deleteByEssayId($essay->getId());
 
+        if (!$from_text) {
+            $essay->setWrittenText(null);
+        }
+
         $this->repos->essay()->save($essay
             ->setPdfVersion($file_id)
             ->setPdfFromWrittenText($from_text)

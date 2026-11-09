@@ -7,18 +7,14 @@ namespace Edutiek\AssessmentService\Assessment\Api;
 use Edutiek\AssessmentService\Assessment\Alert\Service as AlertService;
 use Edutiek\AssessmentService\Assessment\AppBridges\CorrectorBridge;
 use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
-use Edutiek\AssessmentService\Assessment\Apps\OpenHelper;
-use Edutiek\AssessmentService\Assessment\Apps\RestHelper;
 use Edutiek\AssessmentService\Assessment\Apps\Service as AppService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\Service as AssessmentGradingService;
-use Edutiek\AssessmentService\Assessment\Authentication\Service as AuthenticationService;
 use Edutiek\AssessmentService\Assessment\BackgroundTask\Service as BackgroundTaskService;
 use Edutiek\AssessmentService\Assessment\ConstraintHandling\Provider as ConstraintProvider;
 use Edutiek\AssessmentService\Assessment\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\Service as CorrectionSettingsService;
 use Edutiek\AssessmentService\Assessment\Corrector\Service as CorrectorService;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrector;
-use Edutiek\AssessmentService\Assessment\Data\OrgaSettings;
 use Edutiek\AssessmentService\Assessment\DisabledGroup\Service as DisabledGroupService;
 use Edutiek\AssessmentService\Assessment\EventHandling\AssessmentObserver as AssessmentObserver;
 use Edutiek\AssessmentService\Assessment\EventHandling\SystemObserver as SystemObserver;
@@ -56,9 +52,10 @@ use Edutiek\AssessmentService\Assessment\PdfCreation\CorrectionProvider;
 use Edutiek\AssessmentService\Assessment\Apps\AppWriter;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 use Edutiek\AssessmentService\Assessment\Export\ResultsExport;
-use Edutiek\AssessmentService\Assessment\Apps\SlimLogger;
 use Edutiek\AssessmentService\System\File\FileUsageFinder;
 use Edutiek\AssessmentService\Assessment\FileUsage\FileCleanupHandler;
+use Edutiek\AssessmentService\Assessment\Apps\AppStart;
+use Edutiek\AssessmentService\System\Config\Frontend;
 use Edutiek\AssessmentService\Assessment\PersonalDataExport;
 
 class Internal implements ComponentApi, ComponentApiFactory
@@ -114,8 +111,22 @@ class Internal implements ComponentApi, ComponentApiFactory
     {
         return $this->instances[AppService::class] ??= new AppService(
             $this->dependencies->systemApi()->config(),
-            $this->dependencies->restContext(),
+            $this->dependencies->systemApi()->restHelper(),
             $this
+        );
+    }
+
+    /**
+     * REST handler for starting functionality of apps (login, logout, list of assessments)
+     * (no caching needed, created once per request)
+     */
+    public function appStart(Frontend $frontend): AppStart
+    {
+        return new AppStart(
+            $frontend,
+            $this->slimApp(),
+            $this->dependencies->viewsApi(),
+            $this->dependencies->systemApi(),
         );
     }
 
@@ -129,11 +140,11 @@ class Internal implements ComponentApi, ComponentApiFactory
             $ass_id,
             $context_id,
             $user_id,
+            $this->dependencies->repositories(),
             $this->permissions($ass_id, $context_id, $user_id),
-            $this->restHelper($ass_id, $context_id, $user_id),
+            $this->dependencies->systemApi()->restHelper(),
             $this,
             $this->slimApp(),
-            $this->dependencies->restContext(),
             $this->dependencies->systemApi()->fileDelivery()
         );
     }
@@ -148,24 +159,12 @@ class Internal implements ComponentApi, ComponentApiFactory
             $ass_id,
             $context_id,
             $user_id,
+            $this->dependencies->repositories(),
             $this->permissions($ass_id, $context_id, $user_id),
-            $this->restHelper($ass_id, $context_id, $user_id),
+            $this->dependencies->systemApi()->restHelper(),
             $this,
             $this->slimApp(),
-            $this->dependencies->restContext(),
             $this->dependencies->systemApi()->fileDelivery()
-        );
-    }
-
-    /**
-     * Internal authentication service for REST handlers
-     */
-    public function authentication(int $ass_id, int $context_id): AuthenticationService
-    {
-        return $this->instances[AuthenticationService::class][$ass_id][$context_id] ??= new AuthenticationService(
-            $ass_id,
-            $context_id,
-            $this->dependencies->repositories()
         );
     }
 
@@ -252,7 +251,8 @@ class Internal implements ComponentApi, ComponentApiFactory
             $ass_id,
             $user_id,
             $this->dependencies->repositories(),
-            $this->dependencies->systemApi()->entity()
+            $this->dependencies->systemApi()->entity(),
+            $this->dependencies->systemApi()->restHelper()
         );
     }
 
@@ -262,41 +262,6 @@ class Internal implements ComponentApi, ComponentApiFactory
     public function language(int $user_id): LanguageService
     {
         return $this->dependencies->systemApi()->language($user_id, __DIR__ . '/../Languages/');
-    }
-
-    /**
-     * Helper functions to open the WebApps
-     * (no caching needed, created once per request)
-     */
-    public function openHelper(int $ass_id, int $context_id, int $user_id): OpenHelper
-    {
-        return new openHelper(
-            $ass_id,
-            $context_id,
-            $user_id,
-            $this->authentication($ass_id, $context_id),
-            $this->dependencies->systemApi()->config()
-        );
-    }
-
-    /**
-     * Helper functions for the REST services
-     * (no caching needed, created once per request)
-     */
-    public function restHelper(int $ass_id, int $context_id, int $user_id): RestHelper
-    {
-        return new RestHelper(
-            $ass_id,
-            $context_id,
-            $user_id,
-            $this->authentication($ass_id, $context_id),
-            $this->permissions($ass_id, $context_id, $user_id),
-            $this->dependencies->repositories(),
-            $this->dependencies->systemApi()->config(),
-            $this->dependencies->systemApi()->user(),
-            $this->dependencies->systemApi()->fileDelivery(),
-            $this->dependencies->restContext()
-        );
     }
 
     public function documentationExport(int $ass_id, int $context_id, int $user_id): DocumentationExport
@@ -356,7 +321,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             true,
             true,
             true,
-            new SlimLogger($this->dependencies->systemApi()->log())
+            $this->dependencies->systemApi()->log()
         );
         $app->setBasePath(dirname(parse_url(
             $this->dependencies->systemApi()->config()->getSetup()->getBackendUrl(),

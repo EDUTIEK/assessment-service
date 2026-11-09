@@ -32,4 +32,6 @@ interface WriterRepo
     public function save(Writer $entity): void;
     public function delete(int $id): void;
     public function deleteByAssId(int $ass_id): void;
+
+    public function removeLocation(int $ass_id, int $location): void;
 }

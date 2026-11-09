@@ -9,6 +9,7 @@ use Edutiek\AssessmentService\Assessment\CorrectionProcess\FullService as Correc
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettingsReadService;
 use Edutiek\AssessmentService\Assessment\Corrector\FullService as CorrectorService;
 use Edutiek\AssessmentService\Assessment\Export\FileNameBuilder;
+use Edutiek\AssessmentService\Assessment\Format\FullService as FormatService;
 use Edutiek\AssessmentService\Assessment\LogEntry\TasksService as LogEntryTasksService;
 use Edutiek\AssessmentService\Assessment\Notification\DeliverService as NotificationService;
 use Edutiek\AssessmentService\Assessment\PdfSettings\FullService as PdfSettingsFullService;
@@ -46,6 +47,11 @@ readonly class ForTasks
     public function correctionSettings(): CorrectionSettingsReadService
     {
         return $this->internal->correctionSettings($this->ass_id, $this->user_id);
+    }
+
+    public function format(): FormatService
+    {
+        return $this->internal->format($this->ass_id, $this->user_id);
     }
 
     public function fileNameBuilder(): FileNameBuilder

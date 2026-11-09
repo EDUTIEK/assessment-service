@@ -13,7 +13,7 @@ use Exception;
 use Generator;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Com\Tecnick\Pdf\Parser\Parser;
-use Edutiek\AssessmentService\System\Log\FullService as Logger;
+use Psr\Log\LoggerInterface;
 
 class Service implements FullService
 {
@@ -23,7 +23,7 @@ class Service implements FullService
     public function __construct(
         private readonly PdfCreator $pdf_creator,
         private readonly Storage $storage,
-        private readonly Logger $logger,
+        private readonly LoggerInterface $logger,
         private readonly string $ghostscript_bin,
         private readonly string $pdftk_bin,
         string $temp_dir

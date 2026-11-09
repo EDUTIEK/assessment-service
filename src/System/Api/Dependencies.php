@@ -12,24 +12,29 @@ use Edutiek\AssessmentService\System\Data\UserDataRepo;
 use Edutiek\AssessmentService\System\Data\UserDisplayRepo;
 use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\File\Storage;
-use Edutiek\AssessmentService\System\Log\FullService as Logger;
 use Edutiek\AssessmentService\System\Mail\Delivery as MailDelivery;
+use Edutiek\AssessmentService\System\Rest\RestContext;
 use Edutiek\AssessmentService\System\Session\Storage as SessionStorage;
-use ILIAS\Mail;
+use Edutiek\AssessmentService\System\Auth\AuthHandler;
+use Edutiek\AssessmentService\System\Data\TokenRepo;
+use Psr\Log\LoggerInterface;
 
 interface Dependencies
 {
+    public function authHandler(): AuthHandler;
     public function configRepo(): ConfigRepo;
     public function setupRepo(): SetupRepo;
     public function fileStorage(): Storage;
     public function fileDelivery(): Delivery;
+    public function restContext(): RestContext;
     public function tempStorage(): Storage;
     public function tempDelivery(): Delivery;
+    public function tokenRepo(): TokenRepo;
     public function userDataRepo(): UserDataRepo;
     public function userDisplayRepo(): UserDisplayRepo;
     public function formatDate(DateTimeInterface $date): string;
     public function backgroundTaskManager(): BackgroundTaskManager;
     public function sessionStorage(): SessionStorage;
-    public function log(): Logger;
+    public function log(): LoggerInterface;
     public function mailDelivery(): MailDelivery;
 }

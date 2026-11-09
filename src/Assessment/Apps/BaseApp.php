@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\Apps;
 
 use Edutiek\AssessmentService\Assessment\Api\ComponentApiFactory;
-use Edutiek\AssessmentService\Assessment\Data\TokenPurpose;
 use Edutiek\AssessmentService\System\File\Delivery;
 use Edutiek\AssessmentService\System\File\Disposition;
 use Fig\Http\Message\StatusCodeInterface;
@@ -13,9 +12,13 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App as SlimApp;
 use Edutiek\AssessmentService\System\Config\Frontend;
+use Edutiek\AssessmentService\System\Rest\RestHelper;
+use Edutiek\AssessmentService\System\Rest\RestHandler;
 use Edutiek\AssessmentService\Assessment\Permissions\ReadService as Permissions;
+use Edutiek\AssessmentService\System\Rest\RestException;
+use Edutiek\AssessmentService\Assessment\Data\Repositories;
 
-abstract class BaseApp implements RestService
+abstract class BaseApp implements RestHandler
 {
     /**
      * Needs to be set by the child class
@@ -26,11 +29,11 @@ abstract class BaseApp implements RestService
         protected readonly int $ass_id,
         protected readonly int $context_id,
         protected readonly int $user_id,
+        protected readonly Repositories $repos,
         protected readonly Permissions $permissions,
         protected readonly RestHelper $rest_helper,
         protected readonly ComponentApiFactory $apis,
         protected readonly SlimApp $app,
-        protected readonly RestContext $rest_context,
         protected readonly Delivery $delivery
     ) {
     }
@@ -44,13 +47,17 @@ abstract class BaseApp implements RestService
     /**
      * Prepare handling the REST call
      * This must be called by all functions assigned to routes
-     * It can't be done in handle() because the TokenPurpose depends on the function
      */
-    protected function prepare(Request $request, Response $response, array $args, TokenPurpose $purpose): void
+    protected function prepare(Request $request, Response $response, array $args): void
     {
         $params = $request->getQueryParams();
-        $this->rest_helper->checkAuth($purpose, $params['signature'] ?? '');
-        $this->rest_helper->checkAccess();
+
+        if (!$this->repos->properties()->exists($this->ass_id, $this->context_id)) {
+            throw new RestException('assessment not found', RestException::NOT_FOUND);
+        }
+        if (!$this->permissions->canDoRestCall()) {
+            throw new RestException('REST call not allowed', RestException::FORBIDDEN);
+        }
     }
 
     /**
@@ -58,7 +65,7 @@ abstract class BaseApp implements RestService
      */
     public function getData(Request $request, Response $response, array $args): Response
     {
-        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+        $this->prepare($request, $response, $args);
 
         $data = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
@@ -69,8 +76,7 @@ abstract class BaseApp implements RestService
             $data[$component] = $bridge->getData(false);
         }
 
-        $this->rest_helper->extendDataToken($response);
-        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
+        return $this->rest_helper->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $data);
     }
 
     /**
@@ -78,7 +84,7 @@ abstract class BaseApp implements RestService
      */
     public function getUpdate(Request $request, Response $response, array $args): Response
     {
-        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+        $this->prepare($request, $response, $args);
 
         $data = [];
         foreach ($this->apis->components($this->ass_id, $this->user_id) as $component) {
@@ -89,9 +95,7 @@ abstract class BaseApp implements RestService
             $data[$component] = $bridge->getData(true);
         }
 
-        $this->rest_helper->setAlive();
-        $this->rest_helper->extendDataToken($response);
-        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $data);
+        return $this->rest_helper->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $data);
     }
 
     /**
@@ -99,7 +103,7 @@ abstract class BaseApp implements RestService
      */
     public function getFile(Request $request, Response $response, array $args): void
     {
-        $this->prepare($request, $response, $args, TokenPurpose::FILE);
+        $this->prepare($request, $response, $args);
 
         $component = $args['component'] ?? '';
         $entity = $args['entity'] ?? null;
@@ -132,7 +136,7 @@ abstract class BaseApp implements RestService
      */
     public function putChanges(Request $request, Response $response, array $args): Response
     {
-        $this->prepare($request, $response, $args, TokenPurpose::DATA);
+        $this->prepare($request, $response, $args);
 
         $json = [];
 
@@ -159,9 +163,7 @@ abstract class BaseApp implements RestService
             }
         }
 
-        $this->rest_helper->setAlive();
-        $this->rest_helper->extendDataToken($response);
-        return $this->rest_helper->setResponse($response, StatusCodeInterface::STATUS_OK, $json);
+        return $this->rest_helper->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $json);
     }
 
     /**
@@ -170,7 +172,7 @@ abstract class BaseApp implements RestService
     protected function getBridge(string $component): ?AppBridge
     {
         $api = $this->apis->api($component);
-        $params = $this->rest_context->getParams();
+        $params = $this->rest_helper->getParams();
 
         return match($this->frontend) {
             Frontend::WRITER => $api?->writerBridge($this->ass_id, $this->user_id),

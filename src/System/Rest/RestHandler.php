@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\Assessment\Apps;
+namespace Edutiek\AssessmentService\System\Rest;
 
-interface RestService
+interface RestHandler
 {
     /**
      * Handle a REST call

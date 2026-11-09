@@ -25,7 +25,7 @@
  * @param {string} parent   id of the parent element to add the iframe
  * @param {string} viewer   url of the viewer html (source of iframe, without parameter)
  * @param {string} pdf      url of the pdf file to load
- * @param {{viewOnly: bool}} options init pdfjs in view only or not.
+ * @param {{viewOnly: bool, headers: object}} options init pdfjs in view only or not.
  *
  * @return {{
  *   on: {function(string, function(CustomEvent)): void},
@@ -85,9 +85,8 @@ export default (parent, viewer, pdf, options = {}) => {
     frame.src = viewer + '?' + iframeParams;
     frame.style.width = '100%';
     frame.style.height = '100%';
+    window.addEventListener('message', waitForInit);
     parent.appendChild(frame);
-
-    window.addEventListener('message', dispatchOrRespond);
 
     return {
         on: t.addEventListener.bind(t),
@@ -130,6 +129,16 @@ export default (parent, viewer, pdf, options = {}) => {
         setAltText: (id, altText) => request('setAltText', id, altText),
         setDefaultFreeFormType: type => request('setDefaultFreeFormType', type),
     };
+
+    function waitForInit(e)
+    {
+        if(e.source !== frame.contentWindow){
+            return;
+        }
+        window.removeEventListener('message', waitForInit);
+        window.addEventListener('message', dispatchOrRespond);
+        frame.contentWindow.postMessage({headers: options.headers});
+    }
 
     function request(name, ...args)
     {
