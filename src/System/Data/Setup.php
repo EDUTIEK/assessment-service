@@ -6,6 +6,7 @@ namespace Edutiek\AssessmentService\System\Data;
 
 use DateTimeZone;
 use Edutiek\AssessmentService\System\Config\CronJobId;
+use Edutiek\AssessmentService\System\Config\Frontend;
 
 /**
  * Setup of the hosting system and the inclusion of the assessment-service
@@ -20,12 +21,11 @@ abstract readonly class Setup
     abstract public function getSystemName(): string;
 
     /**
-     * Get the base URL of the frontend web apps (writer and corrector)
-     * The frontends are prebuild in the node_modules folder
-     * They may be moved by the hosting system to a public directory
-     * The getFrontendUrl() of
+     * Get the base URL of one frontend web app (writer or corrector)
+     * The URL must not have a trailing slash
+     * The hosting system decides where the built app is published
      */
-    abstract public function getFrontendsBaseUrl(): string;
+    abstract public function getFrontendBaseUrl(Frontend $frontend): string;
 
     /**
      * Get the URL of the backend for REST calls from the web apps

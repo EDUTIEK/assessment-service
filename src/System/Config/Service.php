@@ -56,7 +56,6 @@ readonly class Service implements ReadService, FullService
     /**
      * Build the URL of a frontend web app
      * Add a query string with the revision to avoid an outdated cached app
-     * @param string $frontend name and path of the web app in node_modules
      */
     private function buildFrontendUrl(Frontend $frontend): string
     {
@@ -64,7 +63,7 @@ readonly class Service implements ReadService, FullService
         $resolved = $json['packages']['node_modules/' . $frontend->module()]['resolved'] ?? '';
         $revision = (string) parse_url($resolved, PHP_URL_FRAGMENT);
 
-        return $this->getSetup()->getFrontendsBaseUrl()
-            . '/' . $frontend->module() . '/' . '/dist/index.html?' . substr($revision, 0, 7);
+        return $this->getSetup()->getFrontendBaseUrl($frontend)
+            . '/index.html?' . substr($revision, 0, 7);
     }
 }

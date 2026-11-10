@@ -21,7 +21,7 @@ interface ReadService
 
     /**
      * Get the effective URL to open a frontend web app
-     * This is taken from the config or built from the setup and the module name
+     * This is taken from the config or built from the frontend base URL in the setup
      */
     public function getFrontendUrl(Frontend $frontend): string;
 
