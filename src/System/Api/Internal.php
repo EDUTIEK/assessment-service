@@ -139,7 +139,8 @@ class Internal
                 ],
                 ...$options,
             ]),
-            $this->config()->getSetup()
+            $this->config()->getSetup(),
+            $this->config()->getPathToGhostscript(),
         );
     }
 

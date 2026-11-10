@@ -29,12 +29,15 @@ class Service implements FullService
 
     protected $mono_font = 'courier';
 
+    private ?bool $include_full_font = null;
+
     /**
      * @param Closure(): Dompdf $dom_pdf
      */
     public function __construct(
-        private Closure $dom_pdf,
-        private Setup $setup
+        readonly private Closure $dom_pdf,
+        readonly private Setup $setup,
+        readonly private string $gs_path,
     ) {
     }
 
@@ -173,9 +176,11 @@ header
 
     private function initPdf(Options $opts): Dompdf
     {
+        $this->include_full_font ??= '10.02.1' === $this->ghostscriptVersion();
         $pdf = ($this->dom_pdf)([
             'isPdfUAEnabled' => true,
             'defaultFont' => $this->main_font,
+            'includeFullFont' => $this->include_full_font,
             'dpi' => 150,
             'fontDir' => $this->getFontDir(),
             'fontCache' => $this->getFontCache(),
@@ -186,6 +191,12 @@ header
         $this->setupFonts($pdf);
 
         return $pdf;
+    }
+
+    private function ghostscriptVersion(): string
+    {
+        exec(escapeshellcmd($this->gs_path) . ' --version', $lines);
+        return current($lines) ?: '';
     }
 
     private function setupFonts(Dompdf $pdf): void
