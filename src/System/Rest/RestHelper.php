@@ -66,5 +66,5 @@ interface RestHelper
     /**
      * Send a plain response with data from the parameters
      */
-    public function sendPlainResponse(int $status_code, string $body, array $headers = []): never;
+    public function sendPlainResponse(int $status_code, string $body): never;
 }

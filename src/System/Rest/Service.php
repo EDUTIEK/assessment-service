@@ -48,12 +48,7 @@ class Service implements RestHelper
         $this->context->initCall();
 
         if ($this->context->getRequestMethod() === 'OPTIONS') {
-            $this->context->sendResponse(StatusCodeInterface::STATUS_OK, '', [
-                'Access-Control-Allow-Origin' => '*',
-                'Access-Control-Allow-Headers' => '*',
-                'Access-Control-Allow-Methods' => '*',
-                'Access-Control-Expose-Headers' => ['X-Access-Token', 'X-Server-Time']
-            ]);
+            $this->context->sendResponse(StatusCodeInterface::STATUS_OK, '', $this->getCommonHeaders());
         }
     }
 
@@ -111,10 +106,10 @@ class Service implements RestHelper
 
     public function setJsonResponse(Response $response, int $status, $data = []): Response
     {
+        foreach ($this->getCommonHeaders() as $name => $value) {
+            $response = $response->withHeader($name, $value);
+        }
         $response = $response
-            ->withHeader('Access-Control-Allow-Headers', '*')
-            ->withHeader('Access-Control-Expose-Headers', ['X-Access-Token', 'X-Server-Time'])
-            ->withHeader('Content-Type', 'application/json')
             ->withHeader('X-Server-Time', (string) time())
             ->withStatus($status);
 
@@ -126,8 +121,19 @@ class Service implements RestHelper
         return $response;
     }
 
-    public function sendPlainResponse(int $status_code, string $body, array $headers = []): never
+    public function sendPlainResponse(int $status_code, string $body): never
     {
-        $this->context->sendResponse($status_code, $body, $headers);
+        $this->context->sendResponse($status_code, $body, $this->getCommonHeaders());
+    }
+
+    private function getCommonHeaders(): array
+    {
+        // todo: distinct 'Access-Control-Allow-Origin' between local development and production
+        return [
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Headers' => 'Authorization, Content-Type',
+        'Access-Control-Allow-Methods' => 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Expose-Headers' => 'X-Access-Token, X-Server-Time',
+        ];
     }
 }
