@@ -10,15 +10,18 @@ function run()
         } else {
             window.edutiekProvideHeaders = e.data.headers || {};
         }
-        setup(forwardEvent, actions => {
-            window.addEventListener('message', event => {
-                const p = then(null, () => actions[event.data.name](...event.data.args));
-                p.then(value => window.parent.postMessage({response: {id: event.data.id, value}}));
-                p.catch(error => window.parent.postMessage({response: {id: event.data.id, value: error, error: true}}));
-            });
-        });
     }, {once: true});
     window.parent.postMessage('init');
+    setup(forwardEvent, actions => {
+        window.addEventListener('message', event => {
+            if(event.data.headers){
+                return;
+            }
+            const p = then(null, () => actions[event.data.name](...event.data.args));
+            p.then(value => window.parent.postMessage({response: {id: event.data.id, value}}));
+            p.catch(error => window.parent.postMessage({response: {id: event.data.id, value: error, error: true}}));
+        });
+    });
     
     window.addEventListener('beforeunload', () => {
         if (PDFViewerApplication.pdfViewer.pdfDocument) {
@@ -156,7 +159,7 @@ function setup(dispatch, ready){
                         manager.setSelected(entry.editor);
                     }
                     window.requestAnimationFrame(() => {
-                        if (!entry.editor || !entry.getHighlightDiv) {
+                        if (!entry.editor || !entry.editor.getHighlightDiv) {
                             return;
                         }
                         const rect = entry.editor.getHighlightDiv().getBoundingClientRect();
