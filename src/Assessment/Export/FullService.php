@@ -24,7 +24,8 @@ interface FullService
     public function downloadWritings(
         array $writings,
         bool $anonymous,
-        Disposition $disposition = Disposition::ATTACHMENT
+        Disposition $disposition = Disposition::ATTACHMENT,
+        bool $force_sync = false
     ): bool;
 
     /**
