@@ -20,6 +20,7 @@ use Edutiek\AssessmentService\Task\Data\CorrectionItem;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Task\Data\Settings;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 
 readonly class Service implements ReadService
 {
@@ -118,6 +119,7 @@ readonly class Service implements ReadService
             'grading_points' => $item->getSummary()?->getEffectivePoints(),
             'grading_grade' => $item->getSummary() ? $this->assessment_grading->getGradLevelForPoints($item->getSummary()->getPoints())?->getGrade() : null,
             'other_status_text' => $this->otherStatusText($item),
+            'other_points' => $item->getOtherSummary()?->getEffectivePointsLight(),
             'other_correction_text' => $this->otherCorrectionText($item),
             'final_result_text' => $this->assessment_format->finalResult($item->getWriter()),
             'final_points' => $item->getWriter()->getFinalPoints(),
@@ -140,12 +142,13 @@ readonly class Service implements ReadService
             'correction_status' => $writer->getCorrectionStatus(),
             'correction_status_text' => $this->assessment_format->combinedStatus($writer),
             'grading_status' => null,
-            'own_status' => null,
-            'own_points' => null,
-            'own_grade' => null,
-            'result' => null,
-            'other_status' => null,
-            'other_correction' => null,
+            'grading_status_text' => null,
+            'grading_points' => null,
+            'grading_grade' => null,
+            'other_status_text' => null,
+            'other_points' => null,
+            'other_correction_text' => null,
+            'final_result_text' => null,
             'final_points' => null,
             'final_grade' => null,
             'can_correct' => null,
@@ -166,8 +169,8 @@ readonly class Service implements ReadService
 
     private function otherStatusText(CorrectionItem $item): string
     {
-        if (empty($item->getOtherCorrector()) || empty($item->getOtherAssignment())) {
-            return $this->lang->txt('grading_pos_empty');
+        if (empty($item->getOtherSummary())) {
+            return '';
         }
         return $this->format->gradingStatus($item->getOtherSummary()?->getGradingStatus(), false);
     }

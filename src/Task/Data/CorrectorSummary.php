@@ -49,6 +49,15 @@ abstract class CorrectorSummary implements TaskEntity
     }
 
     /**
+     * Get reduced points if everything before authorization should not be public
+     * @return GradingStatus
+     */
+    public function getEffectivePointsLight(): ?float
+    {
+        return $this->isRevised() ? $this->getRevisionPoints() : ($this->isAuthorized() ? $this->getPoints() : null);
+    }
+
+    /**
      * Get the full Grading Status
      * @return GradingStatus
      */

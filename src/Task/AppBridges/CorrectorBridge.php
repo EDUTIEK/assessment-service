@@ -47,6 +47,7 @@ class CorrectorBridge implements AppCorrectorBridge
     private const CHANGE_TYPE_SUMMARY = 'summary';
     private const CHANGE_TYPE_PREFERENCES = 'preferences';
     private const CHANGE_TYPE_SNIPPETS = 'snippets';
+    private const CHANGE_TYPE_BULK_AUTHORIZE = 'bulk_authorize';
 
     private ?Corrector $corrector = null;
     /** @var Settings */
@@ -127,7 +128,7 @@ class CorrectorBridge implements AppCorrectorBridge
             // A missing item with access is added by the getItem call
             $assignments = $this->assignment_service->all();
         } elseif ($this->corrector !== null) {
-            $assignments = $this->assignment_service->allByCorrectorIdFiltered($this->corrector->getId(), true);
+            $assignments = $this->assignment_service->allByCorrectorId($this->corrector->getId(), true);
         } else {
             $assignments = [];
         }
@@ -442,6 +443,8 @@ class CorrectorBridge implements AppCorrectorBridge
                     return array_map(fn(ChangeRequest $change) => $this->applyPreferences($change), $changes);
                 case self::CHANGE_TYPE_SNIPPETS:
                     return array_map(fn(ChangeRequest $change) => $this->applySnippets($change), $changes);
+                case self::CHANGE_TYPE_BULK_AUTHORIZE:
+                    return array_map(fn(ChangeRequest $change) => $this->applyBulkAuthorization($change), $changes);
                 default:
                     return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'wrong type'), $changes);
             }
@@ -592,6 +595,31 @@ class CorrectorBridge implements AppCorrectorBridge
                 return $change->toResponse(true);
         }
 
+        return $change->toResponse(false, 'wrong action');
+    }
+
+    private function applyBulkAuthorization(ChangeRequest $change): ChangeResponse
+    {
+        $data = $change->getPayload();
+        $assignment = $this->repos->correctorAssignment()->oneByIds(
+            (int) ($data['writer_id'] ?? 0),
+            (int) ($data['corrector_id'] ?? 0),
+            (int) ($data['task_id'] ?? 0),
+        );
+        $summary = clone($this->summary_service->getForAssignment($assignment));
+
+        if ($summary?->getGradingStatus() !== GradingStatus::PRE_GRADED) {
+            return $change->toResponse(false, 'summary is not pre-graded');
+        }
+
+        if ($change->getAction() === ChangeAction::SAVE) {
+            $result = $this->process_service->checkAndSaveSummary($summary->setGradingStatus(GradingStatus::AUTHORIZED, $this->user_id));
+            if ($result->isOk()) {
+                return $change->toResponse(true);
+            } else {
+                return $change->toResponse(false, implode("; ", $result->failures()));
+            }
+        }
         return $change->toResponse(false, 'wrong action');
     }
 
