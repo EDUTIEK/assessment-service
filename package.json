@@ -2,7 +2,7 @@
   "name": "assessment-service",
   "version": "2.0.0",
   "dependencies": {
-    "assessment-corrector": "github:EDUTIEK/assessment-corrector#dev_11",
-    "assessment-writer": "github:EDUTIEK/assessment-writer#dev_11"
+    "assessment-corrector": "github:EDUTIEK/assessment-corrector#pilot_11",
+    "assessment-writer": "github:EDUTIEK/assessment-writer#pilot_11"
   }
 }
