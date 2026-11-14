@@ -83,7 +83,7 @@ class WriterBridge implements AppBridge
     }
 
 
-    public function getFileInfo(string $entity, int $entity_id): ?FileInfo
+    public function getFileInfo(string $entity, int $entity_id, array $data = []): ?FileInfo
     {
         // no files handled in assessment component
         return null;

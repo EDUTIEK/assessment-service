@@ -11,7 +11,7 @@ use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Task\Api\ApiException;
-use Edutiek\AssessmentService\Task\Checks\FullService as ChecksService;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskChecks as ChecksService;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 
 readonly class Service implements ReadService, GradingProvider

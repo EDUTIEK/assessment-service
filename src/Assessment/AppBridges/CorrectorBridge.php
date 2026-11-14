@@ -5,22 +5,21 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Assessment\AppBridges;
 
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
-use Edutiek\AssessmentService\Assessment\Apps\ChangeAction;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
-use Edutiek\AssessmentService\Assessment\Apps\ChangeResponse;
-use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
-use Edutiek\AssessmentService\Assessment\WorkingTime\Factory as WorkingTimeFactory;
-use Edutiek\AssessmentService\Assessment\Writer\FullService as WriterService;
+use Edutiek\AssessmentService\Assessment\Export\FullService as ExportService;
+use Edutiek\AssessmentService\Assessment\PdfCreation\FullService as PdfService;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskChecks as ChecksService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\Data\Config;
 use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
-use Edutiek\AssessmentService\Task\Data\ResourceAvailability;
-use Edutiek\AssessmentService\Task\Data\ResourceType;
-use Edutiek\AssessmentService\Task\Data\Settings;
 use Psr\Http\Message\UploadedFileInterface;
 use Edutiek\AssessmentService\System\Data\FileInfo;
+use Edutiek\AssessmentService\Assessment\Data\WritingTask;
+use Edutiek\AssessmentService\System\File\Disposition;
+use Edutiek\AssessmentService\System\File\Storage;
+use Edutiek\AssessmentService\Assessment\Data\ExportType;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -33,8 +32,11 @@ class CorrectorBridge implements AppCorrectorBridge
     public function __construct(
         private readonly int $ass_id,
         private readonly int $user_id,
+        private readonly PdfService $pdfs,
+        private readonly ChecksService $checks,
         private readonly ConfigService $config,
         private readonly EntityService $entity,
+        private readonly Storage $storage,
         private readonly Repositories $repos,
     ) {
         $this->corrector = $this->repos->corrector()->oneByUserIdAndAssId($this->user_id, $this->ass_id);
@@ -89,8 +91,48 @@ class CorrectorBridge implements AppCorrectorBridge
         return $data;
     }
 
-    public function getFileInfo(string $entity, int $entity_id): ?FileInfo
+    public function getFileInfo(string $entity, int $entity_id, array $data = []): ?FileInfo
     {
+        switch ($entity) {
+            case 'writings':
+                $writings = [];
+                foreach ($data as $item) {
+                    if (!isset($item['writer_id']) || !isset($item['task_id'])) {
+                        continue;
+                    }
+                    $writing = new WritingTask(
+                        (int) $item['writer_id'],
+                        (int) $item['task_id']
+                    );
+                    if ($this->checks->hasTask($writing->getTaskId())
+                        && $this->checks->hasWriter($writing->getWriterId())
+                        && $this->is_admin || $this->checks->isAssigned(
+                            $writing->getWriterId(),
+                            $this->corrector?->getId() ?? 0,
+                            $writing->getTaskId()
+                        )
+                    ) {
+                        $writings[] = $writing;
+                    }
+                }
+
+                if (count($writings) == 1) {
+                    /** @var WritingTask $writing */
+                    $writing = reset($writings);
+                    $file_id = $this->pdfs->createWritingPdf($writing->getTaskId(), $writing->getWriterId(), true);
+                    return $this->storage->newInfo()
+                        ->setId($file_id)
+                        ->setMimeType('application/pdf')
+                        ->setDisposable(true);
+
+                } elseif (count($writings) > 0) {
+                    $file_id = $this->pdfs->createWritingZip($writings, true);
+                    return $this->storage->newInfo()
+                        ->setId($file_id)
+                        ->setMimeType('application/zip')
+                        ->setDisposable(true);
+                }
+        }
         // no files handled in assessment component
         return null;
     }

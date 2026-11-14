@@ -330,9 +330,9 @@ class Internal implements ComponentApi, ComponentApiFactory
         return $app;
     }
 
-    public function writerBridge(int $ass_id, int $user_id): ?AppBridge
+    public function writerBridge(int $ass_id, int $context_id, int $user_id): ?AppBridge
     {
-        return $this->instances[WriterBridge::class][$ass_id][$user_id] ??= new WriterBridge(
+        return $this->instances[WriterBridge::class][$ass_id][$context_id][$user_id] ??= new WriterBridge(
             $ass_id,
             $user_id,
             $this->workingTimeFactory($user_id),
@@ -394,13 +394,16 @@ class Internal implements ComponentApi, ComponentApiFactory
         );
     }
 
-    public function correctorBridge(int $ass_id, int $user_id): ?AppCorrectorBridge
+    public function correctorBridge(int $ass_id, int $context_id, int $user_id): ?AppCorrectorBridge
     {
-        return $this->instances[CorrectorBridge::class][$ass_id][$user_id] ??= new CorrectorBridge(
+        return $this->instances[CorrectorBridge::class][$ass_id][$context_id][$user_id] ??= new CorrectorBridge(
             $ass_id,
             $user_id,
+            $this->pdfCreation($ass_id, $context_id, $user_id),
+            $this->dependencies->taskApi()->checks($ass_id, $user_id),
             $this->dependencies->systemApi()->config(),
             $this->dependencies->systemApi()->entity(),
+            $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->repositories(),
         );
     }
@@ -647,12 +650,12 @@ class Internal implements ComponentApi, ComponentApiFactory
 
     public function personalDataExport(): PersonalDataExport\Export
     {
-        $task_components = array_map(fn (TaskType $task_type) => $task_type->component(), TaskType::cases());
+        $task_components = array_map(fn(TaskType $task_type) => $task_type->component(), TaskType::cases());
 
         return $this->instances[PersonalDataExport\Export::class] ??= new PersonalDataExport\Export(
             $this->api('Assessment')->personalDataCollector(),
             $this->api('Task')->personalDataCollector(),
-            array_map(fn ($component) => $this->api($component)->personalDataCollector(), $task_components),
+            array_map(fn($component) => $this->api($component)->personalDataCollector(), $task_components),
             $this->dependencies->systemApi()->user(),
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->fileDelivery(),

@@ -10,7 +10,7 @@ use Edutiek\AssessmentService\EssayTask\Data\MarkedPdf;
 use Edutiek\AssessmentService\EssayTask\Data\MarkedPdfRepo;
 use Edutiek\AssessmentService\EssayTask\Data\Repositories;
 use Edutiek\AssessmentService\System\File\Storage;
-use Edutiek\AssessmentService\Task\Checks\FullService as ChecksService;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskChecks as ChecksService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingProvider;
 
 class Service implements UsageService, EventService

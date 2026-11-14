@@ -105,7 +105,7 @@ class CorrectorBridge implements AppCorrectorBridge
         return $data;
     }
 
-    public function getFileInfo(string $entity, int $entity_id): ?FileInfo
+    public function getFileInfo(string $entity, int $entity_id, array $data = []): ?FileInfo
     {
         $id = null;
         switch ($entity) {

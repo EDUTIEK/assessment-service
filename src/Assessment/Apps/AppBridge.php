@@ -18,8 +18,9 @@ interface AppBridge
 
     /**
      * Get the file info of a file associated with an entity
+     * @param array $data additional data needed to get the file
      */
-    public function getFileInfo(string $entity, int $entity_id): ?FileInfo;
+    public function getFileInfo(string $entity, int $entity_id, array $data = []): ?FileInfo;
 
     /**
      * Apply change requests

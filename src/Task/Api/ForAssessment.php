@@ -8,6 +8,7 @@ use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\PdfCreation\PdfPartProvider;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingProvider;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskApi as TaskApi;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskChecks as ChecksService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager as ManagerInterface;
 use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 use Edutiek\AssessmentService\System\File\FileUsageFinder;
@@ -20,6 +21,11 @@ readonly class ForAssessment implements TaskApi
     ) {
     }
 
+    public function checks(int $ass_id, int $user_id): ChecksService
+    {
+        return $this->internal->checks($ass_id, $user_id);
+    }
+
     public function taskManager(int $ass_id, int $user_id): ManagerInterface
     {
         return $this->internal->taskManager($ass_id, $user_id);
@@ -30,12 +36,12 @@ readonly class ForAssessment implements TaskApi
         return $this->internal->correctorSummary($ass_id, $user_id);
     }
 
-    public function writerBridge(int $ass_id, int $user_id): ?AppBridge
+    public function writerBridge(int $ass_id, int $context_id, int $user_id): ?AppBridge
     {
         return $this->internal->writerBridge($ass_id, $user_id);
     }
 
-    public function correctorBridge(int $ass_id, int $user_id): ?AppCorrectorBridge
+    public function correctorBridge(int $ass_id, int $context_id, int $user_id): ?AppCorrectorBridge
     {
         return $this->internal->correctorBridge($ass_id, $user_id);
     }

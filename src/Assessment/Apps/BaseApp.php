@@ -99,7 +99,11 @@ abstract class BaseApp implements RestHandler
     }
 
     /**
-     * GET a file (will be sent with the requested disposition
+     * GET a file (will be sent with the requested disposition)
+     *
+     * Handles requests like /{frontend}/file/{component}/{entity}/{id}/{disposition}
+     * A request is typically sent as GET
+     * It may be sent as PUT with additional JSON data in the body
      */
     public function getFile(Request $request, Response $response, array $args): void
     {
@@ -109,9 +113,10 @@ abstract class BaseApp implements RestHandler
         $entity = $args['entity'] ?? null;
         $id = $args['id'] ?? null;
         $disposition = Disposition::tryFrom($args['disposition'] ?? '') ?? Disposition::INLINE;
+        $data = $this->rest_helper->getJsonData($request);
 
         if ($id === null) {
-            throw new RestException('No id gven', RestException::NOT_FOUND);
+            throw new RestException('No id given', RestException::NOT_FOUND);
         }
         if ($entity === null) {
             throw new RestException('No entity given', RestException::NOT_FOUND);
@@ -122,7 +127,7 @@ abstract class BaseApp implements RestHandler
             throw new RestException("Component $component not found", RestException::NOT_FOUND);
         }
 
-        $info = $bridge->getFileInfo((string) $entity, (int) $id);
+        $info = $bridge->getFileInfo((string) $entity, (int) $id, $data);
         if ($info === null) {
             throw new RestException("File for entity $entity with id $id not found", RestException::NOT_FOUND);
         }
@@ -175,8 +180,8 @@ abstract class BaseApp implements RestHandler
         $params = $this->rest_helper->getParams();
 
         return match($this->frontend) {
-            Frontend::WRITER => $api?->writerBridge($this->ass_id, $this->user_id),
-            Frontend::CORRECTOR => $api?->correctorBridge($this->ass_id, $this->user_id)?->setAdmin(
+            Frontend::WRITER => $api?->writerBridge($this->ass_id, $this->context_id, $this->user_id),
+            Frontend::CORRECTOR => $api?->correctorBridge($this->ass_id, $this->context_id, $this->user_id)?->setAdmin(
                 (($params['as_admin'] ?? '') === 'true') && $this->permissions->canMaintainCorrectors()
             )
         };

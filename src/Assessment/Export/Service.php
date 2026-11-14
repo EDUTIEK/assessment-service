@@ -46,26 +46,14 @@ class Service implements FullService
         array $writings,
         bool $anonymous,
         Disposition $disposition = Disposition::ATTACHMENT,
-        bool $force_sync = false,
     ): bool {
         if (count($writings) > 1) {
-            if ($force_sync) {
-                $file_id = $this->pdf->createWritingZip($writings, $anonymous);
-                $file_info = $this->storage->newInfo()
-                    ->setId($file_id)
-                    ->setFileName($this->filenames->build(ExportType::WRITINGS, '.zip'))
-                    ->setDisposable(true);
-                $this->delivery->sendFile($file_id, $disposition, $file_info);
-                return false;
-
-            } else {
-                $this->background_tasks->downloadWritings(
-                    $writings,
-                    $anonymous,
-                    $this->filenames->build(ExportType::WRITINGS, '.zip')
-                );
-                return true;
-            }
+            $this->background_tasks->downloadWritings(
+                $writings,
+                $anonymous,
+                $this->filenames->build(ExportType::WRITINGS, '.zip')
+            );
+            return true;
         }
 
         $wt = reset($writings);

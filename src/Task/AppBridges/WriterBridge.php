@@ -114,7 +114,7 @@ class WriterBridge implements AppBridge
         return $data;
     }
 
-    public function getFileInfo(string $entity, int $entity_id): ?FileInfo
+    public function getFileInfo(string $entity, int $entity_id, array $data = []): ?FileInfo
     {
         $id = null;
         $resource = $this->resources[$entity_id] ?? null;

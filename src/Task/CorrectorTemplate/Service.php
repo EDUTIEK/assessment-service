@@ -6,7 +6,7 @@ namespace Edutiek\AssessmentService\Task\CorrectorTemplate;
 
 use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\Task\Data\CorrectorTemplate;
-use Edutiek\AssessmentService\Task\Checks\FullService as ChecksService;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskChecks as ChecksService;
 use Edutiek\AssessmentService\Task\Api\ApiException;
 
 readonly class Service implements FullService

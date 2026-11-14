@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Edutiek\AssessmentService\Task\Checks;
+namespace Edutiek\AssessmentService\Assessment\TaskInterfaces;
 
-interface FullService
+interface TaskChecks
 {
     /**
      * Check if assessment has the task

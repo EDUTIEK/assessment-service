@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\Task\Checks;
 
 use Edutiek\AssessmentService\Task\Data\Repositories;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskChecks as ChecksService;
 use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterService;
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorService;
 
-readonly class Service implements FullService
+readonly class Service implements ChecksService
 {
     public function __construct(
         private int $ass_id,

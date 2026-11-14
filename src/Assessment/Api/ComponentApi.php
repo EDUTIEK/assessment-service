@@ -25,12 +25,12 @@ interface ComponentApi
     /**
      * Get the bridge to provide and process data for the Writer web app
      */
-    public function writerBridge(int $ass_id, int $user_id): ?AppBridge;
+    public function writerBridge(int $ass_id, int $context_id, int $user_id): ?AppBridge;
 
     /**
      * Get the bridge to provide and process data for the Writer web app
      */
-    public function correctorBridge(int $ass_id, int $user_id): ?AppCorrectorBridge;
+    public function correctorBridge(int $ass_id, int $context_id, int $user_id): ?AppCorrectorBridge;
 
     /**
      * Get the provider of parts for the PDF of a writing
