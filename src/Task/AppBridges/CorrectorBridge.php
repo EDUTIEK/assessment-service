@@ -602,7 +602,7 @@ class CorrectorBridge implements AppCorrectorBridge
 
     private function applyAuthorization(ChangeRequest $change): ChangeResponse
     {
-        if ($change->getAction() === ChangeAction::SAVE) {
+        if ($change->getAction() !== ChangeAction::SAVE) {
             return $change->toResponse(false, 'wrong action');
         }
 
