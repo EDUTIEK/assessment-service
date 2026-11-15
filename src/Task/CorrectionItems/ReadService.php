@@ -27,7 +27,7 @@ interface ReadService
      * @param CorrectionItem $item
      * @return string[]
      */
-    public function getDisplayData(CorrectionItem $item): array;
+    public function getCorrectorData(CorrectionItem $item): array;
 
     /**
      * Get the data for display of the correction item to an admin

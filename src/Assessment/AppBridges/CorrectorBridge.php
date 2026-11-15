@@ -85,7 +85,9 @@ class CorrectorBridge implements AppCorrectorBridge
             'no_manual_decimals' => $settings->getNoManualDecimals(),
             'download_writing' => $this->is_admin || $settings->getDownloadWriting(),
             'download_correction' => $this->is_admin || $settings->getDownloadCorrection(),
-            'fixed_items_order' => $settings->getStartpageFixed()
+            'fixed_items_order' => $settings->getStartpageFixed(),
+            'undo_authorization' => $settings->getUndoAuthorization(),
+            'undo_first_authorization' => $settings->getUndoFirstAuthorization()
         ]);
 
         return $data;
@@ -93,47 +95,61 @@ class CorrectorBridge implements AppCorrectorBridge
 
     public function getFileInfo(string $entity, int $entity_id, array $data = []): ?FileInfo
     {
-        switch ($entity) {
-            case 'writings':
-                $writings = [];
-                foreach ($data as $item) {
-                    if (!isset($item['writer_id']) || !isset($item['task_id'])) {
-                        continue;
-                    }
-                    $writing = new WritingTask(
-                        (int) $item['writer_id'],
-                        (int) $item['task_id']
-                    );
-                    if ($this->checks->hasTask($writing->getTaskId())
-                        && $this->checks->hasWriter($writing->getWriterId())
-                        && $this->is_admin || $this->checks->isAssigned(
-                            $writing->getWriterId(),
-                            $this->corrector?->getId() ?? 0,
-                            $writing->getTaskId()
-                        )
-                    ) {
-                        $writings[] = $writing;
-                    }
-                }
-
-                if (count($writings) == 1) {
-                    /** @var WritingTask $writing */
-                    $writing = reset($writings);
-                    $file_id = $this->pdfs->createWritingPdf($writing->getTaskId(), $writing->getWriterId(), true);
-                    return $this->storage->newInfo()
-                        ->setId($file_id)
-                        ->setMimeType('application/pdf')
-                        ->setDisposable(true);
-
-                } elseif (count($writings) > 0) {
-                    $file_id = $this->pdfs->createWritingZip($writings, true);
-                    return $this->storage->newInfo()
-                        ->setId($file_id)
-                        ->setMimeType('application/zip')
-                        ->setDisposable(true);
-                }
+        $settings = $this->repos->correctionSettings()->one($this->ass_id);
+        $allowed = match($entity) {
+            'writings' => $this->is_admin || $settings?->getDownloadWriting(),
+            'corrections' => $this->is_admin || $settings?->getDownloadCorrection(),
+            default => false
+        };
+        if (!$allowed) {
+            return null;
         }
-        // no files handled in assessment component
+
+        $writings = [];
+        foreach ($data as $item) {
+            if (!isset($item['writer_id']) || !isset($item['task_id'])) {
+                continue;
+            }
+            $writing = new WritingTask(
+                (int) $item['writer_id'],
+                (int) $item['task_id']
+            );
+            if ($this->checks->hasTask($writing->getTaskId())
+                && $this->checks->hasWriter($writing->getWriterId())
+                && $this->is_admin || $this->checks->isAssigned(
+                    $writing->getWriterId(),
+                    $this->corrector?->getId() ?? 0,
+                    $writing->getTaskId()
+                )
+            ) {
+                $writings[] = $writing;
+            }
+        }
+
+        if (count($writings) == 1) {
+            /** @var WritingTask $writing */
+            $writing = reset($writings);
+            $file_id = match($entity) {
+                'writings' => $this->pdfs->createWritingPdf($writing->getTaskId(), $writing->getWriterId(), true),
+                'corrections' => $this->pdfs->createCorrectionPdf($writing->getTaskId(), $writing->getWriterId(), true, false)
+            };
+            return $this->storage->newInfo()
+                ->setId($file_id)
+                ->setMimeType('application/pdf')
+                ->setDisposable(true);
+
+        } elseif (count($writings) > 0) {
+            $file_id = match($entity) {
+                'writings' => $this->pdfs->createWritingZip($writings, true),
+                'corrections' => $this->pdfs->createCorrectionZip($writings, true, false)
+            };
+
+            return $this->storage->newInfo()
+                ->setId($file_id)
+                ->setMimeType('application/zip')
+                ->setDisposable(true);
+        }
+
         return null;
     }
 

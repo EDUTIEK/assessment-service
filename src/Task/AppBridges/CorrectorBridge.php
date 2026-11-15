@@ -39,15 +39,18 @@ use Edutiek\AssessmentService\Task\Data\Settings;
 use Psr\Http\Message\UploadedFileInterface;
 use Edutiek\AssessmentService\System\Data\FileInfo;
 use Edutiek\AssessmentService\Task\Data\CorrectorSnippetPurpose;
+use Edutiek\AssessmentService\System\Data\Result;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
-    private const CHANGE_TYPE_COMMENT = 'comment';
-    private const CHANGE_TYPE_POINTS = 'points';
-    private const CHANGE_TYPE_SUMMARY = 'summary';
-    private const CHANGE_TYPE_PREFERENCES = 'preferences';
-    private const CHANGE_TYPE_SNIPPETS = 'snippets';
-    private const CHANGE_TYPE_BULK_AUTHORIZE = 'bulk_authorize';
+    private const string CHANGE_TYPE_COMMENT = 'comment';
+    private const string CHANGE_TYPE_POINTS = 'points';
+    private const string CHANGE_TYPE_SUMMARY = 'summary';
+    private const string CHANGE_TYPE_PREFERENCES = 'preferences';
+    private const string CHANGE_TYPE_SNIPPETS = 'snippets';
+    private const string CHANGE_TYPE_BULK_AUTHORIZE = 'bulk_authorize';
+    private const string CHANGE_TYPE_REMOVE_OWN_AUTHORIZATION = 'remove_own_authorization';
+    private const string CHANGE_TYPE_REMOVE_FIRST_AUTHORIZATION = 'remove_first_authorization';
 
     private ?Corrector $corrector = null;
     /** @var Settings */
@@ -141,7 +144,7 @@ class CorrectorBridge implements AppCorrectorBridge
             if ($assignment->getCorrectorId() === $this->corrector?->getId()) {
                 $item = $this->items_service->buildCorrectionItem($assignment);
                 $data['Items'][] = $this->entity->arrayToPrimitives(
-                    $this->items_service->getDisplayData($item)
+                    $this->items_service->getCorrectorData($item)
                 );
             } elseif (!isset($added[$assignment->getTaskId()][$assignment->getWriterId()])) {
                 $data['Items'][] = $this->entity->arrayToPrimitives(
@@ -241,14 +244,11 @@ class CorrectorBridge implements AppCorrectorBridge
         if ($own_assignment !== null) {
             $item = $this->items_service->buildCorrectionItem($own_assignment);
             $data['Item'] = $this->entity->arrayToPrimitives(
-                $this->items_service->getDisplayData($item)
+                $this->items_service->getCorrectorData($item)
             );
         } elseif ($this->is_admin) {
             $data['Item'] = $this->entity->arrayToPrimitives(
-                $this->items_service->getAdminData(
-                    $writer,
-                    $this->tasks[$task_id]
-                )
+                $this->items_service->getAdminData($writer, $this->tasks[$task_id])
             );
         } else {
             return $data;
@@ -444,7 +444,9 @@ class CorrectorBridge implements AppCorrectorBridge
                 case self::CHANGE_TYPE_SNIPPETS:
                     return array_map(fn(ChangeRequest $change) => $this->applySnippets($change), $changes);
                 case self::CHANGE_TYPE_BULK_AUTHORIZE:
-                    return array_map(fn(ChangeRequest $change) => $this->applyBulkAuthorization($change), $changes);
+                case self::CHANGE_TYPE_REMOVE_OWN_AUTHORIZATION:
+                case self::CHANGE_TYPE_REMOVE_FIRST_AUTHORIZATION:
+                    return array_map(fn(ChangeRequest $change) => $this->applyAuthorization($change), $changes);
                 default:
                     return array_map(fn(ChangeRequest $change) => $change->toResponse(false, 'wrong type'), $changes);
             }
@@ -598,29 +600,46 @@ class CorrectorBridge implements AppCorrectorBridge
         return $change->toResponse(false, 'wrong action');
     }
 
-    private function applyBulkAuthorization(ChangeRequest $change): ChangeResponse
+    private function applyAuthorization(ChangeRequest $change): ChangeResponse
     {
+        if ($change->getAction() === ChangeAction::SAVE) {
+            return $change->toResponse(false, 'wrong action');
+        }
+
         $data = $change->getPayload();
         $assignment = $this->repos->correctorAssignment()->oneByIds(
             (int) ($data['writer_id'] ?? 0),
             (int) ($data['corrector_id'] ?? 0),
             (int) ($data['task_id'] ?? 0),
         );
-        $summary = clone($this->summary_service->getForAssignment($assignment));
-
-        if ($summary?->getGradingStatus() !== GradingStatus::PRE_GRADED) {
-            return $change->toResponse(false, 'summary is not pre-graded');
+        if ($assignment === null) {
+            return $change->toResponse(false, 'no assignment found');
         }
 
-        if ($change->getAction() === ChangeAction::SAVE) {
-            $result = $this->process_service->checkAndSaveSummary($summary->setGradingStatus(GradingStatus::AUTHORIZED, $this->user_id));
-            if ($result->isOk()) {
-                return $change->toResponse(true);
-            } else {
-                return $change->toResponse(false, implode("; ", $result->failures()));
-            }
+        $result = new Result();
+        switch ($change->getType()) {
+            case self::CHANGE_TYPE_BULK_AUTHORIZE:
+                $summary = clone($this->summary_service->getForAssignment($assignment));
+                if ($summary?->getGradingStatus() !== GradingStatus::PRE_GRADED) {
+                    return $change->toResponse(false, 'summary is not pre-graded');
+                }
+                $result = $this->process_service->checkAndSaveSummary($summary->setGradingStatus(GradingStatus::AUTHORIZED, $this->user_id));
+                break;
+
+            case self::CHANGE_TYPE_REMOVE_OWN_AUTHORIZATION:
+                $result = $this->process_service->removeOwnAuthorization($assignment);
+                break;
+
+            case self::CHANGE_TYPE_REMOVE_FIRST_AUTHORIZATION:
+                $result = $this->process_service->removeFirstAuthorization($assignment);
+                break;
         }
-        return $change->toResponse(false, 'wrong action');
+
+        if ($result->isFailed()) {
+            return $change->toResponse(false, implode("; ", $result->failures()));
+        }
+
+        return $change->toResponse(true);
     }
 
     private function applySummary(ChangeRequest $change): ChangeResponse

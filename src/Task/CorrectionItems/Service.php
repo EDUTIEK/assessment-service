@@ -103,7 +103,7 @@ readonly class Service implements ReadService
         );
     }
 
-    public function getDisplayData(CorrectionItem $item): array
+    public function getCorrectorData(CorrectionItem $item): array
     {
         return [
             'task_id' => $item->getAssignment()->getTaskId(),
@@ -127,6 +127,8 @@ readonly class Service implements ReadService
             'can_correct' => $this->process->canCorrect($item->getAssignment()),
             'can_authorize' => $this->process->canAuthorizeOwnCorrection($item->getAssignment()),
             'can_revise' => $this->process->canRevise($item->getAssignment()),
+            'can_remove_own_authorization' => $this->process->canRemoveOwnAuthorization($item->getAssignment()),
+            'can_remove_first_authorization' => $this->process->canRemoveFirstAuthorization($item->getAssignment())
         ];
     }
 
@@ -154,6 +156,8 @@ readonly class Service implements ReadService
             'can_correct' => null,
             'can_authorize' => null,
             'can_revise' => null,
+            'can_remove_own_authorization' => null,
+            'can_remove_first_authorization' => null
         ];
     }
 

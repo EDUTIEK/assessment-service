@@ -261,7 +261,7 @@ readonly class Service implements FullService
         return new Result(true);
     }
 
-    public function removeFirstAuthorization(CorrectorAssignment $assignment, string $reason): Result
+    public function removeFirstAuthorization(CorrectorAssignment $assignment, string $reason = null): Result
     {
         if (!$this->canRemoveFirstAuthorization($assignment)) {
             return new Result(false, $this->language->txt('remove_first_authorization_not_allowed'));
