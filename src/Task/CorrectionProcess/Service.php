@@ -215,7 +215,7 @@ readonly class Service implements FullService
         return true;
     }
 
-    public function authorizeOwnCorrection(CorrectorAssignment $assignment, bool $in_backend = false): Result
+    public function authorizeOwnCorrection(CorrectorAssignment $assignment, bool $in_bulk = false): Result
     {
         if (!$this->canAuthorizeOwnCorrection($assignment)) {
             return new Result(false, $this->language->txt('authorization_not_allowed'));
@@ -224,7 +224,7 @@ readonly class Service implements FullService
         // use clone to allow compare with a previous version
         $summary = clone $this->summary_service->getForAssignment($assignment);
 
-        if ($in_backend && !$summary->getPreGraded()) {
+        if ($in_bulk && !$summary->getPreGraded()) {
             return new Result(false, $this->language->txt('authorization_needs_pregrade'));
         }
 

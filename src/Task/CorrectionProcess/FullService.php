@@ -12,8 +12,9 @@ interface FullService extends ReadService
 {
     /**
      * Authorize a correction as a corrector
+     * @param bool $in_bulk    function is used in a bulk authorization. The correction mrst be pre-graded
      */
-    public function authorizeOwnCorrection(CorrectorAssignment $assignment, bool $in_backend = false): Result;
+    public function authorizeOwnCorrection(CorrectorAssignment $assignment, bool $in_bulk = false): Result;
 
     /**
      * Remove the authorization of an own correction

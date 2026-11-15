@@ -613,27 +613,15 @@ class CorrectorBridge implements AppCorrectorBridge
             (int) ($data['task_id'] ?? 0),
         );
         if ($assignment === null) {
-            return $change->toResponse(false, 'no assignment found');
+            return $change->toResponse(false, $this->language->txt('assignment_not_found'));
         }
 
-        $result = new Result();
-        switch ($change->getType()) {
-            case self::CHANGE_TYPE_BULK_AUTHORIZE:
-                $summary = clone($this->summary_service->getForAssignment($assignment));
-                if ($summary?->getGradingStatus() !== GradingStatus::PRE_GRADED) {
-                    return $change->toResponse(false, 'summary is not pre-graded');
-                }
-                $result = $this->process_service->checkAndSaveSummary($summary->setGradingStatus(GradingStatus::AUTHORIZED, $this->user_id));
-                break;
-
-            case self::CHANGE_TYPE_REMOVE_OWN_AUTHORIZATION:
-                $result = $this->process_service->removeOwnAuthorization($assignment);
-                break;
-
-            case self::CHANGE_TYPE_REMOVE_FIRST_AUTHORIZATION:
-                $result = $this->process_service->removeFirstAuthorization($assignment);
-                break;
-        }
+        $result = match($change->getType()) {
+            self::CHANGE_TYPE_BULK_AUTHORIZE => $this->process_service->authorizeOwnCorrection($assignment),
+            self::CHANGE_TYPE_REMOVE_OWN_AUTHORIZATION => $this->process_service->removeOwnAuthorization($assignment),
+            self::CHANGE_TYPE_REMOVE_FIRST_AUTHORIZATION => $this->process_service->removeFirstAuthorization($assignment),
+            default => new Result('wrong type')
+        };
 
         if ($result->isFailed()) {
             return $change->toResponse(false, implode("; ", $result->failures()));

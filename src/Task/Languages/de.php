@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'assignment_not_found' => 'Keine Korrektur zugewiesen',
     'authorization_not_removable' => 'Freigabe kann nicht zurückgenommen werden',
     'authorization_not_allowed' => 'Status erlaubt keine Freigabe',
     'authorization_text_missing' => 'Gutachten fehlt',
