@@ -698,7 +698,9 @@ class CorrectorBridge implements AppCorrectorBridge
             return $change->toResponse(false, 'corrector not found');
         }
 
-        $template = $this->repos->correctorTemplates()->oneByTaskIdAndCorrectorId($task_id, $this->corrector->getId());
+        $repo = $this->repos->correctorTemplates();
+        $template = $repo->oneByTaskIdAndCorrectorId($task_id, $this->corrector->getId())
+            ?? $repo->new($task_id, $this->corrector->getId());
 
         $this->entity->fromPrimitives([
             'task_id' => (int) ($data['task_id'] ?? null),
@@ -708,7 +710,7 @@ class CorrectorBridge implements AppCorrectorBridge
         ], $template, CorrectorTemplate::class);
 
         if ($change->getAction() === ChangeAction::SAVE) {
-            $this->repos->correctorTemplates()->save($template);
+            $repo->save($template);
             return $change->toResponse(true);
         }
         return $change->toResponse(false, 'wrong action');
