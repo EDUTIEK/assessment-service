@@ -24,7 +24,7 @@ interface FullService extends ReadService
     /**
      * Remove the authorization of a first corrector as a second corrector
      */
-    public function removeFirstAuthorization(CorrectorAssignment $assignment, string $reason = null): Result;
+    public function removeFirstAuthorization(CorrectorAssignment $assignment, ?string $reason = null): Result;
 
 
     /**
