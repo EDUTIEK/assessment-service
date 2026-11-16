@@ -178,7 +178,9 @@ class CorrectorBridge implements AppCorrectorBridge
                 $template = $this->template_service->getByTaskIdAndCorrectorId($task_id, $this->corrector->getId());
                 $data['Templates'][] = $this->entity->arrayToPrimitives([
                     'task_id' => $template->getTaskId(),
+                    'corrector_id' => $template->getCorrectorId(),
                     'content' => $template->getContent(),
+                    'shared' => $template->getShared()
                 ]);
             }
         }
@@ -691,20 +693,22 @@ class CorrectorBridge implements AppCorrectorBridge
         $data = $change->getPayload();
 
         $task_id = (int) ($data['task_id'] ?? 0);
+        $corrector_id = (int) ($data['corrector_id'] ?? 0);
+
         if (!$this->repos->settings()->has($this->ass_id, $task_id)) {
-            return $change->toResponse(false, 'task not found');
+            return $change->toResponse(false, 'wrong task');
         }
-        if ($this->corrector === null) {
-            return $change->toResponse(false, 'corrector not found');
+        if ($this->corrector === null || $this->corrector->getId() !== $corrector_id) {
+            return $change->toResponse(false, 'wrong corrector');
         }
 
         $repo = $this->repos->correctorTemplates();
-        $template = $repo->oneByTaskIdAndCorrectorId($task_id, $this->corrector->getId())
-            ?? $repo->new($task_id, $this->corrector->getId());
+        $template = $repo->oneByTaskIdAndCorrectorId($task_id, $corrector_id)
+            ?? $repo->new($task_id, $corrector_id);
 
         $this->entity->fromPrimitives([
-            'task_id' => (int) ($data['task_id'] ?? null),
-            'corrector_id' => $this->corrector->getId(),
+            'task_id' => $task_id,
+            'corrector_id' => $corrector_id,
             'content' => $data['content'] ?? null,
             'shared' => (bool) ($data['shared'] ?? null)
         ], $template, CorrectorTemplate::class);
