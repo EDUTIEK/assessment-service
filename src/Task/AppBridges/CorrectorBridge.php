@@ -40,6 +40,7 @@ use Psr\Http\Message\UploadedFileInterface;
 use Edutiek\AssessmentService\System\Data\FileInfo;
 use Edutiek\AssessmentService\Task\Data\CorrectorSnippetPurpose;
 use Edutiek\AssessmentService\System\Data\Result;
+use Edutiek\AssessmentService\Task\Data\CorrectorTemplate;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -48,6 +49,7 @@ class CorrectorBridge implements AppCorrectorBridge
     private const string CHANGE_TYPE_SUMMARY = 'summary';
     private const string CHANGE_TYPE_PREFERENCES = 'preferences';
     private const string CHANGE_TYPE_SNIPPETS = 'snippets';
+    private const string CHANGE_TYPE_TEMPLATE = 'template';
     private const string CHANGE_TYPE_BULK_AUTHORIZE = 'bulk_authorize';
     private const string CHANGE_TYPE_REMOVE_OWN_AUTHORIZATION = 'remove_own_authorization';
     private const string CHANGE_TYPE_REMOVE_FIRST_AUTHORIZATION = 'remove_first_authorization';
@@ -443,6 +445,8 @@ class CorrectorBridge implements AppCorrectorBridge
                     return array_map(fn(ChangeRequest $change) => $this->applyPreferences($change), $changes);
                 case self::CHANGE_TYPE_SNIPPETS:
                     return array_map(fn(ChangeRequest $change) => $this->applySnippets($change), $changes);
+                case self::CHANGE_TYPE_TEMPLATE:
+                    return array_map(fn(ChangeRequest $change) => $this->applyTemplate($change), $changes);
                 case self::CHANGE_TYPE_BULK_AUTHORIZE:
                 case self::CHANGE_TYPE_REMOVE_OWN_AUTHORIZATION:
                 case self::CHANGE_TYPE_REMOVE_FIRST_AUTHORIZATION:
@@ -678,6 +682,34 @@ class CorrectorBridge implements AppCorrectorBridge
             } else {
                 return $change->toResponse(false, implode("; ", $result->failures()));
             }
+        }
+        return $change->toResponse(false, 'wrong action');
+    }
+
+    private function applyTemplate(ChangeRequest $change): ChangeResponse
+    {
+        $data = $change->getPayload();
+
+        $task_id = (int) ($data['task_id'] ?? 0);
+        if (!$this->repos->settings()->has($this->ass_id, $task_id)) {
+            return $change->toResponse(false, 'task not found');
+        }
+        if ($this->corrector === null) {
+            return $change->toResponse(false, 'corrector not found');
+        }
+
+        $template = $this->repos->correctorTemplates()->oneByTaskIdAndCorrectorId($task_id, $this->corrector->getId());
+
+        $this->entity->fromPrimitives([
+            'task_id' => (int) ($data['task_id'] ?? null),
+            'corrector_id' => $this->corrector->getId(),
+            'content' => $data['content'] ?? null,
+            'shared' => (bool) ($data['shared'] ?? null)
+        ], $template, CorrectorTemplate::class);
+
+        if ($change->getAction() === ChangeAction::SAVE) {
+            $this->repos->correctorTemplates()->save($template);
+            return $change->toResponse(true);
         }
         return $change->toResponse(false, 'wrong action');
     }
