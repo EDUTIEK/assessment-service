@@ -87,6 +87,7 @@ class AppStart implements RestHandler
         $user_data = $this->users->getUser($this->user_id);
         $data = [
             'user_id' => $this->user_id,
+            'login' => $user_data->getLogin(),
             'full_name' => $user_data->getFullname(false),
             'agreement' => $this->auth->getAgreement($this->user_id),
             'accepted' => $this->auth->hasAcceptedAgreement($this->user_id),
