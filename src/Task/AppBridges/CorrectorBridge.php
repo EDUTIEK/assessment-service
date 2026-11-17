@@ -220,6 +220,7 @@ class CorrectorBridge implements AppCorrectorBridge
             'select_words' => $preferences->getSelectWords(),
             'filter_assigned_position' => $preferences->getFilterAssignedPosition(),
             'filter_grading_status' => $preferences->getFilterGradingStatus(),
+            'filter_other_status' => $preferences->getFilterOtherStatus(),
             'filter_correction_status' => $preferences->getFilterCorrectionStatus(),
 
         ]);
@@ -762,9 +763,10 @@ class CorrectorBridge implements AppCorrectorBridge
             'default_shape' => $data['default_shape'] ?? null,
             'display_labels' => $data['display_labels'] ?? false,
             'select_words' => $data['select_words'] ?? false,
+            'filter_assigned_position' => $data['filter_assigned_position'] ?? null,
             'filter_grading_status' => $data['filter_grading_status'] ?? null,
-            'filter_combined_status' => $data['filter_correction_status'] ?? null,
-            'filter_assigned_position' => $data['filter_assigned_position'] ?? null
+            'filter_other_status' => $data['filter_other_status'] ?? null,
+            'filter_correction_status' => $data['filter_correction_status'] ?? null,
 
         ], $prefs, CorrectorPrefs::class);
         $this->entity->secure($prefs, CorrectorPrefs::class);
