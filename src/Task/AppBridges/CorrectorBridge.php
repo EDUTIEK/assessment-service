@@ -20,7 +20,7 @@ use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentService;
-use Edutiek\AssessmentService\Task\CorrectionItems\ReadService as ItemsService;
+use Edutiek\AssessmentService\Task\CorrectionItems\FullService as ItemsService;
 use Edutiek\AssessmentService\Task\CorrectorSnippets\FullService as SnippetsService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\ReadService as SummaryService;
 use Edutiek\AssessmentService\Task\CorrectorTemplate\FullService as TemplateService;

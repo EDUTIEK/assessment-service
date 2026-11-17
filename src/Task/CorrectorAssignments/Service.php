@@ -5,7 +5,6 @@ namespace Edutiek\AssessmentService\Task\CorrectorAssignments;
 use Edutiek\AssessmentService\Assessment\Corrector\ReadService as CorrectorService;
 use Edutiek\AssessmentService\Assessment\Data\AssignFilter;
 use Edutiek\AssessmentService\Assessment\Data\AssignMode;
-use Edutiek\AssessmentService\Assessment\Data\CombinedStatus;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionSettings;
 use Edutiek\AssessmentService\Assessment\Data\ExportType;
 use Edutiek\AssessmentService\Assessment\Export\FileNameBuilder;
@@ -28,7 +27,6 @@ use Edutiek\AssessmentService\System\Spreadsheet\ExportType as SpreadsheetExport
 use Edutiek\AssessmentService\System\File\Disposition;
 use Edutiek\AssessmentService\Assessment\Data\NotificationType;
 use Edutiek\AssessmentService\System\Data\Result;
-use Edutiek\AssessmentService\Assessment\Data\CorrectionSort;
 
 readonly class Service implements FullService
 {
@@ -133,155 +131,6 @@ readonly class Service implements FullService
     public function oneByIds(int $writer_id, int $corrector_id, int $task_id): ?CorrectorAssignment
     {
         return $this->repos->correctorAssignment()->oneByIds($writer_id, $corrector_id, $task_id);
-    }
-
-    public function saveCorrectorFilter(int $corrector_id, ?array $grading_status, ?array $combined_status, ?int $position): void
-    {
-        $prefs = $this->repos->correctorPrefs()->one($corrector_id) ??
-            $this->repos->correctorPrefs()->new()->setCorrectorId($corrector_id);
-
-        $prefs->setFilterGradingStatus(
-            $grading_status === null ? null : implode(
-                ',',
-                array_map(fn($status) => $status->value, $grading_status)
-            )
-        );
-
-        $prefs->setFilterCombinedStatus(
-            $combined_status === null ? null : implode(
-                ',',
-                array_map(fn($status) => $status->value, $combined_status)
-            )
-        );
-
-        $prefs->setFilterAssignedPosition($position);
-
-        $this->repos->correctorPrefs()->save($prefs);
-    }
-
-    public function getCorrectionFilter(int $corrector_id): array
-    {
-        if ($this->correction_settings->getStartpageFixed()) {
-            return [null, null, null];
-        }
-
-        $prefs = $this->repos->correctorPrefs()->one($corrector_id) ??
-            $this->repos->correctorPrefs()->new()->setCorrectorId($corrector_id);
-
-        $pos = $prefs->getFilterAssignedPosition();
-
-        if ($prefs->getFilterGradingStatus() !== null) {
-            $status = explode(',', $prefs->getFilterGradingStatus());
-        }
-        $status = empty($status) ? null : $status;
-
-        if ($prefs->getFilterCombinedStatus() !== null) {
-            $combined = explode(',', $prefs->getFilterCombinedStatus());
-        }
-        $combined = empty($combined) ? null : $combined;
-
-        return [$status, $combined, $pos];
-    }
-
-
-    public function allByCorrectorIdFiltered(int $corrector_id, bool $only_authorized_writings = false): array
-    {
-        $assignments = $this->allByCorrectorId($corrector_id, $only_authorized_writings);
-
-        [$status, $combined, $pos] = $this->getCorrectionFilter($corrector_id);
-
-        $filtered = [];
-
-        /** @var CorrectorAssignment $assignment */
-        foreach ($assignments as $assignment) {
-            $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
-            $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
-                $assignment->getTaskId(),
-                $assignment->getWriterId(),
-                $assignment->getCorrectorId()
-            );
-
-            if ($pos !== null && $assignment->getPosition()->value !== $pos) {
-                continue;
-            }
-            if ($status !== null) {
-                $value = $summary?->getGradingStatus()?->value ?? GradingStatus::NOT_STARTED->value;
-                if (!in_array($value, $status)) {
-                    continue;
-                }
-            }
-            if ($combined !== null) {
-                $value = $writer?->getCombinedStatus()?->value ?? CombinedStatus::WRITING_NOT_STARTED->value;
-                if (!in_array($value, $combined)) {
-                    continue;
-                }
-            }
-
-            // summary and writer is needed for sorting
-            $filtered[] = [
-                'assignment' => $assignment,
-                'summary' => $summary,
-                'writer' => $writer
-            ];
-        }
-
-        if ($this->correction_settings->getStartpageFixed()) {
-            usort($filtered, $this->sortAssignments(...));
-        }
-
-        return array_column($filtered, 'assignment');
-    }
-
-
-    /**
-     * Internal sort function for assignments
-     * @return \Closure(array, array): int
-     */
-    private function sortAssignments(array $left, array $right): int
-    {
-        $primary = $this->correction_settings->getFixedSort1();
-        $secondary = $this->correction_settings->getFixedSort2();
-
-        return $this->compareAssignments($left, $right, $primary)
-            ?: $this->compareAssignments($left, $right, $secondary)
-                ?: $this->compareAssignments($left, $right, CorrectionSort::PSEUDONYM_ASC);
-    }
-
-    /**
-     * Internal compare function for assignments
-     * @return \Closure(array, array): int
-     */
-    private function compareAssignments(array $left, array $right, CorrectionSort $sort): int
-    {
-        return match ($sort) {
-            CorrectionSort::GRADING_POSITION => GradingPosition::order(
-                $left['assignment']->getPosition(),
-                $right['assignment']->getPosition()
-            ),
-            CorrectionSort::OWN_STATE => GradingStatus::order(
-                $left['summary']?->getGradingStatus() ?? GradingStatus::NOT_STARTED,
-                $right['summary']?->getGradingStatus() ?? GradingStatus::NOT_STARTED,
-            ),
-            CorrectionSort::PSEUDONYM_ASC => strnatcasecmp(
-                $left['writer']?->getPseudonym() ?? '',
-                $right['writer']?->getPseudonym() ?? ''
-            ),
-            CorrectionSort::PSEUDONYM_DESC => strnatcasecmp(
-                $right['writer']?->getPseudonym() ?? '',
-                $left['writer']?->getPseudonym() ?? ''
-            ),
-        };
-    }
-
-    public function allForCorrectorAdminFiltered(): array
-    {
-        // todo: use filter from corrector administration
-        $assignments = $this->all();
-        $writer_ids = $this->writer_service->correctableIds();
-        return array_filter(
-            $assignments,
-            fn(CorrectorAssignment $assignment) => in_array($assignment->getWriterId(), $writer_ids)
-        );
     }
 
     public function removeAssignment(CorrectorAssignment $assignment): void

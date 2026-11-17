@@ -6,7 +6,7 @@ namespace Edutiek\AssessmentService\Task\Api;
 
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskManager as ManagerInterface;
 use Edutiek\AssessmentService\Task\AssessmentStatus\FullService as StatusFullService;
-use Edutiek\AssessmentService\Task\CorrectionItems\ReadService as CorrectionItemsReadService;
+use Edutiek\AssessmentService\Task\CorrectionItems\FullService as CorrectionItemsReadService;
 use Edutiek\AssessmentService\Task\CorrectionProcess\FullService as CorrectionProcessFullService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsFullService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as CorrectorAssignmentsFullService;

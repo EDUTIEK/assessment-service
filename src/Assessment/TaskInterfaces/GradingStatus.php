@@ -24,6 +24,17 @@ enum GradingStatus: string
     }
 
     /**
+     * Get a status that can be shown to other correctors or to admins
+     */
+    public function lightStatus()
+    {
+        return match($this) {
+            GradingStatus::NOT_STARTED, GradingStatus::PRE_GRADED => GradingStatus::OPEN,
+            default => $this
+        };
+    }
+
+    /**
      * Get the order of two grading status
      * @return int -1 if status1 < status2, 0 if status1 = status2, 1 if status1 > status2
      */

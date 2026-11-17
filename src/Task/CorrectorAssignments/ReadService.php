@@ -30,16 +30,6 @@ interface ReadService
     public function allByCorrectorId(int $corrector_id, bool $only_authorized_writings = false): array;
 
     /**
-     * @return CorrectorAssignment[]
-     */
-    public function allByCorrectorIdFiltered(int $corrector_id, bool $only_authorized_writings = false): array;
-
-    /**
-     * @return CorrectorAssignment[]
-     */
-    public function allForCorrectorAdminFiltered(): array;
-
-    /**
      * Get an info message about missing assignments
      */
     public function getMissingAssignmentsInfo(): ?string;

@@ -66,32 +66,8 @@ readonly class Service implements FullService
         };
     }
 
-    public function gradingStatusOptions(): array
-    {
-        return [
-            GradingStatus::NOT_STARTED->value => $this->lang->txt('grading_not_started'),
-            GradingStatus::OPEN->value => $this->lang->txt('grading_open'),
-            GradingStatus::PRE_GRADED->value => $this->lang->txt('grading_pre_graded'),
-            GradingStatus::AUTHORIZED->value => $this->lang->txt('grading_authorized'),
-            GradingStatus::REVISED->value => match($this->settings->getProcedure()) {
-                CorrectionProcedure::APPROXIMATION => $this->lang->txt('grading_approximated'),
-                CorrectionProcedure::CONSULTING => $this->lang->txt('grading_consulted'),
-                CorrectionProcedure::NONE => $this->lang->txt('grading_revised'),
-            },
-        ];
-    }
-
     public function gradingPosition(GradingPosition $position): string
     {
         return $this->lang->txt($position->languageVariable());
-    }
-
-    public function gradingPositionOptions(): array
-    {
-        return [
-            (string) GradingPosition::FIRST->value => $this->lang->txt('grading_pos_first'),
-            (string) GradingPosition::SECOND->value => $this->lang->txt('grading_pos_second'),
-            (string) GradingPosition::STITCH->value => $this->lang->txt('grading_pos_stitch'),
-        ];
     }
 }

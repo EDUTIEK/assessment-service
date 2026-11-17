@@ -3,31 +3,13 @@
 namespace Edutiek\AssessmentService\Task\CorrectorAssignments;
 
 use Edutiek\AssessmentService\Assessment\Data\AssignFilter;
-use Edutiek\AssessmentService\Assessment\Data\CombinedStatus;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
-use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
 use Edutiek\AssessmentService\System\Data\Result;
 
 interface FullService extends ReadService
 {
     public const BLANK_CORRECTOR_ASSIGNMENT = -1;
     public const UNCHANGED_CORRECTOR_ASSIGNMENT = -2;
-
-    /**
-     * Get the current correction filter set by a corrector
-     * @return array [?array $grading_status, ?array $combined_status, ?int $position]
-     */
-    public function getCorrectionFilter(int $corrector_id): array;
-
-    /**
-     * Save a filter for showing assignments to a corrector
-     * This is set on the start page of a corrector
-     * This is used to filter the assigned items in the corrector app
-     *
-     * @param GradingStatus[]|null $grading_status
-     * @param CombinedStatus[]|null $combined_status
-     */
-    public function saveCorrectorFilter(int $corrector_id, ?array $grading_status, ?array $combined_status, ?int $position);
 
     /**
      * Remove a corrector assignment
