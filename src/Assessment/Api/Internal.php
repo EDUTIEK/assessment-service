@@ -125,6 +125,7 @@ class Internal implements ComponentApi, ComponentApiFactory
         return new AppStart(
             $frontend,
             $this->slimApp(),
+            $this->dependencies->repositories(),
             $this->dependencies->viewsApi(),
             $this->dependencies->systemApi(),
         );

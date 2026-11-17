@@ -16,6 +16,7 @@ use Edutiek\AssessmentService\System\Rest\RestHandler;
 use Edutiek\AssessmentService\Views\Api\ForRest as ViewsRestApi;
 use Edutiek\AssessmentService\System\Rest\RestHelper;
 use Edutiek\AssessmentService\System\Rest\RestException;
+use Edutiek\AssessmentService\Assessment\Data\Repositories;
 
 class AppStart implements RestHandler
 {
@@ -27,6 +28,7 @@ class AppStart implements RestHandler
     public function __construct(
         protected readonly Frontend $frontend,
         protected readonly SlimApp $app,
+        protected readonly Repositories $repos,
         protected readonly ViewsRestApi $views,
         protected readonly SystemApi $system,
     ) {
@@ -129,24 +131,27 @@ class AppStart implements RestHandler
     {
         $this->prepare($request);
         $user = $this->users->getUser($this->user_id);
+        $permissions = $this->repos->permissions();
 
         $formats = $this->system->format($this->user_id);
 
         $data = [];
         if ($this->frontend == Frontend::CORRECTOR) {
             foreach ($this->views->assessment()->correctorAssessments($this->user_id) as $assessment) {
-                $data[] = [
-                    'ass_id' => $assessment->getAssId(),
-                    'context_id' => $assessment->getContextId(),
-                    'parent_title' => $assessment->getParentTitle(),
-                    'title' => $assessment->getTitle(),
-                    'correction_start_ts' => $assessment->getCorrectionStart()?->getTimestamp(),
-                    'correction_end_ts' => $assessment->getCorrectionEnd()?->getTimestamp(),
-                    'correction_start' => $formats->date($assessment->getCorrectionStart()?->setTimezone($user->getTimezone())),
-                    'correction_end' => $formats->date($assessment->getCorrectionEnd()?->setTimezone($user->getTimezone())),
-                    'assigned_gradings' => $assessment->getAssignedGradings(),
-                    'finished_gradings' => $assessment->getFinishedGradings()
-                ];
+                if ($permissions->canRead($assessment->getAssId(), $assessment->getContextId(), $this->user_id)) {
+                    $data[] = [
+                        'ass_id' => $assessment->getAssId(),
+                        'context_id' => $assessment->getContextId(),
+                        'parent_title' => $assessment->getParentTitle(),
+                        'title' => $assessment->getTitle(),
+                        'correction_start_ts' => $assessment->getCorrectionStart()?->getTimestamp(),
+                        'correction_end_ts' => $assessment->getCorrectionEnd()?->getTimestamp(),
+                        'correction_start' => $formats->date($assessment->getCorrectionStart()?->setTimezone($user->getTimezone())),
+                        'correction_end' => $formats->date($assessment->getCorrectionEnd()?->setTimezone($user->getTimezone())),
+                        'assigned_gradings' => $assessment->getAssignedGradings(),
+                        'finished_gradings' => $assessment->getFinishedGradings()
+                    ];
+                }
             }
         }
 

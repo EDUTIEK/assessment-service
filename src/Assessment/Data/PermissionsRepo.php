@@ -6,6 +6,8 @@ namespace Edutiek\AssessmentService\Assessment\Data;
 
 interface PermissionsRepo
 {
+    public function canRead(int $ass_id, int $context_id, int $user_id): bool;
+
     public function one(int $ass_id, int $context_id, int $user_id): Permissions;
 
     /**
