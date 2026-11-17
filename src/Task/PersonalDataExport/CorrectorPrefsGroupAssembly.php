@@ -31,8 +31,8 @@ class CorrectorPrefsGroupAssembly extends AbstractGroupAssembly
             $this->group->addAttribute($this->attribute_factory->text("Filter Grading Status", $corrector_prefs->getFilterGradingStatus()));
         }
 
-        if ($corrector_prefs->getFilterCombinedStatus() !== null) {
-            $this->group->addAttribute($this->attribute_factory->text("Filter Combined Status", $corrector_prefs->getFilterCombinedStatus()));
+        if ($corrector_prefs->getFilterCorrectionStatus() !== null) {
+            $this->group->addAttribute($this->attribute_factory->text("Filter Combined Status", $corrector_prefs->getFilterCorrectionStatus()));
         }
 
         if ($corrector_prefs->getFilterAssignedPosition() !== null) {

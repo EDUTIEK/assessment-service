@@ -211,7 +211,7 @@ readonly class Service implements FullService
             'position' => $prefs->getFilterAssignedPosition(...),
             'grading_status' => $prefs->getFilterGradingStatus(...),
             'other_status' => $prefs->getFilterOtherStatus(...),
-            'correction_status' => $prefs->getFilterCombinedStatus(...),
+            'correction_status' => $prefs->getFilterCorrectionStatus(...),
         ];
 
         $filter_values = [];
@@ -242,7 +242,7 @@ readonly class Service implements FullService
             'position' => $prefs->setFilterAssignedPosition(...),
             'grading_status' => $prefs->setFilterGradingStatus(...),
             'other_status' => $prefs->setFilterOtherStatus(...),
-            'correction_status' => $prefs->setFilterCombinedStatus(...),
+            'correction_status' => $prefs->setFilterCorrectionStatus(...),
         ];
 
         foreach ($this->getFilterOptions() as $key => $options) {

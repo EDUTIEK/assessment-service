@@ -22,8 +22,8 @@ abstract class CorrectorPrefs implements TaskEntity
     abstract public function setSelectWords(bool $select_words): self;
     abstract public function getFilterGradingStatus(): ?string;
     abstract public function setFilterGradingStatus(?string $filter_grading_status): self;
-    abstract public function getFilterCombinedStatus(): ?string;
-    abstract public function setFilterCombinedStatus(?string $filter_combined_status): self;
+    abstract public function getFilterCorrectionStatus(): ?string;
+    abstract public function setFilterCorrectionStatus(?string $filter_correction_status): self;
     abstract public function getFilterAssignedPosition(): ?string;
     abstract public function setFilterAssignedPosition(?string $filter_assigned_position): self;
     abstract public function getFilterOtherStatus(): ?string;
