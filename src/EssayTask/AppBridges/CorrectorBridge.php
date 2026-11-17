@@ -64,6 +64,11 @@ class CorrectorBridge implements AppCorrectorBridge
         return $data;
     }
 
+    public function getEntities(string $entity, int $entity_id = null, array $data = []): array
+    {
+        return [];
+    }
+
     public function getItem(int $task_id, int $writer_id): ?array
     {
         $data = [

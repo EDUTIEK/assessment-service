@@ -19,6 +19,7 @@ class AppCorrector extends BaseApp implements RestHandler
     {
         $this->app->get('/corrector/data', [$this,'getData']);
         $this->app->get('/corrector/item/{task_id}/{writer_id}', [$this,'getItem']);
+        $this->app->get('/corrector/entities/{component}/{entity}[/{id}]', [$this,'getEntities']);
         $this->app->get('/corrector/file/{component}/{entity}/{id}/{disposition}', [$this,'getFile']);
         $this->app->put('/corrector/file/{component}/{entity}/{id}/{disposition}', [$this,'getFile']);
         $this->app->put('/corrector/changes', [$this, 'putChanges']);

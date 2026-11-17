@@ -10,6 +10,9 @@ interface FullService
 {
     public function getByTaskIdAndCorrectorId(int $task_id, int $corrector_id): CorrectorTemplate;
     /** @return int[] */
+
+    /** @return CorrectorTemplate[] */
+    public function getSharedByTaskId(int $task_id): array;
     public function getSharableCorrectorIds(int $task_id): array;
     public function save(CorrectorTemplate $template);
 }

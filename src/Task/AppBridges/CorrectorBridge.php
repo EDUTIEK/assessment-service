@@ -103,7 +103,7 @@ class CorrectorBridge implements AppCorrectorBridge
         return $this;
     }
 
-    public function getData($for_update): array
+    public function getData(bool $for_update): array
     {
         $data = [];
 
@@ -390,6 +390,33 @@ class CorrectorBridge implements AppCorrectorBridge
         }
 
         return $data;
+    }
+
+    public function getEntities(string $entity, int $entity_id = null, array $data = []): array
+    {
+        switch ($entity) {
+            case 'templates':
+                $data = [];
+                if ($this->corrector !== null) {
+                    foreach (array_keys($this->tasks) as $task_id) {
+                        foreach ($this->template_service->getSharedByTaskId($task_id) as $template) {
+                            if ($template->getCorrectorId() !== $this->corrector?->getId()) {
+                                $corrector = $this->corrector_service->oneById($template->getCorrectorId());
+                                $user = $this->user_service->getUser($corrector?->getUserId() ?? 0);
+                                $data[] = $this->entity->arrayToPrimitives([
+                                    'task_id' => $template->getTaskId(),
+                                    'corrector_id' => $template->getCorrectorId(),
+                                    'user_name' => $user?->getFullname(false),
+                                    'content' => $template->getContent(),
+                                    'shared' => $template->getShared()
+                                ]);
+                            }
+                        }
+                    }
+                }
+                return $data;
+        }
+        return [];
     }
 
     public function getFileInfo(string $entity, int $entity_id, array $data = []): ?FileInfo

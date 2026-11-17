@@ -6,7 +6,7 @@ use Edutiek\AssessmentService\System\Data\FileInfo;
 
 /**
  * Functions to provide and process data for an app
- * Must be implemented by Assessment, Task and all Task Type components
+ * Must be implemented by Assessment, Task, and all Task Type components
  */
 interface AppBridge
 {
@@ -15,6 +15,12 @@ interface AppBridge
      * @return array - will converted to JSON
      */
     public function getData(bool $for_update): array;
+
+    /**
+     * Get one or more entities
+     * @return array - will converted to JSON
+     */
+    public function getEntities(string $entity, int $entity_id = null, array $data = []): array;
 
     /**
      * Get the file info of a file associated with an entity

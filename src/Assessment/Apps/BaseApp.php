@@ -99,6 +99,35 @@ abstract class BaseApp implements RestHandler
     }
 
     /**
+     * GET entities
+     *
+     * Handles requests like /{frontend}/entity/{component}/{entity}[/{id}]
+     * A request is typically sent as GET
+     * It may be sent as PUT with additional JSON data in the body
+     */
+    public function getEntities(Request $request, Response $response, array $args): Response
+    {
+        $this->prepare($request, $response, $args);
+
+        $component = $args['component'] ?? '';
+        $entity = $args['entity'] ?? null;
+        $id = isset($args['id']) ? (int) $args['id'] : null;
+        $request_data = $this->rest_helper->getJsonData($request);
+
+        if ($entity === null) {
+            throw new RestException('No entity given', RestException::NOT_FOUND);
+        }
+
+        $bridge = $this->getBridge((string) $component);
+        if ($bridge === null) {
+            throw new RestException("Component $component not found", RestException::NOT_FOUND);
+        }
+
+        $data = $bridge->getEntities($entity, $id, $request_data);
+        return $this->rest_helper->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $data);
+    }
+
+    /**
      * GET a file (will be sent with the requested disposition)
      *
      * Handles requests like /{frontend}/file/{component}/{entity}/{id}/{disposition}

@@ -17,6 +17,11 @@ readonly class Service implements FullService
     ) {
     }
 
+    public function getSharedByTaskId(int $task_id): array
+    {
+        return $this->repos->correctorTemplates()->sharedByTaskId($task_id);
+    }
+
     public function getSharableCorrectorIds(int $task_id): array
     {
         return $this->repos->correctorTemplates()->sharableCorrectorIds($task_id);

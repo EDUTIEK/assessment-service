@@ -99,6 +99,11 @@ class WriterBridge implements AppBridge
         return $data;
     }
 
+    public function getEntities(string $entity, int $entity_id = null, array $data = []): array
+    {
+        return [];
+    }
+
     public function getFileInfo(string $entity, int $entity_id, array $data = []): ?FileInfo
     {
         return null;
