@@ -305,7 +305,7 @@ readonly class Service implements FullService
             'grading_status_text' => $this->format->gradingStatus($item->getSummary()?->getGradingStatus(), true),
             'grading_points' => $item->getSummary()?->getEffectivePoints(),
             'grading_grade' => $item->getSummary() ? $this->assessment_grading->getGradLevelForPoints($item->getSummary()->getPoints())?->getGrade() : null,
-            'other_status' => $item->getOtherSummary()->getGradingStatusLight(),
+            'other_status' => $item->getOtherSummary()?->getGradingStatusLight()  ?? GradingStatus::OPEN,
             'other_status_text' => $this->otherStatusText($item),
             'other_points' => $item->getOtherSummary()?->getEffectivePointsLight(),
             'other_correction_text' => $this->otherCorrectionText($item),
