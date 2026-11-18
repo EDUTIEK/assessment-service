@@ -20,7 +20,7 @@ interface AppBridge
      * Get one or more entities
      * @return array - will converted to JSON
      */
-    public function getEntities(string $entity, int $entity_id = null, array $data = []): array;
+    public function getEntities(string $entity, ?int $entity_id = null, array $data = []): array;
 
     /**
      * Get the file info of a file associated with an entity
