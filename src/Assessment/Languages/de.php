@@ -189,5 +189,7 @@ return [
     'correction_sort_pseudonym_desc' => 'Pseudonym (absteigend)',
     'review_mode_viewer' => 'Online-Ansicht',
     'review_mode_download' => 'Download',
-    'review_mode_both' => 'Beides'
+    'review_mode_both' => 'Beides',
+    'correction_period' => 'Korrektur-Zeitraum',
+    'first_correction_end' => 'Ende Erstkorrektur'
 ];

@@ -202,10 +202,12 @@ class Service implements ReadService
             $this->orga_settings->getCorrectionStart()->getTimestamp() > time()) {
             return false;
         }
-        if ($this->orga_settings->getCorrectionEnd() !== null &&
-            $this->orga_settings->getCorrectionEnd()->getTimestamp() < time()) {
-            return false;
-        }
+
+        // correction end should not matter
+        //        if ($this->orga_settings->getCorrectionEnd() !== null &&
+        //            $this->orga_settings->getCorrectionEnd()->getTimestamp() < time()) {
+        //            return false;
+        //        }
 
         return true;
 

@@ -49,6 +49,9 @@ abstract class OrgaSettings implements AssessmentEntity
     abstract public function getCorrectionStart(): ?DateTimeImmutable;
     abstract public function setCorrectionStart(?DateTimeImmutable $correction_start): self;
 
+    abstract public function getFirstCorrectionEnd(): ?DateTimeImmutable;
+    abstract public function setFirstCorrectionEnd(?DateTimeImmutable $first_correction_end): self;
+
     abstract public function getCorrectionEnd(): ?DateTimeImmutable;
     abstract public function setCorrectionEnd(?DateTimeImmutable $correction_end): self;
 

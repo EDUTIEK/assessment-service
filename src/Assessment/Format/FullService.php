@@ -12,6 +12,11 @@ interface FullService
     public function finalResult(?Writer $writer): string;
 
     /**
+     * Format the correction period
+     */
+    public function correctionPeriod(): ?string;
+
+    /**
      * Format the writing status of a writer
      * - Add the actor name if the writer is excluded or authorized by another person
      */

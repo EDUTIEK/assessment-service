@@ -400,6 +400,7 @@ class Internal implements ComponentApi, ComponentApiFactory
         return $this->instances[CorrectorBridge::class][$ass_id][$context_id][$user_id] ??= new CorrectorBridge(
             $ass_id,
             $user_id,
+            $this->format($ass_id, $user_id),
             $this->pdfCreation($ass_id, $context_id, $user_id),
             $this->dependencies->taskApi()->checks($ass_id, $user_id),
             $this->dependencies->systemApi()->config(),

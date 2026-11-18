@@ -8,7 +8,7 @@ use Edutiek\AssessmentService\Assessment\Apps\AppCorrectorBridge;
 use Edutiek\AssessmentService\Assessment\Apps\ChangeRequest;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
-use Edutiek\AssessmentService\Assessment\Export\FullService as ExportService;
+use Edutiek\AssessmentService\Assessment\Format\FullService as FormatService;
 use Edutiek\AssessmentService\Assessment\PdfCreation\FullService as PdfService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskChecks as ChecksService;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
@@ -17,9 +17,7 @@ use Edutiek\AssessmentService\System\Entity\FullService as EntityService;
 use Psr\Http\Message\UploadedFileInterface;
 use Edutiek\AssessmentService\System\Data\FileInfo;
 use Edutiek\AssessmentService\Assessment\Data\WritingTask;
-use Edutiek\AssessmentService\System\File\Disposition;
 use Edutiek\AssessmentService\System\File\Storage;
-use Edutiek\AssessmentService\Assessment\Data\ExportType;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -32,6 +30,7 @@ class CorrectorBridge implements AppCorrectorBridge
     public function __construct(
         private readonly int $ass_id,
         private readonly int $user_id,
+        private readonly FormatService $format,
         private readonly PdfService $pdfs,
         private readonly ChecksService $checks,
         private readonly ConfigService $config,
@@ -71,8 +70,10 @@ class CorrectorBridge implements AppCorrectorBridge
         }
 
         $settings = $this->repos->correctionSettings()->one($this->ass_id);
+
         $data['Settings'] = $this->entity->arrayToPrimitives([
             'title' => $this->repos->properties()->one($this->ass_id)->getTitle(),
+            'correction_period' => $this->format->correctionPeriod(),
             'multiple_correctors' => $settings->hasMultipleCorrectors(),
             'mutual_visibility' => $settings->getMutualVisibility(),
             'procedure_when_distance' => $settings->getProcedureWhenDistance(),
