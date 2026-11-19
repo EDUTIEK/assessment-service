@@ -187,6 +187,8 @@ return [
     'correction_sort_own_state' => 'Eigener Korrekturstatus (nicht gestartet, offen, vorbenotet, freigegeben, angenähert/beraten)',
     'correction_sort_pseudonym_asc' => 'Pseudonym (aufsteigend)',
     'correction_sort_pseudonym_desc' => 'Pseudonym (absteigend)',
+    'correction_sort_matriculation_asc' => 'Matrikelnummer (aufsteigend)',
+    'correction_sort_matriculation_desc' => 'Matrikelnummer (absteigend)',
     'review_mode_viewer' => 'Online-Ansicht',
     'review_mode_download' => 'Download',
     'review_mode_both' => 'Beides'

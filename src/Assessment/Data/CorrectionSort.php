@@ -10,6 +10,8 @@ enum CorrectionSort: string
     case OWN_STATE = 'own_state';
     case PSEUDONYM_ASC = 'pseudonym_asc';
     case PSEUDONYM_DESC = 'pseudonym_desc';
+    case MATRICULATION_ASC = 'matriculation_asc';
+    case MATRICULATION_DESC = 'matriculation_desc';
 
     public function langVar()
     {

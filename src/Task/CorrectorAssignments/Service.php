@@ -22,6 +22,7 @@ use Edutiek\AssessmentService\Task\Data\Repositories;
 use Edutiek\AssessmentService\System\Spreadsheet\FullService as SpreadsheetService;
 use Edutiek\AssessmentService\System\File\Delivery as FileDelivery;
 use Edutiek\AssessmentService\System\File\Storage as FileStorage;
+use Edutiek\AssessmentService\System\User\ReadService as UserService;
 use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Task\Api\Internal;
 use Edutiek\AssessmentService\System\Spreadsheet\ExportType as SpreadsheetExportType;
@@ -44,6 +45,7 @@ readonly class Service implements FullService
         private LanguageService $lang,
         private FileDelivery $delivery,
         private FileStorage $storage,
+        private UserService $user_service,
         private Internal $internal,
         private Repositories $repos,
         private Dispatcher $events
@@ -195,6 +197,7 @@ readonly class Service implements FullService
         /** @var CorrectorAssignment $assignment */
         foreach ($assignments as $assignment) {
             $writer = $this->writer_service->oneByWriterId($assignment->getWriterId());
+            $user = $this->user_service->getUser($writer->getUserId() ?? 0);
             $summary = $this->repos->correctorSummary()->oneByTaskIdAndWriterIdAndCorrectorId(
                 $assignment->getTaskId(),
                 $assignment->getWriterId(),
@@ -221,7 +224,8 @@ readonly class Service implements FullService
             $filtered[] = [
                 'assignment' => $assignment,
                 'summary' => $summary,
-                'writer' => $writer
+                'writer' => $writer,
+                'user' => $user
             ];
         }
 
@@ -269,6 +273,14 @@ readonly class Service implements FullService
             CorrectionSort::PSEUDONYM_DESC => strnatcasecmp(
                 $right['writer']?->getPseudonym() ?? '',
                 $left['writer']?->getPseudonym() ?? ''
+            ),
+            CorrectionSort::MATRICULATION_ASC => strnatcasecmp(
+                $left['user']?->getMatriculation() ?? '',
+                $right['user']?->getMatriculation() ?? ''
+            ),
+            CorrectionSort::MATRICULATION_DESC => strnatcasecmp(
+                $right['user']?->getMatriculation() ?? '',
+                $left['user']?->getMatriculation() ?? ''
             ),
         };
     }
