@@ -95,6 +95,7 @@ class Internal implements RatingCriterionServiceFactory
             $this->dependencies->systemApi()->language($user_id, __DIR__ . '/../Languages/'),
             $this->dependencies->systemApi()->fileDelivery(),
             $this->dependencies->systemApi()->fileStorage(),
+            $this->dependencies->systemApi()->user(),
             $this,
             $this->dependencies->repositories(),
             $this->dependencies->eventDispatcher($ass_id, $user_id)
