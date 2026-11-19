@@ -89,13 +89,17 @@ readonly class Service implements FullService
                 }
             }
 
-            $items[] = $item;
+            // add user for sorting by matriculation
+            $user = $this->users->getUser($item->getWriter()->getUserId());
+            $items[] = $item->setUser($user);
         }
 
         if ($this->settings->getStartpageFixed()) {
             usort($items, $this->sortItems(...));
         }
-        return $items;
+
+        // unset user after sorting, should not be visible to correctors
+        return array_map(fn(CorrectionItem $item) => $item->setUser(null), $items);
     }
 
     public function buildCorrectionItem(CorrectorAssignment $assignment): CorrectionItem
@@ -287,6 +291,14 @@ readonly class Service implements FullService
                 $right->getWriter()?->getPseudonym() ?? '',
                 $left->getWriter()?->getPseudonym() ?? ''
             ),
+            CorrectionSort::MATRICULATION_ASC => strnatcasecmp(
+                $left->getWriter()?->getPseudonym() ?? '',
+                $right->getWriter()?->getPseudonym() ?? ''
+            ),
+            CorrectionSort::MATRICULATION_DESC => strnatcasecmp(
+                $right->getWriter()?->getPseudonym() ?? '',
+                $left->getWriter()?->getPseudonym() ?? ''
+            ),
         };
     }
 
@@ -305,7 +317,7 @@ readonly class Service implements FullService
             'grading_status_text' => $this->format->gradingStatus($item->getSummary()?->getGradingStatus(), true),
             'grading_points' => $item->getSummary()?->getEffectivePoints(),
             'grading_grade' => $item->getSummary() ? $this->assessment_grading->getGradLevelForPoints($item->getSummary()->getPoints())?->getGrade() : null,
-            'other_status' => $item->getOtherSummary()?->getGradingStatusLight()  ?? GradingStatus::OPEN,
+            'other_status' => $item->getOtherSummary()?->getGradingStatusLight() ?? GradingStatus::OPEN,
             'other_status_text' => $this->otherStatusText($item),
             'other_points' => $item->getOtherSummary()?->getEffectivePointsLight(),
             'other_correction_text' => $this->otherCorrectionText($item),
@@ -362,6 +374,8 @@ readonly class Service implements FullService
     private function otherStatusText(CorrectionItem $item): string
     {
         return $this->format->gradingStatus(
-            $item->getOtherSummary()?->getGradingStatusLight() ?? GradingStatus::OPEN, false);
+            $item->getOtherSummary()?->getGradingStatusLight() ?? GradingStatus::OPEN,
+            false
+        );
     }
 }
