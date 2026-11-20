@@ -19,5 +19,18 @@ return [
     'decimal_separator' => ',',
     'thousands_separator' => '.',
     'login_failed_short' => 'Der Anmeldename oder das Passwort sind ungültig.',
-    'login_failed_long' => 'Die Anmeldung ist fehlgeschlagen. Bitte überprüfen Sie, ob Sie Ihren Anmeldenamen und Ihr Passwort korrekt eingegeben haben. Wenn das Problem weiterhin besteht, ist Ihr Konto möglicherweise inaktiv oder abgelaufen.'
+    'login_failed_long' => 'Die Anmeldung ist fehlgeschlagen. Bitte überprüfen Sie, ob Sie Ihren Anmeldenamen und Ihr Passwort korrekt eingegeben haben. Wenn das Problem weiterhin besteht, ist Ihr Konto möglicherweise inaktiv oder abgelaufen.',
+    'password_change_subject' => 'Passwort-Änderung',
+    'password_change_body' => '
+Jemand hat für Ihre E-Mail-Adresse [email] eine Änderung des Passworts angefragt. 
+Wenn Sie es nicht selbst waren, ignorieren sie bitte diese E-Mail.
+
+Ihre Adresse ist bei den folgenden Benutzerkonten eingetragen:
+[login]
+
+Rufen Sie bitte [link] auf und tragen dann einen der obigen Benutzernamen, sowie den folgenden Code ein:
+[code]
+
+Danach können Sie ein neues Passwort vergeben.
+'
 ];

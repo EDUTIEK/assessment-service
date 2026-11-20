@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Data;
 
-use Edutiek\AssessmentService\System\Data\UserDisplay;
-
 interface UserDataRepo
 {
     /**
@@ -36,4 +34,11 @@ interface UserDataRepo
      * A non-existing user returns '
      */
     public function loginById(int $id): string;
+
+
+    /**
+     * Get user ids by e-mail address
+     * @return int[]
+     */
+    public function idsByEmail(string $email): array;
 }

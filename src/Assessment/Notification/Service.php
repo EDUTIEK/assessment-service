@@ -217,7 +217,7 @@ readonly class Service implements FullService
         foreach ($to_ids as $to_id) {
             $subject = $this->fillPlaceholders($setting->getSubject(), $type, $to_id, $writer, $reason);
             $body = $this->fillPlaceholders((string) $setting->getBody(), $type, $to_id, $writer, $reason);
-            $this->mail->deliver($subject, $body, [$to_id]);
+            $this->mail->internal($subject, $body, [$to_id]);
         }
     }
 

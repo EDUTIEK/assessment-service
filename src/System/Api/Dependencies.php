@@ -18,6 +18,7 @@ use Edutiek\AssessmentService\System\Session\Storage as SessionStorage;
 use Edutiek\AssessmentService\System\Auth\AuthHandler;
 use Edutiek\AssessmentService\System\Data\TokenRepo;
 use Psr\Log\LoggerInterface;
+use Edutiek\AssessmentService\System\Data\UserAuthRepo;
 
 interface Dependencies
 {
@@ -31,6 +32,7 @@ interface Dependencies
     public function tempDelivery(): Delivery;
     public function tokenRepo(): TokenRepo;
     public function userDataRepo(): UserDataRepo;
+    public function userAuthRepo(): UserAuthRepo;
     public function userDisplayRepo(): UserDisplayRepo;
     public function formatDate(DateTimeInterface $date): string;
     public function backgroundTaskManager(): BackgroundTaskManager;

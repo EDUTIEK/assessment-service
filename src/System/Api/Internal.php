@@ -52,7 +52,10 @@ class Internal
     {
         return $this->instances[AuthService::class] ??= new AuthService(
             $this->dependencies->userDataRepo(),
+            $this->dependencies->userAuthRepo(),
             $this->dependencies->authHandler(),
+            $this->dependencies->mailDelivery(),
+            $this->config(),
             $this->language(0, __DIR__ . '/../Languages/')
         );
     }

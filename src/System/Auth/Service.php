@@ -5,14 +5,23 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\System\Auth;
 
 use Edutiek\AssessmentService\System\Data\UserDataRepo;
+use Edutiek\AssessmentService\System\Data\UserAuthRepo;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
+use Edutiek\AssessmentService\System\Mail\Delivery as Mail;
+use Edutiek\AssessmentService\System\Data\Result;
+use Edutiek\AssessmentService\System\Data\UserAuth;
+use Edutiek\AssessmentService\System\Config\Frontend;
+use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 
 readonly class Service implements FullService
 {
     public function __construct(
         private UserDataRepo $user_repo,
+        private UserAuthRepo $auth_repo,
         private AuthHandler $auth_handler,
-        private Language $lang
+        private Mail $mail,
+        private ConfigService $config,
+        private Language $lang,
     ) {
     }
     public function authenticate(string $login, string $password, ?string $factor): ?int
@@ -52,19 +61,85 @@ readonly class Service implements FullService
         return $this->auth_handler->isActive($user_id);
     }
 
-    public function getAgreement($user_id): string
+    public function getAgreement(int $user_id): string
     {
         return $this->auth_handler->getAgreement($user_id);
     }
 
-    public function hasAcceptedAgreement($user_id): bool
+    public function hasAcceptedAgreement(int $user_id): bool
     {
         return $this->auth_handler->hasAcceptedAgreement($user_id);
     }
 
-    public function acceptAgreement($user_id): void
+    public function acceptAgreement(int $user_id): void
     {
         $this->auth_handler->acceptAgreement($user_id);
     }
 
+    public function requestPasswordChange(string $email, Frontend $frontend): bool
+    {
+        $ids = $this->user_repo->idsByEmail($email);
+        if (empty($ids)) {
+            return false;
+        }
+
+        $reset_code = UserAuth::createCode();
+
+        $logins = [];
+        foreach ($ids as $user_id) {
+            $logins[] = $this->user_repo->loginById($user_id);
+            $auth = $this->auth_repo->get($user_id);
+            if (!$auth->isNewResetCodePossible()) {
+                return false;
+            }
+            $auth->setNewResetCode($reset_code);
+            $this->auth_repo->save($auth);
+        }
+
+        $subject = $this->lang->txt('password_change_subject');
+        $body = $this->lang->txt('password_change_body');
+        $link = $this->config->getFrontendUrl($frontend);
+
+        $body = str_replace('[email]', $email, $body);
+        $body = str_replace('[logins]', implode('<br />', $logins), $body);
+        $body = str_replace('[code]', $reset_code, $body);
+        $body = str_replace('[link]', $link, $body);
+
+        return $this->mail->external($subject, $body, [$email]);
+    }
+
+
+    public function removePasswordChange(string $email): void
+    {
+        $ids = $this->user_repo->idsByEmail($email);
+        foreach ($ids as $user_id) {
+            $auth = $this->auth_repo->get($user_id);
+            $auth->setResetCode(null)->setResetValidUntil(null);
+            $this->auth_repo->save($auth);
+        }
+    }
+
+    public function checkPasswordChangeCode(string $login, string $code): bool
+    {
+        $user_id = $this->user_repo->idByLogin($login);
+        if (empty($user_id)) {
+            return false;
+        }
+
+        $auth = $this->auth_repo->get($user_id);
+        if ($auth->isResetCodeValid($auth)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function changePassword(string $login, string $password): Result
+    {
+        $user_id = $this->user_repo->idByLogin($login);
+        if (empty($user_id)) {
+            return new Result(false);
+        }
+        return $this->auth_handler->changePassword($user_id, $password);
+    }
 }

@@ -12,5 +12,13 @@ interface Delivery
      * @param int[] $cc_ids
      * @param int[] $bc_ids
      */
-    public function deliver(string $subject, string $body, array $to_ids, array $cc_ids = [], array $bc_ids = []): void;
+    public function internal(string $subject, string $body, array $to_ids, array $cc_ids = [], array $bc_ids = []): void;
+
+    /**
+     * Deliver a mail to external addresses
+     * @param string[] $to
+     * @param string[] $cc
+     * @param string[] $bc
+     */
+    public function external(string $subject, string $body, array $to, array $cc = [], array $bc = []): bool;
 }

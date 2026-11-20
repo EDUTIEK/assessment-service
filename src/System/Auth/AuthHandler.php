@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Edutiek\AssessmentService\System\Auth;
 
+use Edutiek\AssessmentService\System\Data\Result;
+
 /**
  * Authentication functions needed from the hosting system
  */
@@ -13,6 +15,11 @@ interface AuthHandler
      * Check an entered password for a user
      */
     public function checkPassword(int $user_id, string $password): bool;
+
+    /**
+     * Try to change the password of a user
+     */
+    public function changePassword(int $user_id, string $password): Result;
 
     /**
      * Handle a failed login attempt
@@ -44,4 +51,5 @@ interface AuthHandler
      * Set the acceptance of the user agreement for a user
      */
     public function acceptAgreement($user_id): void;
+
 }
