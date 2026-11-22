@@ -121,7 +121,7 @@ class Service implements RestHelper
         return $response;
     }
 
-    public function sendPlainResponse(int $status_code, string $body): never
+    public function sendPlainResponse(int $status_code, string $body = ''): never
     {
         $this->context->sendResponse($status_code, $body, $this->getCommonHeaders());
     }

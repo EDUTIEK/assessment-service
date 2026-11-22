@@ -17,6 +17,7 @@ use Edutiek\AssessmentService\Views\Api\ForRest as ViewsRestApi;
 use Edutiek\AssessmentService\System\Rest\RestHelper;
 use Edutiek\AssessmentService\System\Rest\RestException;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
+use PharIo\Manifest\Exception;
 
 class AppStart implements RestHandler
 {
@@ -43,7 +44,9 @@ class AppStart implements RestHandler
         $this->app->put('/corrector/start/logout', [$this, 'logout']);
         $this->app->put('/corrector/start/agreement', [$this,'setAgreement']);
         $this->app->get('/corrector/start/assessments', [$this,'getAssessments']);
-        $this->app->put('/corrector/start/open', [$this,'openAssessment']);
+        $this->app->post('/corrector/start/password/request', [$this, 'requestPasswordChange']);
+        $this->app->post('/corrector/start/password/code', [$this, 'checkPasswordChangeCode']);
+        $this->app->post('/corrector/start/password/change', [$this, 'changePassword']);
         $this->app->run();
         exit;
     }
@@ -76,8 +79,8 @@ class AppStart implements RestHandler
         $data = [];
 
         $body = $request->getParsedBody();
-        $login = $body['login'];
-        $password = $body['password'];
+        $login = $body['login'] ?? '';
+        $password = $body['password'] ?? '';
 
         $this->user_id = $this->auth->authenticate($login, $password, null);
 
@@ -159,19 +162,64 @@ class AppStart implements RestHandler
     }
 
     /**
-     * Open an assessment
-     * - Check if the user is authentified, has accepted the agreement, and has access to the assessment
-     * - Initialize the data token
-     * Send the credentials as if the app was opened from the backend
+     * Send an email with the code to change a password
      */
-    public function openAssessment(Request $request, Response $response, array $args): Response
+    public function requestPasswordChange(Request $request, Response $response, array $args): Response
     {
-        $this->prepare($request);
+        try {
+            $body = $request->getParsedBody();
+            $email = $body['email'];
+            $this->auth->requestPasswordChange($email, $this->frontend);
+            $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_OK);
+        } catch (Exception $e) {
+            $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR, $e->getMessage());
+        }
 
-        $data = [];
+    }
 
-        // TODO: create and add the required data
+    /**
+     * Check the code to change a password
+     */
+    public function checkPasswordChangeCode(Request $request, Response $response, array $args): Response
+    {
+        $body = $request->getParsedBody();
+        $login = $body['login'] ?? '';
+        $code = $body['code'] ?? '';
 
-        return $this->rest->setJsonResponse($response, StatusCodeInterface::STATUS_OK, $data);
+        if (!$this->auth->checkPasswordChangeCode($login, $code)) {
+            $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_UNAUTHORIZED);
+        }
+
+        $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_OK);
+    }
+
+    /**
+     * Handle a password change request
+     */
+    public function changePassword(Request $request, Response $response, array $args): Response
+    {
+        $body = $request->getParsedBody();
+        $code = $body['code'];
+        $login = $body['login'] ?? '';
+        $password = $body['password'] ?? '';
+
+        if (empty($code) || empty($login)) {
+            try {
+                $user_id = $this->rest->authenticate();
+                $login = $this->users->getUser($user_id)->getLogin();
+            } catch (RestException $exception) {
+                $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_UNAUTHORIZED);
+            }
+        } elseif (!$this->auth->checkPasswordChangeCode($login, $code)) {
+            $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_UNAUTHORIZED);
+        }
+
+        $result = $this->auth->changePassword($login, $password);
+
+        if ($result->isFailed()) {
+            $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_BAD_REQUEST, implode('; ', $result->failures()));
+        }
+
+        $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_OK);
     }
 }

@@ -12,6 +12,7 @@ use Edutiek\AssessmentService\System\Data\Result;
 use Edutiek\AssessmentService\System\Data\UserAuth;
 use Edutiek\AssessmentService\System\Config\Frontend;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
+use PHPUnit\Framework\Exception;
 
 readonly class Service implements FullService
 {
@@ -80,6 +81,7 @@ readonly class Service implements FullService
     {
         $ids = $this->user_repo->idsByEmail($email);
         if (empty($ids)) {
+            throw new Exception("no user id found for $email");
             return false;
         }
 

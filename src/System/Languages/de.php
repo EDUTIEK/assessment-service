@@ -23,14 +23,14 @@ return [
     'password_change_subject' => 'Passwort-Änderung',
     'password_change_body' => '
 Jemand hat für Ihre E-Mail-Adresse [email] eine Änderung des Passworts angefragt. 
-Wenn Sie es nicht selbst waren, ignorieren sie bitte diese E-Mail.
-
-Ihre Adresse ist bei den folgenden Benutzerkonten eingetragen:
-[login]
-
-Rufen Sie bitte [link] auf und tragen dann einen der obigen Benutzernamen, sowie den folgenden Code ein:
-[code]
-
+Wenn Sie es nicht selbst waren, ignorieren sie bitte diese E-Mail.<br />
+<br />
+Ihre Adresse ist bei den folgenden Benutzerkonten eingetragen:<br />
+<strong>[logins]</strong><br />
+<br />
+Rufen Sie bitte [link] auf und tragen dann einen der obigen Benutzernamen, sowie den folgenden Code ein:<br />
+<strong>[code]</strong><br />
+<br />
 Danach können Sie ein neues Passwort vergeben.
 '
 ];

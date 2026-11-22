@@ -32,7 +32,7 @@ abstract class UserAuth implements SystemEntity
 
     public function isResetCodeValid($code): bool
     {
-        return $code == $this->getResetCode() && $this->getResetValidUntil()->getTimestamp() > time();
+        return $code == $this->getResetCode() && $this->getResetValidUntil()?->getTimestamp() > time();
     }
 
     /**
@@ -40,7 +40,8 @@ abstract class UserAuth implements SystemEntity
      */
     public function isNewResetCodePossible(): bool
     {
-        return $this->getResetValidUntil()->getTimestamp() < self::newResetCodeValidity() - 5;
+        return $this->getResetCode() === null
+            || $this->getResetValidUntil()?->getTimestamp() < self::newResetCodeValidity() - 5;
     }
 
 
