@@ -155,8 +155,12 @@ readonly class Service implements FullService
         return new Result(false, $this->lang->txt('password_change_existing_wrong'));
     }
 
-    public function changePassword(int $user_id, string $password): Result
+    public function changePassword(int $user_id, string $password, ?string $old_password = null): Result
     {
+        if (!empty($old_password) && $password == $old_password) {
+            return new Result(false, $this->lang->txt('password_change_existing_equal'));
+        }
+
         return $this->auth_handler->changePassword($user_id, $password);
     }
 }

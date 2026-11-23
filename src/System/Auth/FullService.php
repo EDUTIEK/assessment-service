@@ -81,6 +81,6 @@ interface FullService
     /**
      * Change the password of a user
      */
-    public function changePassword(int $user_id, string $password): Result;
+    public function changePassword(int $user_id, string $password, ?string $old_password = null): Result;
 
 }

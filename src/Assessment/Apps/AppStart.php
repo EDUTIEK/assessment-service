@@ -231,7 +231,7 @@ class AppStart implements RestHandler
             $user = $this->users->getUser($this->users->getUserIdByLogin($login));
         }
 
-        $result = $this->auth->changePassword($user?->getId() ?? 0, $new_password);
+        $result = $this->auth->changePassword($user?->getId() ?? 0, $new_password, $old_password);
         if ($result->isFailed()) {
             $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_BAD_REQUEST, implode('; ', $result->failures()));
         }
