@@ -169,8 +169,12 @@ class AppStart implements RestHandler
         try {
             $body = $request->getParsedBody();
             $email = $body['email'];
-            $this->auth->requestPasswordChange($email, $this->frontend);
-            $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_OK);
+            $result = $this->auth->requestPasswordChange($email, $this->frontend);
+            if ($result->isOk()) {
+                $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_OK);
+            }
+            $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_BAD_REQUEST, implode('; ', $result->failures()));
+
         } catch (Exception $e) {
             $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_INTERNAL_SERVER_ERROR, $e->getMessage());
         }
@@ -186,8 +190,9 @@ class AppStart implements RestHandler
         $login = $body['login'] ?? '';
         $code = $body['code'] ?? '';
 
-        if (!$this->auth->checkPasswordChangeCode($login, $code)) {
-            $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_UNAUTHORIZED);
+        $result = $this->auth->checkPasswordChangeCode($login, $code);
+        if ($result->isFailed()) {
+            $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_UNAUTHORIZED, implode('; ', $result->failures()));
         }
 
         $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_OK);
@@ -204,22 +209,29 @@ class AppStart implements RestHandler
         $password = $body['password'] ?? '';
 
         if (empty($code) || empty($login)) {
+            // password change for authentified users
             try {
-                $user_id = $this->rest->authenticate();
-                $login = $this->users->getUser($user_id)->getLogin();
+                $user = $this->users->getUser($this->rest->authenticate());
             } catch (RestException $exception) {
                 $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_UNAUTHORIZED);
             }
-        } elseif (!$this->auth->checkPasswordChangeCode($login, $code)) {
-            $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_UNAUTHORIZED);
+            // todo: check the old password
+
+        } else {
+            // password change requested by code
+            $result = $this->auth->checkPasswordChangeCode($login, $code);
+            if ($result->isFailed()) {
+                $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_UNAUTHORIZED);
+            }
+            $user = $this->users->getUser($this->users->getUserIdByLogin($login));
         }
 
-        $result = $this->auth->changePassword($login, $password);
-
+        $result = $this->auth->changePassword($user?->getId() ?? 0, $password);
         if ($result->isFailed()) {
             $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_BAD_REQUEST, implode('; ', $result->failures()));
         }
 
+        $this->auth->removePasswordChange($user->getEmail());
         $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_OK);
     }
 }

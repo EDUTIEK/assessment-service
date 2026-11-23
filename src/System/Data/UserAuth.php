@@ -30,7 +30,7 @@ abstract class UserAuth implements SystemEntity
     abstract public function getFactorInitCode(): ?string;
     abstract public function setFactorInitCode(?string $code): self;
 
-    public function isResetCodeValid($code): bool
+    public function isResetCodeValid(string $code): bool
     {
         return $code == $this->getResetCode() && $this->getResetValidUntil()?->getTimestamp() > time();
     }
@@ -45,7 +45,7 @@ abstract class UserAuth implements SystemEntity
     }
 
 
-    public function setNewResetCode($code): self
+    public function setNewResetCode(string $code): self
     {
         $this->setResetCode($code);
         $this->setResetValidUntil(new DateTimeImmutable('@' . self::newResetCodeValidity()));

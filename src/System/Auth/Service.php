@@ -77,12 +77,12 @@ readonly class Service implements FullService
         $this->auth_handler->acceptAgreement($user_id);
     }
 
-    public function requestPasswordChange(string $email, Frontend $frontend): bool
+    public function requestPasswordChange(string $email, Frontend $frontend): Result
     {
         $ids = $this->user_repo->idsByEmail($email);
         if (empty($ids)) {
-            throw new Exception("no user id found for $email");
-            return false;
+            // prevent if an email is registered
+            return new Result(true);
         }
 
         $reset_code = UserAuth::createCode();
@@ -92,7 +92,8 @@ readonly class Service implements FullService
             $logins[] = $this->user_repo->loginById($user_id);
             $auth = $this->auth_repo->get($user_id);
             if (!$auth->isNewResetCodePossible()) {
-                return false;
+                // prevent checking if an email is registered
+                return new Result(true);
             }
             $auth->setNewResetCode($reset_code);
             $this->auth_repo->save($auth);
@@ -107,7 +108,11 @@ readonly class Service implements FullService
         $body = str_replace('[code]', $reset_code, $body);
         $body = str_replace('[link]', $link, $body);
 
-        return $this->mail->external($subject, $body, [$email]);
+        if (!$this->mail->external($subject, $body, [$email])) {
+            return new Result(false, $this->lang->txt('password_change_sending_failed'));
+        }
+
+        return new Result(true);
     }
 
 
@@ -121,27 +126,21 @@ readonly class Service implements FullService
         }
     }
 
-    public function checkPasswordChangeCode(string $login, string $code): bool
+    public function checkPasswordChangeCode(string $login, string $code): Result
     {
         $user_id = $this->user_repo->idByLogin($login);
-        if (empty($user_id)) {
-            return false;
+        if (!empty($user_id)) {
+            $auth = $this->auth_repo->get($user_id);
+            if ($auth->isResetCodeValid($code)) {
+                return  new Result(true);
+            }
         }
 
-        $auth = $this->auth_repo->get($user_id);
-        if ($auth->isResetCodeValid($auth)) {
-            return true;
-        }
-
-        return false;
+        return new Result(false, $this->lang->txt('password_change_code_or_login_wrong'));
     }
 
-    public function changePassword(string $login, string $password): Result
+    public function changePassword(int $user_id, string $password): Result
     {
-        $user_id = $this->user_repo->idByLogin($login);
-        if (empty($user_id)) {
-            return new Result(false);
-        }
         return $this->auth_handler->changePassword($user_id, $password);
     }
 }

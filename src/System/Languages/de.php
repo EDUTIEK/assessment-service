@@ -23,14 +23,17 @@ return [
     'password_change_subject' => 'Passwort-Änderung',
     'password_change_body' => '
 Jemand hat für Ihre E-Mail-Adresse [email] eine Änderung des Passworts angefragt. 
-Wenn Sie es nicht selbst waren, ignorieren sie bitte diese E-Mail.<br />
+Wenn Sie es nicht selbst waren, ignorieren Sie bitte diese E-Mail.<br />
 <br />
 Ihre Adresse ist bei den folgenden Benutzerkonten eingetragen:<br />
 <strong>[logins]</strong><br />
 <br />
-Rufen Sie bitte [link] auf und tragen dann einen der obigen Benutzernamen, sowie den folgenden Code ein:<br />
+Rufen Sie bitt [link] auf und tragen dann Sie einen der obigen Benutzernamen, sowie den folgenden Code ein:<br />
 <strong>[code]</strong><br />
 <br />
 Danach können Sie ein neues Passwort vergeben.
-'
+',
+    'password_change_code_or_login_wrong' => 'Der eingegebene Benutzername oder Code ist falsch.',
+    'password_change_sending_failed' => 'Der Code zur Passwort-Änderung konnte nicht versendet werden. Bitte kontaktieren Sie die technische Betreuung.'
+
 ];

@@ -53,9 +53,9 @@ interface FullService
      * - set the code for all users that have this e-mail
      * - add the logins of all assigned users to this e-mail
      * - check validity time of old and new code
-     * - if time difference is below 5 seconds, reject
+     * - if time difference is below 5 seconds, reject a resend
      */
-    public function requestPasswordChange(string $email, Frontend $frontend): bool;
+    public function requestPasswordChange(string $email, Frontend $frontend): Result;
 
     /**
      * Remove a password change code from users with an e-mail
@@ -66,11 +66,11 @@ interface FullService
      * Check if the password change code is still valid
      * Keep the code until the password is changed
      */
-    public function checkPasswordChangeCode(string $login, string $code): bool;
+    public function checkPasswordChangeCode(string $login, string $code): Result;
 
     /**
      * Change the password of a user
      */
-    public function changePassword(string $login, string $password): Result;
+    public function changePassword(int $user_id, string $password): Result;
 
 }
