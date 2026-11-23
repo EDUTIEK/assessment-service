@@ -32,15 +32,18 @@ readonly class Service implements ReadService, FullService
         return $this->setup_repo->one();
     }
 
-    public function getFrontendUrl(Frontend $frontend): string
+    public function getFrontendUrl(Frontend $frontend, ?string $query = null): string
     {
-        switch ($frontend) {
-            case Frontend::WRITER:
-                return $this->getConfig()->getWriterUrl() ?? $this->buildFrontendUrl($frontend);
-            case Frontend::CORRECTOR:
-                return $this->getConfig()->getCorrectorUrl() ?? $this->buildFrontendUrl($frontend);
+        $url = match($frontend) {
+            Frontend::WRITER => $this->getConfig()->getWriterUrl() ?? $this->buildFrontendUrl($frontend),
+            Frontend::CORRECTOR => $this->getConfig()->getCorrectorUrl() ?? $this->buildFrontendUrl($frontend)
+        };
+
+        if ($query !== null) {
+            $url .= '?' . urlencode($query);
         }
-        return '';
+
+        return $url;
     }
 
     public function getPathToGhostscript(): ?string

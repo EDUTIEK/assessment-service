@@ -22,8 +22,9 @@ interface ReadService
     /**
      * Get the effective URL to open a frontend web app
      * This is taken from the config or built from the frontend base URL in the setup
+     * Optionally set a query string (leading ? will be added automatically)
      */
-    public function getFrontendUrl(Frontend $frontend): string;
+    public function getFrontendUrl(Frontend $frontend, ?string $query = null): string;
 
     /**
      * Get the effective path of the ghostscript executable

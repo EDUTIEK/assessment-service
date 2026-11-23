@@ -101,7 +101,7 @@ readonly class Service implements FullService
 
         $subject = $this->lang->txt('password_change_subject');
         $body = $this->lang->txt('password_change_body');
-        $link = $this->config->getFrontendUrl($frontend);
+        $link = $this->config->getFrontendUrl($frontend, 'password');
 
         $body = str_replace('[email]', $email, $body);
         $body = str_replace('[logins]', implode('<br />', $logins), $body);

@@ -28,7 +28,7 @@ Wenn Sie es nicht selbst waren, ignorieren Sie bitte diese E-Mail.<br />
 Ihre Adresse ist bei den folgenden Benutzerkonten eingetragen:<br />
 <strong>[logins]</strong><br />
 <br />
-Rufen Sie bitt [link] auf und tragen dann Sie einen der obigen Benutzernamen, sowie den folgenden Code ein:<br />
+Rufen Sie bitte [link] auf und tragen dann Sie einen der obigen Benutzernamen, sowie den folgenden Code ein:<br />
 <strong>[code]</strong><br />
 <br />
 Danach können Sie ein neues Passwort vergeben.
