@@ -28,10 +28,13 @@ Wenn Sie es nicht selbst waren, ignorieren Sie bitte diese E-Mail.<br />
 Ihre Adresse ist bei den folgenden Benutzerkonten eingetragen:<br />
 <strong>[logins]</strong><br />
 <br />
-Rufen Sie bitte [link] auf und tragen dann Sie einen der obigen Benutzernamen, sowie den folgenden Code ein:<br />
+Im Formular "Code zur Passwort-Änderung" tragen Sie einen der obigen Benutzernamen, sowie den folgenden Code ein:<br />
 <strong>[code]</strong><br />
 <br />
 Danach können Sie ein neues Passwort vergeben.
+
+Wenn das Formular nicht bereits angezeigt wird, können Sie es über den folgenden Link aufrufen:<br />
+[link]
 ',
     'password_change_code_or_login_wrong' => 'Der eingegebene Benutzername oder Code ist falsch.',
     'password_change_sending_failed' => 'Der Code zur Passwort-Änderung konnte nicht versendet werden. Bitte kontaktieren Sie die technische Betreuung.'
