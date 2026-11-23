@@ -37,6 +37,6 @@ Wenn das Formular nicht bereits angezeigt wird, können Sie es über den folgend
 [link]
 ',
     'password_change_code_or_login_wrong' => 'Der eingegebene Benutzername oder Code ist falsch.',
-    'password_change_sending_failed' => 'Der Code zur Passwort-Änderung konnte nicht versendet werden. Bitte kontaktieren Sie die technische Betreuung.'
-
+    'password_change_sending_failed' => 'Der Code zur Passwort-Änderung konnte nicht versendet werden. Bitte kontaktieren Sie die technische Betreuung.',
+    'password_change_existing_wrong' => 'Das bisherige Passwort ist falsch.',
 ];

@@ -38,6 +38,11 @@ interface AuthHandler
     public function isPasswordEnabled(int $user_id): bool;
 
     /**
+     * Check if a password change is needed for a user
+     */
+    public function isPasswordChangeNeeded(int $user_id): bool;
+
+    /**
      * Get the text of the user agreement that is required for the user
      */
     public function getAgreement($user_id): string;

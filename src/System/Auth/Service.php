@@ -62,6 +62,14 @@ readonly class Service implements FullService
         return $this->auth_handler->isActive($user_id);
     }
 
+    /**
+     * Check if a password change is needed for a user
+     */
+    public function isPasswordChangeNeeded(int $user_id): bool
+    {
+        return $this->auth_handler->isPasswordChangeNeeded($user_id);
+    }
+
     public function getAgreement(int $user_id): string
     {
         return $this->auth_handler->getAgreement($user_id);
@@ -132,11 +140,19 @@ readonly class Service implements FullService
         if (!empty($user_id)) {
             $auth = $this->auth_repo->get($user_id);
             if ($auth->isResetCodeValid($code)) {
-                return  new Result(true);
+                return new Result(true);
             }
         }
 
         return new Result(false, $this->lang->txt('password_change_code_or_login_wrong'));
+    }
+
+    public function checkExistingPassword(int $user_id, string $password): Result
+    {
+        if ($this->auth_handler->checkPassword($user_id, $password)) {
+            return new Result(true);
+        }
+        return new Result(false, $this->lang->txt('password_change_existing_wrong'));
     }
 
     public function changePassword(int $user_id, string $password): Result

@@ -34,6 +34,11 @@ interface FullService
     public function isActive(int $user_id): bool;
 
     /**
+     * Check if a password change is needed for a user
+     */
+    public function isPasswordChangeNeeded(int $user_id): bool;
+
+    /**
      * Get the user agreement that is relevant for a user (simple HTML text)
      */
     public function getAgreement(int $user_id): string;
@@ -67,6 +72,11 @@ interface FullService
      * Keep the code until the password is changed
      */
     public function checkPasswordChangeCode(string $login, string $code): Result;
+
+    /**
+     * Check the password of a user
+     */
+    public function checkExistingPassword(int $user_id, string $password): Result;
 
     /**
      * Change the password of a user

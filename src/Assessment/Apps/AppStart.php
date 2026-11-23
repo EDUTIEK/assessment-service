@@ -96,6 +96,7 @@ class AppStart implements RestHandler
             'full_name' => $user_data->getFullname(false),
             'agreement' => $this->auth->getAgreement($this->user_id),
             'accepted' => $this->auth->hasAcceptedAgreement($this->user_id),
+            'change_password' => $this->auth->isPasswordChangeNeeded($this->user_id)
         ];
 
         $this->rest->createToken($this->user_id);
@@ -206,7 +207,8 @@ class AppStart implements RestHandler
         $body = $request->getParsedBody();
         $code = $body['code'];
         $login = $body['login'] ?? '';
-        $password = $body['password'] ?? '';
+        $old_password = $body['password'] ?? '';
+        $new_password = $body['new_password'] ?? '';
 
         if (empty($code) || empty($login)) {
             // password change for authentified users
@@ -215,8 +217,11 @@ class AppStart implements RestHandler
             } catch (RestException $exception) {
                 $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_UNAUTHORIZED);
             }
-            // todo: check the old password
 
+            $result = $this->auth->checkExistingPassword($user->getId(), $old_password);
+            if ($result->isFailed()) {
+                $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_UNAUTHORIZED, implode(', ', $result->failures()));
+            }
         } else {
             // password change requested by code
             $result = $this->auth->checkPasswordChangeCode($login, $code);
@@ -226,7 +231,7 @@ class AppStart implements RestHandler
             $user = $this->users->getUser($this->users->getUserIdByLogin($login));
         }
 
-        $result = $this->auth->changePassword($user?->getId() ?? 0, $password);
+        $result = $this->auth->changePassword($user?->getId() ?? 0, $new_password);
         if ($result->isFailed()) {
             $this->rest->sendPlainResponse(StatusCodeInterface::STATUS_BAD_REQUEST, implode('; ', $result->failures()));
         }
