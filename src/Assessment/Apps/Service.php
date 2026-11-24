@@ -58,7 +58,7 @@ class Service implements OpenService, RestHandler
             }
         }
 
-        $this->openFrontend();
+        $this->openFrontend($this->config->getFrontendUrl(Frontend::WRITER));
     }
 
     /**
@@ -72,16 +72,13 @@ class Service implements OpenService, RestHandler
         $this->setCommonFrontendParams($return_url, $this->rest->createToken($this->user_id)->getToken());
         $this->setFrontendParam('AsAdmin', ($as_admin && $permissions->canMaintainCorrectors()) ? 'true' : 'false');
 
-        // deep linking
-        $query = 'open/' . $this->ass_id . '/' . $this->context_id;
-        if ($task_id !== null) {
-            $query .= '/' . $task_id;
-        }
-        if ($writer_id !== null) {
-            $query .= '/' . $writer_id;
-        }
-
-        $this->openFrontend($query);
+        $this->openFrontend($this->internal->deepLink()->correctionApp(
+            $this->ass_id,
+            $this->context_id,
+            $this->user_id,
+            $task_id,
+            $writer_id
+        ));
     }
 
     /**
@@ -190,13 +187,8 @@ class Service implements OpenService, RestHandler
     /**
      * Actually redirect to the frontend
      */
-    private function openFrontend(?string $query = null): never
+    private function openFrontend(string $url): never
     {
-        $url = $this->config->getFrontendUrl($this->frontend);
-        if ($query !== null) {
-            $url .= '?' . $query;
-        }
-
         header('Cache-Control: no-cache, no-store, must-revalidate');
         header('Pragma: no-cache');
         header('Expires: 0');

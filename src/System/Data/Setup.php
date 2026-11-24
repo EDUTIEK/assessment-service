@@ -28,6 +28,11 @@ abstract readonly class Setup
     abstract public function getFrontendBaseUrl(Frontend $frontend): string;
 
     /**
+     * Get if the frontend is used with a direct login
+     */
+    abstract public function isFrontendWithLogin(Frontend $frontend): bool;
+
+    /**
      * Get the URL of the backend for REST calls from the web apps
      * This must a URL of the hosting system that accepts GET and POST requests
      * The web apps will add a path to this URL but keep all existing query params

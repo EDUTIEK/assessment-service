@@ -19,6 +19,7 @@ use Edutiek\AssessmentService\System\Language\FullService as LanguageService;
 use Edutiek\AssessmentService\Task\CorrectorAssignments\FullService as AssignmentsService;
 use Edutiek\AssessmentService\Task\CorrectorSummary\ReadService as SummaryService;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskReader;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingStatus;
@@ -30,13 +31,14 @@ readonly class Service implements FullService
     public function __construct(
         private int $user_id,
         private Repositories $repos,
-        private AssignmentsService $assignments,
         private WriterService $writer_service,
         private CorrectorService $corrector_service,
         private WholeProcessService $whole_process,
         private LogEntryService $log_entry,
         private NotificationService $notification_service,
         private CorrectionSettings $correction_settings,
+        private TaskReader $tasks,
+        private AssignmentsService $assignments,
         private SummaryService $summary_service,
         private LanguageService $language,
     ) {
@@ -250,7 +252,12 @@ readonly class Service implements FullService
             foreach ($this->assignments->allByTaskIdAndWriterId($assignment->getTaskId(), $assignment->getWriterId()) as $ass) {
                 if ($ass->getPosition() === GradingPosition::SECOND) {
                     $corrector2 = $this->corrector_service->oneById($ass->getCorrectorId());
-                    $this->notification_service->createFor(NotificationType::CORRECTOR_FIRST_AUTHORIZATION_REMOVED, $writer, $corrector2);
+                    $this->notification_service->createFor(
+                        NotificationType::CORRECTOR_FIRST_AUTHORIZATION_REMOVED,
+                        $this->tasks->one($assignment->getTaskId()),
+                        $writer,
+                        $corrector2
+                    );
                     break;
                 }
             }
@@ -277,7 +284,13 @@ readonly class Service implements FullService
                 $this->repos->correctorSummary()->save($summary);
 
                 $corrector1 = $this->corrector_service->oneById($ass->getCorrectorId());
-                $this->notification_service->createFor(NotificationType::CORRECTOR_AUTHORIZATION_REMOVED, $writer, $corrector1, $reason);
+                $this->notification_service->createFor(
+                    NotificationType::CORRECTOR_AUTHORIZATION_REMOVED,
+                    $this->tasks->one($assignment->getTaskId()),
+                    $writer,
+                    $corrector1,
+                    $reason
+                );
                 break;
             }
         }
@@ -363,6 +376,7 @@ readonly class Service implements FullService
                 if ($corrector !== null && $corrector->getUserId() !== $this->user_id) {
                     $this->notification_service->createFor(
                         NotificationType::CORRECTOR_AUTHORIZATION_REMOVED,
+                        $this->tasks->one($assignment->getTaskId()),
                         $writer,
                         $corrector,
                         $reason
@@ -506,7 +520,7 @@ readonly class Service implements FullService
                         $this->notification_service->createFor(match($status) {
                             CorrectionStatus::APPROXIMATION => NotificationType::CORRECTOR_APPROXIMATION_STARTED,
                             CorrectionStatus::CONSULTING => NotificationType::CORRECTOR_CONSULTING_STARTED
-                        }, $writer, $corrector);
+                        }, $this->tasks->one($assignment->getTaskId()), $writer, $corrector);
                         break;
                     }
                 }

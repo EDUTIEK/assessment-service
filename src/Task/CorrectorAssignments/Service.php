@@ -13,6 +13,7 @@ use Edutiek\AssessmentService\Assessment\Notification\DeliverService as Notifica
 use Edutiek\AssessmentService\System\EventHandling\Dispatcher;
 use Edutiek\AssessmentService\System\EventHandling\Events\AssignmentRemoved;
 use Edutiek\AssessmentService\Assessment\TaskInterfaces\GradingPosition;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskReader;
 use Edutiek\AssessmentService\Task\Api\ApiException;
 use Edutiek\AssessmentService\Task\Data\CorrectorAssignment;
 use Edutiek\AssessmentService\Task\Data\CorrectorSummary;
@@ -33,6 +34,8 @@ readonly class Service implements FullService
     public function __construct(
         private int $ass_id,
         private int $user_id,
+        private Internal $internal,
+        private TaskReader $tasks,
         private CorrectionSettings $correction_settings,
         private CorrectorService $corrector_service,
         private WriterService $writer_service,
@@ -42,7 +45,6 @@ readonly class Service implements FullService
         private LanguageService $lang,
         private FileDelivery $delivery,
         private FileStorage $storage,
-        private Internal $internal,
         private Repositories $repos,
         private Dispatcher $events
     ) {
@@ -316,6 +318,7 @@ readonly class Service implements FullService
                 $this->notification->sendDirect(
                     NotificationType::CORRECTOR_STITCH_NEEDED,
                     [$corrector->getUserId()],
+                    $this->tasks->one($new_assignment->getTaskId()),
                     $writer
                 );
             }

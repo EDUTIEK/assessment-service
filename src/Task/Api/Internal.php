@@ -89,6 +89,8 @@ class Internal implements RatingCriterionServiceFactory
         return $this->instances[CorrectorAssignmentsService::class][$ass_id][$user_id] ??= new CorrectorAssignmentsService(
             $ass_id,
             $user_id,
+            $this,
+            $this->taskManager($ass_id, $user_id),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
@@ -98,7 +100,6 @@ class Internal implements RatingCriterionServiceFactory
             $this->dependencies->systemApi()->language($user_id, __DIR__ . '/../Languages/'),
             $this->dependencies->systemApi()->fileDelivery(),
             $this->dependencies->systemApi()->fileStorage(),
-            $this,
             $this->dependencies->repositories(),
             $this->dependencies->eventDispatcher($ass_id, $user_id)
         );
@@ -143,13 +144,14 @@ class Internal implements RatingCriterionServiceFactory
         return $this->instances[CorrectionProcessService::class][$ass_id][$user_id] ??= new CorrectionProcessService(
             $user_id,
             $this->dependencies->repositories(),
-            $this->correctorAssignments($ass_id, $user_id),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionProcess(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->logEntry(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->notification(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings()->get(),
+            $this->taskManager($ass_id, $user_id),
+            $this->correctorAssignments($ass_id, $user_id),
             $this->correctorSummary($ass_id, $user_id),
             $this->language($user_id),
         );

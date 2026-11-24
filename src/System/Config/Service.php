@@ -40,7 +40,7 @@ readonly class Service implements ReadService, FullService
         };
 
         if ($query !== null) {
-            $url .= '?' . urlencode($query);
+            $url .= '?' . $query;
         }
 
         return $url;

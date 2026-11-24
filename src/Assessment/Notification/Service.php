@@ -9,9 +9,9 @@ use Edutiek\AssessmentService\Assessment\Data\NotificationSettings;
 use Edutiek\AssessmentService\Assessment\Data\NotificationType;
 use Edutiek\AssessmentService\Assessment\Data\NotificationUser;
 use Edutiek\AssessmentService\Assessment\Data\Repositories;
-use Edutiek\AssessmentService\Assessment\Api\ApiException;
 use Edutiek\AssessmentService\Assessment\Data\Writer;
 use Edutiek\AssessmentService\Assessment\Data\Corrector;
+use Edutiek\AssessmentService\Assessment\DeepLink\FullService as DeepLinkService;
 use Edutiek\AssessmentService\Assessment\OrgaSettings\ReadService as OrgaSettings;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\ReadService as CorrectionSettings;
 use Edutiek\AssessmentService\System\Config\CronJobId;
@@ -20,6 +20,7 @@ use Edutiek\AssessmentService\System\Mail\Delivery as MailDelivery;
 use Edutiek\AssessmentService\System\Config\ReadService as ConfigService;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\Assessment\Data\CorrectionProcedure;
+use Edutiek\AssessmentService\Assessment\TaskInterfaces\TaskInfo;
 
 readonly class Service implements FullService
 {
@@ -29,6 +30,7 @@ readonly class Service implements FullService
         private OrgaSettings $orga,
         private CorrectionSettings $correction,
         private LanguageService $lang,
+        private DeepLinkService $deep_link,
         private MailDelivery $mail,
         private ConfigService $config,
         private UserReadService $users,
@@ -158,7 +160,7 @@ readonly class Service implements FullService
         }
     }
 
-    public function createFor(NotificationType $type, ?Writer $writer = null, ?Corrector $corrector = null, ?string $reason = null): void
+    public function createFor(NotificationType $type, ?TaskInfo $task = null, ?Writer $writer = null, ?Corrector $corrector = null, ?string $reason = null): void
     {
         $setting = $this->getSettings($type);
         if (!$setting->getActive()) {
@@ -204,19 +206,19 @@ readonly class Service implements FullService
                 break;
         }
 
-        $this->sendDirect($type, $to_ids, $writer, $reason);
+        $this->sendDirect($type, $to_ids, $task, $writer, $reason);
     }
 
     /**
      * @param int[] $to_ids
      */
-    public function sendDirect(NotificationType $type, array $to_ids, ?Writer $writer, ?string $reason = null): void
+    public function sendDirect(NotificationType $type, array $to_ids, ?TaskInfo $task = null, ?Writer $writer = null, ?string $reason = null): void
     {
         $setting = $this->getSettings($type);
 
         foreach ($to_ids as $to_id) {
-            $subject = $this->fillPlaceholders($setting->getSubject(), $type, $to_id, $writer, $reason);
-            $body = $this->fillPlaceholders((string) $setting->getBody(), $type, $to_id, $writer, $reason);
+            $subject = $this->fillPlaceholders($setting->getSubject(), $type, $to_id, $task, $writer, $reason);
+            $body = $this->fillPlaceholders((string) $setting->getBody(), $type, $to_id, $task, $writer, $reason);
             $this->mail->internal($subject, $body, [$to_id]);
         }
     }
@@ -235,10 +237,17 @@ readonly class Service implements FullService
         return implode("\n", $lines);
     }
 
-    private function fillPlaceholders(string $template, NotificationType $type, int $user_id, ?Writer $writer, ?string $reason = null): string
+    private function fillPlaceholders(string $template, NotificationType $type, int $user_id, ?TaskInfo $task = null, ?Writer $writer = null, ?string $reason = null): string
     {
         $user_data = $this->users->getUser($user_id);
         $writer_data = $this->users->getUser($writer?->getUserId() ?? 0);
+
+        if ($type->isForCorrector()) {
+            $assessment_link = $this->deep_link->correction($this->ass_id, null, $user_id, $task?->getId(), $writer?->getId());
+        } else {
+            $assessment_link = $this->deep_link->backend($this->ass_id, null, $user_id);
+        }
+
 
         foreach ($type->placeholders() as $key => $var) {
             $search = '[' . $key . ']';
@@ -251,7 +260,7 @@ readonly class Service implements FullService
                 'writer_name' => $writer_data?->getFullname(false),
                 'writer_pseudonym' => $writer->getPseudonym(),
                 'assessment_title' => $this->repos->properties()->one($this->ass_id)?->getTitle(),
-                'assessment_link' => $this->repos->contextInfo()->link($this->ass_id, $user_id),
+                'assessment_link' => $assessment_link,
                 'reason' => $reason ?? ''
             };
 

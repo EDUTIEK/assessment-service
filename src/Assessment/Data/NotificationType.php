@@ -14,6 +14,33 @@ enum NotificationType: string
     case CORRECTOR_STITCH_NEEDED = 'corrector_stitch_needed';
     case ADMIN_WRITING_AUTHORIZED = 'admin_writing_authorized';
 
+    public static function adminTypes(): array
+    {
+        return  [
+            self::ADMIN_STITCH_NEEDED,
+            self::ADMIN_WRITING_AUTHORIZED,
+        ];
+    }
+
+    public static function writerTypes(): array
+    {
+        return  [
+            self::WRITER_CORRECTION_FINALIZED,
+        ];
+    }
+
+    public static function correctorTypes(): array
+    {
+        return  [
+            self::CORRECTOR_WRITING_CHANGED,
+            self::CORRECTOR_FIRST_AUTHORIZATION_REMOVED,
+            self::CORRECTOR_AUTHORIZATION_REMOVED,
+            self::CORRECTOR_APPROXIMATION_STARTED,
+            self::CORRECTOR_CONSULTING_STARTED,
+            self::CORRECTOR_STITCH_NEEDED,
+        ];
+    }
+
     public static function allTypes(): array
     {
         // this order is used for the table presentation
@@ -30,12 +57,24 @@ enum NotificationType: string
         ];
     }
 
+    public function isForAdmin(): bool
+    {
+        return in_array($this, self::adminTypes());
+    }
+
+    public function isForWriter(): bool
+    {
+        return in_array($this, self::writerTypes());
+    }
+
+    public function isForCorrector(): bool
+    {
+        return in_array($this, self::correctorTypes());
+    }
+
     public function hasConfiguredUsers(): bool
     {
-        return in_array($this, [
-           self::ADMIN_STITCH_NEEDED,
-           self::ADMIN_WRITING_AUTHORIZED,
-        ]);
+        return $this->isForAdmin();
     }
 
     public function defaultActive(): bool

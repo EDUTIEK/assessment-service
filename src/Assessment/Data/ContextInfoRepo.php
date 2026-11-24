@@ -12,7 +12,12 @@ interface ContextInfoRepo
     public function get(int $context_id): ContextInfo;
 
     /**
+     * Get the context id for which the assessment is readable for the user
+     */
+    public function readableContextId(int $ass_id, int $user_id): ?int;
+
+    /**
      * Get a link to the assessment object for a user
      */
-    public function link(int $ass_id, int $user_id): string;
+    public function link(int $ass_id, int $context_id = null): string;
 }

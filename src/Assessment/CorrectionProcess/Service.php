@@ -102,6 +102,7 @@ readonly class Service implements FullService
                                 CorrectionStatus::APPROXIMATION => NotificationType::CORRECTOR_APPROXIMATION_STARTED,
                                 CorrectionStatus::CONSULTING => NotificationType::CORRECTOR_CONSULTING_STARTED
                             },
+                            $task,
                             $writer,
                             $corrector
                         );

@@ -10,6 +10,7 @@ use Edutiek\AssessmentService\Assessment\Apps\AppBridge;
 use Edutiek\AssessmentService\Assessment\Apps\Service as AppService;
 use Edutiek\AssessmentService\Assessment\AssessmentGrading\Service as AssessmentGradingService;
 use Edutiek\AssessmentService\Assessment\BackgroundTask\Service as BackgroundTaskService;
+use Edutiek\AssessmentService\Assessment\DeepLink\Service as DeepLinkService;
 use Edutiek\AssessmentService\Assessment\ConstraintHandling\Provider as ConstraintProvider;
 use Edutiek\AssessmentService\Assessment\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Assessment\CorrectionSettings\Service as CorrectionSettingsService;
@@ -265,6 +266,14 @@ class Internal implements ComponentApi, ComponentApiFactory
         return $this->dependencies->systemApi()->language($user_id, __DIR__ . '/../Languages/');
     }
 
+    public function deepLink(): DeepLinkService
+    {
+        return $this->instances[DeepLinkService::class] ??= new DeepLinkService(
+            $this->dependencies->repositories(),
+            $this->dependencies->systemApi()->config()
+        );
+    }
+
     public function documentationExport(int $ass_id, int $context_id, int $user_id): DocumentationExport
     {
         return $this->instances[DocumentationExport::class][$ass_id][$context_id][$user_id] ??= new DocumentationExport(
@@ -477,6 +486,7 @@ class Internal implements ComponentApi, ComponentApiFactory
             $this->orgaSettings($ass_id, $user_id),
             $this->correctionSettings($ass_id, $user_id),
             $this->language($user_id),
+            $this->deepLink(),
             $this->dependencies->systemApi()->mailDelivery(),
             $this->dependencies->systemApi()->config(),
             $this->dependencies->systemApi()->user()

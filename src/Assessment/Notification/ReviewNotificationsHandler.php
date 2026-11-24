@@ -35,7 +35,7 @@ class ReviewNotificationsHandler implements CronHandler
             if ($orga->reviewPossible()) {
                 $service = $this->internal->notification($ass_id, $this->user_id);
                 foreach ($writer_repo->allByUserIdsAndAssId($user_ids, $ass_id) as $writer) {
-                    $service->sendDirect(NotificationType::WRITER_CORRECTION_FINALIZED, [$writer->getUserId()], $writer);
+                    $service->sendDirect(NotificationType::WRITER_CORRECTION_FINALIZED, [$writer->getUserId()], null, $writer);
                 }
                 $queue_repo->deleteByAssIdAndType($ass_id, NotificationType::WRITER_CORRECTION_FINALIZED);
 

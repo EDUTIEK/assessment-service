@@ -60,6 +60,7 @@ readonly class OnWritingContentChanged implements Handler
             ) {
                 $this->assessment_api->notification()->createFor(
                     NotificationType::CORRECTOR_WRITING_CHANGED,
+                    null,
                     $this->assessment_api->writer()->oneByWriterId($assignment->getWriterId()),
                     $this->assessment_api->corrector()->oneById($assignment->getCorrectorId())
                 );
