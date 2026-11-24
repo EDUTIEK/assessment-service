@@ -58,7 +58,7 @@ class Service implements OpenService, RestHandler
             }
         }
 
-        $this->openFrontend($this->config->getFrontendUrl($this->frontend));
+        $this->openFrontend();
     }
 
     /**
@@ -70,11 +70,18 @@ class Service implements OpenService, RestHandler
         $this->context_id = $context_id;
         $permissions = $this->internal->permissions($this->ass_id, $this->context_id, $this->user_id);
         $this->setCommonFrontendParams($return_url, $this->rest->createToken($this->user_id)->getToken());
-        $this->setFrontendParam('TaskId', (string) $task_id);
-        $this->setFrontendParam('WriterId', (string) $writer_id);
         $this->setFrontendParam('AsAdmin', ($as_admin && $permissions->canMaintainCorrectors()) ? 'true' : 'false');
 
-        $this->openFrontend($this->config->getFrontendUrl($this->frontend));
+        // deep linking
+        $query = 'open/' . $this->ass_id . '/' . $this->context_id;
+        if ($task_id !== null) {
+            $query .= '/' . $task_id;
+        }
+        if ($writer_id !== null) {
+            $query .= '/' . $writer_id;
+        }
+
+        $this->openFrontend($query);
     }
 
     /**
@@ -151,12 +158,10 @@ class Service implements OpenService, RestHandler
      */
     public function setCommonFrontendParams(string $return_url, string $token): void
     {
-        $this->setFrontendParam('ReturnUrl', $return_url);
-        $this->setFrontendParam('UserToken', $token);
         $this->setFrontendParam('BackendUrl', $this->config->getSetup()->getBackendUrl());
-        $this->setFrontendParam('AssId', (string) $this->ass_id);
-        $this->setFrontendParam('ContextId', (string) $this->context_id);
+        $this->setFrontendParam('ReturnUrl', $return_url);
         $this->setFrontendParam('UserId', (string) $this->user_id);
+        $this->setFrontendParam('UserToken', $token);
     }
 
     /**
@@ -185,12 +190,17 @@ class Service implements OpenService, RestHandler
     /**
      * Actually redirect to the frontend
      */
-    private function openFrontend(string $frontend_url): never
+    private function openFrontend(?string $query = null): never
     {
+        $url = $this->config->getFrontendUrl($this->frontend);
+        if ($query !== null) {
+            $url .= '?' . $query;
+        }
+
         header('Cache-Control: no-cache, no-store, must-revalidate');
         header('Pragma: no-cache');
         header('Expires: 0');
-        header('Location: ' . $frontend_url);
+        header('Location: ' . $url);
         exit;
     }
 }
