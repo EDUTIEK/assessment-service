@@ -324,10 +324,10 @@ class Internal implements ComponentApi, ComponentApiFactory
             true,
             $this->dependencies->systemApi()->log()
         );
-        $app->setBasePath(dirname(parse_url(
+        $app->setBasePath(parse_url(
             $this->dependencies->systemApi()->config()->getSetup()->getBackendUrl(),
             PHP_URL_PATH
-        )));
+        ));
         return $app;
     }
 

@@ -58,15 +58,18 @@ readonly class Service implements ReadService, FullService
 
     /**
      * Build the URL of a frontend web app
-     * Add a query string with the revision to avoid an outdated cached app
+     * Version 10: Add a query string with the revision to avoid an outdated cached app
+     * Version 11: Web apps may be bookmarked and must have an unchanging URL
      */
     private function buildFrontendUrl(Frontend $frontend): string
     {
-        $json = json_decode(file_get_contents(__DIR__ . '/../../../package-lock.json'), true);
-        $resolved = $json['packages']['node_modules/' . $frontend->module()]['resolved'] ?? '';
-        $revision = (string) parse_url($resolved, PHP_URL_FRAGMENT);
+        return $this->getSetup()->getFrontendBaseUrl($frontend);
 
-        return $this->getSetup()->getFrontendBaseUrl($frontend)
-            . '/index.html?' . substr($revision, 0, 7);
+        //        $json = json_decode(file_get_contents(__DIR__ . '/../../../package-lock.json'), true);
+        //        $resolved = $json['packages']['node_modules/' . $frontend->module()]['resolved'] ?? '';
+        //        $revision = (string) parse_url($resolved, PHP_URL_FRAGMENT);
+        //
+        //        return $this->getSetup()->getFrontendBaseUrl($frontend)
+        //            . '/index.html?' . substr($revision, 0, 7);
     }
 }
