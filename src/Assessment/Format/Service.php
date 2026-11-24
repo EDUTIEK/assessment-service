@@ -46,7 +46,7 @@ readonly class Service implements FullService
         }
         if ($this->orga_settings->getFirstCorrectionEnd()) {
             $messages[] = $this->language->txt("first_correction_end") . ': '
-                . $this->system_format->date($this->orga_settings->getCorrectionEnd());
+                . $this->system_format->date($this->orga_settings->getFirstCorrectionEnd());
         }
 
         if (count($messages)) {
