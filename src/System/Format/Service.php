@@ -47,7 +47,7 @@ readonly class Service implements FullService
         $text = match([!!$start, !!$end]) {
             [true, false] => $txt('period_only_from') . ' ' . ($format)($start),
             [false, true] => $txt('period_only_until') . ' ' . ($format)($end),
-            [true, true] => join(' ', [$txt('period_from'), ($format)($start), $txt('period_until'), ($format)($end)]),
+            [true, true] => join(' ', [($format)($start), $txt('period_until'), ($format)($end)]),
             [false, false] => $txt('not_specified'),
         };
 
