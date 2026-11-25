@@ -41,12 +41,12 @@ readonly class Service implements FullService
         $messages = [];
 
         if ($this->orga_settings->getCorrectionStart() || $this->orga_settings->getCorrectionEnd()) {
-            $period = $this->system_format->dateRange($this->orga_settings->getCorrectionStart(), $this->orga_settings->getCorrectionEnd());
+            $period = $this->system_format->dateRange($this->orga_settings->getCorrectionStart(), $this->orga_settings->getCorrectionEnd(), false);
             $messages[] = $this->language->txt("correction_period") . ': ' . $period;
         }
         if ($this->orga_settings->getFirstCorrectionEnd()) {
             $messages[] = $this->language->txt("first_correction_end") . ': '
-                . $this->system_format->date($this->orga_settings->getFirstCorrectionEnd());
+                . $this->system_format->date($this->orga_settings->getFirstCorrectionEnd(), false);
         }
 
         if (count($messages)) {

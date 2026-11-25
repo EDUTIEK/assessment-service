@@ -32,20 +32,22 @@ readonly class Service implements FullService
         return $date ? $date->setTimezone($this->timezone)->format('d.m.Y') : '';
     }
 
-    public function date(?\DateTimeInterface $date): string
+    public function date(?\DateTimeInterface $date, bool $with_time = true): string
     {
-        return $date ? ($this->format_date)($date) : '';
+        $format = $with_time ? $this->format_date : $this->docDate(...);
+        return $date ? ($format)($date) : '';
     }
 
-    public function dateRange(?DateTimeInterface $start, ?DateTimeInterface $end): string
+    public function dateRange(?DateTimeInterface $start, ?DateTimeInterface $end, bool $with_time = true): string
     {
         $txt = $this->language->txt(...);
+        $format = $with_time ? $this->format_date : $this->docDate(...);
         $start = $start?->setTimezone($this->timezone);
         $end = $end?->setTimezone($this->timezone);
         $text = match([!!$start, !!$end]) {
-            [true, false] => $txt('period_only_from') . ' ' . ($this->format_date)($start),
-            [false, true] => $txt('period_only_until') . ' ' . ($this->format_date)($end),
-            [true, true] => join(' ', [$txt('period_from'), ($this->format_date)($start), $txt('period_until'), ($this->format_date)($end)]),
+            [true, false] => $txt('period_only_from') . ' ' . ($format)($start),
+            [false, true] => $txt('period_only_until') . ' ' . ($format)($end),
+            [true, true] => join(' ', [$txt('period_from'), ($format)($start), $txt('period_until'), ($format)($end)]),
             [false, false] => $txt('not_specified'),
         };
 

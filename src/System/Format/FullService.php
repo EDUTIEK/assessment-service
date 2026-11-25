@@ -21,12 +21,12 @@ interface FullService
     /**
      * Format a date for display in the user interface
      */
-    public function date(?DateTimeInterface $date): string;
+    public function date(?DateTimeInterface $date, bool $with_time = true): string;
 
     /**
      * Format a date range for display in the user interface
      */
-    public function dateRange(?DateTimeInterface $start, ?DateTimeInterface $end): string;
+    public function dateRange(?DateTimeInterface $start, ?DateTimeInterface $end, bool $with_time = true): string;
 
     /**
      * Human-readable file size
