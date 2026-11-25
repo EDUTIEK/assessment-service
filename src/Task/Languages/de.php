@@ -117,5 +117,6 @@ return [
     'warning_delete_assignment_with_data' => "Es sind Korrektureingaben vorhanden",
     'failure_assignment_unchanged' => "Keine Änderung nötig",
     'constraint_block_correction_is_authorized' => "NICHT MÖGLICH - es gibt freigegebene Korrekturen!",
-    'constraint_ask_correction_has_data' => "VORSICHT - es sind bereits Korrektureingaben vorhanden!"
+    'constraint_ask_correction_has_data' => "VORSICHT - es sind bereits Korrektureingaben vorhanden!",
+    'summary_upload_not_saved' => 'Die hochgeladene PDF-Datei wurde nicht gespeichert!'
 ];

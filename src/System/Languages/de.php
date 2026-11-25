@@ -1,4 +1,6 @@
-<?php return [
+<?php
+
+return [
     'period_only_from' => 'Seit',
     'period_only_until' => 'Bis',
     'period_from' => 'Von',
@@ -16,4 +18,6 @@
     'corr_x' => 'K%s',
     'decimal_separator' => ',',
     'thousands_separator' => '.',
+    'pdf_check_failed' => 'Die PDF-Datei kann nicht weiterverarbeitet werden!',
+    'pdf_check_accessibility_warning' => 'Die Datei ist nicht barrierefrei.'
 ];

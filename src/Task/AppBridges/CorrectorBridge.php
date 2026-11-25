@@ -16,6 +16,7 @@ use Edutiek\AssessmentService\Assessment\Writer\ReadService as WriterReadService
 use Edutiek\AssessmentService\System\Entity\FullService as EntityFullService;
 use Edutiek\AssessmentService\System\File\Storage;
 use Edutiek\AssessmentService\System\Language\FullService as Language;
+use Edutiek\AssessmentService\System\PdfProcessing\FullService as PdfProcessing;
 use Edutiek\AssessmentService\System\User\ReadService as UserReadService;
 use Edutiek\AssessmentService\Task\CorrectionProcess\Service as CorrectionProcessService;
 use Edutiek\AssessmentService\Task\CorrectionSettings\FullService as CorrectionSettingsService;
@@ -38,6 +39,7 @@ use Edutiek\AssessmentService\Task\Data\Settings;
 use Psr\Http\Message\UploadedFileInterface;
 use Edutiek\AssessmentService\System\Data\FileInfo;
 use Edutiek\AssessmentService\Task\Data\CorrectorSnippetPurpose;
+use Edutiek\AssessmentService\Assessment\Apps\RestException;
 
 class CorrectorBridge implements AppCorrectorBridge
 {
@@ -65,6 +67,7 @@ class CorrectorBridge implements AppCorrectorBridge
         private readonly Storage $storage,
         private readonly EntityFullService $entity,
         private readonly UserReadService $user_service,
+        private readonly PdfProcessing $pdf_service,
         private readonly CorrectorReadService $corrector_service,
         private readonly WriterReadService $writer_service,
         private readonly AssessmentSettingsService $assesment_settings_service,
@@ -785,12 +788,15 @@ class CorrectorBridge implements AppCorrectorBridge
         $summary = $this->summary_service->getForAssignment($assignment);
         $info = $this->storage->saveFile($file->getStream(), null);
         if ($info) {
+            $result = $this->pdf_service->check($info->getId());
+            if ($result->isFailed()) {
+                return ['id' => null,  'ok' => false, 'message' => implode(' ', $result->failures())];
+            }
             $this->storage->deleteFile($summary->getSummaryPdf());
             $summary->setSummaryPdf(($info->getId()));
             $this->repos->correctorSummary()->save($summary->touch());
-            return ['id' => $info->getId()];
+            return ['id' => $info->getId(),  'ok' => true, 'message' => implode(' ', $result->notes())];
         }
-        return ['id' => $summary->getSummaryPdf()];
-
+        return ['id' => null, 'ok' => false, 'message' => $this->language->txt('summary_upload_not_saved')];
     }
 }

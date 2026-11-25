@@ -143,6 +143,7 @@ class Internal
     {
         return $this->instances[PdfProcessing::class] ??= new PdfProcessing(
             $this->pdfCreator(),
+            $this->language(0, __DIR__ . '/../Languages/'),
             $this->dependencies->fileStorage(),
             $this->dependencies->log(),
             $this->config()->getPathToGhostscript(),

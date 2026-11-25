@@ -8,12 +8,14 @@ use Edutiek\AssessmentService\System\Data\FileInfo;
 use Edutiek\AssessmentService\System\PdfCreator\FullService as PdfCreator;
 use Edutiek\AssessmentService\System\PdfConverter\FullService as PdfConverter;
 use Edutiek\AssessmentService\System\File\Storage;
+use Edutiek\AssessmentService\System\Language\FullService as Language;
 use Edutiek\AssessmentService\System\Data\ImageSizeType;
 use Exception;
 use Generator;
 use Edutiek\AssessmentService\System\PdfCreator\Options;
 use Com\Tecnick\Pdf\Parser\Parser;
 use Edutiek\AssessmentService\System\Log\FullService as Logger;
+use Edutiek\AssessmentService\System\Data\Result;
 
 class Service implements FullService
 {
@@ -22,6 +24,7 @@ class Service implements FullService
 
     public function __construct(
         private readonly PdfCreator $pdf_creator,
+        private readonly Language $lang,
         private readonly Storage $storage,
         private readonly Logger $logger,
         private readonly string $ghostscript_bin,
@@ -38,6 +41,48 @@ class Service implements FullService
         fwrite($stream, $this->pdf_creator->createPdf($html, $options));
         $file_id = $this->saveFile($stream);
         return $file_id;
+    }
+
+    /**
+     * Check if a PDF file can be processed
+     */
+    public function check(string $file_id): Result
+    {
+        $result = new Result(true);
+        $id = null;
+        $count = 0;
+
+        // normal join
+        try {
+            $id = $this->joinAcc([$file_id, $file_id]);
+        } catch (\Throwable $e) {
+            $result->addNote($this->lang->txt('pdf_check_accessibility_warning'));
+        }
+
+        // fallback join
+        if (empty($id)) {
+            try {
+                $id = $this->joinGS([$file_id, $file_id]);
+            } catch (\Throwable $e) {
+                $result->addFailure($this->lang->txt('pdf_check_failed'));
+                return $result;
+            }
+        }
+
+        // page count after join
+        try {
+            $count = $this->count($id);
+        } catch (\Throwable $e) {
+            $result->addFailure($this->lang->txt('pdf_check_failed'));
+            return $result;
+        }
+
+        if ($count == 0) {
+            $result->addFailure($this->lang->txt('pdf_check_failed'));
+        }
+
+        $this->storage->deleteFile($id);
+        return $result;
     }
 
     public function join(array $pdf_ids): string
