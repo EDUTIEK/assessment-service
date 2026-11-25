@@ -53,7 +53,7 @@ class Factory
      */
     public function forCron(int $user_id): ForCron
     {
-        return $this->instances[ForEvents::class] ??= new ForCron(
+        return $this->instances[ForCron::class] ??= new ForCron(
             $user_id,
             $this->internal()
         );
