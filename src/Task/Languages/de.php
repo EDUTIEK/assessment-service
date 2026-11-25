@@ -125,4 +125,6 @@ return [
     'correction_status_consulting' => 'im Beratungsverfahren',
     'correction_status_stitch' => 'im Stichentscheid',
     'correction_status_finalized' => 'abgeschlossen',
+    'summary_upload_not_saved' => 'Die hochgeladene PDF-Datei wurde nicht gespeichert!',
+
 ];

@@ -18,6 +18,8 @@ return [
     'corr_x' => 'K%s',
     'decimal_separator' => ',',
     'thousands_separator' => '.',
+    'pdf_check_failed' => 'Die PDF-Datei kann nicht weiterverarbeitet werden!',
+    'pdf_check_accessibility_warning' => 'Die Datei ist nicht barrierefrei.',
     'login_failed_short' => 'Der Anmeldename oder das Passwort sind ungültig.',
     'login_failed_long' => 'Die Anmeldung ist fehlgeschlagen. Bitte überprüfen Sie, ob Sie Ihren Anmeldenamen und Ihr Passwort korrekt eingegeben haben. Wenn das Problem weiterhin besteht, ist Ihr Konto möglicherweise inaktiv oder abgelaufen.',
     'password_change_subject' => 'Passwort-Änderung',

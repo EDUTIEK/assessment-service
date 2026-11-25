@@ -5,11 +5,20 @@ declare(strict_types=1);
 namespace Edutiek\AssessmentService\System\PdfProcessing;
 
 use Edutiek\AssessmentService\System\PdfCreator\Options;
+use Edutiek\AssessmentService\System\Data\Result;
 use Generator;
 
 interface FullService
 {
+    /**
+     * Create a PDF file from an HTML code
+     */
     public function create(string $html, Options $options): string;
+
+    /**
+     * Check if a PDF file can be processed
+     */
+    public function check(string $file_id): Result;
 
     /**
      * Join separate PDF files into one

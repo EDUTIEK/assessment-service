@@ -166,6 +166,7 @@ class Internal implements RatingCriterionServiceFactory
             $this->dependencies->systemApi()->fileStorage(),
             $this->dependencies->systemApi()->entity(),
             $this->dependencies->systemApi()->user(),
+            $this->dependencies->systemApi()->pdfProcessing(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->corrector(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->writer(),
             $this->dependencies->assessmentApi($ass_id, $user_id)->correctionSettings(),
