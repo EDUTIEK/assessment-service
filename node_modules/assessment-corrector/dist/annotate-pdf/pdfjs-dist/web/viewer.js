@@ -22052,7 +22052,10 @@ const PDFViewerApplication = {
     }
     if (file) {
       this.open({
-        url: file
+        // edutiek-patch: begin
+        url: file,
+        httpHeaders: window.edutiekProvideHeaders || (await new Promise(ok => {window.waitForEdutiekHeaders = ok;})),
+        // edutiek-patch: end
       });
     } else {
       this._hideViewBookmark();

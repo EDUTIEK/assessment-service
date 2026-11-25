@@ -4,8 +4,19 @@ function run()
 {
     window.localStorage.removeItem('pdfjs.history');
     window.localStorage.removeItem('pdfjs.preferences');
+    window.addEventListener('message', e => {
+        if (window.waitForEdutiekHeaders) {
+            window.waitForEdutiekHeaders(e.data.headers || {});
+        } else {
+            window.edutiekProvideHeaders = e.data.headers || {};
+        }
+    }, {once: true});
+    window.parent.postMessage('init');
     setup(forwardEvent, actions => {
         window.addEventListener('message', event => {
+            if(event.data.headers){
+                return;
+            }
             const p = then(null, () => actions[event.data.name](...event.data.args));
             p.then(value => window.parent.postMessage({response: {id: event.data.id, value}}));
             p.catch(error => window.parent.postMessage({response: {id: event.data.id, value: error, error: true}}));
@@ -13,7 +24,9 @@ function run()
     });
     
     window.addEventListener('beforeunload', () => {
-        PDFViewerApplication.pdfViewer.pdfDocument.annotationStorage.resetModified();
+        if (PDFViewerApplication.pdfViewer.pdfDocument) {
+            PDFViewerApplication.pdfViewer.pdfDocument.annotationStorage.resetModified();
+        }
     });
 
     function forwardEvent(name, detail)
@@ -146,7 +159,7 @@ function setup(dispatch, ready){
                         manager.setSelected(entry.editor);
                     }
                     window.requestAnimationFrame(() => {
-                        if (!entry.editor || !entry.getHighlightDiv) {
+                        if (!entry.editor || !entry.editor.getHighlightDiv) {
                             return;
                         }
                         const rect = entry.editor.getHighlightDiv().getBoundingClientRect();
