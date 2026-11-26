@@ -16,7 +16,7 @@ class Service implements FullService
     ) {
     }
 
-    public function backend(int $ass_id, int $context_id = null, int $user_id = null)
+    public function backend(int $ass_id, ?int $context_id = null, ?int $user_id = null)
     {
         $context_repo = $this->repos->contextInfo();
         if ($context_id === null && $user_id !== null) {
@@ -26,7 +26,7 @@ class Service implements FullService
         return $context_repo->link($ass_id, $context_id);
     }
 
-    public function correction(int $ass_id, int $context_id = null, ?int $user_id = null, ?int $task_id = null, ?int $writer_id = null)
+    public function correction(int $ass_id, ?int $context_id = null, ?int $user_id = null, ?int $task_id = null, ?int $writer_id = null)
     {
         $context_repo = $this->repos->contextInfo();
         if ($context_id === null && $user_id !== null) {
@@ -40,7 +40,7 @@ class Service implements FullService
         }
     }
 
-    public function correctionApp(int $ass_id, int $context_id = null, ?int $user_id = null, ?int $task_id = null, ?int $writer_id = null)
+    public function correctionApp(int $ass_id, ?int $context_id = null, ?int $user_id = null, ?int $task_id = null, ?int $writer_id = null)
     {
         $context_repo = $this->repos->contextInfo();
         if ($context_id === null && $user_id !== null) {
