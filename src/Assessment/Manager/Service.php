@@ -81,7 +81,6 @@ readonly class Service implements FullService
         $this->repos->notificationUser()->deleteByAssId($this->ass_id);
         $this->repos->notificationQueue()->deleteByAssId($this->ass_id);
         $this->repos->pdfConfig()->deleteByAssId($this->ass_id);
-        $this->repos->token()->deleteByAssId($this->ass_id);
         $this->repos->writer()->deleteByAssId($this->ass_id);
         foreach ($this->repos->exportFile()->allByAssId($this->ass_id) as $file) {
             $this->storage->deleteFile($file->getFileId());
