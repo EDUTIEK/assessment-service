@@ -19,5 +19,5 @@ interface ContextInfoRepo
     /**
      * Get a link to the assessment object for a user
      */
-    public function link(int $ass_id, int $context_id = null): string;
+    public function link(int $ass_id, ?int $context_id = null): string;
 }
